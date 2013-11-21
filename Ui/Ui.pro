@@ -1,4 +1,4 @@
-TARGET  =   Core
+TARGET  =   Ui
 
 #QT dependences
 CONFIG  +=  console
@@ -9,15 +9,7 @@ QT      +=  network
 QMAKE_CXXFLAGS += -std=c++0x
 
 SOURCES +=  main.cpp \
-    core.cpp \
-    commandserver.cpp \
-    guard.cpp \
-    session.cpp
+    ui.cpp
 
 HEADERS += \
-    core.h \
-    commandserver.h \
-    guard.h \
-    session.h
-
-
+    ui.h
