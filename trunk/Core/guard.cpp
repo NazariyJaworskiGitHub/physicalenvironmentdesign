@@ -6,7 +6,7 @@
 void Guard::readUserDataFromFile()
 ///< Format is:\n
 ///< \a \b userName \i passWord \n
-///< \todo
+///< \todo make it thread-safe
 {
     if(!QFile::exists("users.cfg"))
         Q_EMIT error("ERROR: Can't find 'users.cfg'\n");
@@ -44,6 +44,7 @@ void Guard::readUserDataFromFile()
 }
 
 bool Guard::checkUser(QString userName, QString passWord) const
+///< \todo make it thread-safe
 {
     for(auto i : _knownUsers)
     {

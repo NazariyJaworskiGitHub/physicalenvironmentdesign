@@ -6,17 +6,7 @@
 #include <QTcpSocket>
 
 #include "guard.h"
-
-/// Oun thread for new connection
-class ConnectionThread : public QThread
-{
-    Q_OBJECT
-
-    private: int _socketDescriptor;
-    public: ConnectionThread(int socketDescriptor, QObject *parent);
-    public: void run() override;
-    public: Q_SIGNAL void error(QTcpSocket::SocketError socketError) const;
-};
+#include "session.h"
 
 /// Multi-threaded QTcpServer
 class CommandServer : public QTcpServer

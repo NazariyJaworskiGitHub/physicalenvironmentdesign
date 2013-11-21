@@ -6,7 +6,10 @@
 
 #include "commandserver.h"
 
-/// Main program class
+/// Main program class, does all dirty work. \n
+/// There is only one instance of this class object per program,
+/// object has CommandServer object, which is processing commands
+/// from users through TCP port. \n
 class Core : public QCoreApplication
 {
     Q_OBJECT
