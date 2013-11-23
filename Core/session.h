@@ -19,8 +19,8 @@ class Session : public QThread
         ///< common destructor
     public: void run() override;
         ///< main fuction of the thread
-    public: Q_SIGNAL void error(QTcpSocket::SocketError socketError) const;
-        ///< connect it to some output
+    public : Q_SIGNAL void writeString(const QString message) const;
+        ///< catch this signal with some Ui or Logger
 };
 
 #endif // SESSION_H

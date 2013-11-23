@@ -18,6 +18,9 @@ class CommandServer : public QTcpServer
     protected: void incomingConnection(qintptr socketDescriptor) override;
 
     public: Guard *_myGuard = nullptr;
+
+    public : Q_SIGNAL void writeString(const QString message) const;
+        ///< catch this signal with some Ui or Logger
 };
 
 #endif // COMMANDSERVER_H

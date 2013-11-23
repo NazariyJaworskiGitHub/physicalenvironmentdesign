@@ -1,9 +1,18 @@
 #include "core.h"
+
+#include <iostream>
+
 #include <QTime>
 #include <QFile>
+
+#include "version.h"
+
 Core::Core(int argc, char **argv) :
-    QCoreApplication(argc, argv), _isOK(true), _isInitialized(false)
+    QCoreApplication(argc, argv), _isInitialized(false)
 {
+    /// \todo
+    //this->setApplicationName("Physical Environment Design Core");
+    //this->setApplicationVersion("dev:");
 }
 
 void Core::init()
@@ -11,8 +20,17 @@ void Core::init()
     if(!_isInitialized)
     {
         readConfigurationFile();
+
+        myLogger = new Logger(this);
+        connect(this, SIGNAL(writeString(QString)), myLogger, SLOT(writeToLog(QString)));
+
         runTcpServer();
+
+        runUiWebServer();
+
         _isInitialized = true;
+        Q_EMIT writeString("Core Initialized\n");
+        Q_EMIT writeString("Core version is " + QString::number(VERSION_BUILD) + "\n");
     }
 }
 
@@ -24,11 +42,6 @@ Core *Core::instance()
     return singletonCore;
 }
 
-Core::~Core()
-{
-    delete _myQTcpServer;
-}
-
 void Core::readConfigurationFile()
 ///< Format is:\n
 ///< \a \b keyword \i value \n
@@ -37,12 +50,12 @@ void Core::readConfigurationFile()
 ///< \todo
 {
     if(!QFile::exists("config.cfg"))
-        Core::instance()->fatalError("FATAL ERROR: Can't find 'config.cfg'\n");
+        fatalError("FATAL ERROR: Can't find 'config.cfg'\n");
     else
     {
         QFile *_configurationFile = new QFile("config.cfg");
         if(!_configurationFile->open(QIODevice::ReadOnly | QIODevice::Text))
-            Core::instance()->fatalError("FATAL ERROR: Can't open 'config.cfg'\n");
+            fatalError("FATAL ERROR: Can't open 'config.cfg'\n");
         else
         {
             // Processing configuration file line by line as text stream
@@ -76,20 +89,43 @@ void Core::runTcpServer()
     if(_myQTcpServer)
         delete _myQTcpServer;
     _myQTcpServer = new CommandServer(this);
-    connect(_myQTcpServer,SIGNAL(newConnection()),
-            this, SLOT(onNewServerConnection()));
     if(!_myQTcpServer->listen(QHostAddress::Any,_myTcpServerPort))
-            Core::instance()->fatalError("FATAL ERROR: Can't bind to TCP server socket\n");
+            fatalError("FATAL ERROR: Can't bind to TCP server socket\n");
+    connect(_myQTcpServer, SIGNAL(writeString(QString)), myLogger, SLOT(writeToLog(QString)));
+    /// \todo it should be inside _myQTcpServer constructor, but i can't put it there, because
+    /// connect() function is called after constructor
+    Q_EMIT writeString("Core TCP Server started\n");
 }
-void Core::onNewServerConnection()
-{
 
+void Core::runUiWebServer()
+{
+    if(myUiWebServer)
+        delete myUiWebServer;
+    myUiWebServer = new UiWebServer(this);
+    connect(myUiWebServer, SIGNAL(writeString(QString)), myLogger, SLOT(writeToLog(QString)));
+    myUiWebServer->startServer();
 }
 
 void Core::fatalError(const QString message)
 {
-    QString str = QTime::currentTime().toString() + " " + message;
-    //Q_EMIT SIGNAL_WriteToLog(str);
-    _isOK = false;
-    quit();
+    QString _str = QTime::currentTime().toString() + " " + message;
+    QFile _lastCrash("LastCrashReport.log");
+    _lastCrash.open(QIODevice::WriteOnly | QIODevice::Text);
+    QTextStream _output(&_lastCrash);
+    _output << _str;
+    _lastCrash.flush();
+    _lastCrash.close();
+    std::cerr << _str.toStdString();
+    Q_EMIT writeString(_str);
+    std::exit(-1);
+}
+
+Core::~Core()
+{
+    if(_myQTcpServer)
+        delete _myQTcpServer;
+    if(myUiWebServer)
+        delete myUiWebServer;
+    if(myLogger)
+        delete myLogger;
 }
