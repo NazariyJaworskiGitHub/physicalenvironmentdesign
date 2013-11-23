@@ -1,5 +1,5 @@
 #include "guard.h"
-
+#include "core.h"
 #include <QFile>
 #include <QTextStream>
 
@@ -9,12 +9,14 @@ void Guard::readUserDataFromFile()
 ///< \todo make it thread-safe
 {
     if(!QFile::exists("users.cfg"))
-        Q_EMIT error("ERROR: Can't find 'users.cfg'\n");
+        /// \todo try to avoid this instance call, because it does dependence
+        Core::instance()->fatalError("ERROR: Can't find 'users.cfg'\n");
     else
     {
         QFile *_configurationFile = new QFile("users.cfg");
         if(!_configurationFile->open(QIODevice::ReadOnly | QIODevice::Text))
-            Q_EMIT error("ERROR: Can't open 'users.cfg'\n");
+            /// \todo try to avoid this instance call, because it does dependence
+            Core::instance()->fatalError("ERROR: Can't open 'users.cfg'\n");
         else
         {
             // Processing configuration file line by line as text stream
@@ -41,6 +43,7 @@ void Guard::readUserDataFromFile()
             delete _configurationFile;
         }
     }
+    Q_EMIT writeString("Guard user data file has been read\n");
 }
 
 bool Guard::checkUser(QString userName, QString passWord) const

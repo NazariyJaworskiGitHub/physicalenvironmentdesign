@@ -23,8 +23,8 @@ class Guard : public QObject
         ///< checks if thre is the given uData at _knownUsers
     public: Guard(QObject *parent);
     public: ~Guard();
-    public: Q_SIGNAL void error(const QString message) const;
-        ///< it should be connected to some text output
+    public : Q_SIGNAL void writeString(const QString message) const;
+        ///< catch this signal with some Ui or Logger
 };
 
 #endif // GUARD_H

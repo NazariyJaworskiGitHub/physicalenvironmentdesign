@@ -22,7 +22,7 @@ void Session::run()
     _tcpSocket = new QTcpSocket();
     if (!_tcpSocket->setSocketDescriptor(_socketDescriptor))
     {
-        Q_EMIT error(_tcpSocket->error());
+        Q_EMIT writeString(_tcpSocket->errorString());
     }
     else
     {
