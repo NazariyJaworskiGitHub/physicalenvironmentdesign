@@ -2,16 +2,10 @@
 #include "session.h"
 #include "core.h"
 CommandServer::CommandServer(QObject *parent): QTcpServer(parent)
-{
-    _myGuard = new Guard(this);
-    /// \todo try to avoid this instance call, because it does dependence
-    connect(_myGuard, SIGNAL(writeString(QString)),
-            Core::instance()->myLogger, SLOT(writeToLog(QString)));
-    _myGuard->readUserDataFromFile();
+{ 
 }
 CommandServer::~CommandServer()
 {
-    delete _myGuard;
 }
 
 void CommandServer::incomingConnection(qintptr socketDescriptor)

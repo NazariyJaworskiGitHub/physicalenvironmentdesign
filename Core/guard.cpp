@@ -48,6 +48,7 @@ void Guard::readUserDataFromFile()
 
 bool Guard::checkUser(QString userName, QString passWord) const
 ///< \todo make it thread-safe
+///< \todo try to check if user already have been logedIn
 {
     for(auto i : _knownUsers)
     {
