@@ -2,8 +2,6 @@
 #include "version.h"
 #include "core.h"
 
-#include <Wt/WVBoxLayout>
-
 // +----------------------------------------------------+
 // | LogIn/LogOut widget                                |
 // +----------------------------------------------------+
@@ -22,18 +20,17 @@ UiWebMainWidget::UiWebMainWidget(const WEnvironment &env):
     QString _title = QString("PECAD:rev") + QString::number(VERSION_BUILD);
     this->setTitle(_title.toStdWString());
 
-    myVBoxLayout = new WVBoxLayout(root());
-    root()->setLayout(myVBoxLayout);
+    /// \todo put here some layout
 
     myUiWebAuthenticationWidget = new UiWebAuthenticationWidget(root());
+    //myUiWebAuthenticationWidget->setHeight(WLength(40));    ///<\todo magic number!!!
     connect(myUiWebAuthenticationWidget, SIGNAL(writeString(QString)), Core::instance()->myLogger, SLOT(writeToLog(QString)));
-    myVBoxLayout->addWidget(myUiWebAuthenticationWidget);
+    root()->addWidget(myUiWebAuthenticationWidget);
+    root()->addWidget(new WBreak());
 }
 
 UiWebMainWidget::~UiWebMainWidget()
 {
     if(myUiWebAuthenticationWidget)
         delete myUiWebAuthenticationWidget;
-    if(myVBoxLayout)
-        delete myVBoxLayout;
 }

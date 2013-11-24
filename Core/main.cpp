@@ -1,9 +1,9 @@
 #include "core.h"
 #include <QTimer>
 
-/// use argv = \b Core \b --docroot \i.
-/// \b --http-address \i 0.0.0.0 \b --http-port \i 80
-/// \b --approot \i. \b --config \i wt_config.xml
+/// use argv = \b Core \b --docroot \a.
+/// \b --http-address \a 0.0.0.0 \b --http-port \a 80
+/// \b --approot \a. \b --config \a wt_config.xml
 /// to run web server
 // Core --docroot . --http-address 0.0.0.0 --http-port 80 --approot . --config wt_config.xml
 int main()
