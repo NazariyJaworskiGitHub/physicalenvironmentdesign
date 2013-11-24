@@ -17,7 +17,7 @@
 #include <Wt/WPushButton>
 #include <Wt/WLabel>
 #include <Wt/WLineEdit>
-#include <Wt/WHBoxLayout>
+
 using namespace Wt;
 
 /// Implements Logging In and Out \n
@@ -27,17 +27,21 @@ class UiWebAuthenticationWidget : public QObject, public WContainerWidget
 {
     Q_OBJECT
 
+    private: bool   _isLogInState;
     public : WLabel         *myUserNameLabel        = nullptr;
     public : WLabel         *myUserPassWordLabel    = nullptr;
     public : WLineEdit      *myUserNameLineEdit     = nullptr;
     public : WLineEdit      *myPassWordLineEdit     = nullptr;
     public : WPushButton    *myLogInOutButton       = nullptr;
     public : WLabel         *myInfoMessageLabel     = nullptr;
-    public : WHBoxLayout    *myWHBoxLayout          = nullptr;
     public : UiWebAuthenticationWidget(WContainerWidget *parent);
         ///< Common constructor
     public : void onLogInOutButton();
         ///< slot for myLogInOutButton
+    private: void _changeToLogInState();
+        ///< change widget to display log in fields
+    private: void _changeToLogOutState();
+        ///< change widget to display log out fields
     public : ~UiWebAuthenticationWidget();
         ///< Common destructor
     public : Q_SIGNAL void writeString(const QString message) const;

@@ -24,9 +24,7 @@ class UiWebMainWidget : public QObject, public WApplication
 {
     Q_OBJECT
 
-    public : WVBoxLayout *myVBoxLayout = nullptr;
-        ///< top-level vertical box layout
-    public :UiWebAuthenticationWidget *myUiWebAuthenticationWidget = nullptr;
+    public : UiWebAuthenticationWidget *myUiWebAuthenticationWidget = nullptr;
         ///< Authentication widget
     public : UiWebMainWidget(const WEnvironment &env);
         ///< Common constructor
