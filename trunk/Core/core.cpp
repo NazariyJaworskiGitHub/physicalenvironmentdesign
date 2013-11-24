@@ -24,6 +24,11 @@ void Core::init()
         myLogger = new Logger(this);
         connect(this, SIGNAL(writeString(QString)), myLogger, SLOT(writeToLog(QString)));
 
+        myGuard = new Guard(this);
+        connect(myGuard, SIGNAL(writeString(QString)),
+                myLogger, SLOT(writeToLog(QString)));
+        myGuard->readUserDataFromFile();
+
         runTcpServer();
 
         runUiWebServer();
@@ -122,6 +127,8 @@ void Core::fatalError(const QString message)
 
 Core::~Core()
 {
+    if(myGuard)
+        delete myGuard;
     if(_myQTcpServer)
         delete _myQTcpServer;
     if(myUiWebServer)

@@ -5,8 +5,9 @@
 #include <QTcpServer>
 
 #include "commandserver.h"
-#include "uiwebserver.h"
+#include "guard.h"
 #include "logger.h"
+#include "uiwebserver.h"
 
 /// Main program class, does all dirty work. \n
 /// There is only one instance of this class object per program,
@@ -27,6 +28,7 @@ class Core : public QCoreApplication
     private: qint16 _myTcpServerPort;
         ///< port of TCP Server
 
+    public : Guard *myGuard = nullptr;
     public : UiWebServer *myUiWebServer = nullptr;
 
     public : Logger *myLogger = nullptr;

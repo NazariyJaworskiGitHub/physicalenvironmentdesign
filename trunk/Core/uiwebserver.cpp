@@ -44,6 +44,7 @@ WApplication* UiWebServer::createApplication(const WEnvironment& env)
     UiWebMainWidget *_myApp = new UiWebMainWidget(env);
     /// \todo hold all ui-sessions at some storage
     //_currentSessions.push_back(_myApp);
+    connect(_myApp, SIGNAL(writeString(QString)), Core::instance()->myLogger, SLOT(writeToLog(QString)));
     return _myApp;
 }
 

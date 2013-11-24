@@ -1,5 +1,5 @@
 #include "session.h"
-#include "commandserver.h"
+#include "core.h"
 
 #include <QTextStream>
 #include <QDataStream>
@@ -45,7 +45,7 @@ void Session::run()
 
         // 2)
         // check user
-        if(reinterpret_cast<CommandServer*>(this->parent())->_myGuard->checkUser(_userName,_passWord))
+        if(Core::instance()->myGuard->checkUser(_userName,_passWord))
         {
             // 3)
             qDebug()<<"welcome"<<_userName;
