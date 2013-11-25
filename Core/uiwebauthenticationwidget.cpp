@@ -1,6 +1,8 @@
 #include "uiwebauthenticationwidget.h"
-
+#include "core.h"
 #include <Wt/WGridLayout>
+#include <QString>
+#include <Wt/WMessageBox>
 
 UiWebAuthenticationWidget::UiWebAuthenticationWidget(WContainerWidget *parent = 0):
     WContainerWidget(parent), _isLogInState(true)
@@ -73,13 +75,33 @@ void UiWebAuthenticationWidget::_changeToLogOutState()
 void UiWebAuthenticationWidget::onLogInOutButton()
 {
     if(_isLogInState)
-        _changeToLogOutState();
+    {
+        QString _userName(myUserNameLineEdit->text().narrow().data());
+        QString _passWord(myPassWordLineEdit->text().narrow().data());
+        Q_EMIT writeString("user " + _userName + " is trying to log in\n");
+        /// \todo it may freez Ui?
+        Guard::UserData* _foundUserData =
+                Core::instance()->myGuard->logInUser(_userName,_passWord);
+        if(_foundUserData)
+        {
+            _changeToLogOutState();
+            _isLogInState = !_isLogInState;
+        }
+        else
+        {
+            /// \todo try to make it better
+            WMessageBox::show(
+                        "Authentication failed!",
+                        "You have entered wrong user-name or password",
+                        Ok);
+        }
+    }
     else
-        _changeToLogInState();
-    _isLogInState = !_isLogInState;
-    //Q_EMIT writeString("UiWebAuthenticationWidget a user is trying to log in\n");
-    /// \todo
-    //Core::instance()->myGuard->checkUser(_userName,_passWord)
+    {
+        /// \todo
+        //_changeToLogInState();
+        //_isLogInState = !_isLogInState;
+    }
 }
 
 UiWebAuthenticationWidget::~UiWebAuthenticationWidget()

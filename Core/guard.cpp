@@ -2,6 +2,7 @@
 #include "core.h"
 #include <QFile>
 #include <QTextStream>
+#include <QMutexLocker>
 
 void Guard::readUserDataFromFile()
 ///< Format is:\n
@@ -36,7 +37,7 @@ void Guard::readUserDataFromFile()
                     UserData *_currentUserData = new UserData;
                     _currentUserData->userName = _userName;
                     _currentUserData->passWord = _passWord;
-                    _knownUsers.push_back(_currentUserData);
+                    _knownUnLoggedUsers.push_back(_currentUserData);
                 }
             }
             _configurationFile->close();
@@ -46,19 +47,26 @@ void Guard::readUserDataFromFile()
     Q_EMIT writeString("Guard user data file has been read\n");
 }
 
-bool Guard::checkUser(QString userName, QString passWord) const
-///< \todo make it thread-safe
-///< \todo try to check if user already have been logedIn
+Guard::UserData* Guard::logInUser(QString userName, QString passWord)
 {
-    for(auto i : _knownUsers)
+    QMutexLocker _locker(&_myMutex);// Lock _myMutex while exist, i.e. only within this method
+    for(QList<Guard::UserData*>::Iterator i = _knownUnLoggedUsers.begin();
+        i!= _knownUnLoggedUsers.end(); i++)
     {
         if(
-                (i->userName.compare(userName) == 0) &&
-                (i->passWord.compare(passWord) == 0)
+                ((*i)->userName.compare(userName) == 0) &&
+                ((*i)->passWord.compare(passWord) == 0)
         )
-            return true;
+        {
+            // if true, then we found user;
+            _loggedUsers.push_back(*i);
+            _knownUnLoggedUsers.erase(i);
+            Q_EMIT writeString("Guard Found user " + (*i)->userName + "\n");
+            return *i;
+        }
     }
-    return false;
+    Q_EMIT writeString("Guard Unknown user " + userName + "\n");
+    return nullptr;
 }
 
 Guard::Guard(QObject *parent = 0):QObject(parent)
@@ -67,7 +75,7 @@ Guard::Guard(QObject *parent = 0):QObject(parent)
 
 Guard::~Guard()
 {
-    for(auto i : _knownUsers)
+    for(auto i : _knownUnLoggedUsers)
         delete i;
-    _knownUsers.clear();
+    _knownUnLoggedUsers.clear();
 }
