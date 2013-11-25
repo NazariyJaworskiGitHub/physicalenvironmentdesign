@@ -37,7 +37,9 @@ SOURCES +=  main.cpp \
     logger.cpp \
     uiwebserver.cpp \
     uiwebmainwidget.cpp \
-    uiwebauthenticationwidget.cpp
+    uiwebauthenticationwidget.cpp \
+    project.cpp \
+    usersession.cpp
 
 HEADERS += \
     core.h \
@@ -48,7 +50,9 @@ HEADERS += \
     uiwebserver.h \
     uiwebmainwidget.h \
     version.h.tpl \
-    uiwebauthenticationwidget.h
+    uiwebauthenticationwidget.h \
+    project.h \
+    usersession.h
 
 OTHER_FILES += \
     icons/mainicon.png

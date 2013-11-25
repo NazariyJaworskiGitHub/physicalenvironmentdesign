@@ -45,12 +45,12 @@ void Session::run()
 
         // 2)
         // check user
-        if(Core::instance()->myGuard->checkUser(_userName,_passWord))
-        {
+        //if(Core::instance()->myGuard->checkUser(_userName,_passWord))
+        //{
             // 3)
             qDebug()<<"welcome"<<_userName;
             /// \todo
-        }
+        //}
     }
     _tcpSocket->disconnectFromHost();
     delete _tcpSocket;
