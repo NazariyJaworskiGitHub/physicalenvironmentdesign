@@ -13,6 +13,8 @@
 // |                                                    |
 // |                                                    |
 // +----------------------------------------------------+
+// |Contact information, license,etc.                   |
+// +----------------------------------------------------+
 
 UiWebMainWidget::UiWebMainWidget(const WEnvironment &env):
     WApplication(env)
@@ -22,9 +24,10 @@ UiWebMainWidget::UiWebMainWidget(const WEnvironment &env):
 
     /// \todo put here some layout
 
-    myUiWebAuthenticationWidget = new UiWebAuthenticationWidget(root());
-    //myUiWebAuthenticationWidget->setHeight(WLength(40));    ///<\todo magic number!!!
-    connect(myUiWebAuthenticationWidget, SIGNAL(writeString(QString)), Core::instance()->myLogger, SLOT(writeToLog(QString)));
+    myUiWebAuthenticationWidget = new UiWebAuthenticationWidget(
+                myUserSession, root());
+    connect(myUiWebAuthenticationWidget, SIGNAL(writeString(QString)),
+            Core::instance()->myLogger, SLOT(writeToLog(QString)));
     root()->addWidget(myUiWebAuthenticationWidget);
     root()->addWidget(new WBreak());
 }

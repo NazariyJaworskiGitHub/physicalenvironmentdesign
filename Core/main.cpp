@@ -4,8 +4,9 @@
 /// use argv = \b Core \b --docroot \a.
 /// \b --http-address \a 0.0.0.0 \b --http-port \a 80
 /// \b --approot \a. \b --config \a wt_config.xml
+/// \b --accesslog \a AccesLog.log
 /// to run web server
-// Core --docroot . --http-address 0.0.0.0 --http-port 80 --approot . --config wt_config.xml
+// Core --docroot . --http-address 0.0.0.0 --http-port 80 --approot . --config wt_config.xml --Accesslog accesLog.log
 int main()
 {
         // when you call Core::instance() first time, it will call constructor
