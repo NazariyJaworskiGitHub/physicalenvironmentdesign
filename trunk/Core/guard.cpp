@@ -4,11 +4,23 @@
 #include <QTextStream>
 #include <QMutexLocker>
 
-void Guard::readUserDataFromFile()
-///< Format is:\n
-///< \a \b userName \i passWord \n
-///< \todo make it thread-safe
+void Guard::_clearLists()
 {
+    for(auto i : _knownUnLoggedUsers)
+        delete i;
+    _knownUnLoggedUsers.clear();
+    for(auto i : _loggedUsers)
+        delete i;
+    _loggedUsers.clear();
+}
+
+void Guard::readUserDataFromFile()
+{
+    QMutexLocker _locker(&_myMutex);// Lock _myMutex while exist, i.e. only within this method
+
+    // Clear old stuff
+    _clearLists();
+
     if(!QFile::exists("users.cfg"))
         /// \todo try to avoid this instance call, because it does dependence
         Core::instance()->fatalError("ERROR: Can't find 'users.cfg'\n");
@@ -47,7 +59,8 @@ void Guard::readUserDataFromFile()
     Q_EMIT writeString("Guard user data file has been read\n");
 }
 
-Guard::UserData* Guard::logInUser(QString userName, QString passWord)
+Guard::UserData* Guard::logInUser(QString userName, QString passWord,
+                                  bool *isAlreadyLoggedIn = nullptr)
 {
     QMutexLocker _locker(&_myMutex);// Lock _myMutex while exist, i.e. only within this method
     for(QList<Guard::UserData*>::Iterator i = _knownUnLoggedUsers.begin();
@@ -61,12 +74,42 @@ Guard::UserData* Guard::logInUser(QString userName, QString passWord)
             // if true, then we found user;
             _loggedUsers.push_back(*i);
             _knownUnLoggedUsers.erase(i);
-            Q_EMIT writeString("Guard Found user " + (*i)->userName + "\n");
-            return *i;
+            Q_EMIT writeString("Guard (login) Found user " + userName + "\n");
+            return _loggedUsers.back();
         }
     }
-    Q_EMIT writeString("Guard Unknown user " + userName + "\n");
+    if(isAlreadyLoggedIn)
+    {
+        // check if user have already been logged in
+        *isAlreadyLoggedIn = false;
+        for(auto i : _loggedUsers)
+            if(
+                    (i->userName.compare(userName) == 0) &&
+                    (i->passWord.compare(passWord) == 0)
+            )
+                *isAlreadyLoggedIn = true;
+    }
+    Q_EMIT writeString("Guard (login) Unknown user " + userName + "\n");
     return nullptr;
+}
+
+bool Guard::logOutUser(Guard::UserData *uData)
+{
+    QMutexLocker _locker(&_myMutex);// Lock _myMutex while exist, i.e. only within this method
+    for(QList<Guard::UserData*>::Iterator i = _loggedUsers.begin();
+        i!= _loggedUsers.end(); i++)
+    {
+        if((*i) == uData)
+        {
+            // if true, then we found user;
+            _knownUnLoggedUsers.push_back(*i);
+            _loggedUsers.erase(i);
+            Q_EMIT writeString("Guard (logout) Found user " + uData->userName + "\n");
+            return true;
+        }
+    }
+    Q_EMIT writeString("Guard (logout) Unknown user " + uData->userName + "\n");
+    return false;
 }
 
 Guard::Guard(QObject *parent = 0):QObject(parent)
@@ -75,7 +118,5 @@ Guard::Guard(QObject *parent = 0):QObject(parent)
 
 Guard::~Guard()
 {
-    for(auto i : _knownUnLoggedUsers)
-        delete i;
-    _knownUnLoggedUsers.clear();
+    _clearLists();
 }

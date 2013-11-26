@@ -18,7 +18,7 @@ Logger::Logger(QObject *parent = 0)
     else
     {
         _logTextStream = new QTextStream(_logFile);
-        writeToLog("Logging is started\n");
+        writeToLog("Logging has been started started\n");
     }
 }
 
@@ -28,7 +28,7 @@ void Logger::writeToLog(const QString message) const
     {
         //(*_logTextStream) << QTime::currentTime().toString() << " " << message;
         QTextStream(_logFile) << QTime::currentTime().toString() << " " << message;
-        qDebug() << "LOGGER: " + QTime::currentTime().toString() << " " << message;
+        //qDebug() << "LOGGER: " + QTime::currentTime().toString() << " " << message;
     }
     else
         Q_EMIT writeString("ERROR: log file hasn't been opened\n");

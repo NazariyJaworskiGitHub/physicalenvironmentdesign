@@ -29,7 +29,8 @@ class UiWebServer : public QObject
         ///< Wt web server
     private: static WApplication *createApplication(const WEnvironment& env);
         ///< creates a new user session at myWServer
-    public: UiWebServer(QObject *parent);
+        ///< \todo put here the creation of UserSession object instead of UiWebMainWidget
+    public : UiWebServer(QObject *parent);
         ///< Common constructor, don't forget to call startServer()
     public: ~UiWebServer();
         ///< Common destructor

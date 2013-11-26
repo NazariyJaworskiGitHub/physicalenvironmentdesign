@@ -13,10 +13,13 @@
 
 #include <QObject>
 
+#include <Wt/WApplication>
 #include <Wt/WContainerWidget>
 #include <Wt/WPushButton>
 #include <Wt/WLabel>
 #include <Wt/WLineEdit>
+
+#include "usersession.h"
 
 using namespace Wt;
 
@@ -27,6 +30,8 @@ class UiWebAuthenticationWidget : public QObject, public WContainerWidget
 {
     Q_OBJECT
 
+    private: UserSession* _myUserSession;
+        ///< should point to UserSession* of top-level widget, see UiWebAuthenticationWidget()
     private: bool   _isLogInState;
     public : WLabel         *myUserNameLabel        = nullptr;
     public : WLabel         *myUserPassWordLabel    = nullptr;
@@ -34,7 +39,9 @@ class UiWebAuthenticationWidget : public QObject, public WContainerWidget
     public : WLineEdit      *myPassWordLineEdit     = nullptr;
     public : WPushButton    *myLogInOutButton       = nullptr;
     public : WLabel         *myInfoMessageLabel     = nullptr;
-    public : UiWebAuthenticationWidget(WContainerWidget *parent);
+    public : UiWebAuthenticationWidget(
+            UserSession* ptrToUserSession,
+            WContainerWidget *parent);
         ///< Common constructor
     public : void onLogInOutButton();
         ///< slot for myLogInOutButton

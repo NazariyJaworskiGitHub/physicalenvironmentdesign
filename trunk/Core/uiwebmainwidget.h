@@ -16,14 +16,20 @@
 #include <Wt/WEnvironment>
 
 #include "uiwebauthenticationwidget.h"
+#include "usersession.h"
 
 using namespace Wt;
 
 /// main widget for web users
+/// \todo needs code review, check all public members, maybe they have to be private?
+/// \todo it class stores and processes UserSession, bu this is Ui, maybe it should be different?
 class UiWebMainWidget : public QObject, public WApplication
 {
     Q_OBJECT
 
+    private: UserSession* myUserSession = nullptr;
+        ///< represents working UserSession for current user (i.e. web session)
+        ///< \todo i don't shure that this item have to be located here
     public : UiWebAuthenticationWidget *myUiWebAuthenticationWidget = nullptr;
         ///< Authentication widget
     public : UiWebMainWidget(const WEnvironment &env);

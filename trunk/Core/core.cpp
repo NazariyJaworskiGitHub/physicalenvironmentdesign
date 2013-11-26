@@ -34,7 +34,7 @@ void Core::init()
         runUiWebServer();
 
         _isInitialized = true;
-        Q_EMIT writeString("Core Initialized\n");
+        Q_EMIT writeString("Core has been Initialized\n");
         Q_EMIT writeString("Core version is " + QString::number(VERSION_BUILD) + "\n");
     }
 }
@@ -99,7 +99,7 @@ void Core::runTcpServer()
     connect(_myQTcpServer, SIGNAL(writeString(QString)), myLogger, SLOT(writeToLog(QString)));
     /// \todo it should be inside _myQTcpServer constructor, but i can't put it there, because
     /// connect() function is called after constructor
-    Q_EMIT writeString("Core TCP Server started\n");
+    Q_EMIT writeString("Core TCP Server has been started\n");
 }
 
 void Core::runUiWebServer()
