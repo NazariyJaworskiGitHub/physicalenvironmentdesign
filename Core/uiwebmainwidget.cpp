@@ -24,6 +24,7 @@ UiWebMainWidget::UiWebMainWidget(const WEnvironment &env, QObject *parent = 0):
 
     QString _title = QString("PECAD:rev") + QString::number(VERSION_BUILD);
     this->setTitle(_title.toStdWString());
+    this->enableUpdates(true);
 
     /// \todo put here some layout
 
@@ -32,11 +33,13 @@ UiWebMainWidget::UiWebMainWidget(const WEnvironment &env, QObject *parent = 0):
                 this,
                 root());
     connect(myUiWebAuthenticationWidget, SIGNAL(createUserSession(Guard::UserData*)),
-            this, SLOT(createUserSession(Guard::UserData*)),
-            Qt::QueuedConnection);
+            this, SLOT(createUserSession(Guard::UserData*)));
+    connect(this, SIGNAL(sessionCreated()),
+            myUiWebAuthenticationWidget, SLOT(changeToLogOutState()));
     connect(myUiWebAuthenticationWidget, SIGNAL(destroyUserSession()),
-            this, SLOT(destroyUserSession()),
-            Qt::QueuedConnection);
+            this, SLOT(destroyUserSession()));
+    connect(this, SIGNAL(sessionDestroed()),
+            myUiWebAuthenticationWidget, SLOT(changeToLogInState()));
     root()->addWidget(myUiWebAuthenticationWidget);
     root()->addWidget(new WBreak());
 
@@ -54,6 +57,7 @@ UiWebMainWidget::UiWebMainWidget(const WEnvironment &env, QObject *parent = 0):
 void UiWebMainWidget::createUserSession(Guard::UserData *ptrToUserData)
 {
     _myUserSession = new UserSession(ptrToUserData, this);
+    Q_EMIT sessionCreated();
 }
 
 void UiWebMainWidget::destroyUserSession()
@@ -62,6 +66,7 @@ void UiWebMainWidget::destroyUserSession()
     {
         delete _myUserSession;
         _myUserSession = nullptr;
+        Q_EMIT sessionDestroed();
     }
     else
         Q_EMIT writeString(

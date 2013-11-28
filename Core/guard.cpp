@@ -92,7 +92,7 @@ Guard::UserData* Guard::logInUser(QString userName, QString passWord,
                 Q_EMIT writeString("Guard (login) User " + userName + " is already logged\n");
             }
     }
-    if(!isAlreadyLoggedIn || (isAlreadyLoggedIn && *isAlreadyLoggedIn))
+    if(!isAlreadyLoggedIn || (isAlreadyLoggedIn && !*isAlreadyLoggedIn))
         Q_EMIT writeString("Guard (login) Unknown user " + userName + "\n");
     return nullptr;
 }
