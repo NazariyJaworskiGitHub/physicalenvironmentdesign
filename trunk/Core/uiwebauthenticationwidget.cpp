@@ -45,25 +45,31 @@ UiWebAuthenticationWidget::UiWebAuthenticationWidget(UserSession ** const ptrToU
     myLogInOutButton->clicked().connect(this, &UiWebAuthenticationWidget::onLogInOutButton);
     _myWContainerWidget->addWidget(myLogInOutButton);
 
-    _changeToLogInState();
+    changeToLogInState();
 }
 
 /// \todo make multilanguage support (Localization)
-void UiWebAuthenticationWidget::_changeToLogInState()
+void UiWebAuthenticationWidget::changeToLogInState()
 {
-    myInfoMessageLabel->setText("Please Log In!");
-    myUserNameLabel->setText("Name:");
-    myUserNameLabel->setHidden(false);
-    myUserNameLineEdit->setHidden(false);
-    myUserPassWordLabel->setText("Password:");
-    myUserPassWordLabel->setHidden(false);
-    myPassWordLineEdit->setHidden(false);
-    myLogInOutButton->setText("Log In");
-    myLogInOutButton->setToolTip("Confirm information and try to Login to new session");
+    //Wt::WApplication::UpdateLock lock(WApplication::instance());
+    //if(lock)
+    //{
+        _isLogInState = true;
+        myInfoMessageLabel->setText("Please Log In!");
+        myUserNameLabel->setText("Name:");
+        myUserNameLabel->setHidden(false);
+        myUserNameLineEdit->setHidden(false);
+        myUserPassWordLabel->setText("Password:");
+        myUserPassWordLabel->setHidden(false);
+        myPassWordLineEdit->setHidden(false);
+        myLogInOutButton->setText("Log In");
+        myLogInOutButton->setToolTip("Confirm information and try to Login to new session");
+        //WApplication::instance()->triggerUpdate();
+    //}
 }
 
 /// \todo make multilanguage support (Localization)
-void UiWebAuthenticationWidget::_changeToLogOutState()
+void UiWebAuthenticationWidget::changeToLogOutState()
 {
     if(!(*_myUserSession))
     {
@@ -80,13 +86,20 @@ void UiWebAuthenticationWidget::_changeToLogOutState()
     }
     else
     {
-        myInfoMessageLabel->setText("Welcome! " + (*_myUserSession)->myUserData->userName.toStdString());
-        myUserNameLabel->setHidden(true);
-        myUserNameLineEdit->setHidden(true);
-        myUserPassWordLabel->setHidden(true);
-        myPassWordLineEdit->setHidden(true);
-        myLogInOutButton->setText("Log Out");
-        myLogInOutButton->setToolTip("Logout from current session");
+        //Wt::WApplication::UpdateLock lock(WApplication::instance());
+        //if(lock)
+        //{
+            _isLogInState = false;
+            myInfoMessageLabel->setText("Welcome! " +
+                    (*_myUserSession)->myUserData->userName.toStdString());
+            myUserNameLabel->setHidden(true);
+            myUserNameLineEdit->setHidden(true);
+            myUserPassWordLabel->setHidden(true);
+            myPassWordLineEdit->setHidden(true);
+            myLogInOutButton->setText("Log Out");
+            myLogInOutButton->setToolTip("Logout from current session");
+            //WApplication::instance()->triggerUpdate();
+        //}
     }
 }
 
@@ -104,11 +117,9 @@ void UiWebAuthenticationWidget::onLogInOutButton()
                 Core::instance()->myGuard->logInUser(_userName,_passWord, &_isAlreadyLoggedIn);
         if(_foundUserData)
         {
-            Q_EMIT createUserSession(_foundUserData);
-            /// \todo make something as _myUserSession->start()
-            /// \todo block Ui until done
-            _changeToLogOutState();
-            _isLogInState = !_isLogInState;
+            //Q_EMIT createUserSession(_foundUserData);
+            (*_myUserSession) = new UserSession(_foundUserData, nullptr);
+            changeToLogOutState();
         }
         else
         {
@@ -128,11 +139,9 @@ void UiWebAuthenticationWidget::onLogInOutButton()
     else
         // try to logOut and finish the UserSession
     {
-        Q_EMIT destroyUserSession();
-        /// \todo make something as _myUserSession->finish()
-        /// \todo block Ui until done
-        _changeToLogInState();
-        _isLogInState = !_isLogInState;
+        //Q_EMIT destroyUserSession();
+        (*_myUserSession)->deleteLater();
+        changeToLogInState();
     }
 }
 

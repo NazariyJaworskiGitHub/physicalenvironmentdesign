@@ -42,9 +42,13 @@ class UiWebMainWidget : public QObject, public WApplication
     public : Q_SIGNAL void writeString(const QString message) const;
         ///< catch this signal with some Ui or Logger
     public : Q_SLOT void createUserSession(Guard::UserData *ptrToUserData);
-        ///< makes a new UserSession at _myUserSession
+        ///< makes a new UserSession at _myUserSession, emits sessionCreated()
+    public : Q_SIGNAL void sessionCreated() const;
+        ///< emit when a new session is created
     public : Q_SLOT void destroyUserSession();
-        ///< destroys the UserSession at _myUserSession, automaticaly logOut
+        ///< destroys the UserSession at _myUserSession, automaticaly logOut, emits sessionDestroed()
+    public : Q_SIGNAL void sessionDestroed() const;
+        ///< emit when the session is destroed
 };
 
 #endif // UIWEBMAINWIDGET_H

@@ -46,9 +46,9 @@ class UiWebAuthenticationWidget : public QObject, public WContainerWidget
         ///< Common constructor
     public : void onLogInOutButton();
         ///< slot for myLogInOutButton
-    private: void _changeToLogInState();
+    public : Q_SLOT void changeToLogInState();
         ///< change widget to display log in fields
-    private: void _changeToLogOutState();
+    public : Q_SLOT void changeToLogOutState();
         ///< change widget to display log out fields
     public : ~UiWebAuthenticationWidget();
         ///< Common destructor
