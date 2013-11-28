@@ -1,8 +1,11 @@
 #include "uiwebserver.h"
 #include "core.h"
 
-UiWebServer::UiWebServer(QObject *parent = 0)
+UiWebServer::UiWebServer(QObject *parent = 0):
+    QObject(parent)
 {
+    connect(this, SIGNAL(writeString(QString)),
+            Core::instance()-> myLogger, SLOT(writeToLog(QString)));
     try
     {
         /// \todo here is some bug?
@@ -39,11 +42,9 @@ void UiWebServer::startServer()
 
 WApplication* UiWebServer::createApplication(const WEnvironment& env)
 {
-
-    UiWebMainWidget *_myApp = new UiWebMainWidget(env);
+    UiWebMainWidget *_myApp = new UiWebMainWidget(env, nullptr);
     /// \todo hold all ui-sessions at some storage
     //_currentSessions.push_back(_myApp);
-    connect(_myApp, SIGNAL(writeString(QString)), Core::instance()->myLogger, SLOT(writeToLog(QString)));
     return _myApp;
 }
 

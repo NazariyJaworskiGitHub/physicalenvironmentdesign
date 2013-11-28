@@ -7,6 +7,7 @@
 #include "commandserver.h"
 #include "guard.h"
 #include "logger.h"
+#include "usersession.h"
 #include "uiwebserver.h"
 
 /// Main program class, does all dirty work. \n
@@ -33,6 +34,12 @@ class Core : public QCoreApplication
 
     public : Logger *myLogger = nullptr;
         ///< logger of this object
+
+    public : QList<UserSession*> myUserSessions;
+        ///< holds pointers to UserSession,
+        ///< each UserSession should be created at UiWebServer::createApplication(),
+        ///< or at something like that
+        ///< \todo fill the list!
 
     // Main functions
     private: Core(int argc, char **argv);

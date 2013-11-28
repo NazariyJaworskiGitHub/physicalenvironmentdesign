@@ -30,7 +30,7 @@ class UiWebAuthenticationWidget : public QObject, public WContainerWidget
 {
     Q_OBJECT
 
-    private: UserSession* _myUserSession;
+    private: UserSession    ** const _myUserSession;
         ///< should point to UserSession* of top-level widget, see UiWebAuthenticationWidget()
     private: bool   _isLogInState;
     public : WLabel         *myUserNameLabel        = nullptr;
@@ -40,8 +40,9 @@ class UiWebAuthenticationWidget : public QObject, public WContainerWidget
     public : WPushButton    *myLogInOutButton       = nullptr;
     public : WLabel         *myInfoMessageLabel     = nullptr;
     public : UiWebAuthenticationWidget(
-            UserSession* ptrToUserSession,
-            WContainerWidget *parent);
+            UserSession ** const ptrToUserSession,
+            QObject *qObjParent,
+            WContainerWidget *wContParent);
         ///< Common constructor
     public : void onLogInOutButton();
         ///< slot for myLogInOutButton
@@ -53,6 +54,10 @@ class UiWebAuthenticationWidget : public QObject, public WContainerWidget
         ///< Common destructor
     public : Q_SIGNAL void writeString(const QString message) const;
         ///< catch this signal with some Ui or Logger
+    public : Q_SIGNAL void createUserSession(Guard::UserData *ptrToUserData) const;
+        ///< sends signal to UiWebMainWidget to start the new UserSession
+    public : Q_SIGNAL void destroyUserSession() const;
+        ///< sends signal to UiWebMainWidget to destroy the UserSession
 };
 
 #endif // UIWEBAUTHENTICATIONWIDGET_H

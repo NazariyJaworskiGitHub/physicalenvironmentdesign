@@ -3,11 +3,15 @@
 
 #include <QObject>
 #include "guard.h"
+#include "databasemanager.h"
 
 /// Each user works in its own session
 class UserSession : public QObject
 {
     Q_OBJECT
+
+    public : DatabaseManager myDatabaseManager;
+        ///< represents the connection to MySQL database
 
     public: Guard::UserData *myUserData = nullptr;
         ///< it should refer to specific UserData that located at Core::myGuard object

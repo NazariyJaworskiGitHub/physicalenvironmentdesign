@@ -8,6 +8,8 @@
 Session::Session(int socketDescriptor, QObject *parent):
     QThread(parent), _socketDescriptor(socketDescriptor)
 {
+    connect(this, SIGNAL(writeString(QString)),
+            Core::instance()-> myLogger, SLOT(writeToLog(QString)));
 }
 
 /// Each connection has its oun thread \n

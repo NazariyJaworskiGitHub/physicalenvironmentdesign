@@ -25,8 +25,6 @@ void Core::init()
         connect(this, SIGNAL(writeString(QString)), myLogger, SLOT(writeToLog(QString)));
 
         myGuard = new Guard(this);
-        connect(myGuard, SIGNAL(writeString(QString)),
-                myLogger, SLOT(writeToLog(QString)));
         myGuard->readUserDataFromFile();
 
         runTcpServer();
@@ -96,9 +94,6 @@ void Core::runTcpServer()
     _myQTcpServer = new CommandServer(this);
     if(!_myQTcpServer->listen(QHostAddress::Any,_myTcpServerPort))
             fatalError("FATAL ERROR: Can't bind to TCP server socket\n");
-    connect(_myQTcpServer, SIGNAL(writeString(QString)), myLogger, SLOT(writeToLog(QString)));
-    /// \todo it should be inside _myQTcpServer constructor, but i can't put it there, because
-    /// connect() function is called after constructor
     Q_EMIT writeString("Core TCP Server has been started\n");
 }
 
@@ -107,7 +102,6 @@ void Core::runUiWebServer()
     if(myUiWebServer)
         delete myUiWebServer;
     myUiWebServer = new UiWebServer(this);
-    connect(myUiWebServer, SIGNAL(writeString(QString)), myLogger, SLOT(writeToLog(QString)));
     myUiWebServer->startServer();
 }
 
@@ -127,6 +121,9 @@ void Core::fatalError(const QString message)
 
 Core::~Core()
 {
+    for(auto i : myUserSessions)
+        delete i;
+    myUserSessions.clear();
     if(myGuard)
         delete myGuard;
     if(_myQTcpServer)

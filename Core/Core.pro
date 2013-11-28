@@ -5,6 +5,7 @@ ICON    =   icons\mainicon.png
 CONFIG  +=  console
 CONFIG  +=  no_keywords # no Qt-keywords for avoiding boost/Wt and Qt conflicts
 QT      +=  network
+QT      +=  sql
 
 #Wt Web ToolKit
 INCLUDEPATH += -isystem E:\Wt\Wt_3.3.0_boost_1.54.0_mingw_4.8.0_x32\include\
@@ -39,7 +40,9 @@ SOURCES +=  main.cpp \
     uiwebmainwidget.cpp \
     uiwebauthenticationwidget.cpp \
     project.cpp \
-    usersession.cpp
+    usersession.cpp \
+    uiwebdatabaseconnectionwidget.cpp \
+    databasemanager.cpp
 
 HEADERS += \
     core.h \
@@ -52,7 +55,9 @@ HEADERS += \
     version.h.tpl \
     uiwebauthenticationwidget.h \
     project.h \
-    usersession.h
+    usersession.h \
+    uiwebdatabaseconnectionwidget.h \
+    databasemanager.h
 
 OTHER_FILES += \
     icons/mainicon.png
