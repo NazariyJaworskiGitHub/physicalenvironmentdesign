@@ -4,12 +4,17 @@
 #include <QString>
 #include <Wt/WMessageBox>
 
-UiWebAuthenticationWidget::UiWebAuthenticationWidget(UserSession* ptrToUserSession,
-        WContainerWidget *parent = 0):
-    WContainerWidget(parent),
+UiWebAuthenticationWidget::UiWebAuthenticationWidget(UserSession ** const ptrToUserSession,
+        QObject *qObjParent = 0,
+        WContainerWidget *wContParent = 0):
+    QObject(qObjParent),
+    WContainerWidget(wContParent),
     _myUserSession(ptrToUserSession),
     _isLogInState(true)
 {
+    connect(this, SIGNAL(writeString(QString)),
+            Core::instance()-> myLogger, SLOT(writeToLog(QString)));
+
     WGridLayout *_myWGridLayout = new WGridLayout(this);
     this->setLayout(_myWGridLayout);
     WContainerWidget *_myWContainerWidget = new WContainerWidget(this);
@@ -18,33 +23,27 @@ UiWebAuthenticationWidget::UiWebAuthenticationWidget(UserSession* ptrToUserSessi
 
     myInfoMessageLabel = new WLabel(this);
     _myWGridLayout->addWidget(myInfoMessageLabel,0,0,0,0,Wt::AlignLeft);
-    //this->addWidget(myInfoMessageLabel);
 
     myUserNameLabel = new WLabel(this);
     _myWContainerWidget->addWidget(myUserNameLabel);
-    //this->addWidget(myUserNameLabel);
 
     myUserNameLineEdit = new WLineEdit(this);
     myUserNameLineEdit->setToolTip("User Authentication Name");
     myUserNameLineEdit->enterPressed().connect(this, &UiWebAuthenticationWidget::onLogInOutButton);
     _myWContainerWidget->addWidget(myUserNameLineEdit);
-    //this->addWidget(myUserNameLineEdit);
 
     myUserPassWordLabel = new WLabel(this);
     _myWContainerWidget->addWidget(myUserPassWordLabel);
-    //this->addWidget(myUserPassWordLabel);
 
     myPassWordLineEdit = new WLineEdit(this);
     myPassWordLineEdit->setEchoMode(WLineEdit::Password);
     myPassWordLineEdit->setToolTip("User Authentication Password");
     myPassWordLineEdit->enterPressed().connect(this, &UiWebAuthenticationWidget::onLogInOutButton);
     _myWContainerWidget->addWidget(myPassWordLineEdit);
-    //this->addWidget(myPassWordLineEdit);
 
     myLogInOutButton = new WPushButton(this);
     myLogInOutButton->clicked().connect(this, &UiWebAuthenticationWidget::onLogInOutButton);
     _myWContainerWidget->addWidget(myLogInOutButton);
-    //this->addWidget(myLogInOutButton);
 
     _changeToLogInState();
 }
@@ -66,12 +65,13 @@ void UiWebAuthenticationWidget::_changeToLogInState()
 /// \todo make multilanguage support (Localization)
 void UiWebAuthenticationWidget::_changeToLogOutState()
 {
-    if(!_myUserSession)
+    if(!(*_myUserSession))
     {
-        Q_EMIT writeString("Web session " +
-                           QString(WApplication::instance()->sessionId().data()) +
-                           " ERROR: UserSession have been not created after LogIn procedure," +
-                           "current session will be closed\n");
+        Q_EMIT writeString(
+                    "Web session " +
+                    QString(WApplication::instance()->sessionId().data()) +
+                    " ERROR: UserSession have been not created after LogIn procedure," +
+                    "current session will be closed\n");
         WMessageBox::show(
                     "Error!",
                     "UserSession have been not created after LogIn procedure, current session will be closed",
@@ -80,7 +80,7 @@ void UiWebAuthenticationWidget::_changeToLogOutState()
     }
     else
     {
-        myInfoMessageLabel->setText("Welcome! " + _myUserSession->myUserData->userName.toStdString());
+        myInfoMessageLabel->setText("Welcome! " + (*_myUserSession)->myUserData->userName.toStdString());
         myUserNameLabel->setHidden(true);
         myUserNameLineEdit->setHidden(true);
         myUserPassWordLabel->setHidden(true);
@@ -104,10 +104,9 @@ void UiWebAuthenticationWidget::onLogInOutButton()
                 Core::instance()->myGuard->logInUser(_userName,_passWord, &_isAlreadyLoggedIn);
         if(_foundUserData)
         {
-            /// \todo this fucking UserSession somehow is located in different thread, so i can't
-            /// put parameter QObject *parent = this
-            _myUserSession = new UserSession(_foundUserData, nullptr); //a new UserSession
+            Q_EMIT createUserSession(_foundUserData);
             /// \todo make something as _myUserSession->start()
+            /// \todo block Ui until done
             _changeToLogOutState();
             _isLogInState = !_isLogInState;
         }
@@ -129,24 +128,11 @@ void UiWebAuthenticationWidget::onLogInOutButton()
     else
         // try to logOut and finish the UserSession
     {
-        if(Core::instance()->myGuard->logOutUser(_myUserSession->myUserData))
-        {
-            delete _myUserSession; //finish the UserSession
-            /// \todo make something as _myUserSession->finish()
-            _changeToLogInState();
-            _isLogInState = !_isLogInState;
-        }
-        else
-        {
-            Q_EMIT writeString("Web session " +
-                               QString( WApplication::instance()->sessionId().data()) +
-                               " ERROR: Can't LogOut, current session will be closed\n");
-            WMessageBox::show(
-                        "Error!",
-                        "Can't LogOut, current session will be closed",
-                        Ok);
-            WApplication::instance()->quit();
-        }
+        Q_EMIT destroyUserSession();
+        /// \todo make something as _myUserSession->finish()
+        /// \todo block Ui until done
+        _changeToLogInState();
+        _isLogInState = !_isLogInState;
     }
 }
 
@@ -154,8 +140,6 @@ UiWebAuthenticationWidget::~UiWebAuthenticationWidget()
 {
     /// \todo this destructor will be called after server`s timeout and
     /// i don't know how to fix that!
-    if(!_isLogInState)
-        onLogInOutButton();// try to LogOut if need
     delete myUserNameLabel;
     delete myUserPassWordLabel;
     delete myUserNameLineEdit;

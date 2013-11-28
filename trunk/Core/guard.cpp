@@ -87,9 +87,13 @@ Guard::UserData* Guard::logInUser(QString userName, QString passWord,
                     (i->userName.compare(userName) == 0) &&
                     (i->passWord.compare(passWord) == 0)
             )
+            {
                 *isAlreadyLoggedIn = true;
+                Q_EMIT writeString("Guard (login) User " + userName + " is already logged\n");
+            }
     }
-    Q_EMIT writeString("Guard (login) Unknown user " + userName + "\n");
+    if(!isAlreadyLoggedIn || (isAlreadyLoggedIn && *isAlreadyLoggedIn))
+        Q_EMIT writeString("Guard (login) Unknown user " + userName + "\n");
     return nullptr;
 }
 
@@ -114,6 +118,8 @@ bool Guard::logOutUser(Guard::UserData *uData)
 
 Guard::Guard(QObject *parent = 0):QObject(parent)
 {
+    connect(this, SIGNAL(writeString(QString)),
+            Core::instance()-> myLogger, SLOT(writeToLog(QString)));
 }
 
 Guard::~Guard()

@@ -2,13 +2,15 @@
 #include "core.h"
 #include <QDateTime>
 
-Logger::Logger(QObject *parent = 0)
+Logger::Logger(QObject *parent = 0):
+    QObject(parent)
 {
-    QString _logFileName = "CoreLog0.log";
-    for(int _i=1;QFile::exists(_logFileName);++_i)
-    {
-        _logFileName = "CoreLog" + QString::number(_i) + ".log";
-    }
+    QString _logFileName = "CoreLog.log";
+    //QString _logFileName = "CoreLog0.log";
+    //for(int _i=1;QFile::exists(_logFileName);++_i)
+    //{
+    //    _logFileName = "CoreLog" + QString::number(_i) + ".log";
+    //}
     _logFile = new QFile(_logFileName);
     if(!_logFile->open(QIODevice::WriteOnly | QIODevice::Text))
     {
@@ -18,7 +20,7 @@ Logger::Logger(QObject *parent = 0)
     else
     {
         _logTextStream = new QTextStream(_logFile);
-        writeToLog("Logging has been started started\n");
+        writeToLog("Logging has been started\n");
     }
 }
 
