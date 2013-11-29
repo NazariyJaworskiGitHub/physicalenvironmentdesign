@@ -1,4 +1,5 @@
 #include "core.h"
+
 #include <QTimer>
 
 /// use argv = \b Core \b --docroot \a.

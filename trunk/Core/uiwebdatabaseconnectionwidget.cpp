@@ -4,7 +4,8 @@
 #include <Wt/WGridLayout>
 #include <Wt/WMessageBox>
 
-UiWebDatabaseConnectionWidget::UiWebDatabaseConnectionWidget(UserSession ** const ptrToUserSession,
+UiWebDatabaseConnectionWidget::UiWebDatabaseConnectionWidget(
+        UserSession * const ptrToUserSession,
         QObject *qObjParent = 0,
         WObject *wObjParent = 0):
     QObject(qObjParent),
@@ -64,37 +65,54 @@ UiWebDatabaseConnectionWidget::UiWebDatabaseConnectionWidget(UserSession ** cons
 
     myConnectButton = new WPushButton("Connect", this->contents());
     myConnectButton->setWidth(175);
-    myConnectButton->clicked().connect(
-                this,
+    myConnectButton->clicked().connect(this,
                 &UiWebDatabaseConnectionWidget::onConnectButton);
 
     myCancelButton = new WPushButton("Cancel", this->contents());
     myCancelButton->setWidth(175);
-    myCancelButton->clicked().connect(this, &Wt::WDialog::reject);
+    myCancelButton->clicked().connect(this,
+                &UiWebDatabaseConnectionWidget::onCancelButton);
 }
 
 void UiWebDatabaseConnectionWidget::onConnectButton()
 {
-    if((*_myUserSession))
+    if(_myUserSession)
     {   // i.e. if session was started
-        if((*_myUserSession)->myDatabaseManager.connectToDatabase(
+        if(!_myUserSession->myDatabaseManager.connectToDatabase(
                     QString(myHostNameEdit->text().narrow().data()),
                     QString(myDatabaseNameEdit->text().narrow().data()),
                     QString(myUserNameEdit->text().narrow().data()),
                     QString(myUserNameEdit->text().narrow().data())))
         {
+            /// \todo this writeString() should be emited at _myUserSession->myDatabaseManager
             Q_EMIT writeString(
                         "Web session " +
                         QString( WApplication::instance()->sessionId().data()) +
                         " ERROR: Can't open DataBase " +
-                        (*_myUserSession)->myDatabaseManager.lastError().text());
+                        _myUserSession->myDatabaseManager.lastError().text() + "\n");
+            WApplication::instance()->root()->hide();
+            /// \todo WDialog works not like WContainerWidget, so when root() is hidden,
+            /// this WDialog still be shown
+            this->hide();
             WMessageBox::show(
-                        "Error!",
-                        "ERROR: Can't open DataBase, current session will be closed",
+                        "Error! ",
+                        "Can't open DataBase " +
+                        _myUserSession->myDatabaseManager.lastError().text().toStdString() +
+                        ", current session will be closed",
                         Ok);
             WApplication::instance()->quit();
         }
-        this->accept();//close dialog
+        else
+        {
+            Q_EMIT writeString(
+                        "Web session " +
+                        QString( WApplication::instance()->sessionId().data()) +
+                        " SUCCESS: DataBase " +
+                        QString(myHostNameEdit->text().narrow().data()) + ":" +
+                        QString(myDatabaseNameEdit->text().narrow().data()) +
+                        " is opened\n");
+            this->accept();//close dialog
+        }
     }
     else
     {
@@ -103,12 +121,34 @@ void UiWebDatabaseConnectionWidget::onConnectButton()
                     QString(WApplication::instance()->sessionId().data()) +
                     " ERROR: UserSession have been not started, " +
                     "current session will be closed\n");
+        WApplication::instance()->root()->hide();
+        /// \todo WDialog works not like WContainerWidget, so when root() is hidden,
+        /// this WDialog still be shown
+        this->hide();
         WMessageBox::show(
                     "Error!",
                     "UserSession have been not startet, current session will be closed",
                     Ok);
         WApplication::instance()->quit();
     }
+}
+
+void UiWebDatabaseConnectionWidget::onCancelButton()
+{
+    Q_EMIT writeString(
+                "Web session " +
+                QString(WApplication::instance()->sessionId().data()) +
+                " INFO: User " + _myUserSession->myUserData->userName +
+                " don't want to connect to database, session will be closed\n");
+    WApplication::instance()->root()->hide();
+    /// \todo WDialog works not like WContainerWidget, so when root() is hidden,
+    /// this WDialog still be shown
+    this->hide();
+    WMessageBox::show(
+                "INFO",
+                "You have to connect to some database, current session will be closed\n",
+                Ok);
+    WApplication::instance()->quit();
 }
 
 UiWebDatabaseConnectionWidget::~UiWebDatabaseConnectionWidget()

@@ -2,10 +2,10 @@ TARGET  =   Core
 ICON    =   icons\mainicon.png
 
 #QT dependences
-CONFIG  +=  console
-CONFIG  +=  no_keywords # no Qt-keywords for avoiding boost/Wt and Qt conflicts
-QT      +=  network
-QT      +=  sql
+CONFIG      +=  console
+CONFIG      +=  no_keywords # no Qt-keywords for avoiding boost/Wt and Qt conflicts
+QT          +=  network
+QT          +=  sql
 
 #Wt Web ToolKit
 INCLUDEPATH += -isystem E:\Wt\Wt_3.3.0_boost_1.54.0_mingw_4.8.0_x32\include\

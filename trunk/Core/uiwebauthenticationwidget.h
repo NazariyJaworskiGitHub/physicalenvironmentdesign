@@ -32,6 +32,7 @@ class UiWebAuthenticationWidget : public QObject, public WContainerWidget
 
     private: UserSession    ** const _myUserSession;
         ///< should point to UserSession* of top-level widget, see UiWebAuthenticationWidget()
+        ///< if you call delete, dont forget to set it with nullptr
     private: bool   _isLogInState;
     public : WLabel         *myUserNameLabel        = nullptr;
     public : WLabel         *myUserPassWordLabel    = nullptr;
@@ -44,20 +45,24 @@ class UiWebAuthenticationWidget : public QObject, public WContainerWidget
             QObject *qObjParent,
             WContainerWidget *wContParent);
         ///< Common constructor
+        ///< qObjParent currently not used
     public : void onLogInOutButton();
         ///< slot for myLogInOutButton
-    public : Q_SLOT void changeToLogInState();
+    public : /*Q_SLOT*/ void changeToLogInState();
         ///< change widget to display log in fields
-    public : Q_SLOT void changeToLogOutState();
+    public : /*Q_SLOT*/ void changeToLogOutState();
         ///< change widget to display log out fields
     public : ~UiWebAuthenticationWidget();
         ///< Common destructor
     public : Q_SIGNAL void writeString(const QString message) const;
         ///< catch this signal with some Ui or Logger
-    public : Q_SIGNAL void createUserSession(Guard::UserData *ptrToUserData) const;
+    /*public : Q_SIGNAL void createUserSession(Guard::UserData *ptrToUserData) const;
         ///< sends signal to UiWebMainWidget to start the new UserSession
     public : Q_SIGNAL void destroyUserSession() const;
         ///< sends signal to UiWebMainWidget to destroy the UserSession
+
+    public : Signal<Guard::UserData *> createUserSession_s;
+    public : Signal<> destroyUserSession_s;*/
 };
 
 #endif // UIWEBAUTHENTICATIONWIDGET_H

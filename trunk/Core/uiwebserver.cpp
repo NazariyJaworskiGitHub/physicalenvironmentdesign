@@ -42,6 +42,8 @@ void UiWebServer::startServer()
 
 WApplication* UiWebServer::createApplication(const WEnvironment& env)
 {
+    // tip: I can't make Core::instance() the paretnt of _myApp,
+    // because they are in different threads, so make shure that _myApp will be destroed
     UiWebMainWidget *_myApp = new UiWebMainWidget(env, nullptr);
     /// \todo hold all ui-sessions at some storage
     //_currentSessions.push_back(_myApp);

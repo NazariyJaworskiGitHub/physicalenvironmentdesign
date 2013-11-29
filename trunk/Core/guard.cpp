@@ -16,6 +16,7 @@ void Guard::_clearLists()
 
 void Guard::readUserDataFromFile()
 {
+    /// \todo it still don't check for same data
     QMutexLocker _locker(&_myMutex);// Lock _myMutex while exist, i.e. only within this method
 
     // Clear old stuff
