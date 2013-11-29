@@ -33,7 +33,7 @@ using namespace Wt;
 class UiWebDatabaseConnectionWidget : public QObject, public WDialog
 {
     Q_OBJECT
-    private: UserSession ** const _myUserSession;
+    private: UserSession * const _myUserSession;
         ///< should point to UserSession* of top-level widget, see UiWebAuthenticationWidget()
 
     public : WLabel     *myHostNameLabel        = nullptr;
@@ -50,12 +50,15 @@ class UiWebDatabaseConnectionWidget : public QObject, public WDialog
     public : WPushButton *myCancelButton        = nullptr;
 
     public : UiWebDatabaseConnectionWidget(
-            UserSession ** const ptrToUserSession,
+            UserSession * const ptrToUserSession,
             QObject *qObjParent,
             WObject *wObjParent);
         ///< Common constructor
+        ///< qObjParent currently not used
     public : void onConnectButton();
         ///< when user try to connect to database
+    public : void onCancelButton();
+        ///< when user pushes Cancel
     public : ~UiWebDatabaseConnectionWidget();
         ///< Common destructor
     public : Q_SIGNAL void writeString(const QString message) const;

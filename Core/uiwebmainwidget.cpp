@@ -30,34 +30,29 @@ UiWebMainWidget::UiWebMainWidget(const WEnvironment &env, QObject *parent = 0):
 
     myUiWebAuthenticationWidget = new UiWebAuthenticationWidget(
                 &_myUserSession,
-                this,
+                nullptr, //this,
                 root());
-    connect(myUiWebAuthenticationWidget, SIGNAL(createUserSession(Guard::UserData*)),
-            this, SLOT(createUserSession(Guard::UserData*)));
-    connect(this, SIGNAL(sessionCreated()),
-            myUiWebAuthenticationWidget, SLOT(changeToLogOutState()));
-    connect(myUiWebAuthenticationWidget, SIGNAL(destroyUserSession()),
-            this, SLOT(destroyUserSession()));
-    connect(this, SIGNAL(sessionDestroed()),
-            myUiWebAuthenticationWidget, SLOT(changeToLogInState()));
+    //this->sessionCreated_s.connect(myUiWebAuthenticationWidget, &UiWebAuthenticationWidget::changeToLogOutState);
+    //this->sessionDestroed_s.connect(myUiWebAuthenticationWidget, &UiWebAuthenticationWidget::changeToLogInState);
+    //myUiWebAuthenticationWidget->createUserSession_s.connect(this, &UiWebMainWidget::createUserSession);
+    //myUiWebAuthenticationWidget->destroyUserSession_s.connect(this, &UiWebMainWidget::destroyUserSession);
+    //connect(myUiWebAuthenticationWidget, SIGNAL(createUserSession(Guard::UserData*)),
+    //        this, SLOT(createUserSession(Guard::UserData*)));
+    //connect(this, SIGNAL(sessionCreated()),
+    //        myUiWebAuthenticationWidget, SLOT(changeToLogOutState()));
+    //connect(myUiWebAuthenticationWidget, SIGNAL(destroyUserSession()),
+    //        this, SLOT(destroyUserSession()));
+    //connect(this, SIGNAL(sessionDestroed()),
+    //        myUiWebAuthenticationWidget, SLOT(changeToLogInState()));
     root()->addWidget(myUiWebAuthenticationWidget);
     root()->addWidget(new WBreak());
-
-    /// \todo this is just for test
-    /*UiWebDatabaseConnectionWidget *myUiWebDatabaseConnectionWidget =
-            new UiWebDatabaseConnectionWidget(
-                &_myUserSession,
-                this,
-                root());
-    myUiWebDatabaseConnectionWidget->exec(); ///block until return
-    /// \todo what a hell is that? Read more about WDialog
-    delete myUiWebDatabaseConnectionWidget;*/
 }
 
-void UiWebMainWidget::createUserSession(Guard::UserData *ptrToUserData)
+/*void UiWebMainWidget::createUserSession(Guard::UserData *ptrToUserData)
 {
     _myUserSession = new UserSession(ptrToUserData, this);
-    Q_EMIT sessionCreated();
+    //Q_EMIT sessionCreated();
+    sessionCreated_s.emit();
 }
 
 void UiWebMainWidget::destroyUserSession()
@@ -66,14 +61,15 @@ void UiWebMainWidget::destroyUserSession()
     {
         delete _myUserSession;
         _myUserSession = nullptr;
-        Q_EMIT sessionDestroed();
+        //Q_EMIT sessionDestroed();
+        sessionDestroed_s.emit();
     }
     else
         Q_EMIT writeString(
                 "Web session " +
                 QString(WApplication::instance()->sessionId().data()) +
                 " ERROR: Can't destroy UserSession - it already have been destroed\n");
-}
+}*/
 
 UiWebMainWidget::~UiWebMainWidget()
 {

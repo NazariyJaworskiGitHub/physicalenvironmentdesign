@@ -1,4 +1,5 @@
 #include "uiwebauthenticationwidget.h"
+#include "uiwebdatabaseconnectionwidget.h"
 #include "core.h"
 #include <Wt/WGridLayout>
 #include <QString>
@@ -29,7 +30,8 @@ UiWebAuthenticationWidget::UiWebAuthenticationWidget(UserSession ** const ptrToU
 
     myUserNameLineEdit = new WLineEdit(this);
     myUserNameLineEdit->setToolTip("User Authentication Name");
-    myUserNameLineEdit->enterPressed().connect(this, &UiWebAuthenticationWidget::onLogInOutButton);
+    myUserNameLineEdit->enterPressed().connect(this,
+            &UiWebAuthenticationWidget::onLogInOutButton);
     _myWContainerWidget->addWidget(myUserNameLineEdit);
 
     myUserPassWordLabel = new WLabel(this);
@@ -38,7 +40,8 @@ UiWebAuthenticationWidget::UiWebAuthenticationWidget(UserSession ** const ptrToU
     myPassWordLineEdit = new WLineEdit(this);
     myPassWordLineEdit->setEchoMode(WLineEdit::Password);
     myPassWordLineEdit->setToolTip("User Authentication Password");
-    myPassWordLineEdit->enterPressed().connect(this, &UiWebAuthenticationWidget::onLogInOutButton);
+    myPassWordLineEdit->enterPressed().connect(this,
+            &UiWebAuthenticationWidget::onLogInOutButton);
     _myWContainerWidget->addWidget(myPassWordLineEdit);
 
     myLogInOutButton = new WPushButton(this);
@@ -51,21 +54,16 @@ UiWebAuthenticationWidget::UiWebAuthenticationWidget(UserSession ** const ptrToU
 /// \todo make multilanguage support (Localization)
 void UiWebAuthenticationWidget::changeToLogInState()
 {
-    //Wt::WApplication::UpdateLock lock(WApplication::instance());
-    //if(lock)
-    //{
-        _isLogInState = true;
-        myInfoMessageLabel->setText("Please Log In!");
-        myUserNameLabel->setText("Name:");
-        myUserNameLabel->setHidden(false);
-        myUserNameLineEdit->setHidden(false);
-        myUserPassWordLabel->setText("Password:");
-        myUserPassWordLabel->setHidden(false);
-        myPassWordLineEdit->setHidden(false);
-        myLogInOutButton->setText("Log In");
-        myLogInOutButton->setToolTip("Confirm information and try to Login to new session");
-        //WApplication::instance()->triggerUpdate();
-    //}
+    _isLogInState = true;
+    myInfoMessageLabel->setText("Please Log In!");
+    myUserNameLabel->setText("Name:");
+    myUserNameLabel->setHidden(false);
+    myUserNameLineEdit->setHidden(false);
+    myUserPassWordLabel->setText("Password:");
+    myUserPassWordLabel->setHidden(false);
+    myPassWordLineEdit->setHidden(false);
+    myLogInOutButton->setText("Log In");
+    myLogInOutButton->setToolTip("Confirm information and try to Login to new session");
 }
 
 /// \todo make multilanguage support (Localization)
@@ -78,28 +76,33 @@ void UiWebAuthenticationWidget::changeToLogOutState()
                     QString(WApplication::instance()->sessionId().data()) +
                     " ERROR: UserSession have been not created after LogIn procedure," +
                     "current session will be closed\n");
+        WApplication::instance()->root()->hide();
         WMessageBox::show(
                     "Error!",
-                    "UserSession have been not created after LogIn procedure, current session will be closed",
+                    "UserSession have been not created after LogIn procedure,\n current session will be closed",
                     Ok);
         WApplication::instance()->quit();
     }
     else
     {
-        //Wt::WApplication::UpdateLock lock(WApplication::instance());
-        //if(lock)
-        //{
-            _isLogInState = false;
-            myInfoMessageLabel->setText("Welcome! " +
-                    (*_myUserSession)->myUserData->userName.toStdString());
-            myUserNameLabel->setHidden(true);
-            myUserNameLineEdit->setHidden(true);
-            myUserPassWordLabel->setHidden(true);
-            myPassWordLineEdit->setHidden(true);
-            myLogInOutButton->setText("Log Out");
-            myLogInOutButton->setToolTip("Logout from current session");
-            //WApplication::instance()->triggerUpdate();
-        //}
+        _isLogInState = false;
+        myInfoMessageLabel->setText("Welcome! " +
+                                    (*_myUserSession)->myUserData->userName.toStdString());
+        myUserNameLabel->setHidden(true);
+        myUserNameLineEdit->setHidden(true);
+        myUserPassWordLabel->setHidden(true);
+        myPassWordLineEdit->setHidden(true);
+        myLogInOutButton->setText("Log Out");
+        myLogInOutButton->setToolTip("Logout from current session");
+
+        /// \todo this is just for test
+        UiWebDatabaseConnectionWidget *_myUiWebDatabaseConnectionWidget =
+                new UiWebDatabaseConnectionWidget(
+                *_myUserSession,
+                nullptr, //this,
+                this);
+        _myUiWebDatabaseConnectionWidget->exec(); ///block until return
+        delete _myUiWebDatabaseConnectionWidget;
     }
 }
 
@@ -110,7 +113,10 @@ void UiWebAuthenticationWidget::onLogInOutButton()
     {
         QString _userName(myUserNameLineEdit->text().narrow().data());
         QString _passWord(myPassWordLineEdit->text().narrow().data());
-        Q_EMIT writeString("user " + _userName + " is trying to log in\n");
+        Q_EMIT writeString(
+                    "Web session " +
+                    QString(WApplication::instance()->sessionId().data()) +
+                    " user " + _userName + " is trying to log in\n");
         /// \todo it may freez Ui?
         bool _isAlreadyLoggedIn;
         Guard::UserData* _foundUserData =
@@ -118,12 +124,14 @@ void UiWebAuthenticationWidget::onLogInOutButton()
         if(_foundUserData)
         {
             //Q_EMIT createUserSession(_foundUserData);
+            //createUserSession_s.emit(_foundUserData);
             (*_myUserSession) = new UserSession(_foundUserData, nullptr);
             changeToLogOutState();
         }
         else
         {
             /// \todo try to make it better
+            WApplication::instance()->root()->hide();
             if(_isAlreadyLoggedIn)
                 WMessageBox::show(
                             "Authentication failed!",
@@ -134,13 +142,16 @@ void UiWebAuthenticationWidget::onLogInOutButton()
                             "Authentication failed!",
                             "You have entered wrong user-name or password",
                             Ok);
+            WApplication::instance()->root()->show();
         }
     }
     else
         // try to logOut and finish the UserSession
     {
         //Q_EMIT destroyUserSession();
-        (*_myUserSession)->deleteLater();
+        //destroyUserSession_s.emit();
+        delete *_myUserSession;
+        *_myUserSession = nullptr;
         changeToLogInState();
     }
 }

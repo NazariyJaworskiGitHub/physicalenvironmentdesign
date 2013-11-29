@@ -12,7 +12,7 @@ Core::Core(int argc, char **argv) :
 {
     /// \todo
     //this->setApplicationName("Physical Environment Design Core");
-    //this->setApplicationVersion("dev:");
+    //this->setApplicationVersion("dev:"); 
 }
 
 void Core::init()

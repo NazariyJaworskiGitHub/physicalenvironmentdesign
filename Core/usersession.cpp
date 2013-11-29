@@ -1,8 +1,9 @@
 #include "usersession.h"
 #include "core.h"
 
+/// \todo myDatabaseManager(this)
 UserSession::UserSession(Guard::UserData *ptrToUserData, QObject *parent = 0) :
-    QObject(parent), myDatabaseManager(this), myUserData(ptrToUserData)
+    QObject(parent), myDatabaseManager(this, nullptr), myUserData(ptrToUserData)
 {
     connect(this, SIGNAL(writeString(QString)),
             Core::instance()->myLogger, SLOT(writeToLog(QString)));
