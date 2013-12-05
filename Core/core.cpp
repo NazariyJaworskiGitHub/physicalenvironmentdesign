@@ -25,7 +25,6 @@ void Core::init()
         connect(this, SIGNAL(writeString(QString)), myLogger, SLOT(writeToLog(QString)));
 
         myGuard = new Guard(this);
-        myGuard->readUserDataFromFile();
 
         runTcpServer();
 
