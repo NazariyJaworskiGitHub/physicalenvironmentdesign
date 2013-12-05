@@ -1,3 +1,5 @@
+/// \author Nazariy Jaworski
+
 #ifndef USERSESSION_H
 #define USERSESSION_H
 
@@ -11,18 +13,19 @@ class UserSession : public QObject
 {
     Q_OBJECT
 
+        /// Represents the connection to MySQL database
     public : DatabaseManager myDatabaseManager;
-        ///< represents the connection to MySQL database
 
+        /// It should refer to specific UserData that located at Core::myGuard object
     public: Guard::UserData *myUserData = nullptr;
-        ///< it should refer to specific UserData that located at Core::myGuard object
+        /// Common constructor
+        /// parent currently not used
     public: UserSession(Guard::UserData *ptrToUserData, QObject *parent);
-        ///< Common constructor
-        ///< parent currently not used
+        /// Common destructor
     public: ~UserSession();
-        ///< Common destructor
+        /// Catch this signal with some Ui or Logger
     public : Q_SIGNAL void writeString(const QString message) const;
-        ///< catch this signal with some Ui or Logger
+
 };
 
 #endif // USERSESSION_H

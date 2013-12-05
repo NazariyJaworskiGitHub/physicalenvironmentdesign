@@ -1,3 +1,5 @@
+/// \author Nazariy Jaworski
+
 #ifndef COMMANDSERVER_H
 #define COMMANDSERVER_H
 
@@ -15,9 +17,8 @@ class CommandServer : public QTcpServer
     public:    CommandServer(QObject *parent = 0);
     public:    ~CommandServer();
     protected: void incomingConnection(qintptr socketDescriptor) override;
-
+        /// Catch this signal with some Ui or Logger
     public : Q_SIGNAL void writeString(const QString message) const;
-        ///< catch this signal with some Ui or Logger
 };
 
 #endif // COMMANDSERVER_H

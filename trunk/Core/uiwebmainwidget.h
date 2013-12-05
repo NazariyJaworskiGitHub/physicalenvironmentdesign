@@ -1,3 +1,5 @@
+/// \author Nazariy Jaworski
+
 #ifndef UIWEBMAINWIDGET_H
 #define UIWEBMAINWIDGET_H
 
@@ -32,19 +34,21 @@ class UiWebMainWidget : public QObject, public WApplication
 {
     Q_OBJECT
 
+        /// Represents working UserSession for current user (i.e. web session)
+        /// if you call delete, dont forget to set it with nullptr
+        /// \todo i don't shure that this item have to be located here
+        /// \todo make it as singleton for web-session, like WApplication::instance()
     private: UserSession* _myUserSession = nullptr;
-        ///< represents working UserSession for current user (i.e. web session)
-        ///< if you call delete, dont forget to set it with nullptr
-        ///< \todo i don't shure that this item have to be located here
+        /// Authentication widget
     public : UiWebAuthenticationWidget *myUiWebAuthenticationWidget = nullptr;
-        ///< Authentication widget
+        /// Common constructor
+        /// parent currently not used
     public : UiWebMainWidget(const WEnvironment &env, QObject *parent);
-        ///< Common constructor
-        ///< parent currently not used
+        /// Common destructor
     public : ~UiWebMainWidget();
-        ///< common destructor
+        /// Catch this signal with some Ui or Logger
     public : Q_SIGNAL void writeString(const QString message) const;
-        ///< catch this signal with some Ui or Logger
+
     /*public : Q_SLOT void createUserSession(Guard::UserData *ptrToUserData);
         ///< makes a new UserSession at _myUserSession, emits sessionCreated()
     public : Q_SIGNAL void sessionCreated() const;

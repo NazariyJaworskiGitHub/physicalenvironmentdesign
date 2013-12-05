@@ -1,8 +1,11 @@
+/// \author Nazariy Jaworski
+
 #include "guard.h"
 #include "core.h"
 #include <QFile>
 #include <QTextStream>
 #include <QMutexLocker>
+#include <QRegExp>
 
 void Guard::_clearLists()
 {
@@ -39,12 +42,13 @@ void Guard::readUserDataFromFile()
             QString _currentLine;
             QString _userName;
             QString _passWord;
+            QRegExp _sep("\\s+");   //skip white-characters
             while(!_input.atEnd())
             {
                 _currentLine = _input.readLine();
                 // Read first word
-                _userName = _currentLine.section(' ',0,0,QString::SectionSkipEmpty);
-                _passWord = _currentLine.section(' ',1,1,QString::SectionSkipEmpty);
+                _userName = _currentLine.section(_sep,0,0,QString::SectionSkipEmpty);
+                _passWord = _currentLine.section(_sep,1,1,QString::SectionSkipEmpty);
                 if(_userName.length() && _passWord.length())
                 {
                     UserData *_currentUserData = new UserData;

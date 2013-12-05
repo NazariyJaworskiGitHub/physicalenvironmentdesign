@@ -1,3 +1,5 @@
+/// \author Nazariy Jaworski
+
 #ifndef LOGGER_H
 #define LOGGER_H
 
@@ -11,22 +13,22 @@ class Logger : public QObject
 {
     Q_OBJECT
 
+        /// File for writing
     private: QFile *_logFile = nullptr;
-        ///< file for writing
+        /// Text stream corresponding to _logFile
     private: QTextStream *_logTextStream = nullptr;
-        ///< Text stream corresponding to _logFile
-
+        /// Common constructor
     public: Logger(QObject *parent);
-        ///< Common constructor
 
+        /// Catch this signal with some Ui or Logger
     public : Q_SIGNAL void writeString(const QString message) const;
-        ///< catch this signal with some Ui or Logger
 
+        /// Slot for writing data to log file.
     public: Q_SLOT void writeToLog(const QString message) const;
-        ///< Slot for writing data to log file.
 
+        /// Common destructor
     public: ~Logger();
-        ///< Common destructor
+
 };
 
 #endif // LOGGER_H

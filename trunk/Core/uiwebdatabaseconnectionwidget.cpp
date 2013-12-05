@@ -1,3 +1,5 @@
+/// \author Nazariy Jaworski
+
 #include "uiwebdatabaseconnectionwidget.h"
 #include "core.h"
 #include <QSqlError>

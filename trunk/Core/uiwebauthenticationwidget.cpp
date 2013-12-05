@@ -1,3 +1,5 @@
+/// \author Nazariy Jaworski
+
 #include "uiwebauthenticationwidget.h"
 #include "uiwebdatabaseconnectionwidget.h"
 #include "core.h"

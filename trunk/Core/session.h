@@ -1,3 +1,5 @@
+/// \author Nazariy Jaworski
+
 #ifndef SESSION_H
 #define SESSION_H
 
@@ -9,18 +11,19 @@ class Session : public QThread
 {
     Q_OBJECT
 
+        /// Descriptor for socket creation
     private: int _socketDescriptor;
-        ///< descriptor for socket creation
+        /// TCP Socket which makes communication
     private: QTcpSocket *_tcpSocket = nullptr;
-        ///< TCP Socket which makes communication
+        /// Common constructor
     public: Session(int socketDescriptor, QObject *parent);
-        ///< common constructor
+        /// Common destructor
     public: ~Session();
-        ///< common destructor
+        /// Main fuction of the thread
     public: void run() override;
-        ///< main fuction of the thread
+        /// Catch this signal with some Ui or Logger
     public : Q_SIGNAL void writeString(const QString message) const;
-        ///< catch this signal with some Ui or Logger
+
 };
 
 #endif // SESSION_H

@@ -1,3 +1,5 @@
+/// \author Nazariy Jaworski
+
 #include "commandserver.h"
 #include "session.h"
 #include "core.h"

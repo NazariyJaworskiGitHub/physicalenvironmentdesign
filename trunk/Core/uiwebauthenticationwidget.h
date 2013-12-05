@@ -1,3 +1,5 @@
+/// \author Nazariy Jaworski
+
 #ifndef UIWEBAUTHENTICATIONWIDGET_H
 #define UIWEBAUTHENTICATIONWIDGET_H
 
@@ -30,9 +32,10 @@ class UiWebAuthenticationWidget : public QObject, public WContainerWidget
 {
     Q_OBJECT
 
+        /// Should point to UserSession* of top-level widget, see UiWebAuthenticationWidget()
+        /// if you call delete, dont forget to set it with nullptr
     private: UserSession    ** const _myUserSession;
-        ///< should point to UserSession* of top-level widget, see UiWebAuthenticationWidget()
-        ///< if you call delete, dont forget to set it with nullptr
+
     private: bool   _isLogInState;
     public : WLabel         *myUserNameLabel        = nullptr;
     public : WLabel         *myUserPassWordLabel    = nullptr;
@@ -40,22 +43,24 @@ class UiWebAuthenticationWidget : public QObject, public WContainerWidget
     public : WLineEdit      *myPassWordLineEdit     = nullptr;
     public : WPushButton    *myLogInOutButton       = nullptr;
     public : WLabel         *myInfoMessageLabel     = nullptr;
+
+        /// Common constructor
+        /// qObjParent currently not used
     public : UiWebAuthenticationWidget(
             UserSession ** const ptrToUserSession,
             QObject *qObjParent,
             WContainerWidget *wContParent);
-        ///< Common constructor
-        ///< qObjParent currently not used
+        /// Slot for myLogInOutButton
     public : void onLogInOutButton();
-        ///< slot for myLogInOutButton
+        /// Change widget to display log in fields
     public : /*Q_SLOT*/ void changeToLogInState();
-        ///< change widget to display log in fields
+        /// Change widget to display log out fields
     public : /*Q_SLOT*/ void changeToLogOutState();
-        ///< change widget to display log out fields
+        /// Common destructor
     public : ~UiWebAuthenticationWidget();
-        ///< Common destructor
+        /// Catch this signal with some Ui or Logger
     public : Q_SIGNAL void writeString(const QString message) const;
-        ///< catch this signal with some Ui or Logger
+
     /*public : Q_SIGNAL void createUserSession(Guard::UserData *ptrToUserData) const;
         ///< sends signal to UiWebMainWidget to start the new UserSession
     public : Q_SIGNAL void destroyUserSession() const;
