@@ -25,10 +25,10 @@ class Guard : public QObject
     private: QList<Guard::UserData*> _loggedUsers;
         /// Clear all old stuff in _knownUnLoggedUsers and _loggedUsers
     private: void _clearLists();
-        /// Reads configuration from \file users.cfg,
+        /// Reads configuration from \c users.cfg,
         /// fills _knownUsers.
         /// Format is:\n
-        /// \a \b userName \i passWord \n
+        /// \a \b userName \c passWord
     public : void readUserDataFromFile();
         /// Checks if there is the given UserData at _knownUnLogedUsers,
         /// and if there is, try to put UserData to _loggedUsers,

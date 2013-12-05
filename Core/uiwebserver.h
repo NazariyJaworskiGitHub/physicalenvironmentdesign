@@ -34,7 +34,7 @@ class UiWebServer : public QObject
         /// \todo put here the creation of UserSession object instead of UiWebMainWidget
     private: static WApplication *createApplication(const WEnvironment& env);
         /// Common constructor, don't forget to call startServer(),
-        /// configuration file for WServer is \file wt_config.xml
+        /// configuration file for WServer is \c wt_config.xml
     public : UiWebServer(QObject *parent);
         /// Common destructor
     public: ~UiWebServer();

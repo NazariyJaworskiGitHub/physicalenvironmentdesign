@@ -75,7 +75,7 @@ class Core : public QCoreApplication
     public : static Core *instance();
 
     // Configurations
-        /// Reads configuration from \file config.cfg, fills myConfigurationParameters
+        /// Reads configuration from \c config.cfg, fills myConfigurationParameters
     private: Q_SLOT void readConfigurationFile();
 
     // Network
@@ -86,7 +86,7 @@ class Core : public QCoreApplication
 
     // Errors
         /// Handler for exceptions, write error-message to log and exit from the program.
-        /// emits writeString(), creates \file LastCrashReport.log with message
+        /// emits writeString(), creates \c LastCrashReport.log with message
     public : Q_SLOT void fatalError(const QString message);
 
     // Messaging
