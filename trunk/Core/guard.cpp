@@ -121,6 +121,8 @@ Guard::Guard(QObject *parent = 0):QObject(parent)
 {
     connect(this, SIGNAL(writeString(QString)),
             Core::instance()-> myLogger, SLOT(writeToLog(QString)));
+
+    readUserDataFromFile(); ///< \todo not shure that this should be here
 }
 
 Guard::~Guard()
