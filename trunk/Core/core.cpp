@@ -48,17 +48,17 @@ Core *Core::instance()
 }
 
 /// Format is:\n
-/// \a \b keyword \i value \n
-/// keywords are (case insensitive): \n
-/// \a \b TCPPORT
-/// \a \b UIWEBSERVERDOCROOT
-/// \a \b UIWEBSERVERHTTPADDRESS
-/// \a \b UIWEBSERVERHTTPPORT
-/// \a \b UIWEBSERVERAPPROOT
-/// \a \b UIWEBSERVERCONFIG
-/// \a \b UIWEBSERVERACCESSLOG
-/// \see \file configurationfilekeywords.h
-/// \todo
+/// \a \b keyword \c value .
+/// \n keywords are (case insensitive): \n
+/// \li \b TCPPORT
+/// \li \b UIWEBSERVERDOCROOT
+/// \li \b UIWEBSERVERHTTPADDRESS
+/// \li \b UIWEBSERVERHTTPPORT
+/// \li \b UIWEBSERVERAPPROOT
+/// \li \b UIWEBSERVERCONFIG
+/// \li \b UIWEBSERVERACCESSLOG
+/// \see \c configurationfilekeywords.h
+/// \todo ...
 void Core::readConfigurationFile()
 {
     if(!QFile::exists("config.cfg"))

@@ -7,7 +7,7 @@
 #include <QFile>
 #include <QTextStream>
 
-/// Provides the logging of all messages to \file CoreLogXXX.log \n
+/// Provides the logging of all messages to \c CoreLogXXX.log \n
 /// where XXX is a nubmer
 class Logger : public QObject
 {
