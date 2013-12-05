@@ -1,3 +1,5 @@
+/// \author Nazariy Jaworski
+
 #ifndef UIWEBSERVER_H
 #define UIWEBSERVER_H
 
@@ -25,22 +27,23 @@ class UiWebServer : public QObject
 {
     Q_OBJECT
 
+        /// Wt web server
     public: WServer *myWServer = nullptr;
-        ///< Wt web server
+        /// Creates a new user session at myWServer
+        /// \todo this function should be common for all types of Ui
+        /// \todo put here the creation of UserSession object instead of UiWebMainWidget
     private: static WApplication *createApplication(const WEnvironment& env);
-        ///< creates a new user session at myWServer
-        ///< \todo this function should be common for all types of Ui
-        ///< \todo put here the creation of UserSession object instead of UiWebMainWidget
+        /// Common constructor, don't forget to call startServer(),
+        /// configuration file for WServer is \file wt_config.xml
     public : UiWebServer(QObject *parent);
-        ///< Common constructor, don't forget to call startServer()
+        /// Common destructor
     public: ~UiWebServer();
-        ///< Common destructor
+        /// Catch this signal with some Ui or Logger
     public : Q_SIGNAL void writeString(const QString message) const;
-        ///< catch this signal with some Ui or Logger
+        /// Is emmiting when server has been started
     public : Q_SIGNAL void serverStarted() const;
-        ///< is emmiting when server has been started
-    public : Q_SLOT void startServer();
-        ///< slot for server starting
+        /// Slot for server starting
+    public : Q_SLOT void startServer();     
 };
 
 #endif // UIWEBSERVER_H

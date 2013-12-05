@@ -1,6 +1,12 @@
+/// \author Nazariy Jaworski
+
 #include "uiwebserver.h"
 #include "core.h"
 
+#include <QStringList>
+#include <QSql>
+
+// Core --docroot . --http-address 0.0.0.0 --http-port 81 --approot . --config wt_config.xml  --accesslog AccesLog.log
 UiWebServer::UiWebServer(QObject *parent = 0):
     QObject(parent)
 {
@@ -8,10 +14,35 @@ UiWebServer::UiWebServer(QObject *parent = 0):
             Core::instance()-> myLogger, SLOT(writeToLog(QString)));
     try
     {
-        /// \todo here is some bug?
-        myWServer = new WServer(__argv[0]);
-        myWServer->setServerConfiguration(__argc, __argv, WTHTTP_CONFIGURATION);
+        myWServer = new WServer(Core::instance()->applicationName().toStdString());
+        /// \todo this should be at some configuration file
+        // form the arguments list from Core::instance()->myConfigurationParameters
+        char *_param[] = {
+            "Core",
+            "--docroot",
+            Core::instance()->myConfigurationParameters.uiWebServerDocRoot,
+            "--http-address",
+            Core::instance()->myConfigurationParameters.uiWebServerHttpAddress,
+            "--http-port",
+            Core::instance()->myConfigurationParameters.uiWebServerHttpPort,
+            "--approot",
+            Core::instance()->myConfigurationParameters.uiWebServerAppRoot,
+            "--config",
+            Core::instance()->myConfigurationParameters.uiWebServerConfig,
+            "--accesslog",
+            Core::instance()->myConfigurationParameters.uiWebServerAccessLog};
+        myWServer->setServerConfiguration(13, _param);
         myWServer->addEntryPoint(Wt::Application, &createApplication);
+
+        /// \todo for test only
+        Q_EMIT writeString("Lib paths:\n");
+        for(auto i : Core::instance()->libraryPaths())
+            Q_EMIT writeString("\t" + i +"\n");
+
+        /// \todo it should be at DatabaseManager
+        Q_EMIT writeString("SQL  Drivers:\n");
+        for(auto i : QSqlDatabase::drivers())
+            Q_EMIT writeString("\t" + i +"\n");
     }
     catch (WServer::Exception& e)
     {

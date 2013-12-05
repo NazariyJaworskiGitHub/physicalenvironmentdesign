@@ -1,3 +1,5 @@
+/// \author Nazariy Jaworski
+
 #include "databasemanager.h"
 #include "core.h"
 

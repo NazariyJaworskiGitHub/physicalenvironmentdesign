@@ -1,3 +1,5 @@
+/// \author Nazariy Jaworski
+
 #ifndef UIWEBDATABASECONNECTIONWIDGET_H
 #define UIWEBDATABASECONNECTIONWIDGET_H
 
@@ -33,8 +35,9 @@ using namespace Wt;
 class UiWebDatabaseConnectionWidget : public QObject, public WDialog
 {
     Q_OBJECT
+
+        /// Should point to UserSession* of top-level widget, see UiWebAuthenticationWidget()
     private: UserSession * const _myUserSession;
-        ///< should point to UserSession* of top-level widget, see UiWebAuthenticationWidget()
 
     public : WLabel     *myHostNameLabel        = nullptr;
     public : WLabel     *myDatabaseNameLabel    = nullptr;
@@ -49,20 +52,20 @@ class UiWebDatabaseConnectionWidget : public QObject, public WDialog
     public : WPushButton *myConnectButton       = nullptr;
     public : WPushButton *myCancelButton        = nullptr;
 
+        /// Common constructor,
+        /// qObjParent currently not used
     public : UiWebDatabaseConnectionWidget(
             UserSession * const ptrToUserSession,
             QObject *qObjParent,
             WObject *wObjParent);
-        ///< Common constructor
-        ///< qObjParent currently not used
+        /// When user try to connect to database
     public : void onConnectButton();
-        ///< when user try to connect to database
+        /// When user pushes Cancel
     public : void onCancelButton();
-        ///< when user pushes Cancel
+        /// Common destructor
     public : ~UiWebDatabaseConnectionWidget();
-        ///< Common destructor
+        /// Catch this signal with some Ui or Logger
     public : Q_SIGNAL void writeString(const QString message) const;
-        ///< catch this signal with some Ui or Logger
 };
 
 #endif // UIWEBDATABASECONNECTIONWIDGET_H

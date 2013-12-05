@@ -1,3 +1,5 @@
+/// \author Nazariy Jaworski
+
 #include "uiwebmainwidget.h"
 #include "version.h"
 #include "core.h"

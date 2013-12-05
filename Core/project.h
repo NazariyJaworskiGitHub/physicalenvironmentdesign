@@ -1,3 +1,5 @@
+/// \author Nazariy Jaworski
+
 #ifndef PROJECT_H
 #define PROJECT_H
 
@@ -8,10 +10,11 @@ class Project : public QObject
 {
     Q_OBJECT
 
+        /// Common constructor
     public : Project(QObject *parent);
-        ///< Common constructor
+        /// Common destructor
     public : ~Project();
-        ///< Common destructor
+
 };
 
 #endif // PROJECT_H

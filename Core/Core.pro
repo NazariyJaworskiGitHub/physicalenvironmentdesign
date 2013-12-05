@@ -1,3 +1,5 @@
+#/// \author Nazariy Jaworski
+
 TARGET  =   Core
 ICON    =   icons\mainicon.png
 
@@ -26,6 +28,7 @@ LIBS += -lwsock32
 #Flags
 QMAKE_CXXFLAGS += -std=c++0x
 QMAKE_CXXFLAGS += -Wno-unused-local-typedefs #disable a lot of boost warnings
+QMAKE_CXXFLAGS += -Wno-write-strings
 
 #Versions
 system("SubWCRev $$PWD $$PWD/version.h.tpl $$OUT_PWD/version.h") #Tortise Svn is used

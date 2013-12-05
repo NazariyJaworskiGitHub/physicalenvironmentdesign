@@ -1,3 +1,5 @@
+/// \author Nazariy Jaworski
+
 #include "session.h"
 #include "core.h"
 
