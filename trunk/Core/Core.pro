@@ -39,13 +39,16 @@ SOURCES +=  main.cpp \
     guard.cpp \
     session.cpp \
     logger.cpp \
-    uiwebserver.cpp \
-    uiwebmainwidget.cpp \
-    uiwebauthenticationwidget.cpp \
     project.cpp \
     usersession.cpp \
-    uiwebdatabaseconnectionwidget.cpp \
-    databasemanager.cpp
+    databasemanager.cpp \
+    Ui\Web\uiwebserver.cpp \
+    Ui\Web\mainwidget.cpp \
+    Ui\Web\authenticationwidget.cpp \
+    Ui\Web\DatabaseConnection\databaseconnectionwidget.cpp \
+    Ui/Web/DatabaseConnection/databaseconnectioneditwidget.cpp \
+    Ui/Web/DatabaseConnection/databaseconnectionitemsubwidget.cpp \
+    Ui/Web/DatabaseConnection/databaseconnectioncreateconnectionitemwidget.cpp
 
 HEADERS += \
     core.h \
@@ -53,16 +56,19 @@ HEADERS += \
     guard.h \
     session.h \
     logger.h \
-    uiwebserver.h \
-    uiwebmainwidget.h \
     version.h.tpl \
-    uiwebauthenticationwidget.h \
     project.h \
     usersession.h \
-    uiwebdatabaseconnectionwidget.h \
-    databasemanager.h
+    databasemanager.h \
+    Ui\Web\uiwebserver.h \
+    Ui\Web\mainwidget.h \
+    Ui\Web\authenticationwidget.h \
+    Ui\Web\DatabaseConnection\databaseconnectionwidget.h \
+    Ui/Web/DatabaseConnection/databaseconnectioneditwidget.h \
+    Ui/Web/DatabaseConnection/databaseconnectionitemsubwidget.h \
+    Ui/Web/DatabaseConnection/databaseconnectioncreateconnectionitemwidget.h
 
 OTHER_FILES += \
-    icons/mainicon.png
+    icons\mainicon.png
 
 

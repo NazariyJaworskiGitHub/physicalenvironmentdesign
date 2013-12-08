@@ -36,8 +36,11 @@ DatabaseManager::~DatabaseManager()
 {
     if(_hasConnection)
     {
-        QSqlDatabase _db = QSqlDatabase::database(_myUserSession->myUserData->userName, false);
-        _db.close();
+        {   //barcet statement for local variable _db
+            QSqlDatabase _db = QSqlDatabase::database(
+                        _myUserSession->myUserData->userName, false);
+            _db.close();
+        }
         QSqlDatabase::removeDatabase(_myUserSession->myUserData->userName);
     }
 }

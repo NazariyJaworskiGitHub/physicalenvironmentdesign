@@ -31,7 +31,7 @@ void Logger::writeToLog(const QString message) const
     if(_logTextStream)
     {
         QTextStream(_logFile) << QTime::currentTime().toString() << " " << message;
-        //qDebug() << "LOGGER: " + QTime::currentTime().toString() << " " << message;
+        qDebug() << "LOGGER: " + QTime::currentTime().toString() << " " << message;
     }
     else
         Q_EMIT writeString("ERROR: log file hasn't been opened\n");

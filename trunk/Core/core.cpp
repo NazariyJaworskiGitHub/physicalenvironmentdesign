@@ -162,7 +162,7 @@ void Core::runUiWebServer()
 {
     if(myUiWebServer)
         delete myUiWebServer;
-    myUiWebServer = new UiWebServer(this);
+    myUiWebServer = new Ui::Web::UiWebServer(this);
     myUiWebServer->startServer();
 }
 
