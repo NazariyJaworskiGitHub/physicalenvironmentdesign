@@ -42,13 +42,13 @@ SOURCES +=  main.cpp \
     project.cpp \
     usersession.cpp \
     databasemanager.cpp \
-    Ui\Web\uiwebserver.cpp \
-    Ui\Web\mainwidget.cpp \
-    Ui\Web\authenticationwidget.cpp \
-    Ui\Web\DatabaseConnection\databaseconnectionwidget.cpp \
-    Ui/Web/DatabaseConnection/databaseconnectioneditwidget.cpp \
-    Ui/Web/DatabaseConnection/databaseconnectionitemsubwidget.cpp \
-    Ui/Web/DatabaseConnection/databaseconnectioncreateconnectionitemwidget.cpp
+    Ui/Web/uiwebserver.cpp \
+    Ui/Web/mainwidget.cpp \
+    Ui/Web/authenticationwidget.cpp \
+    Ui/Web/DatabaseConnection/dbcwidget.cpp \
+    Ui/Web/DatabaseConnection/dbcitemsubwidget.cpp \
+    Ui/Web/DatabaseConnection/dbceditwidget.cpp \
+    Ui/Web/DatabaseConnection/dbccreateconnectionitemwidget.cpp
 
 HEADERS += \
     core.h \
@@ -60,13 +60,13 @@ HEADERS += \
     project.h \
     usersession.h \
     databasemanager.h \
-    Ui\Web\uiwebserver.h \
-    Ui\Web\mainwidget.h \
-    Ui\Web\authenticationwidget.h \
-    Ui\Web\DatabaseConnection\databaseconnectionwidget.h \
-    Ui/Web/DatabaseConnection/databaseconnectioneditwidget.h \
-    Ui/Web/DatabaseConnection/databaseconnectionitemsubwidget.h \
-    Ui/Web/DatabaseConnection/databaseconnectioncreateconnectionitemwidget.h
+    Ui/Web/uiwebserver.h \
+    Ui/Web/mainwidget.h \
+    Ui/Web/authenticationwidget.h \
+    Ui/Web/DatabaseConnection/dbcwidget.h \
+    Ui/Web/DatabaseConnection/dbcitemsubwidget.h \
+    Ui/Web/DatabaseConnection/dbceditwidget.h \
+    Ui/Web/DatabaseConnection/dbccreateconnectionitemwidget.h
 
 OTHER_FILES += \
     icons\mainicon.png

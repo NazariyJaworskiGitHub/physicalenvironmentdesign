@@ -1,7 +1,7 @@
 /// \author Nazariy Jaworski
 
 #include "Ui/Web/authenticationwidget.h"
-#include "Ui/Web/DatabaseConnection/databaseconnectionwidget.h"
+#include "Ui/Web/DatabaseConnection/dbcwidget.h"
 #include "core.h"
 #include <Wt/WGridLayout>
 #include <QString>
@@ -100,8 +100,8 @@ void AuthenticationWidget::changeToLogOutState()
         myLogInOutButton->setToolTip("Logout from current session");
 
         /// \todo this is just for test
-        DatabaseConnection::DatabaseConnectionWidget *_myUiWebDatabaseConnectionWidget =
-                new DatabaseConnection::DatabaseConnectionWidget(
+        DatabaseConnection::DBCWidget *_myUiWebDatabaseConnectionWidget =
+                new DatabaseConnection::DBCWidget(
                 *_myUserSession,
                 nullptr, //this,
                 this);

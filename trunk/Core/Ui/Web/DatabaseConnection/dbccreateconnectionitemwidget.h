@@ -14,7 +14,7 @@
 #endif // BOOST_SIGNALS_NO_DEPRECATION_WARNING
 
 #include <Wt/WDialog>
-#include "Ui/Web/DatabaseConnection/databaseconnectionwidget.h"
+#include "Ui/Web/DatabaseConnection/dbcwidget.h"
 
 using namespace Wt;
 
@@ -25,18 +25,24 @@ namespace Ui
         namespace DatabaseConnection
         {
             /// Inline-widget for creation of a new connection data, can't be used
-            /// without DatabaseConnectionEditWidget
-            class DatabaseConnectionCreateConnectionItemWidget : public WDialog
+            /// without DBCEditWidget. Widget works only with given QStringList (see
+            /// DBCCreateConnectionItemWidget() and _myConnectionData), and doesn't
+            /// modify any other data
+            class DBCCreateConnectionItemWidget : public WDialog
             {
+                    /// Reference to external object
                 private: QStringList &_myConnectionData;
                 private: WLineEdit  *_myConnectionNameEdit   = nullptr;
                 private: WLineEdit  *_myHostNameEdit         = nullptr;
                 private: WLineEdit  *_myDatabaseNameEdit     = nullptr;
                 private: WLineEdit  *_myUserNameEdit         = nullptr;
                 private: WLineEdit  *_myPasswordEdit         = nullptr;
-                private: void _onCreateButton();
-                    /// New connection item data will be stored at connectionData
-                public: DatabaseConnectionCreateConnectionItemWidget(
+                    /// I f there is any user defined data, updates _myConnectionData,
+                    /// emits accept() and closes the dialog
+                private: void _onDoneButton();
+                    /// New connection item data will be stored at connectionData,
+                    /// which is the reference to external object
+                public: DBCCreateConnectionItemWidget(
                         WObject *wObjParent,
                         QStringList &connectionData);
             };
