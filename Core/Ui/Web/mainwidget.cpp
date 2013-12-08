@@ -1,8 +1,10 @@
 /// \author Nazariy Jaworski
 
-#include "uiwebmainwidget.h"
+#include "Ui/Web/mainwidget.h"
 #include "version.h"
 #include "core.h"
+
+using namespace Ui::Web;
 
 // +----------------------------------------------------+
 // | LogIn/LogOut widget                                |
@@ -18,7 +20,7 @@
 // |Contact information, license,etc.                   |
 // +----------------------------------------------------+
 
-UiWebMainWidget::UiWebMainWidget(const WEnvironment &env, QObject *parent = 0):
+MainWidget::MainWidget(const WEnvironment &env, QObject *parent = 0):
     QObject(parent), WApplication(env)
 {
     connect(this, SIGNAL(writeString(QString)),
@@ -30,7 +32,7 @@ UiWebMainWidget::UiWebMainWidget(const WEnvironment &env, QObject *parent = 0):
 
     /// \todo put here some layout
 
-    myUiWebAuthenticationWidget = new UiWebAuthenticationWidget(
+    myUiWebAuthenticationWidget = new AuthenticationWidget(
                 &_myUserSession,
                 nullptr, //this,
                 root());
@@ -73,7 +75,7 @@ void UiWebMainWidget::destroyUserSession()
                 " ERROR: Can't destroy UserSession - it already have been destroed\n");
 }*/
 
-UiWebMainWidget::~UiWebMainWidget()
+MainWidget::~MainWidget()
 {
     if(myUiWebAuthenticationWidget)
         delete myUiWebAuthenticationWidget;

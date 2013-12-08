@@ -10,7 +10,7 @@
 #include "guard.h"
 #include "logger.h"
 #include "usersession.h"
-#include "uiwebserver.h"
+#include "Ui/Web/uiwebserver.h"
 
 #define CONFIGURATION_FILE_KEYWORD_TCPPORT                  "TCPPORT"
 #define CONFIGURATION_FILE_KEYWORD_UIWEBSERVERDOCROOT       "UIWEBSERVERDOCROOT"
@@ -53,7 +53,7 @@ class Core : public QCoreApplication
         /// Makes users authentication
     public : Guard *myGuard = nullptr;
         /// Provides Web-Ui
-    public : UiWebServer *myUiWebServer = nullptr;
+    public : Ui::Web::UiWebServer *myUiWebServer = nullptr;
 
         /// Logger for this object
     public : Logger *myLogger = nullptr;
