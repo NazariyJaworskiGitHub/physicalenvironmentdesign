@@ -1,10 +1,10 @@
 /// \author Nazariy Jaworski
 
-#include "databaseconnectioncreateconnectionitemwidget.h"
+#include "dbccreateconnectionitemwidget.h"
 
 using namespace Ui::Web::DatabaseConnection;
 
-void DatabaseConnectionCreateConnectionItemWidget::_onCreateButton()
+void DBCCreateConnectionItemWidget::_onDoneButton()
 {
     if(!_myConnectionNameEdit->text().empty() &&
             !_myHostNameEdit->text().empty() &&
@@ -22,7 +22,7 @@ void DatabaseConnectionCreateConnectionItemWidget::_onCreateButton()
     }
 }
 
-DatabaseConnectionCreateConnectionItemWidget::DatabaseConnectionCreateConnectionItemWidget(
+DBCCreateConnectionItemWidget::DBCCreateConnectionItemWidget(
         WObject *wObjParent,
         QStringList &connectionData):
     WDialog(wObjParent),
@@ -38,7 +38,7 @@ DatabaseConnectionCreateConnectionItemWidget::DatabaseConnectionCreateConnection
     _myConnectionNameEdit->setWidth(200);
     _myConnectionNameEdit->enterPressed().connect(
                 this,
-                &DatabaseConnectionCreateConnectionItemWidget::accept);
+                &DBCCreateConnectionItemWidget::accept);
     _myConnectionNameEdit->setToolTip("Name for connection");
     new WBreak(this->contents());
 
@@ -49,7 +49,7 @@ DatabaseConnectionCreateConnectionItemWidget::DatabaseConnectionCreateConnection
     _myHostNameEdit->setWidth(200);
     _myHostNameEdit->enterPressed().connect(
                 this,
-                &DatabaseConnectionCreateConnectionItemWidget::accept);
+                &DBCCreateConnectionItemWidget::accept);
     _myHostNameEdit->setToolTip("Database location host-name");
     new WBreak(this->contents());
 
@@ -60,7 +60,7 @@ DatabaseConnectionCreateConnectionItemWidget::DatabaseConnectionCreateConnection
     _myDatabaseNameEdit->setWidth(200);
     _myDatabaseNameEdit->enterPressed().connect(
                 this,
-                &DatabaseConnectionCreateConnectionItemWidget::accept);
+                &DBCCreateConnectionItemWidget::accept);
     _myDatabaseNameEdit->setToolTip("Name of the database");
     new WBreak(this->contents());
 
@@ -71,7 +71,7 @@ DatabaseConnectionCreateConnectionItemWidget::DatabaseConnectionCreateConnection
     _myUserNameEdit->setWidth(200);
     _myUserNameEdit->enterPressed().connect(
                 this,
-                &DatabaseConnectionCreateConnectionItemWidget::accept);
+                &DBCCreateConnectionItemWidget::accept);
     _myUserNameEdit->setToolTip("User-name of database user");
     new WBreak(this->contents());
 
@@ -82,27 +82,30 @@ DatabaseConnectionCreateConnectionItemWidget::DatabaseConnectionCreateConnection
     _myPasswordEdit->setWidth(200);
     _myPasswordEdit->enterPressed().connect(
                 this,
-                &DatabaseConnectionCreateConnectionItemWidget::accept);
+                &DBCCreateConnectionItemWidget::accept);
     _myPasswordEdit->setToolTip("Password for specific user");
     _myPasswordEdit->setEchoMode(WLineEdit::Password);
     new WBreak(this->contents());
 
-    _myConnectionNameEdit->setText(_myConnectionData[0].toStdString());
-    _myHostNameEdit->setText(_myConnectionData[1].toStdString());
-    _myDatabaseNameEdit->setText(_myConnectionData[2].toStdString());
-    _myUserNameEdit->setText(_myConnectionData[3].toStdString());
-    _myPasswordEdit->setText(_myConnectionData[4].toStdString());
+    if(!_myConnectionData.empty())
+    {
+        _myConnectionNameEdit->setText(_myConnectionData[0].toStdString());
+        _myHostNameEdit->setText(_myConnectionData[1].toStdString());
+        _myDatabaseNameEdit->setText(_myConnectionData[2].toStdString());
+        _myUserNameEdit->setText(_myConnectionData[3].toStdString());
+        _myPasswordEdit->setText(_myConnectionData[4].toStdString());
+    }
 
-    WPushButton *_create = new WPushButton("Create", this->contents());
+    WPushButton *_create = new WPushButton("Done", this->contents());
     _create->setWidth(175);
     _create->clicked().connect(
                 this,
-                &DatabaseConnectionCreateConnectionItemWidget::_onCreateButton);
+                &DBCCreateConnectionItemWidget::_onDoneButton);
 
     WPushButton *_cancel = new WPushButton("Cancel", this->contents());
     _cancel->setWidth(175);
     _cancel->clicked().connect(
                 this,
-                &DatabaseConnectionCreateConnectionItemWidget::reject);
+                &DBCCreateConnectionItemWidget::reject);
 
 }

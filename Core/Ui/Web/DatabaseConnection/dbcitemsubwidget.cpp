@@ -1,26 +1,27 @@
 /// \author Nazariy Jaworski
 
-#include "databaseconnectionitemsubwidget.h"
-#include "Ui/Web/DatabaseConnection/databaseconnectioncreateconnectionitemwidget.h"
+#include "dbcitemsubwidget.h"
+#include "Ui/Web/DatabaseConnection/dbccreateconnectionitemwidget.h"
 
 using namespace Ui::Web::DatabaseConnection;
 
-void DatabaseConnectionItemSubWidget::_onEditButton()
+void DBCItemSubWidget::_onEditButton()
 {
-    this->hide();
-    DatabaseConnectionCreateConnectionItemWidget _cciw(
+    // this -> Container of items -> Container of container -> Parent dialog
+    this->parent()->parent()->parent()->hide();///< \todo remake this chain
+    DBCCreateConnectionItemWidget _cciw(
                 nullptr, myConnectionData);
     _cciw.exec();
     _update();
-    this->show();
+    this->parent()->parent()->parent()->show();
 }
 
-void DatabaseConnectionItemSubWidget::_onDeleteButton()
+void DBCItemSubWidget::_onDeleteButton()
 {
-    /// \todo
+    sDelete.emit(this);
 }
 
-void DatabaseConnectionItemSubWidget::_update()
+void DBCItemSubWidget::_update()
 {
     QString _str = myConnectionData[0];
     _str += ' ';
@@ -32,7 +33,7 @@ void DatabaseConnectionItemSubWidget::_update()
     _myConnectionDataLabel->setText(_str.toStdString());
 }
 
-DatabaseConnectionItemSubWidget::DatabaseConnectionItemSubWidget(
+DBCItemSubWidget::DBCItemSubWidget(
         WContainerWidget *parent,
         QStringList connectionData):
     WContainerWidget(parent),
@@ -49,12 +50,12 @@ DatabaseConnectionItemSubWidget::DatabaseConnectionItemSubWidget(
     _myEditButton->setWidth(100);
     _myEditButton->clicked().connect(
                 this,
-                &DatabaseConnectionItemSubWidget::_onEditButton);
+                &DBCItemSubWidget::_onEditButton);
     this->addWidget(_myEditButton);
     _myDeleteButton = new WPushButton("Delete",this);
     _myDeleteButton->setWidth(100);
     _myDeleteButton->clicked().connect(
                 this,
-                &DatabaseConnectionItemSubWidget::_onDeleteButton);
+                &DBCItemSubWidget::_onDeleteButton);
     this->addWidget(_myDeleteButton);
 }

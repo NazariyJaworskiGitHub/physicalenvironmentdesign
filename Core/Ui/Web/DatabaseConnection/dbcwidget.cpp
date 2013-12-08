@@ -1,14 +1,14 @@
 /// \author Nazariy Jaworski
 
-#include "Ui/Web/DatabaseConnection/databaseconnectionwidget.h"
-#include "Ui/Web/DatabaseConnection/databaseconnectioneditwidget.h"
+#include "Ui/Web/DatabaseConnection/dbcwidget.h"
+#include "Ui/Web/DatabaseConnection/dbceditwidget.h"
 #include "core.h"
 #include <Wt/WGridLayout>
 #include <Wt/WMessageBox>
 
 using namespace Ui::Web::DatabaseConnection;
 
-DatabaseConnectionWidget::DatabaseConnectionWidget(
+DBCWidget::DBCWidget(
         UserSession * const ptrToUserSession,
         QObject *qObjParent = 0,
         WObject *wObjParent = 0):
@@ -30,7 +30,7 @@ DatabaseConnectionWidget::DatabaseConnectionWidget(
     _myConnectionsComboBox->setWidth(200);
     _myConnectionsComboBox->changed().connect(
                 this,
-                &DatabaseConnectionWidget::_onConnectionsItemChange);
+                &DBCWidget::_onConnectionsItemChange);
     _myConnectionsComboBox->setToolTip("List of known database connections");
     new WBreak(this->contents());
 
@@ -41,7 +41,7 @@ DatabaseConnectionWidget::DatabaseConnectionWidget(
     _myHostNameEdit->setWidth(200);
     _myHostNameEdit->enterPressed().connect(
                 this,
-                &DatabaseConnectionWidget::_onConnectButton);
+                &DBCWidget::_onConnectButton);
     _myHostNameEdit->setToolTip("Database location host-name");
     _myHostNameEdit->setReadOnly(true);
     new WBreak(this->contents());
@@ -53,7 +53,7 @@ DatabaseConnectionWidget::DatabaseConnectionWidget(
     _myDatabaseNameEdit->setWidth(200);
     _myDatabaseNameEdit->enterPressed().connect(
                 this,
-                &DatabaseConnectionWidget::_onConnectButton);
+                &DBCWidget::_onConnectButton);
     _myDatabaseNameEdit->setToolTip("Name of the database");
     _myDatabaseNameEdit->setReadOnly(true);
     new WBreak(this->contents());
@@ -65,7 +65,7 @@ DatabaseConnectionWidget::DatabaseConnectionWidget(
     _myUserNameEdit->setWidth(200);
     _myUserNameEdit->enterPressed().connect(
                 this,
-                &DatabaseConnectionWidget::_onConnectButton);
+                &DBCWidget::_onConnectButton);
     _myUserNameEdit->setToolTip("User-name of database user");
     _myUserNameEdit->setReadOnly(true);
     new WBreak(this->contents());
@@ -73,25 +73,35 @@ DatabaseConnectionWidget::DatabaseConnectionWidget(
     _myConnectButton = new WPushButton("Connect", this->contents());
     _myConnectButton->setWidth(115);
     _myConnectButton->clicked().connect(this,
-                &DatabaseConnectionWidget::_onConnectButton);
+                &DBCWidget::_onConnectButton);
     _myEditButton = new WPushButton("Edit", this->contents());
     _myEditButton->setWidth(115);
     _myEditButton->clicked().connect(this,
-                &DatabaseConnectionWidget::_onEditButton);
+                &DBCWidget::_onEditButton);
     _myCancelButton = new WPushButton("Cancel", this->contents());
     _myCancelButton->setWidth(115);
     _myCancelButton->clicked().connect(this,
-                &DatabaseConnectionWidget::_onCancelButton);
+                &DBCWidget::_onCancelButton);
 
-    _fillConnectionsList();
+    _myInternalStorage = new std::string();
+    //Read from cookie, dublicate to _myInternalStorage
+    _fillConnectionsList(false, _myInternalStorage);
 }
 
-void DatabaseConnectionWidget::_fillConnectionsList()
+void DBCWidget::_fillConnectionsList(
+        bool readFromInternalStorage = false,
+        std::string *internalStorage = nullptr)
 {
     _myConnectionsComboBox->clear();
-    const std::string *_data = WApplication::instance()->environment().getCookieValue(
-                COOKIE_DATABASE_CONNECTIONS);
-    if(_data && _data->size())
+    const std::string *_data;
+    if(readFromInternalStorage && internalStorage)
+        _data = internalStorage;
+    else
+        _data = WApplication::instance()->environment().getCookieValue(
+                    COOKIE_DATABASE_CONNECTIONS);
+    // if there is no cookie _data be nullptr, if cookie was deleted _data be "deleted"
+    /// \todo try it i different browsers and versions
+    if(_data && _data->size() && _data->compare("deleted")!=0)
     {
         QString _qstrData(_data->data());
         //each word is separated by ' '
@@ -128,10 +138,15 @@ void DatabaseConnectionWidget::_fillConnectionsList()
         _myConnectButton->disable();
         _myIndexOfSelectedConnection = -1;
         _myConnectionsComboBox->addItem("No known connections");
+        _myHostNameEdit->setText("");
+        _myDatabaseNameEdit->setText("");
+        _myUserNameEdit->setText("");
     }
+    if(internalStorage)  // dublicate
+        *internalStorage = *_data;
 }
 
-void DatabaseConnectionWidget::_onConnectButton()
+void DBCWidget::_onConnectButton()
 {
     if(_myUserSession) // i.e. if session was started
     {
@@ -202,7 +217,7 @@ void DatabaseConnectionWidget::_onConnectButton()
     }
 }
 
-void DatabaseConnectionWidget::_onCancelButton()
+void DBCWidget::_onCancelButton()
 {
     Q_EMIT writeString(
                 "Web session client " +
@@ -221,17 +236,17 @@ void DatabaseConnectionWidget::_onCancelButton()
     WApplication::instance()->quit();
 }
 
-void DatabaseConnectionWidget::_onEditButton()
+void DBCWidget::_onEditButton()
 {
-    /// \todo here is some bug?
     this->hide();
-    DatabaseConnectionEditWidget _dbcew(nullptr);   /// \todo why nullptr?
+    DBCEditWidget _dbcew(nullptr, _myInternalStorage, true);
     _dbcew.exec();
-    _fillConnectionsList();
+    //Read from _myInternalStorage, dublicate to _myInternalStorage
+    _fillConnectionsList(true, _myInternalStorage);
     this->show();
 }
 
-void DatabaseConnectionWidget::_onConnectionsItemChange()
+void DBCWidget::_onConnectionsItemChange()
 {
     if(_myIndexOfSelectedConnection == -1)
     {
@@ -256,9 +271,11 @@ void DatabaseConnectionWidget::_onConnectionsItemChange()
     }
 }
 
-DatabaseConnectionWidget::~DatabaseConnectionWidget()
+DBCWidget::~DBCWidget()
 {
-    _myConnectionsData.clear(); ///\todo try ti check memory leaks
+    _myConnectionsData.clear(); ///\todo try to check memory leaks
+    if(_myInternalStorage)
+        delete _myInternalStorage;
 
     delete _myHostNameLabel;
     delete _myDatabaseNameLabel;

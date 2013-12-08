@@ -14,9 +14,9 @@
 #endif // BOOST_SIGNALS_NO_DEPRECATION_WARNING
 
 #include <Wt/WDialog>
-#include "Ui/Web/DatabaseConnection/databaseconnectionwidget.h"
-#include "Ui/Web/DatabaseConnection/databaseconnectionitemsubwidget.h"
-#include "Ui/Web/DatabaseConnection/databaseconnectioncreateconnectionitemwidget.h"
+#include "Ui/Web/DatabaseConnection/dbcwidget.h"
+#include "Ui/Web/DatabaseConnection/dbcitemsubwidget.h"
+#include "Ui/Web/DatabaseConnection/dbccreateconnectionitemwidget.h"
 
 using namespace Wt;
 
@@ -37,19 +37,33 @@ namespace Ui
             /// <tt> +----------------------------+----------------------------+ </tt>\n
             /// Creates, edits or destroys database connection items by managing
             /// COOKIE_DATABASE_CONNECTIONS
-            class DatabaseConnectionEditWidget : public WDialog
+            /// \todo it too difficult, needs refactor
+            class DBCEditWidget : public WDialog
             {
+                    /// If true (and any _myInternalStorage is given), initial data be
+                    /// readed from _myInternalStorage but not from
+                    /// COOKIE_DATABASE_CONNECTIONS, default false
+                private: bool _myReadFromInternalStorageFlag;
+                    /// If this pointer is nonzero, data of COOKIE_DATABASE_CONNECTIONS
+                    /// be dublicatet here (i need this, because i can't refresh cookies
+                    /// in session). See _myReadFromInternalStorageFlag and DBCEditWidget()
+                private: std::string *_myInternalStorage = nullptr;
                     /// Connection items, per line: ConnectionName HostName DatabaseName
                     /// UserName EditPushButton DeletePushButton
-                private: QList<DatabaseConnectionItemSubWidget*> _myItems;
+                private: QList<DBCItemSubWidget*> _myItems;
                     /// All items from _myItems will be stored here
                 private: WContainerWidget *_myItemSubWidgetContainer = nullptr;
                     /// See _onItemCreate()
                 private: WPushButton *_myCreateButton   = nullptr;
                     /// See _writeCookie()
                 private: WPushButton *_myExitButton     = nullptr;
-                    /// Calls DatabaseConnectionCreateConnectionItemWidget
+                    /// Adds QStringList item to _myItems and _myItemSubWidgetContainer
+                private: void _addItem(QStringList item);
+                    /// Calls DBCCreateConnectionItemWidget
                 private: void _onItemCreate();
+                    /// Is called when DBCCreateConnectionItemWidget::sDelete was emited.
+                    /// Destroys caller and updates dialog
+                private: void _onItemDelete(DBCItemSubWidget *caller);
                     /// Clears _myItems, clears _myItemSubWidgetContainer,
                     /// reads COOKIE_DATABASE_CONNECTIONS, fills _myItems,
                     /// fills _myItemSubWidgetContainer
@@ -57,12 +71,16 @@ namespace Ui
                     /// Writes COOKIE_DATABASE_CONNECTIONS with _myItems data (cookie will
                     /// be saved during a month), emits accept() and closes the dialog
                 private: void _writeCookie();
-
                     /// Common constructor
-                public : DatabaseConnectionEditWidget(
-                        WObject *wObjParent);
+                    /// Set internalStorage to nullptr if you work with
+                    /// COOKIE_DATABASE_CONNECTIONS, or nonzero if you works wiht
+                    /// _myInternalStorage. See _myReadFromInternalStorageFlag
+                public : DBCEditWidget(
+                        WObject *wObjParent,
+                        std::string *internalStorage,
+                        bool readFromInternalStorageFlag);
                     /// Common destructor
-                public :~DatabaseConnectionEditWidget();
+                public :~DBCEditWidget();
             };
         }
     }

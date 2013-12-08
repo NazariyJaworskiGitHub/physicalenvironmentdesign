@@ -50,10 +50,13 @@ namespace Ui
             /// Data about database connections is stored at client side
             /// in COOKIE_DATABASE_CONNECTIONS
             /// \todo some bug with destruction
-            class DatabaseConnectionWidget : public QObject, public WDialog
+            class DBCWidget : public QObject, public WDialog
             {
                 Q_OBJECT
-
+                    /// If this pointer is nonzero, data of COOKIE_DATABASE_CONNECTIONS
+                    /// be dublicatet here (i need this, because i can't refresh cookies
+                    /// in session).
+                private: std::string *_myInternalStorage = nullptr;
                     /// Stores connection data,
                     /// data can be selected by _myConnectionsComboBox
                 private: QList<QStringList> _myConnectionsData;
@@ -86,12 +89,12 @@ namespace Ui
 
                     /// Common constructor,
                     /// qObjParent currently not used
-                public : DatabaseConnectionWidget(
+                public : DBCWidget(
                         UserSession * const ptrToUserSession,
                         QObject *qObjParent,
                         WObject *wObjParent);
                     /// Fills myConnectionsComboBox by saved COOKIE_DATABASE_CONNECTIONS:\n
-                    /// 1) clear the _myConnectionsComboBox, cleat the myConnectionsData;\n
+                    /// 1) clear the _myConnectionsComboBox, clear the myConnectionsData;\n
                     /// 2) try to read the COOKIE_DATABASE_CONNECTIONS; \n
                     /// 3) if exist and not empty, fill _myConnectionsData, fill the
                     /// _myConnectionsComboBox, make the _myConnectButton->enable(),
@@ -99,19 +102,22 @@ namespace Ui
                     /// 4) elese, make the _myConnectButton->disable(),
                     /// set the _myIndexOfSelectedConnection = -1, add "No known connections"
                     /// item to the _myConnectionsComboBox;
-                private: void _fillConnectionsList();
+                    /// \todo need refactoring, internal storage excludes cookie
+                private: void _fillConnectionsList(
+                        bool readFromInternalStorage,
+                        std::string *internalStorage);
                     /// When user try to connect to database, finishes the dialog by emiting
                     /// accept()
                 private: void _onConnectButton();
                     /// Finishes the dialog by emiting reject()
                 private: void _onCancelButton();
-                    /// Calls DatabaseConnectionEditWidget
+                    /// Calls DBCEditWidget
                 private: void _onEditButton();
                     /// When user change the item at _myConnectionsComboBox
                 private: void _onConnectionsItemChange();
 
                     /// Common destructor
-                public : ~DatabaseConnectionWidget();
+                public : ~DBCWidget();
                     /// Catch this signal with some Ui or Logger
                 public : Q_SIGNAL void writeString(const QString message) const;
             };
