@@ -38,7 +38,7 @@ class Guard : public QObject
         /// and if there is, try to put UserData to _knownUnLogedUsers,
         /// (it is opposite steps to logInUser()).
         /// returns false if there aren't given UserData, or true
-    public : bool logOutUser(Guard::UserData* uData);
+    public : bool logOutUser(const UserData *uData);
     public : Guard(QObject *parent);
     public : ~Guard();
         /// Catch this signal with some Ui or Logger

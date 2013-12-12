@@ -9,7 +9,7 @@
 using namespace Ui::Web::DatabaseConnection;
 
 DBCWidget::DBCWidget(
-        UserSession * const ptrToUserSession,
+        Session::UserSession * const ptrToUserSession,
         QObject *qObjParent = 0,
         WObject *wObjParent = 0):
     QObject(qObjParent),
@@ -92,6 +92,7 @@ void DBCWidget::_fillConnectionsList(
         bool readFromInternalStorage = false,
         std::string *internalStorage = nullptr)
 {
+    _myConnectionsData.clear();
     _myConnectionsComboBox->clear();
     const std::string *_data;
     if(readFromInternalStorage && internalStorage)
@@ -178,7 +179,8 @@ void DBCWidget::_onConnectButton()
                             _myUserSession->myDatabaseManager.lastError().text().toStdString() +
                             ", current session will be closed",
                             Ok);
-                WApplication::instance()->quit();
+                //WApplication::instance()->quit(); ///< \todo reject()
+                this->reject();
             }
             else
             {
@@ -213,7 +215,8 @@ void DBCWidget::_onConnectButton()
                     "Error!",
                     "UserSession have been not startet, current session will be closed",
                     Ok);
-        WApplication::instance()->quit();
+        //WApplication::instance()->quit(); ///< \todo reject()
+        this->reject();
     }
 }
 
@@ -233,7 +236,8 @@ void DBCWidget::_onCancelButton()
                 "INFO",
                 "You have to connect to some database, current session will be closed\n",
                 Ok);
-    WApplication::instance()->quit();
+    //WApplication::instance()->quit();   ///< \todo reject()
+    this->reject();
 }
 
 void DBCWidget::_onEditButton()
@@ -277,7 +281,7 @@ DBCWidget::~DBCWidget()
     if(_myInternalStorage)
         delete _myInternalStorage;
 
-    delete _myHostNameLabel;
+    /*delete _myHostNameLabel;
     delete _myDatabaseNameLabel;
     delete _myUserNameLabel;
     delete _myConnectionsLabel;
@@ -290,5 +294,5 @@ DBCWidget::~DBCWidget()
 
     delete _myConnectButton;
     delete _myEditButton;
-    delete _myCancelButton;
+    delete _myCancelButton;*/
 }

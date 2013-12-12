@@ -7,7 +7,8 @@
 #include <QTcpSocket>
 
 /// All users data should be processed here, in its own thread
-class Session : public QThread
+/// Not used for now
+class WorkerSession : public QThread
 {
     Q_OBJECT
 
@@ -16,9 +17,9 @@ class Session : public QThread
         /// TCP Socket which makes communication
     private: QTcpSocket *_tcpSocket = nullptr;
         /// Common constructor
-    public: Session(int socketDescriptor, QObject *parent);
+    public: WorkerSession(int socketDescriptor, QObject *parent);
         /// Common destructor
-    public: ~Session();
+    public: ~WorkerSession();
         /// Main fuction of the thread
     public: void run() override;
         /// Catch this signal with some Ui or Logger

@@ -22,7 +22,7 @@
 #include <Wt/WLabel>
 #include <Wt/WLineEdit>
 #include <Wt/WPushButton>
-#include "usersession.h"
+#include "Session/usersession.h"
 
 /// 5 items in the connection data:
 /// ConnectionName, HostName, DatabaseName, UserName, Password
@@ -48,7 +48,8 @@ namespace Ui
             /// <tt> |Connect | Edit  | Cancel | </tt>\n
             /// <tt> +--------+-------+--------+ </tt>\n
             /// Data about database connections is stored at client side
-            /// in COOKIE_DATABASE_CONNECTIONS
+            /// in COOKIE_DATABASE_CONNECTIONS \n
+            /// When some error is found, emits reject()
             /// \todo some bug with destruction
             class DBCWidget : public QObject, public WDialog
             {
@@ -63,9 +64,9 @@ namespace Ui
                     /// Use to store index of selected connection from myConnectionsData,
                     /// or \c -1 if last is empty
                 private: int _myIndexOfSelectedConnection;
-                    /// Should point to UserSession* of top-level widget,
+                    /// Should point to Session::UserSession* of top-level widget,
                     /// See DatabaseConnectionWidget()
-                private: UserSession * const _myUserSession;
+                private: Session::UserSession * const _myUserSession;
 
                 private: WLabel     *_myConnectionsLabel     = nullptr;
                 private: WLabel     *_myHostNameLabel        = nullptr;
@@ -89,8 +90,9 @@ namespace Ui
 
                     /// Common constructor,
                     /// qObjParent currently not used
+                    /// wObjParent currently not used
                 public : DBCWidget(
-                        UserSession * const ptrToUserSession,
+                        Session::UserSession * const ptrToUserSession,
                         QObject *qObjParent,
                         WObject *wObjParent);
                     /// Fills myConnectionsComboBox by saved COOKIE_DATABASE_CONNECTIONS:\n

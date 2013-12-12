@@ -1,7 +1,7 @@
 /// \author Nazariy Jaworski
 
 #include "commandserver.h"
-#include "session.h"
+#include "workersession.h"
 #include "core.h"
 CommandServer::CommandServer(QObject *parent): QTcpServer(parent)
 { 
@@ -14,7 +14,7 @@ CommandServer::~CommandServer()
 
 void CommandServer::incomingConnection(qintptr socketDescriptor)
 {
-    Session *_curSession = new Session(socketDescriptor, this);
+    WorkerSession *_curSession = new WorkerSession(socketDescriptor, this);
     connect(_curSession, SIGNAL(finished()), _curSession, SLOT(deleteLater()));
     _curSession->start();
 }

@@ -1,13 +1,13 @@
 /// \author Nazariy Jaworski
 
-#include "session.h"
+#include "workersession.h"
 #include "core.h"
 
 #include <QTextStream>
 #include <QDataStream>
 #include <QByteArray>
 
-Session::Session(int socketDescriptor, QObject *parent):
+WorkerSession::WorkerSession(int socketDescriptor, QObject *parent):
     QThread(parent), _socketDescriptor(socketDescriptor)
 {
     connect(this, SIGNAL(writeString(QString)),
@@ -21,7 +21,7 @@ Session::Session(int socketDescriptor, QObject *parent):
 ///  2) after user has sent login and password, the Guard object checks
 ///     it and gives or not gives permissions\n
 ///  3) \todo
-void Session::run()
+void WorkerSession::run()
 {
     _tcpSocket = new QTcpSocket();
     if (!_tcpSocket->setSocketDescriptor(_socketDescriptor))
@@ -59,6 +59,6 @@ void Session::run()
     _tcpSocket->disconnectFromHost();
     delete _tcpSocket;
 }
-Session::~Session()
+WorkerSession::~WorkerSession()
 {
 }

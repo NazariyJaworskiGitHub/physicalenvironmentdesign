@@ -42,6 +42,7 @@ namespace Ui
                 private: void _onDoneButton();
                     /// New connection item data will be stored at connectionData,
                     /// which is the reference to external object
+                    /// wObjParent currently not used
                 public: DBCCreateConnectionItemWidget(
                         WObject *wObjParent,
                         QStringList &connectionData);

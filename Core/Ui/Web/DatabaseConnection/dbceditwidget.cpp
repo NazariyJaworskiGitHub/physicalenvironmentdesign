@@ -152,10 +152,10 @@ DBCEditWidget::DBCEditWidget(
 
 DBCEditWidget::~DBCEditWidget()
 {
-    for(DBCItemSubWidget *i : _myItems)
-        delete i;
     _myItems.clear();
+    /*for(DBCItemSubWidget *i : _myItems)
+        delete i;
     delete _myItemSubWidgetContainer;
     delete _myCreateButton;
-    delete _myExitButton;
+    delete _myExitButton;*/
 }
