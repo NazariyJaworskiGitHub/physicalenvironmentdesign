@@ -102,7 +102,7 @@ Guard::UserData* Guard::logInUser(QString userName, QString passWord,
     return nullptr;
 }
 
-bool Guard::logOutUser(Guard::UserData *uData)
+bool Guard::logOutUser(Guard::UserData const *uData)
 {
     QMutexLocker _locker(&_myMutex);// Lock _myMutex while exist, i.e. only within this method
     for(QList<Guard::UserData*>::Iterator i = _loggedUsers.begin();

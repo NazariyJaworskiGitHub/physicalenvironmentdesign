@@ -38,7 +38,7 @@ DBCCreateConnectionItemWidget::DBCCreateConnectionItemWidget(
     _myConnectionNameEdit->setWidth(200);
     _myConnectionNameEdit->enterPressed().connect(
                 this,
-                &DBCCreateConnectionItemWidget::accept);
+                &DBCCreateConnectionItemWidget::_onDoneButton);
     _myConnectionNameEdit->setToolTip("Name for connection");
     new WBreak(this->contents());
 
@@ -49,7 +49,7 @@ DBCCreateConnectionItemWidget::DBCCreateConnectionItemWidget(
     _myHostNameEdit->setWidth(200);
     _myHostNameEdit->enterPressed().connect(
                 this,
-                &DBCCreateConnectionItemWidget::accept);
+                &DBCCreateConnectionItemWidget::_onDoneButton);
     _myHostNameEdit->setToolTip("Database location host-name");
     new WBreak(this->contents());
 
@@ -60,7 +60,7 @@ DBCCreateConnectionItemWidget::DBCCreateConnectionItemWidget(
     _myDatabaseNameEdit->setWidth(200);
     _myDatabaseNameEdit->enterPressed().connect(
                 this,
-                &DBCCreateConnectionItemWidget::accept);
+                &DBCCreateConnectionItemWidget::_onDoneButton);
     _myDatabaseNameEdit->setToolTip("Name of the database");
     new WBreak(this->contents());
 
@@ -71,7 +71,7 @@ DBCCreateConnectionItemWidget::DBCCreateConnectionItemWidget(
     _myUserNameEdit->setWidth(200);
     _myUserNameEdit->enterPressed().connect(
                 this,
-                &DBCCreateConnectionItemWidget::accept);
+                &DBCCreateConnectionItemWidget::_onDoneButton);
     _myUserNameEdit->setToolTip("User-name of database user");
     new WBreak(this->contents());
 
@@ -82,7 +82,7 @@ DBCCreateConnectionItemWidget::DBCCreateConnectionItemWidget(
     _myPasswordEdit->setWidth(200);
     _myPasswordEdit->enterPressed().connect(
                 this,
-                &DBCCreateConnectionItemWidget::accept);
+                &DBCCreateConnectionItemWidget::_onDoneButton);
     _myPasswordEdit->setToolTip("Password for specific user");
     _myPasswordEdit->setEchoMode(WLineEdit::Password);
     new WBreak(this->contents());

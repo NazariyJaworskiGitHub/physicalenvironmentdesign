@@ -18,7 +18,7 @@
 #include <Wt/WEnvironment>
 
 #include "Ui/Web/authenticationwidget.h"
-#include "usersession.h"
+#include "Session/usersession.h"
 
 using namespace Wt;
 
@@ -40,6 +40,19 @@ namespace Ui
         /// so they inherit QObject, but all of their QObject parents should be nullptrs,
         /// becouse the are in different threads. Thats why, you need to check objects
         /// destructions
+        // +----------------------------------------------------+
+        // | LogIn/LogOut widget                                |
+        // +----------------------------------------------------+
+        // | Working area                                       |
+        // |                                                    |
+        // |                                                    |
+        // |                                                    |
+        // |                                                    |
+        // |                                                    |
+        // |                                                    |
+        // +----------------------------------------------------+
+        // |Contact information, license,etc.                   |
+        // +----------------------------------------------------+
         class MainWidget : public QObject, public WApplication
         {
             Q_OBJECT
@@ -48,9 +61,10 @@ namespace Ui
                 /// if you call delete, dont forget to set it with nullptr
                 /// \todo i don't shure that this item have to be located here
                 /// \todo make it as singleton for web-session, like WApplication::instance()
-            private: UserSession* _myUserSession = nullptr;
+            private: Session::UserSession* _myUserSession = nullptr;
                 /// Authentication widget
             public : AuthenticationWidget *myUiWebAuthenticationWidget = nullptr;
+            private: WTabWidget *_myWorkingAreaTabWidget = nullptr;
                 /// Common constructor
                 /// parent currently not used
             public : MainWidget(const WEnvironment &env, QObject *parent);
@@ -58,18 +72,6 @@ namespace Ui
             public : ~MainWidget();
                 /// Catch this signal with some Ui or Logger
             public : Q_SIGNAL void writeString(const QString message) const;
-
-            /*public : Q_SLOT void createUserSession(Guard::UserData *ptrToUserData);
-                ///< makes a new UserSession at _myUserSession, emits sessionCreated()
-            public : Q_SIGNAL void sessionCreated() const;
-                ///< emit when a new session is created
-            public : Q_SLOT void destroyUserSession();
-                ///< destroys the UserSession at _myUserSession, automaticaly logOut, emits sessionDestroed()
-            public : Q_SIGNAL void sessionDestroed() const;
-                ///< emit when the session is destroed
-
-            public : Signal<> sessionCreated_s;
-            public : Signal<> sessionDestroed_s;*/
         };
     }
 }

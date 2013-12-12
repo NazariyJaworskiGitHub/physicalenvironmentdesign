@@ -7,9 +7,10 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 
-#include "session.h"
+#include "workersession.h"
 
 /// Multi-threaded QTcpServer
+/// Not used for now
 class CommandServer : public QTcpServer
 {
     Q_OBJECT

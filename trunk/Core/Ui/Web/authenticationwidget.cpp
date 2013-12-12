@@ -3,13 +3,15 @@
 #include "Ui/Web/authenticationwidget.h"
 #include "Ui/Web/DatabaseConnection/dbcwidget.h"
 #include "core.h"
+#include "DataBase/databaseupdater.h"
 #include <Wt/WGridLayout>
 #include <QString>
 #include <Wt/WMessageBox>
 
 using namespace Ui::Web;
 
-AuthenticationWidget::AuthenticationWidget(UserSession ** const ptrToUserSession,
+AuthenticationWidget::AuthenticationWidget(
+        Session::UserSession ** const ptrToUserSession,
         QObject *qObjParent = 0,
         WContainerWidget *wContParent = 0):
     QObject(qObjParent),
@@ -90,8 +92,8 @@ void AuthenticationWidget::changeToLogOutState()
     else
     {
         _isLogInState = false;
-        myInfoMessageLabel->setText("Welcome! " +
-                                    (*_myUserSession)->myUserData->userName.toStdString());
+        myInfoMessageLabel->setText(
+                    "Welcome! " + (*_myUserSession)->myUserData->userName.toStdString());
         myUserNameLabel->setHidden(true);
         myUserNameLineEdit->setHidden(true);
         myUserPassWordLabel->setHidden(true);
@@ -100,13 +102,27 @@ void AuthenticationWidget::changeToLogOutState()
         myLogInOutButton->setToolTip("Logout from current session");
 
         /// \todo this is just for test
-        DatabaseConnection::DBCWidget *_myUiWebDatabaseConnectionWidget =
-                new DatabaseConnection::DBCWidget(
-                *_myUserSession,
-                nullptr, //this,
-                this);
-        _myUiWebDatabaseConnectionWidget->exec(); ///block until return
-        delete _myUiWebDatabaseConnectionWidget;
+        {
+            WApplication::instance()->root()->hide();
+            DatabaseConnection::DBCWidget _myUiWebDatabaseConnectionWidget(
+                    *_myUserSession,
+                    nullptr, //this,
+                    nullptr); //this);
+            /// block until return
+            if(_myUiWebDatabaseConnectionWidget.exec() == WDialog::Rejected)
+                WApplication::instance()->quit();
+            else
+            {
+                WApplication::instance()->root()->show();
+
+                if((*_myUserSession)->myDatabaseManager.isConnected())
+                {
+                    DataBase::DataBaseUpdater _myDataBaseUpdater(nullptr);
+                    _myDataBaseUpdater.makeUpgrade(
+                                (*_myUserSession)->myDatabaseManager.getDatabaseConnectionName());
+                }
+            }
+        }
     }
 }
 
@@ -127,9 +143,7 @@ void AuthenticationWidget::onLogInOutButton()
                 Core::instance()->myGuard->logInUser(_userName,_passWord, &_isAlreadyLoggedIn);
         if(_foundUserData)
         {
-            //Q_EMIT createUserSession(_foundUserData);
-            //createUserSession_s.emit(_foundUserData);
-            (*_myUserSession) = new UserSession(_foundUserData, nullptr);
+            (*_myUserSession) = new Session::UserSession(_foundUserData, nullptr);
             changeToLogOutState();
         }
         else
@@ -152,8 +166,6 @@ void AuthenticationWidget::onLogInOutButton()
     else
         // try to logOut and finish the UserSession
     {
-        //Q_EMIT destroyUserSession();
-        //destroyUserSession_s.emit();
         delete *_myUserSession;
         *_myUserSession = nullptr;
         changeToLogInState();
@@ -164,10 +176,10 @@ AuthenticationWidget::~AuthenticationWidget()
 {
     /// \todo this destructor will be called after server`s timeout and
     /// i don't know how to fix that!
-    delete myUserNameLabel;
+    /*delete myUserNameLabel;
     delete myUserPassWordLabel;
     delete myUserNameLineEdit;
     delete myPassWordLineEdit;
     delete myLogInOutButton;
-    delete myInfoMessageLabel;
+    delete myInfoMessageLabel;*/
 }

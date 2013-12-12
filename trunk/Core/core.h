@@ -6,12 +6,12 @@
 #include <QCoreApplication>
 #include <QTcpServer>
 
-#include "commandserver.h"
 #include "guard.h"
 #include "logger.h"
-#include "usersession.h"
+#include "Session/usersession.h"
 #include "Ui/Web/uiwebserver.h"
 
+/// \todo move this out of here
 #define CONFIGURATION_FILE_KEYWORD_TCPPORT                  "TCPPORT"
 #define CONFIGURATION_FILE_KEYWORD_UIWEBSERVERDOCROOT       "UIWEBSERVERDOCROOT"
 #define CONFIGURATION_FILE_KEYWORD_UIWEBSERVERHTTPADDRESS   "UIWEBSERVERHTTPADDRESS"
@@ -21,12 +21,16 @@
 #define CONFIGURATION_FILE_KEYWORD_UIWEBSERVERACCESSLOG     "UIWEBSERVERACCESSLOG"
 
 /// Main program class, does all dirty work. \n
-/// There is only one instance of this class object per program,
-/// object has CommandServer object, which is processing commands
-/// from users through TCP port. \n
+/// There is only one instance of this class object per program.
+/// Inherits main event loop.
+/// \todo make all qt-connect() outside from constructors
+// object has CommandServer object, which is processing commands
+// from users through TCP port. \n
 class Core : public QCoreApplication
 {
     Q_OBJECT
+
+    /// \todo move this out of here
     private : struct ConfigurationParameters
     {
         qint16  tcpServerPort;
@@ -61,8 +65,9 @@ class Core : public QCoreApplication
         /// Holds pointers to UserSession,
         /// each UserSession should be created at UiWebServer::createApplication(),
         /// or at something like that
+        /// not used for now
         /// \todo fill the list!
-    public : QList<UserSession*> myUserSessions;
+    public : QList<Session::UserSession*> myUserSessions;
 
     // Main functions
         /// Common constructor, don't forget to call init()

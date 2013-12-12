@@ -33,42 +33,45 @@ QMAKE_CXXFLAGS += -Wno-write-strings
 #Versions
 system("SubWCRev $$PWD $$PWD/version.h.tpl $$OUT_PWD/version.h") #Tortise Svn is used
 
-SOURCES +=  main.cpp \
+SOURCES += \
+    main.cpp \
     core.cpp \
     commandserver.cpp \
     guard.cpp \
-    session.cpp \
     logger.cpp \
-    project.cpp \
-    usersession.cpp \
-    databasemanager.cpp \
     Ui/Web/uiwebserver.cpp \
     Ui/Web/mainwidget.cpp \
     Ui/Web/authenticationwidget.cpp \
     Ui/Web/DatabaseConnection/dbcwidget.cpp \
     Ui/Web/DatabaseConnection/dbcitemsubwidget.cpp \
     Ui/Web/DatabaseConnection/dbceditwidget.cpp \
-    Ui/Web/DatabaseConnection/dbccreateconnectionitemwidget.cpp
+    Ui/Web/DatabaseConnection/dbccreateconnectionitemwidget.cpp \
+    Session/project.cpp \
+    Session/usersession.cpp \
+    DataBase/databasemanager.cpp \
+    DataBase/databaseupdater.cpp \
+    workersession.cpp
 
 HEADERS += \
     core.h \
     commandserver.h \
     guard.h \
-    session.h \
     logger.h \
-    version.h.tpl \
-    project.h \
-    usersession.h \
-    databasemanager.h \
     Ui/Web/uiwebserver.h \
     Ui/Web/mainwidget.h \
     Ui/Web/authenticationwidget.h \
     Ui/Web/DatabaseConnection/dbcwidget.h \
     Ui/Web/DatabaseConnection/dbcitemsubwidget.h \
     Ui/Web/DatabaseConnection/dbceditwidget.h \
-    Ui/Web/DatabaseConnection/dbccreateconnectionitemwidget.h
+    Ui/Web/DatabaseConnection/dbccreateconnectionitemwidget.h \
+    Session/project.h \
+    Session/usersession.h \
+    DataBase/databasemanager.h \
+    DataBase/databaseupdater.h \
+    workersession.h
 
 OTHER_FILES += \
-    icons\mainicon.png
+    icons/mainicon.png \
+    version.h.tpl
 
 

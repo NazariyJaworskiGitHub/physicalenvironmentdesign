@@ -3,9 +3,12 @@
 #include "usersession.h"
 #include "core.h"
 
+using namespace Session;
+
 /// \todo myDatabaseManager(this)
-UserSession::UserSession(Guard::UserData *ptrToUserData, QObject *parent = 0) :
-    QObject(parent), myDatabaseManager(this, nullptr), myUserData(ptrToUserData)
+UserSession::UserSession(const Guard::UserData *ptrToUserData, QObject *parent = 0) :
+    QObject(parent), myUserData(ptrToUserData),
+    myDatabaseManager(myUserData->userName, nullptr)
 {
     connect(this, SIGNAL(writeString(QString)),
             Core::instance()->myLogger, SLOT(writeToLog(QString)));
