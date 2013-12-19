@@ -1,4 +1,4 @@
-/// \author Nazariy Jaworski
+/// \file \author Nazariy Jaworski
 
 #ifndef UIWEBMAINWIDGET_H
 #define UIWEBMAINWIDGET_H
@@ -28,24 +28,24 @@ namespace Ui
     {
         /// Main widget for web users \n
         /// (actually this is not a widget, but the WApplication, which corresponds
-        /// to a user web-session, and contains the WApplication::root() main widget)
+        /// to a user web-session, and contains the WApplication::root() main widget) \n
+        /// All ui web widgets are connected to this widget tree, all of them have Q_SIGNAL
+        /// writeString(), so they inherit QObject, but all of their QObject parents
+        /// should be nullptrs, becouse the are in different threads. Thats why, you
+        /// need to check objects destructions
         /// \todo needs code review, check all public members, maybe they have to be private?
         /// \todo it class stores and processes UserSession, bu this is Ui, maybe it
         /// should be different?
         /// \todo make some specific class for WMessageBox info widget that will catch
         /// writeString
-        /// \todo signals from widget tree \n
-        /// all ui web widgets are connected to this widget tree, all of them have Q_SIGNAL
-        /// writeString(),
-        /// so they inherit QObject, but all of their QObject parents should be nullptrs,
-        /// becouse the are in different threads. Thats why, you need to check objects
-        /// destructions
+        /// \todo signals from widget tree
+
         // +----------------------------------------------------+
         // | LogIn/LogOut widget                                |
         // +----------------------------------------------------+
         // | Working area                                       |
-        // |                                                    |
-        // |                                                    |
+        // |    TAB    |    TAB    |    TAB    |                |
+        // +-----------+-----------+-----------+----------------+
         // |                                                    |
         // |                                                    |
         // |                                                    |
@@ -53,6 +53,7 @@ namespace Ui
         // +----------------------------------------------------+
         // |Contact information, license,etc.                   |
         // +----------------------------------------------------+
+
         class MainWidget : public QObject, public WApplication
         {
             Q_OBJECT
@@ -63,11 +64,11 @@ namespace Ui
                 /// \todo make it as singleton for web-session, like WApplication::instance()
             private: Session::UserSession* _myUserSession = nullptr;
                 /// Authentication widget
-            public : AuthenticationWidget *myUiWebAuthenticationWidget = nullptr;
+            private: AuthenticationWidget *_myUiWebAuthenticationWidget = nullptr;
             private: WTabWidget *_myWorkingAreaTabWidget = nullptr;
                 /// Common constructor
                 /// parent currently not used
-            public : MainWidget(const WEnvironment &env, QObject *parent);
+            public : MainWidget(const WEnvironment &env, QObject *parent = nullptr);
                 /// Common destructor
             public : ~MainWidget();
                 /// Catch this signal with some Ui or Logger

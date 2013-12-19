@@ -1,4 +1,4 @@
-/// \author Nazariy Jaworski
+/// \file \author Nazariy Jaworski
 
 #include "usersession.h"
 #include "core.h"
@@ -6,7 +6,7 @@
 using namespace Session;
 
 /// \todo myDatabaseManager(this)
-UserSession::UserSession(const Guard::UserData *ptrToUserData, QObject *parent = 0) :
+UserSession::UserSession(const Guard::UserData *ptrToUserData, QObject *parent) :
     QObject(parent), myUserData(ptrToUserData),
     myDatabaseManager(myUserData->userName, nullptr)
 {

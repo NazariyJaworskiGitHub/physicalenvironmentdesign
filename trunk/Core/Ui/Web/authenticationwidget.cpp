@@ -1,4 +1,4 @@
-/// \author Nazariy Jaworski
+/// \file \author Nazariy Jaworski
 
 #include "Ui/Web/authenticationwidget.h"
 #include "Ui/Web/DatabaseConnection/dbcwidget.h"
@@ -12,68 +12,65 @@ using namespace Ui::Web;
 
 AuthenticationWidget::AuthenticationWidget(
         Session::UserSession ** const ptrToUserSession,
-        QObject *qObjParent = 0,
-        WContainerWidget *wContParent = 0):
+        QObject *qObjParent,
+        WContainerWidget *wContParent):
     QObject(qObjParent),
     WContainerWidget(wContParent),
     _myUserSession(ptrToUserSession),
     _isLogInState(true)
 {
-    connect(this, SIGNAL(writeString(QString)),
-            Core::instance()-> myLogger, SLOT(writeToLog(QString)));
-
     WGridLayout *_myWGridLayout = new WGridLayout(this);
     this->setLayout(_myWGridLayout);
     WContainerWidget *_myWContainerWidget = new WContainerWidget(this);
     _myWGridLayout->addWidget(_myWContainerWidget,0,1,0,0,Wt::AlignRight);
     /// \todo hope this items will be destroed by parent destructor
 
-    myInfoMessageLabel = new WLabel(this);
-    _myWGridLayout->addWidget(myInfoMessageLabel,0,0,0,0,Wt::AlignLeft);
+    _myInfoMessageLabel = new WLabel(this);
+    _myWGridLayout->addWidget(_myInfoMessageLabel,0,0,0,0,Wt::AlignLeft);
 
-    myUserNameLabel = new WLabel(this);
-    _myWContainerWidget->addWidget(myUserNameLabel);
+    _myUserNameLabel = new WLabel(this);
+    _myWContainerWidget->addWidget(_myUserNameLabel);
 
-    myUserNameLineEdit = new WLineEdit(this);
-    myUserNameLineEdit->setToolTip("User Authentication Name");
-    myUserNameLineEdit->enterPressed().connect(this,
-            &AuthenticationWidget::onLogInOutButton);
-    _myWContainerWidget->addWidget(myUserNameLineEdit);
+    _myUserNameLineEdit = new WLineEdit(this);
+    _myUserNameLineEdit->setToolTip("User Authentication Name");
+    _myUserNameLineEdit->enterPressed().connect(this,
+            &AuthenticationWidget::_onLogInOutButton);
+    _myWContainerWidget->addWidget(_myUserNameLineEdit);
 
-    myUserPassWordLabel = new WLabel(this);
-    _myWContainerWidget->addWidget(myUserPassWordLabel);
+    _myUserPassWordLabel = new WLabel(this);
+    _myWContainerWidget->addWidget(_myUserPassWordLabel);
 
-    myPassWordLineEdit = new WLineEdit(this);
-    myPassWordLineEdit->setEchoMode(WLineEdit::Password);
-    myPassWordLineEdit->setToolTip("User Authentication Password");
-    myPassWordLineEdit->enterPressed().connect(this,
-            &AuthenticationWidget::onLogInOutButton);
-    _myWContainerWidget->addWidget(myPassWordLineEdit);
+    _myPassWordLineEdit = new WLineEdit(this);
+    _myPassWordLineEdit->setEchoMode(WLineEdit::Password);
+    _myPassWordLineEdit->setToolTip("User Authentication Password");
+    _myPassWordLineEdit->enterPressed().connect(this,
+            &AuthenticationWidget::_onLogInOutButton);
+    _myWContainerWidget->addWidget(_myPassWordLineEdit);
 
-    myLogInOutButton = new WPushButton(this);
-    myLogInOutButton->clicked().connect(this, &AuthenticationWidget::onLogInOutButton);
-    _myWContainerWidget->addWidget(myLogInOutButton);
+    _myLogInOutButton = new WPushButton(this);
+    _myLogInOutButton->clicked().connect(this, &AuthenticationWidget::_onLogInOutButton);
+    _myWContainerWidget->addWidget(_myLogInOutButton);
 
-    changeToLogInState();
+    _changeToLogInState();
 }
 
 /// \todo make multilanguage support (Localization)
-void AuthenticationWidget::changeToLogInState()
+void AuthenticationWidget::_changeToLogInState()
 {
     _isLogInState = true;
-    myInfoMessageLabel->setText("Please Log In!");
-    myUserNameLabel->setText("Name:");
-    myUserNameLabel->setHidden(false);
-    myUserNameLineEdit->setHidden(false);
-    myUserPassWordLabel->setText("Password:");
-    myUserPassWordLabel->setHidden(false);
-    myPassWordLineEdit->setHidden(false);
-    myLogInOutButton->setText("Log In");
-    myLogInOutButton->setToolTip("Confirm information and try to Login to new session");
+    _myInfoMessageLabel->setText("Please Log In!");
+    _myUserNameLabel->setText("Name:");
+    _myUserNameLabel->setHidden(false);
+    _myUserNameLineEdit->setHidden(false);
+    _myUserPassWordLabel->setText("Password:");
+    _myUserPassWordLabel->setHidden(false);
+    _myPassWordLineEdit->setHidden(false);
+    _myLogInOutButton->setText("Log In");
+    _myLogInOutButton->setToolTip("Confirm information and try to Login to new session");
 }
 
 /// \todo make multilanguage support (Localization)
-void AuthenticationWidget::changeToLogOutState()
+void AuthenticationWidget::_changeToLogOutState()
 {
     if(!(*_myUserSession))
     {
@@ -92,14 +89,14 @@ void AuthenticationWidget::changeToLogOutState()
     else
     {
         _isLogInState = false;
-        myInfoMessageLabel->setText(
+        _myInfoMessageLabel->setText(
                     "Welcome! " + (*_myUserSession)->myUserData->userName.toStdString());
-        myUserNameLabel->setHidden(true);
-        myUserNameLineEdit->setHidden(true);
-        myUserPassWordLabel->setHidden(true);
-        myPassWordLineEdit->setHidden(true);
-        myLogInOutButton->setText("Log Out");
-        myLogInOutButton->setToolTip("Logout from current session");
+        _myUserNameLabel->setHidden(true);
+        _myUserNameLineEdit->setHidden(true);
+        _myUserPassWordLabel->setHidden(true);
+        _myPassWordLineEdit->setHidden(true);
+        _myLogInOutButton->setText("Log Out");
+        _myLogInOutButton->setToolTip("Logout from current session");
 
         /// \todo this is just for test
         {
@@ -126,13 +123,13 @@ void AuthenticationWidget::changeToLogOutState()
     }
 }
 
-void AuthenticationWidget::onLogInOutButton()
+void AuthenticationWidget::_onLogInOutButton()
 {
     if(_isLogInState)
         // try to logIn and start a new UserSession
     {
-        QString _userName(myUserNameLineEdit->text().narrow().data());
-        QString _passWord(myPassWordLineEdit->text().narrow().data());
+        QString _userName(_myUserNameLineEdit->text().narrow().data());
+        QString _passWord(_myPassWordLineEdit->text().narrow().data());
         Q_EMIT writeString(
                     "Web session client " +
                     QString(WApplication::instance()->environment().clientAddress().data()) +
@@ -144,7 +141,7 @@ void AuthenticationWidget::onLogInOutButton()
         if(_foundUserData)
         {
             (*_myUserSession) = new Session::UserSession(_foundUserData, nullptr);
-            changeToLogOutState();
+            _changeToLogOutState();
         }
         else
         {
@@ -153,7 +150,7 @@ void AuthenticationWidget::onLogInOutButton()
             if(_isAlreadyLoggedIn)
                 WMessageBox::show(
                             "Authentication failed!",
-                            "User " + myUserNameLineEdit->text() + " has already been logged in",
+                            "User " + _myUserNameLineEdit->text() + " has already been logged in",
                             Ok);
             else
                 WMessageBox::show(
@@ -168,7 +165,7 @@ void AuthenticationWidget::onLogInOutButton()
     {
         delete *_myUserSession;
         *_myUserSession = nullptr;
-        changeToLogInState();
+        _changeToLogInState();
     }
 }
 

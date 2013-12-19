@@ -1,4 +1,4 @@
-/// \author Nazariy Jaworski
+/// \file \author Nazariy Jaworski
 
 #include "Ui/Web/DatabaseConnection/dbceditwidget.h"
 #include "Wt/WEnvironment"
@@ -120,9 +120,9 @@ void DBCEditWidget::_writeCookie()
 }
 
 DBCEditWidget::DBCEditWidget(
-        WObject *wObjParent = nullptr,
-        std::string *internalStorage = nullptr,
-        bool readFromInternalStorageFlag = false):
+        bool readFromInternalStorageFlag,
+        WObject *wObjParent,
+        std::string *internalStorage):
     WDialog(wObjParent),
     _myReadFromInternalStorageFlag(readFromInternalStorageFlag),
     _myInternalStorage(internalStorage)

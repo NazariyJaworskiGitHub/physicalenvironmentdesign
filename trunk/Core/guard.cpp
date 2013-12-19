@@ -1,7 +1,6 @@
-/// \author Nazariy Jaworski
+/// \file \author Nazariy Jaworski
 
 #include "guard.h"
-#include "core.h"
 #include <QFile>
 #include <QTextStream>
 #include <QMutexLocker>
@@ -17,23 +16,28 @@ void Guard::_clearLists()
     _loggedUsers.clear();
 }
 
-void Guard::readUserDataFromFile()
+void Guard::readUserDataFromFile(const QString usersFileName) throw(std::exception)
 {
     /// \todo it still don't check for same data
-    QMutexLocker _locker(&_myMutex);// Lock _myMutex while exist, i.e. only within this method
+    // Locks _myMutex while exist, i.e. only within this method
+    QMutexLocker _locker(&_myMutex);
 
     // Clear old stuff
     _clearLists();
 
-    if(!QFile::exists("users.cfg"))
-        /// \todo try to avoid this instance call, because it does dependence
-        Core::instance()->fatalError("ERROR: Can't find 'users.cfg'\n");
+    if(!QFile::exists(usersFileName))
+    {
+        Q_EMIT writeString("ERROR: Can't find " + usersFileName + "\n");
+        throw std::runtime_error("ERROR: Can't find " + usersFileName.toStdString() + "\n");
+    }
     else
     {
-        QFile *_configurationFile = new QFile("users.cfg");
+        QFile *_configurationFile = new QFile(usersFileName);
         if(!_configurationFile->open(QIODevice::ReadOnly | QIODevice::Text))
-            /// \todo try to avoid this instance call, because it does dependence
-            Core::instance()->fatalError("ERROR: Can't open 'users.cfg'\n");
+        {
+            Q_EMIT writeString("ERROR: Can't open " + usersFileName + "\n");
+            throw std::runtime_error("ERROR: Can't open " + usersFileName.toStdString() + "\n");
+        }
         else
         {
             // Processing configuration file line by line as text stream
@@ -64,10 +68,11 @@ void Guard::readUserDataFromFile()
     Q_EMIT writeString("Guard user data file has been read\n");
 }
 
-Guard::UserData* Guard::logInUser(QString userName, QString passWord,
-                                  bool *isAlreadyLoggedIn = nullptr)
+Guard::UserData* Guard::logInUser(QString userName, QString passWord, bool *isAlreadyLoggedIn)
 {
-    QMutexLocker _locker(&_myMutex);// Lock _myMutex while exist, i.e. only within this method
+    // Locks _myMutex while exist, i.e. only within this method
+    QMutexLocker _locker(&_myMutex);
+
     for(QList<Guard::UserData*>::Iterator i = _knownUnLoggedUsers.begin();
         i!= _knownUnLoggedUsers.end(); i++)
     {
@@ -102,9 +107,15 @@ Guard::UserData* Guard::logInUser(QString userName, QString passWord,
     return nullptr;
 }
 
-bool Guard::logOutUser(Guard::UserData const *uData)
+bool Guard::logOutUser(Guard::UserData const *uData) throw (std::exception)
 {
-    QMutexLocker _locker(&_myMutex);// Lock _myMutex while exist, i.e. only within this method
+    if(!uData)
+    {
+        Q_EMIT writeString("Guard (logout) invalid user data \n");
+        throw std::runtime_error("Guard (logout) invalid user data \n");
+    }
+    // Locks _myMutex while exist, i.e. only within this method
+    QMutexLocker _locker(&_myMutex);
     for(QList<Guard::UserData*>::Iterator i = _loggedUsers.begin();
         i!= _loggedUsers.end(); i++)
     {
@@ -121,12 +132,8 @@ bool Guard::logOutUser(Guard::UserData const *uData)
     return false;
 }
 
-Guard::Guard(QObject *parent = 0):QObject(parent)
+Guard::Guard(QObject *parent):QObject(parent)
 {
-    connect(this, SIGNAL(writeString(QString)),
-            Core::instance()-> myLogger, SLOT(writeToLog(QString)));
-
-    readUserDataFromFile(); ///< \todo not shure that this should be here
 }
 
 Guard::~Guard()

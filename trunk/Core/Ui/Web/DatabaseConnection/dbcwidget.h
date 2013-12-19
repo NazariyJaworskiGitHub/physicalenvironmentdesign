@@ -1,4 +1,4 @@
-/// \author Nazariy Jaworski
+/// \file \author Nazariy Jaworski
 
 #ifndef UIWEBDATABASECONNECTIONWIDGET_H
 #define UIWEBDATABASECONNECTIONWIDGET_H
@@ -93,8 +93,8 @@ namespace Ui
                     /// wObjParent currently not used
                 public : DBCWidget(
                         Session::UserSession * const ptrToUserSession,
-                        QObject *qObjParent,
-                        WObject *wObjParent);
+                        QObject *qObjParent = nullptr,
+                        WObject *wObjParent = nullptr);
                     /// Fills myConnectionsComboBox by saved COOKIE_DATABASE_CONNECTIONS:\n
                     /// 1) clear the _myConnectionsComboBox, clear the myConnectionsData;\n
                     /// 2) try to read the COOKIE_DATABASE_CONNECTIONS; \n

@@ -1,12 +1,13 @@
-/// \author Nazariy Jaworski
+/// \file \author Nazariy Jaworski
 
 #include "databasemanager.h"
 #include "core.h"
 
 using namespace DataBase;
 
-DatabaseManager::DatabaseManager(const QString &refToUserName,
-        QObject *parent = 0 ):
+DatabaseManager::DatabaseManager(
+        const QString &refToUserName,
+        QObject *parent):
     QObject(parent),
     _myDatabaseConnectionName(refToUserName),
     _isConnectedFlag(false)

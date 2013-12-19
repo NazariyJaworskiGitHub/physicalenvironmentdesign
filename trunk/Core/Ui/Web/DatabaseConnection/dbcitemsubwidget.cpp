@@ -1,4 +1,4 @@
-/// \author Nazariy Jaworski
+/// \file \author Nazariy Jaworski
 
 #include "dbcitemsubwidget.h"
 #include "Ui/Web/DatabaseConnection/dbccreateconnectionitemwidget.h"
