@@ -1,4 +1,4 @@
-/// \author Nazariy Jaworski
+/// \file \author Nazariy Jaworski
 
 #ifndef DATABASECONNECTIONEDITWIDGET_H
 #define DATABASECONNECTIONEDITWIDGET_H
@@ -76,9 +76,9 @@ namespace Ui
                     /// COOKIE_DATABASE_CONNECTIONS, or nonzero if you works wiht
                     /// _myInternalStorage. See _myReadFromInternalStorageFlag
                 public : DBCEditWidget(
-                        WObject *wObjParent,
-                        std::string *internalStorage,
-                        bool readFromInternalStorageFlag);
+                        bool readFromInternalStorageFlag = false,
+                        WObject *wObjParent = nullptr,
+                        std::string *internalStorage = nullptr);
                     /// Common destructor
                 public :~DBCEditWidget();
             };

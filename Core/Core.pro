@@ -1,7 +1,6 @@
 #/// \author Nazariy Jaworski
 
 TARGET  =   Core
-ICON    =   icons\mainicon.png
 
 #QT dependences
 CONFIG      +=  console
@@ -9,11 +8,16 @@ CONFIG      +=  no_keywords # no Qt-keywords for avoiding boost/Wt and Qt confli
 QT          +=  network
 QT          +=  sql
 
+debug {
+    QT      +=  testlib
+}
+
 #Wt Web ToolKit
 INCLUDEPATH += -isystem E:\Wt\Wt_3.3.0_boost_1.54.0_mingw_4.8.0_x32\include\
 INCLUDEPATH += -isystem E:\Boost\boost_1_54_0
 LIBS += E:\Wt\Wt_3.3.0_boost_1.54.0_mingw_4.8.0_x32\lib\libwt.a
 LIBS += E:\Wt\Wt_3.3.0_boost_1.54.0_mingw_4.8.0_x32\lib\libwthttp.a
+#LIBS += E:\Wt\Wt_3.3.0_boost_1.54.0_mingw_4.8.0_x32\lib\libwttest.a
 LIBS += E:\Boost\boost_1_54_0\lib\libboost_signals-mgw48-mt-1_54.a
 LIBS += E:\Boost\boost_1_54_0\lib\libboost_system-mgw48-mt-1_54.a
 LIBS += E:\Boost\boost_1_54_0\lib\libboost_thread-mgw48-mt-1_54.a
@@ -50,7 +54,12 @@ SOURCES += \
     Session/usersession.cpp \
     DataBase/databasemanager.cpp \
     DataBase/databaseupdater.cpp \
-    workersession.cpp
+    workersession.cpp \
+    UnitTests/test_core.cpp \
+    UnitTests/test_logger.cpp \
+    UnitTests/test_guard.cpp \
+    UnitTests/test_uiwebserver.cpp \
+    UnitTests/test_mainwidget.cpp
 
 HEADERS += \
     core.h \
@@ -68,10 +77,17 @@ HEADERS += \
     Session/usersession.h \
     DataBase/databasemanager.h \
     DataBase/databaseupdater.h \
-    workersession.h
+    workersession.h \
+    UnitTests/test_core.h \
+    UnitTests/test_logger.h \
+    UnitTests/unit_tests_runner.h \
+    UnitTests/test_guard.h \
+    UnitTests/test_uiwebserver.h \
+    configurationparameters.h \
+    UnitTests/test_mainwidget.h
 
 OTHER_FILES += \
-    icons/mainicon.png \
+    Icons/mainicon.png \
     version.h.tpl
 
 

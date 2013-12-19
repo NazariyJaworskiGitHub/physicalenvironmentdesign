@@ -1,5 +1,4 @@
-/// \author Nazariy Jaworski
-/// \author Marian Lobur
+/// \file \author Nazariy Jaworski, Marian Lobur
 
 #ifndef DATABASEUPDATER_H
 #define DATABASEUPDATER_H
@@ -14,9 +13,9 @@ namespace DataBase
         Q_OBJECT
 
             /// Current version
-        private: static const int currentVersion = 23;
+        private: static const int _currentVersion = 23;
             /// Common constructor
-        public : DataBaseUpdater(QObject *parent);
+        public : DataBaseUpdater(QObject *parent = nullptr);
             /// Does the upgrades of specific database,
             /// note that database should be already opened
         public : void makeUpgrade(QString databaseName);

@@ -1,4 +1,4 @@
-/// \author Nazariy Jaworski
+/// \file \author Nazariy Jaworski
 
 #ifndef DATABASECONNECTIONITEMSUBWIDGET_H
 #define DATABASECONNECTIONITEMSUBWIDGET_H
@@ -40,6 +40,7 @@ namespace Ui
                 public : Signal<DBCItemSubWidget*> sDelete;
                     /// Updates the _myConnectionDataLabel with myConnectionData
                 private: void _update();
+                    /// Common constructor, you have to set parent pointer
                 public: DBCItemSubWidget(
                         WContainerWidget *parent,
                         QStringList connectionData);

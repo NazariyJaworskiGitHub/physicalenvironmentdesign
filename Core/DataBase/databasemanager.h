@@ -1,4 +1,4 @@
-/// \author Nazariy Jaworski
+/// \file \author Nazariy Jaworski
 
 #ifndef DATABASEMANAGER_H
 #define DATABASEMANAGER_H
@@ -33,7 +33,7 @@ namespace DataBase
         public : QSqlError lastError() const;
             /// Common constructor,
             /// parent currently not used
-        public : DatabaseManager(const QString &refToUserName, QObject *parent);
+        public : DatabaseManager(const QString &refToUserName, QObject *parent = nullptr);
             /// Try to connect to database by given data, returns false if fail or true
             /// opened connection will has name _myUserSession->myUserData->userName
         public : bool connectToDatabase(

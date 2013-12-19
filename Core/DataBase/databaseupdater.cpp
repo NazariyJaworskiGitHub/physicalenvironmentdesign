@@ -1,5 +1,4 @@
-/// \author Nazariy Jaworski
-/// \author Marian Lobur
+/// \file \author Nazariy Jaworski, Marian Lobur
 
 #include "databaseupdater.h"
 #include "core.h"
@@ -9,7 +8,7 @@
 
 using namespace DataBase;
 
-DataBaseUpdater::DataBaseUpdater(QObject *parent = nullptr): QObject(parent)
+DataBaseUpdater::DataBaseUpdater(QObject *parent): QObject(parent)
 {
     /// \todo this should be outside of constructor, because this does dependence
     connect(this, SIGNAL(writeString(QString)),
@@ -32,7 +31,7 @@ void DataBaseUpdater::makeUpgrade(QString databaseName)
 
     Q_EMIT writeString("Database version = " + QString::number(_version) + "\n");
 
-    if(_version >= currentVersion){
+    if(_version >= _currentVersion){
         _myDb.commit();
         return;
     }
@@ -43,7 +42,7 @@ void DataBaseUpdater::makeUpgrade(QString databaseName)
             _changeVersion(_version,22);    ///< \todo not shute that 22 is correct
             return;
         }
-    _changeVersion(_version,currentVersion);
+    _changeVersion(_version,_currentVersion);
 }
 
 void DataBaseUpdater::_changeVersion(int oldVersion, int newVersion)
@@ -66,9 +65,9 @@ void DataBaseUpdater::_changeVersion(int oldVersion, int newVersion)
                 QString::number(oldVersion) + " to the version " +
                 QString::number(newVersion) + "\n");
   }
-  if(currentVersion != newVersion)
+  if(_currentVersion != newVersion)
   {
-      Q_EMIT writeString("This program need version " + QString::number(currentVersion));
+      Q_EMIT writeString("This program need version " + QString::number(_currentVersion));
   }
 }
 

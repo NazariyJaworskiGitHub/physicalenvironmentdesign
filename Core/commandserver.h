@@ -1,4 +1,4 @@
-/// \author Nazariy Jaworski
+/// \file \author Nazariy Jaworski
 
 #ifndef COMMANDSERVER_H
 #define COMMANDSERVER_H

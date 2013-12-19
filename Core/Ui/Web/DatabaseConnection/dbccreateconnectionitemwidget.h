@@ -1,4 +1,4 @@
-/// \author Nazariy Jaworski
+/// \file \author Nazariy Jaworski
 
 #ifndef DATABASECONNECTIONCREATECONNECTIONITEMWIDGET_H
 #define DATABASECONNECTIONCREATECONNECTIONITEMWIDGET_H

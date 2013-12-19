@@ -1,4 +1,4 @@
-/// \author Nazariy Jaworski
+/// \file \author Nazariy Jaworski
 
 #ifndef UIWEBAUTHENTICATIONWIDGET_H
 #define UIWEBAUTHENTICATIONWIDGET_H
@@ -43,25 +43,25 @@ namespace Ui
             private: Session::UserSession ** const _myUserSession;
 
             private: bool           _isLogInState;
-            public : WLabel         *myUserNameLabel        = nullptr;
-            public : WLabel         *myUserPassWordLabel    = nullptr;
-            public : WLineEdit      *myUserNameLineEdit     = nullptr;
-            public : WLineEdit      *myPassWordLineEdit     = nullptr;
-            public : WPushButton    *myLogInOutButton       = nullptr;
-            public : WLabel         *myInfoMessageLabel     = nullptr;
+            private: WLabel         *_myUserNameLabel        = nullptr;
+            private: WLabel         *_myUserPassWordLabel    = nullptr;
+            private: WLineEdit      *_myUserNameLineEdit     = nullptr;
+            private: WLineEdit      *_myPassWordLineEdit     = nullptr;
+            private: WPushButton    *_myLogInOutButton       = nullptr;
+            private: WLabel         *_myInfoMessageLabel     = nullptr;
 
                 /// Common constructor
                 /// qObjParent currently not used
             public : AuthenticationWidget(
                     Session::UserSession ** const ptrToUserSession,
-                    QObject *qObjParent,
-                    WContainerWidget *wContParent);
+                    QObject *qObjParent = nullptr,
+                    WContainerWidget *wContParent = nullptr);
                 /// Slot for myLogInOutButton
-            public : void onLogInOutButton();
+            private: void _onLogInOutButton();
                 /// Change widget to display log in fields
-            public : void changeToLogInState();
+            private: void _changeToLogInState();
                 /// Change widget to display log out fields
-            public : void changeToLogOutState();
+            private: void _changeToLogOutState();
                 /// Common destructor
             public : ~AuthenticationWidget();
                 /// Catch this signal with some Ui or Logger

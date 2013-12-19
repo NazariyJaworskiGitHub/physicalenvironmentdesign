@@ -1,4 +1,4 @@
-/// \author Nazariy Jaworski
+/// \file \author Nazariy Jaworski
 
 #include "Ui/Web/DatabaseConnection/dbcwidget.h"
 #include "Ui/Web/DatabaseConnection/dbceditwidget.h"
@@ -10,8 +10,8 @@ using namespace Ui::Web::DatabaseConnection;
 
 DBCWidget::DBCWidget(
         Session::UserSession * const ptrToUserSession,
-        QObject *qObjParent = 0,
-        WObject *wObjParent = 0):
+        QObject *qObjParent,
+        WObject *wObjParent):
     QObject(qObjParent),
     WDialog(wObjParent),
     _myIndexOfSelectedConnection(-1),   //not necessary to set default value for now
@@ -243,7 +243,7 @@ void DBCWidget::_onCancelButton()
 void DBCWidget::_onEditButton()
 {
     this->hide();
-    DBCEditWidget _dbcew(nullptr, _myInternalStorage, true);
+    DBCEditWidget _dbcew(true, nullptr, _myInternalStorage);
     _dbcew.exec();
     //Read from _myInternalStorage, dublicate to _myInternalStorage
     _fillConnectionsList(true, _myInternalStorage);

@@ -1,4 +1,4 @@
-/// \author Nazariy Jaworski
+/// \file \author Nazariy Jaworski
 
 #include "core.h"
 
@@ -7,67 +7,84 @@
 #include <QTime>
 #include <QFile>
 #include <QRegExp>
+#include <QStringList>
+#include <QSql>
 
 #include "version.h"
 
-Core::Core(int argc, char **argv) :
-    QCoreApplication(argc, argv), _isInitialized(false)
+Core::Core() :
+    QCoreApplication(__argc, __argv), _isInitialized(false)
 {
     /// \todo
     //this->setApplicationName("Physical Environment Design Core");
     //this->setApplicationVersion("dev:"); 
 }
 
-void Core::init()
+void Core::initialize()
 {
     if(!_isInitialized)
     {
-        readConfigurationFile();
+        try
+        {
+            _readConfigurationFile();
 
-        myLogger = new Logger(this);
-        connect(this, SIGNAL(writeString(QString)), myLogger, SLOT(writeToLog(QString)));
+            myLogger = new Logger(this);
+            connect(this, SIGNAL(writeString(QString)),
+                    myLogger, SLOT(writeToLog(QString)));
+            myLogger->openLogFile();
 
-        myGuard = new Guard(this);
+            myGuard = new Guard(this);
+            connect(myGuard, SIGNAL(writeString(QString)),
+                    myLogger, SLOT(writeToLog(QString)));
+            myGuard->readUserDataFromFile();
 
-        //runTcpServer();
+            //runTcpServer();
 
-        runUiWebServer();
+            myUiWebServer = new Ui::Web::UiWebServer(
+                        myConfigurationParameters.webServerParameters, this);
+            connect(myUiWebServer, SIGNAL(writeString(QString)),
+                    myLogger, SLOT(writeToLog(QString)));
+            myUiWebServer->startServer();
+        }
+        catch(std::exception &e)
+        {
+            fatalError(e.what());
+            return;
+        }
 
         _isInitialized = true;
         Q_EMIT writeString("Core has been Initialized\n");
         Q_EMIT writeString("Core version is " + QString::number(VERSION_BUILD) + "\n");
+        Q_EMIT writeString("Library paths:\n");
+        for(auto i : this->libraryPaths())
+            Q_EMIT writeString("\t" + i +"\n");
+        Q_EMIT writeString("SQL  Drivers:\n");
+        for(auto i : QSqlDatabase::drivers())
+            Q_EMIT writeString("\t" + i +"\n");
     }
 }
 
-static Core *singletonCore = nullptr; ///< Extra local object
 Core *Core::instance()
 {
-    if(!singletonCore)
-        singletonCore = new Core(__argc,__argv);
-    return singletonCore;
+    static Core _instanceOfCore;
+    return &_instanceOfCore;
 }
 
-/// Format is:\n
-/// \a \b keyword \c value .
-/// \n keywords are (case insensitive): \n
-/// \li \b TCPPORT
-/// \li \b UIWEBSERVERDOCROOT
-/// \li \b UIWEBSERVERHTTPADDRESS
-/// \li \b UIWEBSERVERHTTPPORT
-/// \li \b UIWEBSERVERAPPROOT
-/// \li \b UIWEBSERVERCONFIG
-/// \li \b UIWEBSERVERACCESSLOG
-/// \see \c configurationfilekeywords.h
-/// \todo ...
-void Core::readConfigurationFile()
+void Core::_readConfigurationFile(const QString configurationFileName) throw(std::exception)
 {
-    if(!QFile::exists("config.cfg"))
-        fatalError("FATAL ERROR: Can't find 'config.cfg'\n");
+    if(!QFile::exists(configurationFileName))
+    {
+        Q_EMIT writeString("ERROR: Can't find " + configurationFileName + "\n");
+        throw std::runtime_error("ERROR: Can't find " + configurationFileName.toStdString() + "\n");
+    }
     else
     {
-        QFile *_configurationFile = new QFile("config.cfg");
+        QFile *_configurationFile = new QFile(configurationFileName);
         if(!_configurationFile->open(QIODevice::ReadOnly | QIODevice::Text))
-            fatalError("FATAL ERROR: Can't open 'config.cfg'\n");
+        {
+            Q_EMIT writeString("ERROR: Can't open "+ configurationFileName + "\n");
+            throw std::runtime_error("ERROR: Can't open "+ configurationFileName.toStdString() + "\n");
+        }
         else
         {
             // Processing configuration file line by line as text stream
@@ -84,67 +101,91 @@ void Core::readConfigurationFile()
 
                 /// \todo make it easier
                 // Comprasions
-                if(_currentWord.compare(
+                /*if(_currentWord.compare(
                             QString(CONFIGURATION_FILE_KEYWORD_TCPPORT),
                             Qt::CaseInsensitive) == 0)
                 {
                     // Read second word;
                     _currentWord = _currentLine.section(_sep,1,1,QString::SectionSkipEmpty);
-                    // If there is not a number or wrong number, port shall be equal to zero
+                    // If there is not a number or wrong number,
+                    // port shall be equal to zero
                     this->myConfigurationParameters.tcpServerPort = _currentWord.toInt();
                 }
-                else if(_currentWord.compare(
+                else */if(_currentWord.compare(
                             QString(CONFIGURATION_FILE_KEYWORD_UIWEBSERVERDOCROOT),
                             Qt::CaseInsensitive) == 0)
                 {
                     _currentWord = _currentLine.section(_sep,1,1,QString::SectionSkipEmpty);
-                    this->myConfigurationParameters.uiWebServerDocRoot = new char[_currentWord.length()];
-                    strcpy(this->myConfigurationParameters.uiWebServerDocRoot,_currentWord.toStdString().data());
+                    this->myConfigurationParameters.webServerParameters.uiWebServerDocRoot =
+                            new char[_currentWord.length()];
+                    strcpy(this->myConfigurationParameters.webServerParameters.uiWebServerDocRoot,
+                           _currentWord.toStdString().data());
                 }
                 else if(_currentWord.compare(
                             QString(CONFIGURATION_FILE_KEYWORD_UIWEBSERVERHTTPADDRESS),
                             Qt::CaseInsensitive) == 0)
                 {
                     _currentWord = _currentLine.section(_sep,1,1,QString::SectionSkipEmpty);
-                    this->myConfigurationParameters.uiWebServerHttpAddress = new char[_currentWord.length()];
-                    strcpy(this->myConfigurationParameters.uiWebServerHttpAddress,_currentWord.toStdString().data());
+                    this->myConfigurationParameters.webServerParameters.uiWebServerHttpAddress =
+                            new char[_currentWord.length()];
+                    strcpy(this->myConfigurationParameters.webServerParameters.uiWebServerHttpAddress,
+                           _currentWord.toStdString().data());
                 }
                 else if(_currentWord.compare(
                             QString(CONFIGURATION_FILE_KEYWORD_UIWEBSERVERHTTPPORT),
                             Qt::CaseInsensitive) == 0)
                 {
                     _currentWord = _currentLine.section(_sep,1,1,QString::SectionSkipEmpty);
-                    this->myConfigurationParameters.uiWebServerHttpPort = new char[_currentWord.length()];
-                    strcpy(this->myConfigurationParameters.uiWebServerHttpPort,_currentWord.toStdString().data());
+                    this->myConfigurationParameters.webServerParameters.uiWebServerHttpPort =
+                            new char[_currentWord.length()];
+                    strcpy(this->myConfigurationParameters.webServerParameters.uiWebServerHttpPort,
+                           _currentWord.toStdString().data());
                 }
                 else if(_currentWord.compare(
                             QString(CONFIGURATION_FILE_KEYWORD_UIWEBSERVERAPPROOT),
                             Qt::CaseInsensitive) == 0)
                 {
                     _currentWord = _currentLine.section(_sep,1,1,QString::SectionSkipEmpty);
-                    this->myConfigurationParameters.uiWebServerAppRoot = new char[_currentWord.length()];
-                    strcpy(this->myConfigurationParameters.uiWebServerAppRoot,_currentWord.toStdString().data());
+                    this->myConfigurationParameters.webServerParameters.uiWebServerAppRoot =
+                            new char[_currentWord.length()];
+                    strcpy(this->myConfigurationParameters.webServerParameters.uiWebServerAppRoot,
+                           _currentWord.toStdString().data());
                 }
                 else if(_currentWord.compare(
                             QString(CONFIGURATION_FILE_KEYWORD_UIWEBSERVERCONFIG),
                             Qt::CaseInsensitive) == 0)
                 {
                     _currentWord = _currentLine.section(_sep,1,1,QString::SectionSkipEmpty);
-                    this->myConfigurationParameters.uiWebServerConfig = new char[_currentWord.length()];
-                    strcpy(this->myConfigurationParameters.uiWebServerConfig,_currentWord.toStdString().data());
+                    this->myConfigurationParameters.webServerParameters.uiWebServerConfig =
+                            new char[_currentWord.length()];
+                    strcpy(this->myConfigurationParameters.webServerParameters.uiWebServerConfig,
+                           _currentWord.toStdString().data());
                 }
                 else if(_currentWord.compare(
                             QString(CONFIGURATION_FILE_KEYWORD_UIWEBSERVERACCESSLOG),
                             Qt::CaseInsensitive) == 0)
                 {
                     _currentWord = _currentLine.section(_sep,1,1,QString::SectionSkipEmpty);
-                    this->myConfigurationParameters.uiWebServerAccessLog = new char[_currentWord.length()];
-                    strcpy(this->myConfigurationParameters.uiWebServerAccessLog,_currentWord.toStdString().data());
+                    this->myConfigurationParameters.webServerParameters.uiWebServerAccessLog =
+                            new char[_currentWord.length()];
+                    strcpy(this->myConfigurationParameters.webServerParameters.uiWebServerAccessLog,
+                           _currentWord.toStdString().data());
                 }
             }
             _configurationFile->close();
             delete _configurationFile;
         }
+    }
+    if(
+            myConfigurationParameters.webServerParameters.uiWebServerAccessLog == nullptr ||
+            myConfigurationParameters.webServerParameters.uiWebServerAppRoot == nullptr ||
+            myConfigurationParameters.webServerParameters.uiWebServerConfig == nullptr ||
+            myConfigurationParameters.webServerParameters.uiWebServerDocRoot == nullptr ||
+            myConfigurationParameters.webServerParameters.uiWebServerHttpAddress == nullptr ||
+            myConfigurationParameters.webServerParameters.uiWebServerHttpPort == nullptr)
+    {
+        Q_EMIT writeString("ERROR: There aren't some parameter at the configuration file\n");
+        throw std::runtime_error("ERROR: There aren't some parameter at the configuration file\n");
     }
 }
 
@@ -158,17 +199,9 @@ void Core::readConfigurationFile()
     Q_EMIT writeString("Core TCP Server has been started\n");
 }*/
 
-void Core::runUiWebServer()
-{
-    if(myUiWebServer)
-        delete myUiWebServer;
-    myUiWebServer = new Ui::Web::UiWebServer(this);
-    myUiWebServer->startServer();
-}
-
 void Core::fatalError(const QString message)
 {
-    QString _str = QTime::currentTime().toString() + " " + message;
+    QString _str = QTime::currentTime().toString() + " FATAL " + message;
     QFile _lastCrash("LastCrashReport.log");
     _lastCrash.open(QIODevice::WriteOnly | QIODevice::Text);
     QTextStream _output(&_lastCrash);
@@ -182,9 +215,9 @@ void Core::fatalError(const QString message)
 
 Core::~Core()
 {
-    for(auto i : myUserSessions)
+    /*for(auto i : myUserSessions)
         delete i;
-    myUserSessions.clear();
+    myUserSessions.clear();*/
     if(myGuard)
         delete myGuard;
     //if(_myQTcpServer)

@@ -1,4 +1,4 @@
-/// \author Nazariy Jaworski
+/// \file \author Nazariy Jaworski
 
 #ifndef USERSESSION_H
 #define USERSESSION_H
@@ -21,7 +21,7 @@ namespace Session
         public : DataBase::DatabaseManager myDatabaseManager;
             /// Common constructor
             /// parent currently not used
-        public: UserSession(Guard::UserData const *ptrToUserData, QObject *parent);
+        public: UserSession(Guard::UserData const *ptrToUserData, QObject *parent = nullptr);
             /// Common destructor
         public: ~UserSession();
             /// Catch this signal with some Ui or Logger

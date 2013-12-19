@@ -1,46 +1,60 @@
-/// \author Nazariy Jaworski
+/// \file \author Nazariy Jaworski
 
 #include "logger.h"
-#include "core.h"
 #include <QDateTime>
+#include <QDebug>
+#include <QMutexLocker>
 
-Logger::Logger(QObject *parent = 0):
+Logger::Logger(QObject *parent):
     QObject(parent)
 {
-    QString _logFileName = "CoreLog.log";
-    //QString _logFileName = "CoreLog0.log";
-    //for(int _i=1;QFile::exists(_logFileName);++_i)
-    //{
-    //    _logFileName = "CoreLog" + QString::number(_i) + ".log";
-    //}
-    _logFile = new QFile(_logFileName);
+}
+
+void Logger::openLogFile(const QString logFileName) throw(std::exception)
+{
+    _myMutex.lock();
+    if(_logFile)
+    {
+        _logFile->flush();
+        _logFile->close();
+        delete _logFile;
+    }
+    _logFile = new QFile(logFileName);
     if(!_logFile->open(QIODevice::WriteOnly | QIODevice::Text))
     {
-        /// \todo try to avoid this instance call, because it does dependence
-        Core::instance()->fatalError("FATAL ERROR: Can't open CoreLogXXX.log");
+        Q_EMIT writeString("ERROR: Can't open " + logFileName + "\n");
+        delete _logFile;
+        _logFile = nullptr;
+        _myMutex.unlock();
+        throw std::runtime_error("ERROR: Can't open " + logFileName.toStdString() + "\n");
+        return;
     }
     else
     {
-        _logTextStream = new QTextStream(_logFile);
+        _myMutex.unlock();
+        #ifdef QT_DEBUG
+            writeToLog("--Working in DEBUG mode--\n");
+        #endif //QT_DEBUG
         writeToLog("Logging has been started\n");
     }
 }
 
-void Logger::writeToLog(const QString message) const
+void Logger::writeToLog(const QString message) throw(std::exception)
 {
-    if(_logTextStream)
-    {
+    // Locks _myMutex while exist, i.e. only within this method
+    QMutexLocker _locker(&_myMutex);
+    if(_logFile)
         QTextStream(_logFile) << QTime::currentTime().toString() << " " << message;
-        qDebug() << "LOGGER: " + QTime::currentTime().toString() << " " << message;
-    }
     else
+    {
         Q_EMIT writeString("ERROR: log file hasn't been opened\n");
+        throw std::runtime_error("ERROR: log file hasn't been opened\n");
+        return;
+    }
 }
 
 Logger::~Logger()
 {
-    if(_logTextStream)
-        delete _logTextStream;
     if(_logFile)
     {
         _logFile->flush();
