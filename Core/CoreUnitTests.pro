@@ -2,7 +2,7 @@
 
 TEMPLATE    =   app
 
-TARGET      =   Core
+TARGET      =   CoreUnitTests
 
 #QT dependences
 CONFIG      +=  console
@@ -10,12 +10,13 @@ CONFIG      +=  no_keywords # no Qt-keywords for avoiding boost/Wt and Qt confli
 CONFIG      +=  c++11
 QT          +=  network
 QT          +=  sql
+QT          +=  testlib
 
 #Wt Web ToolKit
 INCLUDEPATH += -isystem E:\Wt\Wt_3.3.0_boost_1.54.0_mingw_4.8.0_x32\include\
 INCLUDEPATH += -isystem E:\Boost\boost_1_54_0
 LIBS += E:\Wt\Wt_3.3.0_boost_1.54.0_mingw_4.8.0_x32\lib\libwt.a
-LIBS += E:\Wt\Wt_3.3.0_boost_1.54.0_mingw_4.8.0_x32\lib\libwthttp.a
+LIBS += E:\Wt\Wt_3.3.0_boost_1.54.0_mingw_4.8.0_x32\lib\libwttest.a
 LIBS += E:\Boost\boost_1_54_0\lib\libboost_signals-mgw48-mt-1_54.a
 LIBS += E:\Boost\boost_1_54_0\lib\libboost_system-mgw48-mt-1_54.a
 LIBS += E:\Boost\boost_1_54_0\lib\libboost_thread-mgw48-mt-1_54.a
@@ -35,7 +36,7 @@ QMAKE_CXXFLAGS += -Wno-write-strings
 system("SubWCRev $$PWD $$PWD/version.h.tpl $$OUT_PWD/version.h") #Tortise Svn is used
 
 SOURCES += \
-    main.cpp \
+    mainUnitTests.cpp \
     core.cpp \
     commandserver.cpp \
     guard.cpp \
@@ -51,7 +52,12 @@ SOURCES += \
     Session/usersession.cpp \
     DataBase/databasemanager.cpp \
     DataBase/databaseupdater.cpp \
-    workersession.cpp
+    workersession.cpp \
+    UnitTests/test_uiwebserver.cpp \
+    UnitTests/test_mainwidget.cpp \
+    UnitTests/test_logger.cpp \
+    UnitTests/test_guard.cpp \
+    UnitTests/test_core.cpp
 
 HEADERS += \
     core.h \
@@ -70,8 +76,17 @@ HEADERS += \
     DataBase/databasemanager.h \
     DataBase/databaseupdater.h \
     workersession.h \
-    configurationparameters.h
+    configurationparameters.h \
+    UnitTests/unit_tests_runner.h \
+    UnitTests/test_uiwebserver.h \
+    UnitTests/test_mainwidget.h \
+    UnitTests/test_logger.h \
+    UnitTests/test_guard.h \
+    UnitTests/test_core.h \
+    UnitTests/dummy_wserver.h
 
 OTHER_FILES += \
     Icons/mainicon.png \
     version.h.tpl
+
+DEFINES +=  RUN_UNIT_TESTS

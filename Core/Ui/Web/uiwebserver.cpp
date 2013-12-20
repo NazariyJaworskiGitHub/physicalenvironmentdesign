@@ -67,5 +67,9 @@ WApplication* UiWebServer::createApplication(const WEnvironment& env)
 UiWebServer::~UiWebServer()
 {
     if(_myWServer)
+    {
+        if(_myWServer->isRunning())
+            _myWServer->stop();
         delete _myWServer;
+    }
 }

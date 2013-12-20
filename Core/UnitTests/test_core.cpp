@@ -4,6 +4,32 @@
 
 void Test_Core::test()
 {
+    {
+        QFile* _test_ConfigFile = new QFile("config.cfg");
+        _test_ConfigFile->open(QIODevice::WriteOnly | QIODevice::Text);
+        QTextStream _qInput(_test_ConfigFile);
+        _qInput << "TCPPORT                 \t 15001        \n";
+        _qInput << "UIWEBSERVERDOCROOT      \t doc          \n";
+        _qInput << "UIWEBSERVERHTTPADDRESS  \t 0.0.0.0      \n";
+        _qInput << "UIWEBSERVERHTTPPORT     \t 81           \n";
+        _qInput << "UIWEBSERVERAPPROOT      \t .            \n";
+        _qInput << "UIWEBSERVERCONFIG       \t wtconfig.xml \n";
+        _qInput << "UIWEBSERVERACCESSLOG    \t AccesLog.log \n";
+        _test_ConfigFile->flush();
+        _test_ConfigFile->close();
+        delete _test_ConfigFile;
+    }
+
+    {
+        QFile* _test_UsersFile = new QFile("users.cfg");
+        _test_UsersFile->open(QIODevice::WriteOnly | QIODevice::Text);
+        QTextStream _qInput(_test_UsersFile);
+        _qInput << "testUser                \t testPassword \n";
+        _test_UsersFile->flush();
+        _test_UsersFile->close();
+        delete _test_UsersFile;
+    }
+
     Core* _instanceOfCore = nullptr;
     QVERIFY(_instanceOfCore == nullptr);
     {
@@ -35,4 +61,6 @@ void Test_Core::test()
     QVERIFY(Core::instance()->myLogger != nullptr);
     QVERIFY(Core::instance()->myUiWebServer != nullptr);
     QVERIFY(Core::instance()->isInitialized() == true);
+
+    Core::instance()->myUiWebServer->stopServer();
 }

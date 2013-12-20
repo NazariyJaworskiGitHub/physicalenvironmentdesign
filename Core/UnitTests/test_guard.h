@@ -4,7 +4,7 @@
 #define TEST_GUARD_H
 
 #include <QTest>
-#include <guard.h>
+#include "guard.h"
 class Test_Guard : public QObject
 {
     Q_OBJECT

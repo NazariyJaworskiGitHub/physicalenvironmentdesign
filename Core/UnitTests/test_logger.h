@@ -4,7 +4,7 @@
 #define TEST_LOGGER_H
 
 #include <QTest>
-#include <logger.h>
+#include "logger.h"
 class Test_Logger : public QObject
 {
     Q_OBJECT

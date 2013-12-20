@@ -3,13 +3,13 @@
 #ifndef UNIT_TESTS_RUNNER_H
 #define UNIT_TESTS_RUNNER_H
 
-#include <QDir>
 #include <QStringList>
-#include "UnitTests/test_core.h"
-#include "UnitTests/test_guard.h"
-#include "UnitTests/test_logger.h"
-#include "UnitTests/test_mainwidget.h"
-#include "UnitTests/test_uiwebserver.h"
+
+#include "test_core.h"
+#include "test_guard.h"
+#include "test_logger.h"
+#include "test_mainwidget.h"
+#include "test_uiwebserver.h"
 
 //tip! use "-vs" to see emited signals
 
@@ -63,5 +63,4 @@ void run_tests_all()
     run_tests_UiWebServer();
     run_tests_MainWidget();
 }
-
 #endif // UNIT_TESTS_RUNNER_H

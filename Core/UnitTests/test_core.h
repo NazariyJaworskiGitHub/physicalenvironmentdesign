@@ -4,7 +4,7 @@
 #define TEST_CORE_H
 
 #include <QTest>
-#include <core.h>
+#include "core.h"
 class Test_Core : public QObject
 {
     Q_OBJECT
