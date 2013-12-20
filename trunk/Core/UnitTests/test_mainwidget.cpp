@@ -2,11 +2,13 @@
 
 #include "test_mainwidget.h"
 
-//#include <Wt/Test/WTestEnvironment>
+#include "UnitTests/dummy_wserver.h"
+#include <Wt/Test/WTestEnvironment>
+
+/// \todo connect Test::WTestEnvironment and libwttest
 void Test_MainWidget::test()
 {
-    /// \todo connect Test::WTestEnvironment and libwttest
-    //Test::WTestEnvironment environment(".","wtconfig.xml");
-    //MainWidget *_mw = new MainWidget(environment, nullptr);
-    //delete _mw;
+    Test::WTestEnvironment environment(".","wtconfig.xml");
+    MainWidget *_mw = new MainWidget(environment, nullptr);
+    delete _mw;
 }

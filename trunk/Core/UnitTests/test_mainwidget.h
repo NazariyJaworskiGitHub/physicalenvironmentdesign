@@ -4,7 +4,7 @@
 #define TEST_MAINWIDGET_H
 
 #include <QTest>
-#include <Ui/Web/mainwidget.h>
+#include "Ui/Web/mainwidget.h"
 
 using namespace Ui::Web;
 

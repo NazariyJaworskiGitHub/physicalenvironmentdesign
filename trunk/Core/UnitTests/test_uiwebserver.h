@@ -4,7 +4,7 @@
 #define TEST_UIWEBSERVER_H
 
 #include <QTest>
-#include <Ui/Web/uiwebserver.h>
+#include "Ui/Web/uiwebserver.h"
 
 using namespace Ui::Web;
 

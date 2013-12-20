@@ -15,12 +15,12 @@ void Test_UiWebServer::test()
         QVERIFY(e.what());
     }
 
-    params.uiWebServerDocRoot = "";
+    params.uiWebServerDocRoot =     "";
     params.uiWebServerHttpAddress = "";
-    params.uiWebServerHttpPort = "";
-    params.uiWebServerAppRoot = "";
-    params.uiWebServerConfig = "";
-    params.uiWebServerAccessLog = "";
+    params.uiWebServerHttpPort =    "";
+    params.uiWebServerAppRoot =     "";
+    params.uiWebServerConfig =      "";
+    params.uiWebServerAccessLog =   "";
     try
     {
         _s = new UiWebServer(params, nullptr);
@@ -29,12 +29,12 @@ void Test_UiWebServer::test()
     {
         QVERIFY(e.what());
     }
-    params.uiWebServerDocRoot = ".";
+    params.uiWebServerDocRoot =     ".";
     params.uiWebServerHttpAddress = "0.0.0.0";
-    params.uiWebServerHttpPort = "81";
-    params.uiWebServerAppRoot = ".";
-    params.uiWebServerConfig = "wtconfig.xml";
-    params.uiWebServerAccessLog = "AccesLog.log";
+    params.uiWebServerHttpPort =    "81";
+    params.uiWebServerAppRoot =     ".";
+    params.uiWebServerConfig =      "wtconfig.xml";
+    params.uiWebServerAccessLog =   "AccesLog.log";
     _s = new UiWebServer(params, nullptr);
     QVERIFY(_s->isServerRunning() == false);
     _s->startServer();
