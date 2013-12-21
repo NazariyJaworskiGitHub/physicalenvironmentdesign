@@ -57,7 +57,10 @@ SOURCES += \
     UnitTests/test_mainwidget.cpp \
     UnitTests/test_logger.cpp \
     UnitTests/test_guard.cpp \
-    UnitTests/test_core.cpp
+    UnitTests/test_core.cpp \
+    UnitTests/test_authenticationwidget.cpp \
+    UnitTests/dummy_wserver.cpp \
+    UnitTests/test_usersession.cpp
 
 HEADERS += \
     core.h \
@@ -83,7 +86,9 @@ HEADERS += \
     UnitTests/test_logger.h \
     UnitTests/test_guard.h \
     UnitTests/test_core.h \
-    UnitTests/dummy_wserver.h
+    UnitTests/dummy_wserver.h \
+    UnitTests/test_authenticationwidget.h \
+    UnitTests/test_usersession.h
 
 OTHER_FILES += \
     Icons/mainicon.png \

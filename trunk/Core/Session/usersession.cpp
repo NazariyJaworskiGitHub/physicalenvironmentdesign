@@ -6,8 +6,15 @@
 using namespace Session;
 
 /// \todo myDatabaseManager(this)
-UserSession::UserSession(const Guard::UserData *ptrToUserData, QObject *parent) :
-    QObject(parent), myUserData(ptrToUserData),
+UserSession::UserSession(
+        const Guard::UserData *ptrToUserData,
+        QObject *parent) throw(std::exception):
+    QObject(parent),
+    myUserData( // I hope it will work
+        ptrToUserData ?
+            ptrToUserData :
+            throw std::runtime_error(
+                "ERROR: UserSession constructor - ptrToUserData == nullptr\n")),
     myDatabaseManager(myUserData->userName, nullptr)
 {
     connect(this, SIGNAL(writeString(QString)),

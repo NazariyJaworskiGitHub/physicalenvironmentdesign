@@ -17,7 +17,7 @@ AuthenticationWidget::AuthenticationWidget(
     QObject(qObjParent),
     WContainerWidget(wContParent),
     _myUserSession(ptrToUserSession),
-    _isLogInState(true)
+    _isWaitingForLogIn((*_myUserSession) ? false : true)
 {
     WGridLayout *_myWGridLayout = new WGridLayout(this);
     this->setLayout(_myWGridLayout);
@@ -51,13 +51,16 @@ AuthenticationWidget::AuthenticationWidget(
     _myLogInOutButton->clicked().connect(this, &AuthenticationWidget::_onLogInOutButton);
     _myWContainerWidget->addWidget(_myLogInOutButton);
 
-    _changeToLogInState();
+    if(_isWaitingForLogIn)
+        _changeToWaitingForLogInState();
+    else
+        _changeToWaitingForLogOutState();
 }
 
 /// \todo make multilanguage support (Localization)
-void AuthenticationWidget::_changeToLogInState()
+void AuthenticationWidget::_changeToWaitingForLogInState()
 {
-    _isLogInState = true;
+    _isWaitingForLogIn = true;
     _myInfoMessageLabel->setText("Please Log In!");
     _myUserNameLabel->setText("Name:");
     _myUserNameLabel->setHidden(false);
@@ -70,27 +73,16 @@ void AuthenticationWidget::_changeToLogInState()
 }
 
 /// \todo make multilanguage support (Localization)
-void AuthenticationWidget::_changeToLogOutState()
+void AuthenticationWidget::_changeToWaitingForLogOutState()
 {
     if(!(*_myUserSession))
-    {
-        Q_EMIT writeString(
-                    "Web session client " +
-                    QString(WApplication::instance()->environment().clientAddress().data()) +
-                    " ERROR: UserSession have been not created after LogIn procedure," +
-                    "current session will be closed\n");
-        WApplication::instance()->root()->hide();
-        WMessageBox::show(
-                    "Error!",
-                    "UserSession have been not created after LogIn procedure,\n current session will be closed",
-                    Ok);
-        WApplication::instance()->quit();
-    }
+        notifyError(QString("UserSession have been not created after LogIn procedure") +
+                    "(_myUserSession==nullptr).\nCurrent session will be closed\n");
     else
     {
-        _isLogInState = false;
-        _myInfoMessageLabel->setText(
-                    "Welcome! " + (*_myUserSession)->myUserData->userName.toStdString());
+        _isWaitingForLogIn = false;
+        _myInfoMessageLabel->setText("Welcome! " +
+                        (*_myUserSession)->myUserData->userName.toStdString());
         _myUserNameLabel->setHidden(true);
         _myUserNameLineEdit->setHidden(true);
         _myUserPassWordLabel->setHidden(true);
@@ -98,7 +90,7 @@ void AuthenticationWidget::_changeToLogOutState()
         _myLogInOutButton->setText("Log Out");
         _myLogInOutButton->setToolTip("Logout from current session");
 
-        /// \todo this is just for test
+        /*/// \todo this is just for test
         {
             WApplication::instance()->root()->hide();
             DatabaseConnection::DBCWidget _myUiWebDatabaseConnectionWidget(
@@ -119,53 +111,59 @@ void AuthenticationWidget::_changeToLogOutState()
                                 (*_myUserSession)->myDatabaseManager.getDatabaseConnectionName());
                 }
             }
-        }
+        }*/
     }
 }
 
 void AuthenticationWidget::_onLogInOutButton()
 {
-    if(_isLogInState)
-        // try to logIn and start a new UserSession
+    if(_isWaitingForLogIn) // try to logIn and start a new UserSession
     {
-        QString _userName(_myUserNameLineEdit->text().narrow().data());
-        QString _passWord(_myPassWordLineEdit->text().narrow().data());
-        Q_EMIT writeString(
-                    "Web session client " +
-                    QString(WApplication::instance()->environment().clientAddress().data()) +
-                    " user " + _userName + " is trying to log in\n");
-        /// \todo it may freez Ui?
-        bool _isAlreadyLoggedIn;
-        Guard::UserData* _foundUserData =
-                Core::instance()->myGuard->logInUser(_userName,_passWord, &_isAlreadyLoggedIn);
-        if(_foundUserData)
-        {
-            (*_myUserSession) = new Session::UserSession(_foundUserData, nullptr);
-            _changeToLogOutState();
-        }
+        if(*_myUserSession)
+            notifyError(QString("Can't create new UserSession (_myUserSession!=nullptr)\n") +
+                        "Current session will be closed\n");
         else
         {
-            /// \todo try to make it better
-            WApplication::instance()->root()->hide();
-            if(_isAlreadyLoggedIn)
-                WMessageBox::show(
-                            "Authentication failed!",
-                            "User " + _myUserNameLineEdit->text() + " has already been logged in",
-                            Ok);
+            QString _userName(_myUserNameLineEdit->text().narrow().data());
+            QString _passWord(_myPassWordLineEdit->text().narrow().data());
+            Q_EMIT writeString(
+                        "Web session client " +
+                        QString(WApplication::instance()->environment().clientAddress().data()) +
+                        " user " + _userName + " is trying to log in\n");
+            /// \todo it may freez Ui?
+            bool _isAlreadyLoggedIn;
+            Guard::UserData* _foundUserData =
+                    Core::instance()->myGuard->logInUser(
+                        _userName,_passWord, &_isAlreadyLoggedIn);
+            if(_foundUserData)
+            {
+                (*_myUserSession) = new Session::UserSession(_foundUserData, nullptr);
+                _changeToWaitingForLogOutState();
+            }
             else
-                WMessageBox::show(
-                            "Authentication failed!",
-                            "You have entered wrong user-name or password",
-                            Ok);
-            WApplication::instance()->root()->show();
+            {
+                /// \todo try to make it better
+                WApplication::instance()->root()->hide();
+                if(_isAlreadyLoggedIn)
+                    WMessageBox::show(
+                                "Authentication failed!",
+                                "User " + _myUserNameLineEdit->text() +
+                                    " has already been logged in",
+                                Ok);
+                else
+                    WMessageBox::show(
+                                "Authentication failed!",
+                                "You have entered wrong user-name or password",
+                                Ok);
+                WApplication::instance()->root()->show();
+            }
         }
     }
-    else
-        // try to logOut and finish the UserSession
+    else // try to logOut and finish the UserSession
     {
         delete *_myUserSession;
         *_myUserSession = nullptr;
-        _changeToLogInState();
+        _changeToWaitingForLogInState();
     }
 }
 
@@ -173,10 +171,18 @@ AuthenticationWidget::~AuthenticationWidget()
 {
     /// \todo this destructor will be called after server`s timeout and
     /// i don't know how to fix that!
-    /*delete myUserNameLabel;
-    delete myUserPassWordLabel;
-    delete myUserNameLineEdit;
-    delete myPassWordLineEdit;
-    delete myLogInOutButton;
-    delete myInfoMessageLabel;*/
+}
+
+void AuthenticationWidget::notifyError(const QString msg) const
+{
+    Q_EMIT writeString(
+                "ERROR: Client [" +
+                QString(WApplication::instance()->environment().clientAddress().data()) +
+                "]:" + msg);
+    WApplication::instance()->root()->hide();
+    WMessageBox::show(
+                "ERROR!",
+                msg.toStdString(),
+                Ok);
+    WApplication::instance()->quit();
 }

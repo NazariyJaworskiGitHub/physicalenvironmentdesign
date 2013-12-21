@@ -10,18 +10,22 @@
 namespace Session
 {
     /// Each user works in its own session
+    /// \n throws std::exception
     /// \todo make it thread-safe
     class UserSession : public QObject
     {
         Q_OBJECT
 
-        /// It should refer to specific UserData that located at Core::myGuard object
+            /// It should refer to specific UserData that located at Core::myGuard object
         public: const Guard::UserData *myUserData = nullptr;
             /// Represents the connection to MySQL database
         public : DataBase::DatabaseManager myDatabaseManager;
-            /// Common constructor
+            /// Common constructor, can't be done with empty ptrToUserData,
             /// parent currently not used
-        public: UserSession(Guard::UserData const *ptrToUserData, QObject *parent = nullptr);
+            /// \n throws std::exception
+        public: UserSession(
+                Guard::UserData const *ptrToUserData,
+                QObject *parent = nullptr) throw(std::exception);
             /// Common destructor
         public: ~UserSession();
             /// Catch this signal with some Ui or Logger

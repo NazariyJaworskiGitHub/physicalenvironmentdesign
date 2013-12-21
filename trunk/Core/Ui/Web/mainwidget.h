@@ -63,6 +63,7 @@ namespace Ui
                 /// \todo i don't shure that this item have to be located here
                 /// \todo make it as singleton for web-session, like WApplication::instance()
             private: Session::UserSession* _myUserSession = nullptr;
+            public : const Session::UserSession* getUserSession() const {return _myUserSession;}
                 /// Authentication widget
             private: AuthenticationWidget *_myUiWebAuthenticationWidget = nullptr;
             private: WTabWidget *_myWorkingAreaTabWidget = nullptr;
