@@ -2,6 +2,7 @@
 
 #include "test_guard.h"
 #include <QTextStream>
+#include <iostream>
 void Test_Guard::test()
 {
     Guard *_g = new Guard(nullptr);
@@ -13,6 +14,7 @@ void Test_Guard::test()
     catch(std::exception &e)
     {
         QVERIFY(e.what());
+        std::cout << "Expected error: " << e.what();
     }
 
     QFile* _test_UsersFile = new QFile("test_UsersFile");
@@ -45,6 +47,7 @@ void Test_Guard::test()
     catch(std::exception &e)
     {
         QVERIFY(e.what());
+        std::cout << "Expected error: " << e.what();
     }
     _b = _g->logOutUser(_d1);
     QVERIFY(_b == true);

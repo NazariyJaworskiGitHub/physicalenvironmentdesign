@@ -41,8 +41,12 @@ namespace Ui
                 /// see AuthenticationWidget()
                 /// if you call delete, dont forget to set it with nullptr
             private: Session::UserSession ** const _myUserSession;
+                /// If true - show login form, else show logout form,
+                /// default depends on _myUserSession
+            private: bool _isWaitingForLogIn;
+                /// Returns _isWaitingForLogIn
+            public : bool isWaitingForLogIn() const {return _isWaitingForLogIn;}
 
-            private: bool           _isLogInState;
             private: WLabel         *_myUserNameLabel        = nullptr;
             private: WLabel         *_myUserPassWordLabel    = nullptr;
             private: WLineEdit      *_myUserNameLineEdit     = nullptr;
@@ -59,11 +63,14 @@ namespace Ui
                 /// Slot for myLogInOutButton
             private: void _onLogInOutButton();
                 /// Change widget to display log in fields
-            private: void _changeToLogInState();
+            private: void _changeToWaitingForLogInState();
                 /// Change widget to display log out fields
-            private: void _changeToLogOutState();
+            private: void _changeToWaitingForLogOutState();
                 /// Common destructor
             public : ~AuthenticationWidget();
+                /// Notify user with a message-box, about some error that is occurred,
+                /// closes current session
+            public : void notifyError(const QString msg) const;
                 /// Catch this signal with some Ui or Logger
             public : Q_SIGNAL void writeString(const QString message) const;
         };

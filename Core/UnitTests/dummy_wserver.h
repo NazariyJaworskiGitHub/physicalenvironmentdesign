@@ -16,33 +16,6 @@
 #include <Wt/WServer>
 
 // Implementation of dummy Test-case WServer (conflict between libwthttp & libwttest)
-// WARNING! It does dependence for all usage of WServer
-/// Dummy flag
-static bool _serverRunningFlag = false;
-/// Dummy stub
-bool WServer::start()
-{
-    return _serverRunningFlag = true;
-}
-/// Dummy stub
-void WServer::stop()
-{
-    _serverRunningFlag = false;
-}
-/// Dummy stub
-int WServer::httpPort() const
-{
-    return 0;
-}
-/// Dummy stub
-bool WServer::isRunning() const
-{
-    return _serverRunningFlag;
-}
-/// Dummy stub
-void WServer::setServerConfiguration(
-        int argc, char *argv[], const std::string &serverConfigurationFile)
-{
-}
+// See .cpp file
 
 #endif // DUMMY_WSERVER_H

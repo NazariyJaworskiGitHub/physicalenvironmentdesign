@@ -1,11 +1,12 @@
 /// \file \author Nazariy Jaworski
 
 #include "test_uiwebserver.h"
+#include <iostream>
 
 void Test_UiWebServer::test()
 {
     ConfigurationParameters::WebServerParameters params;
-    UiWebServer *_s;
+    UiWebServer *_s = nullptr;
     try
     {
         _s = new UiWebServer(params, nullptr);
@@ -13,7 +14,9 @@ void Test_UiWebServer::test()
     catch(std::exception &e)
     {
         QVERIFY(e.what());
+        std::cout << "Expected error: " << e.what();
     }
+    QVERIFY(_s == nullptr);
 
     params.uiWebServerDocRoot =     "";
     params.uiWebServerHttpAddress = "";
@@ -28,7 +31,10 @@ void Test_UiWebServer::test()
     catch(std::exception &e)
     {
         QVERIFY(e.what());
+        std::cout << "Expected error: " << e.what();
     }
+    QVERIFY(_s == nullptr);
+
     params.uiWebServerDocRoot =     ".";
     params.uiWebServerHttpAddress = "0.0.0.0";
     params.uiWebServerHttpPort =    "81";
@@ -36,6 +42,7 @@ void Test_UiWebServer::test()
     params.uiWebServerConfig =      "wtconfig.xml";
     params.uiWebServerAccessLog =   "AccesLog.log";
     _s = new UiWebServer(params, nullptr);
+    QVERIFY(_s != nullptr);
     QVERIFY(_s->isServerRunning() == false);
     _s->startServer();
     QVERIFY(_s->isServerRunning() == true);
