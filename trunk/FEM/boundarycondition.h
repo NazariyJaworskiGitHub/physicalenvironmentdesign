@@ -16,6 +16,7 @@ namespace FEM
             _myPotential = potential;
             _myFlux = flux;
         }
+        public : ~BoundaryCondition(){}
     };
 }
 #endif // BOUNDARYCONDITION_H
