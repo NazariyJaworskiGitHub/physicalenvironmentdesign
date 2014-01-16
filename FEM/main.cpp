@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "beam.h"
 #include "boundarycondition.h"
 #include "domain.h"
@@ -24,6 +26,9 @@ int main()
 
     // Simulation object
     FEM::Beam<qreal, FEM::Node1D> myBeam(BEAM_LENGTH);
+    myBeam.setEnvironment(0,
+                Environment<qreal>(
+                    "test environment",CONDUCTION,CONDUCTION,CONDUCTION));
 
     // Boundary conditions
     myBeam.setBoundaryCondition(
@@ -41,14 +46,18 @@ int main()
                     FEM::Node1D(0+i*myBeam.getLength()/NUMBER_OF_ELEMENTS));
     }
     myBeam.getGrid(0).createNode(FEM::Node1D(myBeam.getLength()));
-    /*QVector<FiniteElement<Node3D,2>> elements;
     for(int i=0; i<NUMBER_OF_ELEMENTS; i++)
     {
-        elements += FiniteElement<Node3D,2>(&nodes[i], &nodes[i+1]);
-    }*/
+        myBeam.getGrid(0).createFiniteElement(
+                    i,
+                    i+1,
+                    myBeam.getEnvironment(0).getConductionCoefficients());
+    }
 
     // Matrix assembling
-    myBeam.createDomain(0);
+
+    myBeam.setDomain(0,myBeam.getGrid(0).constructDomain());
+    std::cout << myBeam.getDomain(0).getStiffnessMatrix() << std::endl;
 
     // Equations system solving
     // ...

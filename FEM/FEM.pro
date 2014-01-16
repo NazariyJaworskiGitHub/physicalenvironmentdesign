@@ -14,7 +14,8 @@ SOURCES += main.cpp \
     beam.cpp \
     TESTS/test_finiteelement.cpp \
     grid.cpp \
-    node.cpp
+    node.cpp \
+    environment.cpp
 
 HEADERS += \
     boundarycondition.h \
@@ -25,4 +26,5 @@ HEADERS += \
     TESTS/test_finiteelement.h \
     TESTS/tests_runner.h \
     grid.h \
-    node.h
+    node.h \
+    environment.h

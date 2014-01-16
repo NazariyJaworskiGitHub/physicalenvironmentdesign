@@ -4,8 +4,6 @@
 #include <QVector>
 #include <Eigen/Sparse>
 
-#include "finiteelement.h"
-
 namespace FEM
 {
     /// So-called "Domain" provides the calculation of stiffness
@@ -22,12 +20,25 @@ namespace FEM
     {
         private: Eigen::SparseMatrix<_DimType_> _myStiffnessMatrix;
         private: QVector<_DimType_>             _myForceVector;
-        public : Domain(){}
-        /*public : Domain(const Domain &target)
+        public : Eigen::SparseMatrix<_DimType_> & getStiffnessMatrix()
         {
-            _stiffnessMatrix = target._stiffnessMatrix;
-            _forceVector = target._forceVector;
-        }*/
+            return _myStiffnessMatrix;
+        }
+        public : void setStiffnessMatrix(Eigen::SparseMatrix<_DimType_> & stiffnessMatrix)
+        {
+            /// \todo
+            _myStiffnessMatrix = stiffnessMatrix;
+        }
+        public : QVector<_DimType_> & getForceVector()
+        {
+            return _myForceVector;
+        }
+        public : void setForceVector(QVector<_DimType_> & forceVector)
+        {
+            /// \todo
+            _myForceVector = forceVector;
+        }
+        public : Domain(){}
         public : ~Domain(){}
     };
 }

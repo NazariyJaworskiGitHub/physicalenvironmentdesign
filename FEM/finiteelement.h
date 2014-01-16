@@ -3,6 +3,7 @@
 
 #include <cstdarg>
 #include <Eigen/Dense>
+#include <QList>
 
 namespace FEM
 {
@@ -15,33 +16,64 @@ namespace FEM
     ///                   each number should be accesible by [] operator;
     ///   _nNodes_      - number of nodes per finite element;
     ///   _nDimentions_ - number of dimentions, where finite element exists
+    /// \todo Finite element is also a simple domain
     template <typename _DimType_, typename _NodeType_, int _nNodes_, int _nDimentions_>
     class FiniteElement
     {
-        private: _NodeType_ *_myNodes[_nNodes_];
+        private: QList<_NodeType_> *_ptrToNodesList;
+        private: int _myNodeIndexes[_nNodes_];
+
+        public : const int * getNodeIndexes() const
+        {
+            return _myNodeIndexes;
+        }
         public : _NodeType_ &operator [](const int &index) throw(std::out_of_range)
         {
             if(index >= _nNodes_ || index < 0)
-            throw std::out_of_range("FiniteElement[i], i out of range");
-            return *_myNodes[index];
+                throw std::out_of_range("FiniteElement[i], i out of range");
+            return (*_ptrToNodesList)[_myNodeIndexes[index]];
         }
-        public : FiniteElement(){}
-        public : FiniteElement(_NodeType_ *ni, ...)
+        public : FiniteElement(const FiniteElement &target):
+            _ptrToNodesList(target._ptrToNodesList)
         {
-            _myNodes[0] = ni;
+            memcpy(_myNodeIndexes,target._myNodeIndexes,_nNodes_*sizeof(int));
+        }
+        public : FiniteElement(
+                QList<_NodeType_> *ptrToNodesList,
+                int ni, ...) throw(std::out_of_range):
+            _ptrToNodesList(ptrToNodesList)
+        {
+            _myNodeIndexes[0] = ni;
             va_list _ptr;
             va_start(_ptr, ni);
             for(int i=1; i<_nNodes_; i++)
-                _myNodes[i] = va_arg(_ptr, _NodeType_ *);
+                _myNodeIndexes[i] = va_arg(_ptr, int);
             va_end(_ptr);
-        }
-        public : FiniteElement(const FiniteElement &target)
-        {
-            memcpy(_myNodes,target._myNodes,_nNodes_*sizeof(_NodeType_ *));
+
+            bool _allCorrect = true;
+            for(int i=0; i<_nNodes_; i++)
+            {
+                if(_myNodeIndexes[i] >= _ptrToNodesList->size() || _myNodeIndexes[i] < 0)
+                {
+                    _allCorrect = false;
+                    break;
+                }
+                for(int j=0; j<_nNodes_; j++)
+                {
+                    if(i == j) continue;
+                    else if(_myNodeIndexes[i] == _myNodeIndexes[j])
+                    {
+                        _allCorrect = false;
+                        break;
+                    }
+                }
+            }
+            if(!_allCorrect)
+                throw std::out_of_range("FiniteElement(), index out of range, or repeated");
         }
         /// \todo it fits only to simplex elements
         public : Eigen::Matrix<_DimType_, _nNodes_, _nNodes_> calculateStiffnessMatrix(
-                    const Eigen::Matrix<_DimType_, _nDimentions_, _nDimentions_> &conductionMatrix) const
+                _DimType_ *ptrToConductionCoefficients) const
         throw (std::logic_error)
         {
             //-Find local stiffness matrix [K], rank([K]) = number of nodes ^2:
@@ -111,6 +143,12 @@ namespace FEM
             //  Segerlind  L 1976 Applied Finite Element Analysis
             //  (New York: Wiley, John, and Sons, Incorporated)
 
+            // prepare conduction matrix
+            Eigen::Matrix<_DimType_, _nDimentions_, _nDimentions_> _conductionMatrix;
+            _conductionMatrix.setZero(_nDimentions_, _nDimentions_);
+            for(int i=0;i<_nDimentions_;i++)
+                _conductionMatrix(i,i) = ptrToConductionCoefficients[i];
+
             Eigen::Matrix<_DimType_, _nNodes_, _nNodes_> _C;
             Eigen::Matrix<_DimType_, _nNodes_, _nNodes_> _invC;
 
@@ -119,7 +157,7 @@ namespace FEM
             {
                 _C(i,0) = 1;
                 for(int j=0; j< _nDimentions_; j++)
-                   _C(i,j+1) = (*_myNodes[i])[j];
+                   _C(i,j+1) = (*_ptrToNodesList)[_myNodeIndexes[i]][j];
             }
 
             // calculate determinant of [C]
@@ -145,10 +183,19 @@ namespace FEM
                     _invC.transpose().template block<_nNodes_, _nNodes_-1>(0,1);
 
             // calculate and return [K]
-            return _volume * _transposedB * conductionMatrix * _B;
+            return _volume * _transposedB * _conductionMatrix * _B;
         }
         public : ~FiniteElement() {}
     };
+
+    template <typename _DimType_, typename _NodeType_>
+    using Edge = FiniteElement<_DimType_, _NodeType_, 2, 1>;
+
+    template <typename _DimType_, typename _NodeType_>
+    using Triangle = FiniteElement<_DimType_, _NodeType_, 3, 2>;
+
+    template <typename _DimType_, typename _NodeType_>
+    using Tetrahedron = FiniteElement<_DimType_, _NodeType_, 4, 3>;
 }
 
 #endif // FINITEELEMENT_H

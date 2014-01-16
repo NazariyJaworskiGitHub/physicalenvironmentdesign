@@ -5,7 +5,7 @@
 
 #include "boundarycondition.h"
 #include "domain.h"
-#include "grid.h"
+#include "environment.h"
 
 namespace FEM
 {
@@ -14,7 +14,7 @@ namespace FEM
     {
         private: QMap<int, BoundaryCondition<_DimType_>> _myBoundaryConditions;
         private: QMap<int, Domain<_DimType_>> _myDomains;
-        private: QMap<int, Grid<_DimType_,_NodeType_,_nDimentions_>> _myGrids;
+        private: QMap<int, Environment<_DimType_>> _myEnvironments;
 
         public : void setBoundaryCondition(
                 const int boundaryId, const BoundaryCondition<_DimType_> &condition)
@@ -32,10 +32,9 @@ namespace FEM
             else throw std::out_of_range("SimulationObject::getBoundaryCondition(), boundaryId out of range");
         }
 
-        public : Domain<_DimType_> &createDomain(const int domainId)
+        public : void setDomain(const int domainId, const Domain<_DimType_> &&domain)
         {
-            _myDomains.insert(domainId, Domain<_DimType_>());
-            return _myDomains[domainId];
+            _myDomains.insert(domainId, domain);
         }
         public : Domain<_DimType_> &getDomain(const int domainId)
                  throw (std::out_of_range)
@@ -47,19 +46,19 @@ namespace FEM
             else throw std::out_of_range("SimulationObject::getDomain(), domainId out of range");
         }
 
-        public : Grid<_DimType_,_NodeType_,_nDimentions_> &createGrid(const int gridId)
+        public : void setEnvironment(
+                const int environmentId, const Environment<_DimType_> &environment)
         {
-            _myGrids.insert(gridId, Grid<_DimType_,_NodeType_,_nDimentions_>());
-            return _myGrids[gridId];
+            _myEnvironments.insert(environmentId, environment);
         }
-        public : Grid<_DimType_,_NodeType_,_nDimentions_> &getGrid(const int gridId)
+        public : Environment<_DimType_> &getEnvironment(const int environmentId)
                  throw (std::out_of_range)
         {
-            if(_myGrids.contains(gridId))
+            if(_myEnvironments.contains(environmentId))
             {
-                return _myGrids[gridId];
+                return _myEnvironments[environmentId];
             }
-            else throw std::out_of_range("SimulationObject::getGrid(), gridId out of range");
+            else throw std::out_of_range("SimulationObject::getEnvironment(), domainId out of range");
         }
 
         public :SimulationObject(){}
