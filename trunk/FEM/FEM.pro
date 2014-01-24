@@ -6,6 +6,8 @@ CONFIG += no_keywords
 
 QT += testlib
 
+INCLUDEPATH += E:\ViennaCL-1.4.2\
+
 SOURCES += main.cpp \
     boundarycondition.cpp \
     simulationobject.cpp \
@@ -15,7 +17,7 @@ SOURCES += main.cpp \
     TESTS/test_finiteelement.cpp \
     grid.cpp \
     node.cpp \
-    environment.cpp
+    phase.cpp
 
 HEADERS += \
     boundarycondition.h \
@@ -27,4 +29,4 @@ HEADERS += \
     TESTS/tests_runner.h \
     grid.h \
     node.h \
-    environment.h
+    phase.h

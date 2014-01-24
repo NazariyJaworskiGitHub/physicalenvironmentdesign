@@ -1,9 +1,13 @@
 #ifndef BEAM_H
 #define BEAM_H
 
-#include "QMap"
+#include <QMap>
+
 #include "grid.h"
+#include "node.h"
 #include "simulationobject.h"
+
+
 
 namespace FEM
 {
@@ -33,6 +37,8 @@ namespace FEM
         public : Beam(int length):_length(length){}
         public : ~Beam(){}
     };
+
+    typedef Beam<qreal, Node1D> BeamNative;
 }
 
 #endif // BEAM_H
