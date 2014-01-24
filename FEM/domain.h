@@ -19,7 +19,7 @@ namespace FEM
     class Domain
     {
         private: Eigen::SparseMatrix<_DimType_> _myStiffnessMatrix;
-        private: QVector<_DimType_>             _myForceVector;
+        private: Eigen::SparseMatrix<_DimType_> _myForceVector;
         public : Eigen::SparseMatrix<_DimType_> & getStiffnessMatrix()
         {
             return _myStiffnessMatrix;
@@ -29,11 +29,11 @@ namespace FEM
             /// \todo
             _myStiffnessMatrix = stiffnessMatrix;
         }
-        public : QVector<_DimType_> & getForceVector()
+        public : Eigen::SparseMatrix<_DimType_> & getForceVector()
         {
             return _myForceVector;
         }
-        public : void setForceVector(QVector<_DimType_> & forceVector)
+        public : void setForceVector(Eigen::SparseMatrix<_DimType_> & forceVector)
         {
             /// \todo
             _myForceVector = forceVector;

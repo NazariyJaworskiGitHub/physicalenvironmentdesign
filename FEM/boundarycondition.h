@@ -11,6 +11,10 @@ namespace FEM
         private: _DimType_ _myFlux;        // II (Dirichlet)
         public : const _DimType_ & getFlux() const {return _myFlux;}
         public : void setFlux(const _DimType_ flux) {_myFlux = flux;}
+        public : BoundaryCondition()
+        {
+            ///\todo
+        }
         public : BoundaryCondition(const _DimType_ potential, const _DimType_ flux)
         {
             _myPotential = potential;

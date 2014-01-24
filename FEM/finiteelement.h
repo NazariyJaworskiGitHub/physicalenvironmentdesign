@@ -2,8 +2,12 @@
 #define FINITEELEMENT_H
 
 #include <cstdarg>
-#include <Eigen/Dense>
 #include <QList>
+
+#include <Eigen/Dense>
+
+//#include "viennacl/matrix.hpp"
+//#include "viennacl/linalg/prod.hpp"
 
 namespace FEM
 {
@@ -20,6 +24,8 @@ namespace FEM
     template <typename _DimType_, typename _NodeType_, int _nNodes_, int _nDimentions_>
     class FiniteElement
     {
+        //public : enum BOUNDARIES {LEFT, RIGHT, TOP, BOTTOM, FRONT, BACK};
+
         private: QList<_NodeType_> *_ptrToNodesList;
         private: int _myNodeIndexes[_nNodes_];
 
@@ -46,19 +52,19 @@ namespace FEM
             _myNodeIndexes[0] = ni;
             va_list _ptr;
             va_start(_ptr, ni);
-            for(int i=1; i<_nNodes_; i++)
+            for(int i=1; i<_nNodes_; ++i)
                 _myNodeIndexes[i] = va_arg(_ptr, int);
             va_end(_ptr);
 
             bool _allCorrect = true;
-            for(int i=0; i<_nNodes_; i++)
+            for(int i=0; i<_nNodes_; ++i)
             {
                 if(_myNodeIndexes[i] >= _ptrToNodesList->size() || _myNodeIndexes[i] < 0)
                 {
                     _allCorrect = false;
                     break;
                 }
-                for(int j=0; j<_nNodes_; j++)
+                for(int j=0; j<_nNodes_; ++j)
                 {
                     if(i == j) continue;
                     else if(_myNodeIndexes[i] == _myNodeIndexes[j])
@@ -71,9 +77,44 @@ namespace FEM
             if(!_allCorrect)
                 throw std::out_of_range("FiniteElement(), index out of range, or repeated");
         }
+        //-For simplex elements
+        //       |[C]|
+        //   V = -----, n - number of dimensions, |.| - taking of determinant
+        //         n!
+        //   warning! - volume is depending of determinant sign, so renumber
+        //              element's nodes if it is negative
+        public : _DimType_ calculateElementVolume() const throw (std::logic_error)
+        {
+            /// \todo
+            //viennacl::matrix<_DimType_> _C(_nNodes_, _nNodes_);
+            //viennacl::matrix<_DimType_> _invC(_nNodes_, _nNodes_);
+
+            Eigen::Matrix<_DimType_, _nNodes_, _nNodes_> _C;
+            Eigen::Matrix<_DimType_, _nNodes_, _nNodes_> _invC;
+
+            for(int i=0;i<_nNodes_;++i)
+            {
+                _C(i,0) = 1;
+                for(int j=0; j< _nDimentions_; ++j)
+                   _C(i,j+1) = (*_ptrToNodesList)[_myNodeIndexes[i]][j];
+            }
+
+            bool _isInversible;
+            _DimType_ _determinant;
+            /// \todo it fits only up to 4x4 matrices
+            _C.computeInverseAndDetWithCheck(_invC,_determinant,_isInversible);
+            if(!_isInversible)
+                throw std::logic_error("FiniteElement has zero-volume");
+
+            _DimType_ _factorial = 1;
+            for(int i=2; i<=_nDimentions_;++i)
+                _factorial*=i;
+            return _determinant/_factorial;
+        }
+
         /// \todo it fits only to simplex elements
         public : Eigen::Matrix<_DimType_, _nNodes_, _nNodes_> calculateStiffnessMatrix(
-                _DimType_ *ptrToConductionCoefficients) const
+                const _DimType_ *ptrToConductionCoefficients) const
         throw (std::logic_error)
         {
             //-Find local stiffness matrix [K], rank([K]) = number of nodes ^2:
@@ -153,10 +194,10 @@ namespace FEM
             Eigen::Matrix<_DimType_, _nNodes_, _nNodes_> _invC;
 
             // calculate [C]
-            for(int i=0;i<_nNodes_;i++)
+            for(int i=0;i<_nNodes_;++i)
             {
                 _C(i,0) = 1;
-                for(int j=0; j< _nDimentions_; j++)
+                for(int j=0; j< _nDimentions_; ++j)
                    _C(i,j+1) = (*_ptrToNodesList)[_myNodeIndexes[i]][j];
             }
 
@@ -169,9 +210,8 @@ namespace FEM
             if(!_isInversible)
                 throw std::logic_error("FiniteElement has zero-volume");
 
-            // calculate volume of element V
-            int _factorial = 1;
-            for(int i=2; i<=_nDimentions_;i++)
+            _DimType_ _factorial = 1;
+            for(int i=2; i<=_nDimentions_;++i)
                 _factorial*=i;
             _DimType_ _volume = _determinant/_factorial;
 

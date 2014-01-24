@@ -25,39 +25,48 @@ int main()
     run_tests_all();
 
     // Simulation object
-    FEM::Beam<qreal, FEM::Node1D> myBeam(BEAM_LENGTH);
-    myBeam.setEnvironment(0,
-                Environment<qreal>(
-                    "test environment",CONDUCTION,CONDUCTION,CONDUCTION));
+    FEM::BeamNative myBeam(BEAM_LENGTH);
+    myBeam.setPhase(0,
+                Phase<qreal>(
+                    "test phase",CONDUCTION,CONDUCTION,CONDUCTION));
 
     // Boundary conditions
     myBeam.setBoundaryCondition(
-                FEM::Beam<qreal, FEM::Node1D>::LEFT,
+                FEM::BeamNative::LEFT,
                 FEM::BoundaryCondition<qreal>(TEMPERATURE,0));
     myBeam.setBoundaryCondition(
-                FEM::Beam<qreal, FEM::Node1D>::RIGHT,
+                FEM::BeamNative::RIGHT,
                 FEM::BoundaryCondition<qreal>(0,FLUX));
 
     // Grid generation
     myBeam.createGrid(0);
-    for(int i=0; i<NUMBER_OF_ELEMENTS; i++)
+    for(int i=0; i<NUMBER_OF_ELEMENTS; ++i)
     {
         myBeam.getGrid(0).createNode(
                     FEM::Node1D(0+i*myBeam.getLength()/NUMBER_OF_ELEMENTS));
     }
     myBeam.getGrid(0).createNode(FEM::Node1D(myBeam.getLength()));
-    for(int i=0; i<NUMBER_OF_ELEMENTS; i++)
+    for(int i=0; i<NUMBER_OF_ELEMENTS; ++i)
     {
         myBeam.getGrid(0).createFiniteElement(
                     i,
                     i+1,
-                    myBeam.getEnvironment(0).getConductionCoefficients());
+                    myBeam.getPhase(0).getConductionCoefficients());
     }
 
-    // Matrix assembling
+    // Apply boundary conditions to grid
+    myBeam.getGrid(0).bindBoundaryConditionToNode(
+                0,
+                &myBeam.getBoundaryCondition(FEM::BeamNative::LEFT));
+    myBeam.getGrid(0).bindBoundaryConditionToElement(
+                0,
+                1,  ///< \todo why '1' ?
+                &myBeam.getBoundaryCondition(FEM::BeamNative::RIGHT));
 
+    // Matrix assembling
     myBeam.setDomain(0,myBeam.getGrid(0).constructDomain());
     std::cout << myBeam.getDomain(0).getStiffnessMatrix() << std::endl;
+    std::cout << myBeam.getDomain(0).getForceVector() << std::endl;
 
     // Equations system solving
     // ...

@@ -5,7 +5,7 @@
 
 #include "boundarycondition.h"
 #include "domain.h"
-#include "environment.h"
+#include "phase.h"
 
 namespace FEM
 {
@@ -14,15 +14,15 @@ namespace FEM
     {
         private: QMap<int, BoundaryCondition<_DimType_>> _myBoundaryConditions;
         private: QMap<int, Domain<_DimType_>> _myDomains;
-        private: QMap<int, Environment<_DimType_>> _myEnvironments;
+        private: QMap<int, Phase<_DimType_>> _myEnvironments;
 
         public : void setBoundaryCondition(
                 const int boundaryId, const BoundaryCondition<_DimType_> &condition)
         {
             _myBoundaryConditions.insert(boundaryId,condition);
         }
-        public : const BoundaryCondition<_DimType_> &getBoundaryCondition(
-                 const int boundaryId) const
+        public : BoundaryCondition<_DimType_> &getBoundaryCondition(
+                 const int boundaryId)
                  throw (std::out_of_range)
         {
             if(_myBoundaryConditions.contains(boundaryId))
@@ -46,19 +46,19 @@ namespace FEM
             else throw std::out_of_range("SimulationObject::getDomain(), domainId out of range");
         }
 
-        public : void setEnvironment(
-                const int environmentId, const Environment<_DimType_> &environment)
+        public : void setPhase(
+                const int phaseId, const Phase<_DimType_> &phase)
         {
-            _myEnvironments.insert(environmentId, environment);
+            _myEnvironments.insert(phaseId, phase);
         }
-        public : Environment<_DimType_> &getEnvironment(const int environmentId)
+        public : Phase<_DimType_> &getPhase(const int phaseId)
                  throw (std::out_of_range)
         {
-            if(_myEnvironments.contains(environmentId))
+            if(_myEnvironments.contains(phaseId))
             {
-                return _myEnvironments[environmentId];
+                return _myEnvironments[phaseId];
             }
-            else throw std::out_of_range("SimulationObject::getEnvironment(), domainId out of range");
+            else throw std::out_of_range("SimulationObject::getPhase(), phaseId out of range");
         }
 
         public :SimulationObject(){}
