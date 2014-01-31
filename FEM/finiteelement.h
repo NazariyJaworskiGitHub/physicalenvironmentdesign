@@ -29,6 +29,7 @@ namespace FEM
         private: QList<_NodeType_> *_ptrToNodesList;
         private: int _myNodeIndexes[_nNodes_];
 
+        public : static int getNodesNumber() {return _nNodes_;}
         public : const int * getNodeIndexes() const
         {
             return _myNodeIndexes;
@@ -44,18 +45,9 @@ namespace FEM
         {
             memcpy(_myNodeIndexes,target._myNodeIndexes,_nNodes_*sizeof(int));
         }
-        public : FiniteElement(
-                QList<_NodeType_> *ptrToNodesList,
-                int ni, ...) throw(std::out_of_range):
-            _ptrToNodesList(ptrToNodesList)
-        {
-            _myNodeIndexes[0] = ni;
-            va_list _ptr;
-            va_start(_ptr, ni);
-            for(int i=1; i<_nNodes_; ++i)
-                _myNodeIndexes[i] = va_arg(_ptr, int);
-            va_end(_ptr);
 
+        private: void _checkNodeIndexes() throw(std::out_of_range)
+        {
             bool _allCorrect = true;
             for(int i=0; i<_nNodes_; ++i)
             {
@@ -77,6 +69,30 @@ namespace FEM
             if(!_allCorrect)
                 throw std::out_of_range("FiniteElement(), index out of range, or repeated");
         }
+
+        public : FiniteElement(
+                QList<_NodeType_> *ptrToNodesList,
+                int ni, ...) throw(std::out_of_range):
+            _ptrToNodesList(ptrToNodesList)
+        {
+            _myNodeIndexes[0] = ni;
+            va_list _ptr;
+            va_start(_ptr, ni);
+            for(int i=1; i<_nNodes_; ++i)
+                _myNodeIndexes[i] = va_arg(_ptr, int);
+            va_end(_ptr);
+
+            _checkNodeIndexes();
+        }
+        public : FiniteElement(
+            QList<_NodeType_> *ptrToNodesList,
+            const int *_nodeIndexesPtr) throw(std::out_of_range):
+        _ptrToNodesList(ptrToNodesList)
+        {
+            memcpy(_myNodeIndexes,_nodeIndexesPtr,_nNodes_*sizeof(int));
+            _checkNodeIndexes();
+        }
+
         //-For simplex elements
         //       |[C]|
         //   V = -----, n - number of dimensions, |.| - taking of determinant
@@ -113,74 +129,42 @@ namespace FEM
         }
 
         /// \todo it fits only to simplex elements
-        public : Eigen::Matrix<_DimType_, _nNodes_, _nNodes_> calculateStiffnessMatrix(
+        public : Eigen::Matrix<_DimType_, _nNodes_, _nNodes_> calculateStiffnessMatrixEllipticEquation(
                 const _DimType_ *ptrToConductionCoefficients) const
         throw (std::logic_error)
         {
-            //-Find local stiffness matrix [K], rank([K]) = number of nodes ^2:
+            // Convert L(u) = d2u/dx2 + d2u/d2y = 0 to [K]{u}={F},
+            // Find [K]
             //
-            //-Problem can be described as energy minimization problem:
+            // in weak galerkin formulation:
             //
-            //       1                          dI(u)
-            //  I(u)=-{u}^T[K]{u}-{u}^T{F}  =>  ------=[K]{u}-{F}
-            //       2                          d{u}^T
+            // I(d[N]^t/dx * d[N]/dx * {u} + d[N]^t/dy * d[N]/dy * {u})dxdy = 0
             //
-            //-I(u) is some complex integral function that should be approximated.
+            //                         [ 1 Xi Yi]^-1
+            // N = {P}[C]^-1 = [1 x y]*[ 1 Xj Yj]
+            //                         [ 1 Xk Yk]
             //
-            //-I(u) is approximated by sum of simple polinomial functions fi:
-            //  fi = a1 + a2x + ...
-            //-or in the matrix form:
-            //  fi = [1 x ...][a1 a2 ...]^T = [1 x ...][C]-1{u}=[N]{u}
+            // d[N]/dx = d{P}/dx * [C]^-1 = [0 1 0] * [C]^-1
+            // d[N]/dy = d{P}/dy * [C]^-1 = [0 0 1] * [C]^-1
+            // d[N]/dx + d[N]/dy = [C]^-1 without first row = [B]
             //
-            //-where:
-            //  [N] - shape function matrix,
-            //
-            //  [1 x ...]=[P] - polinom coefficients
-            //                  (note that for mechanics this will be different)
-            //
-            //        [ 1   xi  yi ...]
-            //  [C] = [ 1   xj  yj ...] rank([C]) = rank([K])
-            //        [... ... ... ...]
-            //
-            //-To fing dI(u)/d{u}^T let's consider derivatives matrix [g]:
-            //
-            //        [dfi/dx]   [dNi/dx dNj/dx ...]
-            //  [g] = [dfi/dy] = [dNi/dy dNj/dy ...]{u} = [B]{u}
-            //        [ ...  ]   [ ...    ...   ...]
-            //
-            //-Then:
-            //        1 /                         /
-            //  I(u)= - | {u}^T[B]^T[D][B]{u}dV - |{u}^T{F}dS
-            //        2 /V                        /S  (doundary conditions)
-            //
-            //  dI(u)                               /        /
-            //  ------ = [K]{u}-{F} = [B]^T[D][B]{u}|dv - {F}|dS
-            //  d{u}^T                              /V       /S
-            //
-            //  [K] = [B]^T[D][B]V
-            //
-            //        [hx 0  ...]
-            //  [D] = [0  hy ...] - conduction matrix
-            //        [...   ...]
-            //
-            //   V - volume of element, S - area of boundary with condition
-            //
-            //-For simplex elements
+            // I(1)dxdy = Element's volume = V
+            // For simplex elements
             //       |[C]|
             //   V = -----, n - number of dimensions, |.| - taking of determinant
             //         n!
             //   warning! - volume is depending of determinant sign, so renumber
             //              element's nodes if it is negative
             //
-            //-Because of [N] = [1 x ...][C]^-1
-            //  [B] = d([1 x ...][C]^-1)/dxi = d[N]/dxi
-            //  i.e [B] = [C]^-1 without first row,
-            //  because polinom starts from 1, and then x, y, z, ...
-            //  (note that for mechanics this will be different)
+            // Conduction matrix = [D]
             //
-            //-Described method is also applicable to finding the global stiffness matrix
+            // [K] = [B]^T[D][B]V
             //
-            //-For more information, try to read:
+            // Note that for mechanics this will be different
+            //
+            // Described method is also applicable to finding the global stiffness matrix
+            //
+            // For more information, try to read:
             //  Segerlind  L 1976 Applied Finite Element Analysis
             //  (New York: Wiley, John, and Sons, Incorporated)
 

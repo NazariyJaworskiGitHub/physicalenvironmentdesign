@@ -48,9 +48,9 @@ int main()
     myBeam.getGrid(0).createNode(FEM::Node1D(myBeam.getLength()));
     for(int i=0; i<NUMBER_OF_ELEMENTS; ++i)
     {
+        int n[] = {i, i+1};
         myBeam.getGrid(0).createFiniteElement(
-                    i,
-                    i+1,
+                    n,
                     myBeam.getPhase(0).getConductionCoefficients());
     }
 
@@ -64,7 +64,7 @@ int main()
                 &myBeam.getBoundaryCondition(FEM::BeamNative::RIGHT));
 
     // Matrix assembling
-    myBeam.setDomain(0,myBeam.getGrid(0).constructDomain());
+    myBeam.setDomain(0,myBeam.getGrid(0).constructDomainEllipticEquation());
     std::cout << myBeam.getDomain(0).getStiffnessMatrix() << std::endl;
     std::cout << myBeam.getDomain(0).getForceVector() << std::endl;
 
