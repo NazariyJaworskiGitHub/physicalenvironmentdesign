@@ -15,11 +15,13 @@ namespace FEM
     template <
         typename _DimType_,
         typename _NodeType_,
-        int _nDimentions_>
+        int _nDimentions_,
+        typename _ElementType_>
+    // Tip! For now, grid can hold only the same type of elements
     class Grid
     {
         protected: QList<_NodeType_> _myNodes;
-        // protected: Abstract Finite Element List - implemented in child classes
+        protected: QList<_ElementType_> _myFiniteElements;
         protected: QList<const _DimType_*> _myFiniteElementConductionCoefficients;
         protected: QMap<int, const BoundaryCondition<_DimType_>*> _myNodeBindedBoundaryConditions;
         protected: QMap<int, QPair<int, const BoundaryCondition<_DimType_>*>> _myElementBindedBoundaryConditions;
@@ -30,6 +32,7 @@ namespace FEM
             _myNodes.append(_NodeType_(target));
             return _myNodes.last();
         }
+
         public : _NodeType_ & getNode(int nodeIndex) throw (std::out_of_range)
         {
             if(nodeIndex>=0 && nodeIndex < _myNodes.size())
@@ -38,46 +41,16 @@ namespace FEM
             }
             else throw std::out_of_range("Grid::getNode(), nodeIndex out of range");
         }
-        public : virtual Domain<_DimType_> constructDomain() const = 0;
-        public : void bindBoundaryConditionToNode(int nodeIndex,
-                const BoundaryCondition<_DimType_> *boundaryCondition) throw (std::out_of_range)
-        {
-            if(nodeIndex>=0 && nodeIndex < _myNodes.size())
-            {
-                _myNodeBindedBoundaryConditions.insert(nodeIndex,boundaryCondition);
-            }
-            else throw std::out_of_range("Grid::bindBoundaryConditionToNode(), nodeIndex out of range");
-        }
 
-        public : void bindBoundaryConditionToElement(int elementIndex, int elementBoundaryId,
-                const BoundaryCondition<_DimType_> *boundaryCondition) throw (std::out_of_range)
+        public : _ElementType_ & createFiniteElement(const int *nodeIndexes,
+                const _DimType_* conductionCoefficients)
         {
-            /// \todo
-            //if(elementIndex>=0 && elementIndex < _myNodes.size())
-            //{
-            _myElementBindedBoundaryConditions.insert(elementIndex, qMakePair(elementBoundaryId, boundaryCondition));
-            //}
-            //else throw std::out_of_range("Grid::bindBoundaryConditionToElement(), nodeIndex out of range");
-        }
-        public : Grid(){}
-        public : ~Grid(){}
-    };
-
-    template <
-        typename _DimType_,
-        typename _NodeType_>
-    class EdgeGrid : public Grid <_DimType_,_NodeType_,1>
-    {
-        protected: QList<Edge<_DimType_, _NodeType_>> _myFiniteElements;
-        public : Edge<_DimType_, _NodeType_> & createFiniteElement(
-                int index1, int index2, _DimType_* conductionCoefficients)
-        {
-            _myFiniteElements.append(Edge<_DimType_, _NodeType_>(
-                                         &(this->_myNodes),index1,index2));
+            _myFiniteElements.append(_ElementType_(&(this->_myNodes),nodeIndexes));
             this->_myFiniteElementConductionCoefficients.append(conductionCoefficients);
             return _myFiniteElements.last();
         }
-        public : Domain<_DimType_> constructDomain() const final
+
+        public : virtual Domain<_DimType_> constructDomainEllipticEquation() const
         {
             Domain<_DimType_> _d;
 
@@ -88,24 +61,22 @@ namespace FEM
             {
                 // [ K11 K12 ]
                 // [ K21 K22 ]
-                auto _localStiffnessMatrix = _myFiniteElements[i].calculateStiffnessMatrix(
+                auto _localStiffnessMatrix = _myFiniteElements[i].calculateStiffnessMatrixEllipticEquation(
                             this->_myFiniteElementConductionCoefficients[i]);
 
                 // Apply Neumann boundary conditions
-                /// \todo method extraction
-
                 // e.g.:
                 //  T22 = 20
                 // then
                 //  [ K11 0 ]  [-20*K12]
                 //  [ 0   1 ]  [   20  ]
 
-                for(int k=0;k<2;++k)    // Go through all nodes
+                for(int k=0;k<_ElementType_::getNodesNumber();++k)    // Go through all nodes
                 {
                     int _globalIndex = _myFiniteElements[i].getNodeIndexes()[k];
                     if(this->_myNodeBindedBoundaryConditions.contains(_globalIndex))
                     {
-                        for(int p=0;p<2;++p)
+                        for(int p=0;p<_ElementType_::getNodesNumber();++p)
                         {
                             // F -= cond * K.column(k)
                             _d.getForceVector().coeffRef(_myFiniteElements[i].getNodeIndexes()[p],0) -=
@@ -131,8 +102,8 @@ namespace FEM
                 /// \todo implement
 
                 // Construct global stiffnessMatrix by locals
-                for(int k=0;k<2;++k)    // Tip! it is not the magic numbers, see defenition of Edge
-                    for(int p=0;p<2;++p)
+                for(int k=0;k<_ElementType_::getNodesNumber();++k)    // Tip! it is not the magic numbers, see defenition of Edge
+                    for(int p=0;p<_ElementType_::getNodesNumber();++p)
                         /// \todo use Triplets!!!
                     _d.getStiffnessMatrix().coeffRef(
                                 _myFiniteElements[i].getNodeIndexes()[k],
@@ -186,47 +157,38 @@ namespace FEM
             // Return constructed domain
             return _d;
         }
-        public : EdgeGrid(){}
-        public : ~EdgeGrid(){}
-    };
-
-    template <
-        typename _DimType_,
-        typename _NodeType_>
-    class TriangularGrid : public Grid <_DimType_,_NodeType_,2>
-    {
-        protected: QList<Triangle<_DimType_, _NodeType_>> _myFiniteElements;
-        public : Triangle<_DimType_, _NodeType_> & createFiniteElement(
-                int index1, int index2, int index3, _DimType_* conductionCoefficients)
+        public : void bindBoundaryConditionToNode(int nodeIndex,
+                const BoundaryCondition<_DimType_> *boundaryCondition) throw (std::out_of_range)
         {
-            _myFiniteElements.append(Triangle<_DimType_, _NodeType_>(
-                                         &(this->_myNodes),index1,index2,index3));
-            this->_myFiniteElementConductionCoefficients.append(conductionCoefficients);
-            return _myFiniteElements.last();
+            /// \todo
+            if(nodeIndex>=0 && nodeIndex < _myNodes.size())
+            {
+                _myNodeBindedBoundaryConditions.insert(nodeIndex,boundaryCondition);
+            }
+            else throw std::out_of_range("Grid::bindBoundaryConditionToNode(), nodeIndex out of range");
         }
 
-        public : TriangularGrid(){}
-        public : ~TriangularGrid(){}
-    };
-
-    template <
-        typename _DimType_,
-        typename _NodeType_>
-    class TetrahedralGrid : public Grid <_DimType_,_NodeType_,3>
-    {
-        protected: QList<Tetrahedron<_DimType_, _NodeType_>> _myFiniteElements;
-        public : Tetrahedron<_DimType_, _NodeType_> & createFiniteElement(
-                int index1, int index2, int index3, int index4, _DimType_* conductionCoefficients)
+        public : void bindBoundaryConditionToElement(int elementIndex, int elementBoundaryId,
+                const BoundaryCondition<_DimType_> *boundaryCondition) throw (std::out_of_range)
         {
-            _myFiniteElements.append(Tetrahedron<_DimType_, _NodeType_>(
-                                         &(this->_myNodes),index1,index2,index3,index4));
-            this->_myFiniteElementConductionCoefficients.append(conductionCoefficients);
-            return _myFiniteElements.last();
+            if(elementIndex>=0 && elementIndex < _myFiniteElements.size())
+            {
+                _myElementBindedBoundaryConditions.insert(elementIndex, qMakePair(elementBoundaryId, boundaryCondition));
+            }
+            else throw std::out_of_range("Grid::bindBoundaryConditionToElement(), nodeIndex out of range");
         }
-
-        public : TetrahedralGrid(){}
-        public : ~TetrahedralGrid(){}
+        public : Grid(){}
+        public : ~Grid(){}
     };
+
+    template <typename _DimType_, typename _NodeType_>
+    using EdgeGrid = Grid <_DimType_,_NodeType_,1,Edge<_DimType_, _NodeType_>>;
+
+    template <typename _DimType_, typename _NodeType_>
+    using TriangularGrid = Grid <_DimType_,_NodeType_,2,Triangle<_DimType_, _NodeType_>>;
+
+    template <typename _DimType_, typename _NodeType_>
+    using TetrahedralGrid = Grid <_DimType_,_NodeType_,3, Tetrahedron<_DimType_, _NodeType_>>;
 }
 
 #endif // GRID_H

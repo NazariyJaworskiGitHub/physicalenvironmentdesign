@@ -49,7 +49,7 @@ void Test_FiniteElement::test()
     QList<FEM::Node2D> n = {{0,0.5}, {0,0}, {0.5,0}};
     qreal conductionCoefficients[3] = {100,100};
     FEM::FiniteElement<qreal,Node2D,3, 2> simplex(&n, 0, 1, 2);
-    Eigen::Matrix<qreal, 3, 3> K = simplex.calculateStiffnessMatrix(conductionCoefficients);
+    Eigen::Matrix<qreal, 3, 3> K = simplex.calculateStiffnessMatrixEllipticEquation(conductionCoefficients);
     QVERIFY(    K(0,0)== 50 && K(0,1)==-50 && K(0,2)==  0 &&
                 K(1,0)==-50 && K(1,1)==100 && K(1,2)==-50 &&
                 K(2,0)==  0 && K(2,1)==-50 && K(2,2)== 50 );
