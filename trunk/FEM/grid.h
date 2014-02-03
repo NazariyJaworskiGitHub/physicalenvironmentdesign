@@ -14,9 +14,9 @@ namespace FEM
 {
     template <
         typename _DimType_,
-        typename _NodeType_,
+        typename _NodeType_,    // See "node.h"
         int _nDimentions_,
-        typename _ElementType_>
+        typename _ElementType_> // See "finiteelement.h"
     // Tip! For now, grid can hold only the same type of elements
     class Grid
     {
@@ -101,8 +101,13 @@ namespace FEM
                 // Apply Dirichlet boundary conditions
                 /// \todo implement
 
+                /*for(auto _e : this->_myElementBindedBoundaryConditions)
+                {
+
+                }*/
+
                 // Construct global stiffnessMatrix by locals
-                for(int k=0;k<_ElementType_::getNodesNumber();++k)    // Tip! it is not the magic numbers, see defenition of Edge
+                for(int k=0;k<_ElementType_::getNodesNumber();++k)
                     for(int p=0;p<_ElementType_::getNodesNumber();++p)
                         /// \todo use Triplets!!!
                     _d.getStiffnessMatrix().coeffRef(
@@ -110,51 +115,6 @@ namespace FEM
                                 _myFiniteElements[i].getNodeIndexes()[p]) +=
                             _localStiffnessMatrix(k,p);
             }
-
-            // Apply Neumann boundary conditions
-            /*for(
-                typename QMap<int,const BoundaryCondition<_DimType_>*>::const_iterator _n =
-                    this->_myNodeBindedBoundaryConditions.begin();
-                _n != this->_myNodeBindedBoundaryConditions.end();
-                ++_n)
-            {
-                // Temporarily store diagonal element
-                _DimType_ _tmpVal = _d.getStiffnessMatrix().coeffRef(_n.key(),_n.key());
-
-                // Subtract from  forceVector[i] condition*stiffnessMatrix[i][node]
-                _d.getForceVector() -=
-                        _d.getStiffnessMatrix().col(_n.key()) * _n.value()->getPotential();
-
-                // Set zero entire stiffnessMatrix row
-                _d.getStiffnessMatrix().template block(
-                            _n.key(),
-                            0,
-                            1,
-                            _d.getStiffnessMatrix().cols()) *= 0;
-
-                // Set zero entire stiffnessMatrix column
-                _d.getStiffnessMatrix().template block(
-                            0,
-                            _n.key(),
-                            _d.getStiffnessMatrix().rows(),
-                            1) *= 0;
-
-                // Set forceVector[node] to condition*stiffnessMatrix[node][node]
-                _d.getForceVector().coeffRef(_n.key(),0) = _tmpVal * _n.value()->getPotential();
-
-                // Restore stiffnessMatrix[node][node]
-                _d.getStiffnessMatrix().coeffRef(_n.key(),_n.key()) = _tmpVal;
-            }*/
-
-            // Apply Dirichlet boundary conditions
-            /*for(auto _e : this->_myElementBindedBoundaryConditions)
-            {
-
-            }*/
-
-            // Apply Robin boundary conditions
-
-            // Return constructed domain
             return _d;
         }
         public : void bindBoundaryConditionToNode(int nodeIndex,
