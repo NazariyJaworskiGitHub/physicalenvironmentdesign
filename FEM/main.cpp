@@ -1,11 +1,6 @@
 #include <iostream>
 
 #include "beam.h"
-#include "boundarycondition.h"
-#include "domain.h"
-#include "finiteelement.h"
-#include "node.h"
-#include "simulationobject.h"
 
 #include "TESTS/tests_runner.h"
 
@@ -59,8 +54,8 @@ int main()
                 0,
                 &myBeam.getBoundaryCondition(FEM::BeamNative::LEFT));
     myBeam.getGrid(0).bindBoundaryConditionToElement(
-                0,
-                1,  ///< \todo why '1' ?
+                NUMBER_OF_ELEMENTS - 1,
+                0,  // local index of opposite to the boundary node
                 &myBeam.getBoundaryCondition(FEM::BeamNative::RIGHT));
 
     // Matrix assembling

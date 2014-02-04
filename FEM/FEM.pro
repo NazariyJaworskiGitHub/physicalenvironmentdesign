@@ -29,4 +29,5 @@ HEADERS += \
     TESTS/tests_runner.h \
     grid.h \
     node.h \
-    phase.h
+    phase.h \
+    utils.h
