@@ -1,5 +1,8 @@
 #include <iostream>
 
+/// \todo just for test
+#include <Eigen/IterativeLinearSolvers>
+
 #include "beam.h"
 
 #include "TESTS/tests_runner.h"
@@ -7,11 +10,11 @@
 using namespace FEM;
 
 #define BEAM_LENGTH         100
-#define TEMPERATURE         20
+#define TEMPERATURE         25
 #define FLUX                500
-#define CONDUCTION          100
+#define CONDUCTION          250
 
-#define NUMBER_OF_ELEMENTS  4
+#define NUMBER_OF_ELEMENTS  10
 
 #define MINIMAL_DISCRETIZATION_STEP 1e-10
 
@@ -64,7 +67,12 @@ int main()
     std::cout << myBeam.getDomain(0).getForceVector() << std::endl;
 
     // Equations system solving
-    // ...
+    /// \todo just for test
+    /// \todo make calass
+    Eigen::ConjugateGradient<Eigen::SparseMatrix<qreal>> solver;
+    solver.compute(myBeam.getDomain(0).getStiffnessMatrix());
+    Eigen::SparseMatrix<qreal> result = solver.solve(myBeam.getDomain(0).getForceVector());
+    std::cout << result << std::endl;
 
     // Results rendering
     // ...

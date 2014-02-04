@@ -76,7 +76,7 @@ void Test_FiniteElement::test()
     int indexes2[] = {0,1,2,3};
     FEM::Tetrahedron<qreal,Node3D> thdr(&p2,indexes2);
     //QVERIFY( thdr.calculateSubElementVolume(0) == 6);
-    QVERIFY( thdr.calculateSubElementVolume(1) == 6);
-    QVERIFY( thdr.calculateSubElementVolume(2) == 3);
-    QVERIFY( thdr.calculateSubElementVolume(3) == 2);
+    QVERIFY( thdr.calculateSubElementVolume(1) == 3);
+    QVERIFY( thdr.calculateSubElementVolume(2) == 1.5);
+    QVERIFY( thdr.calculateSubElementVolume(3) == 1);
 }
