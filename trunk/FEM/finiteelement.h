@@ -6,8 +6,7 @@
 
 #include <Eigen/Dense>
 
-/// \todo just for testing
-#include <iostream>
+#include "utils.h"
 
 //#include "viennacl/matrix.hpp"
 //#include "viennacl/linalg/prod.hpp"
@@ -139,12 +138,9 @@ namespace FEM
         //        (n-1)!|[cx cy cz cw ...]| |.| - length of the vector
         //              |[...         ...]|
         //
-        // WARNING! It returns volume without dividing it on (n-1)!,
-        //          because later, at force vector assembling it should be multiplied
-        //
         // Tip: _nDimentions_+1 = _nNodes_
         //
-        public : _DimType_ calculateSubElementVolume(int oppositeNodeIndex)
+        public : _DimType_ calculateSubElementVolume(int oppositeNodeIndex) const
         {
             _DimType_ _volume = 0;   /// \todo bad constant
 
@@ -189,7 +185,7 @@ namespace FEM
                 _volume += _term * _term;
             }
 
-            return sqrt(_volume);
+            return sqrt(_volume)/factorial(_nDimentions_-1);
         }
 
         /*//  For simplex elements
@@ -294,10 +290,12 @@ namespace FEM
             if(!_isInversible)
                 throw std::logic_error("SimplexElement has zero-volume");
 
-            _DimType_ _factorial = 1;
+            /// \deprecated
+            /*_DimType_ _factorial = 1;
             for(int i=2; i<=_nDimentions_;++i)
                 _factorial*=i;
-            _DimType_ _volume = _determinant/_factorial;
+            _DimType_ _volume = _determinant/_factorial;*/
+            _DimType_ _volume = _determinant/factorial(_nDimentions_);
 
             // calculate [B]
             // tip!: it is just the references:

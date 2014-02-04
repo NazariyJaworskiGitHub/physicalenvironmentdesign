@@ -50,19 +50,19 @@ namespace FEM
             return _myFiniteElements.last();
         }
 
-        public : virtual Domain<_DimType_> constructDomainEllipticEquation() const
+        public : Domain<_DimType_> constructDomainEllipticEquation() const
         {
             Domain<_DimType_> _d;
 
-            _d.getForceVector().resize(this->_myNodes.size(),1);
-            _d.getStiffnessMatrix().resize(this->_myNodes.size(), this->_myNodes.size());
+            _d.getForceVector().resize(_myNodes.size(),1);
+            _d.getStiffnessMatrix().resize(_myNodes.size(), _myNodes.size());
 
-            for(int i=0; i<_myFiniteElements.size(); ++i) // Go through all elements
+            for(int _elementIndex=0; _elementIndex<_myFiniteElements.size(); ++_elementIndex) // Go through all elements
             {
                 // [ K11 K12 ]
                 // [ K21 K22 ]
-                auto _localStiffnessMatrix = _myFiniteElements[i].calculateStiffnessMatrixEllipticEquation(
-                            this->_myFiniteElementConductionCoefficients[i]);
+                auto _localStiffnessMatrix = _myFiniteElements[_elementIndex].calculateStiffnessMatrixEllipticEquation(
+                            _myFiniteElementConductionCoefficients[_elementIndex]);
 
                 // Apply Neumann boundary conditions
                 // e.g.:
@@ -71,49 +71,70 @@ namespace FEM
                 //  [ K11 0 ]  [-20*K12]
                 //  [ 0   1 ]  [   20  ]
 
-                for(int k=0;k<_ElementType_::getNodesNumber();++k)    // Go through all nodes
+                for(int _nodeIndex1=0;_nodeIndex1<_ElementType_::getNodesNumber();++_nodeIndex1)    // Go through all nodes
                 {
-                    int _globalIndex = _myFiniteElements[i].getNodeIndexes()[k];
-                    if(this->_myNodeBindedBoundaryConditions.contains(_globalIndex))
+                    int _globalNodeIndex = _myFiniteElements[_elementIndex].getNodeIndexes()[_nodeIndex1];
+                    if(_myNodeBindedBoundaryConditions.contains(_globalNodeIndex))
                     {
-                        for(int p=0;p<_ElementType_::getNodesNumber();++p)
+                        for(int _nodeIndex2=0;_nodeIndex2<_ElementType_::getNodesNumber();++_nodeIndex2)
                         {
                             // F -= cond * K.column(k)
-                            _d.getForceVector().coeffRef(_myFiniteElements[i].getNodeIndexes()[p],0) -=
-                                    this->_myNodeBindedBoundaryConditions[_globalIndex]->getPotential() *
-                                    _localStiffnessMatrix(p,k);
+                            _d.getForceVector().coeffRef(_myFiniteElements[_elementIndex].getNodeIndexes()[_nodeIndex2],0) -=
+                                    _myNodeBindedBoundaryConditions[_globalNodeIndex]->getPotential() *
+                                    _localStiffnessMatrix(_nodeIndex2,_nodeIndex1);
 
                             // Set zero entire stiffnessMatrix row
-                            _localStiffnessMatrix(k,p) = 0; ///< \todo bad constant, expand to complex arguments
+                            _localStiffnessMatrix(_nodeIndex1,_nodeIndex2) = 0; ///< \todo bad constant, expand to complex arguments
 
                             // Set zero entire stiffnessMatrix column
-                            _localStiffnessMatrix(p,k) = 0; ///< \todo bad constant, expand to complex arguments
+                            _localStiffnessMatrix(_nodeIndex2,_nodeIndex1) = 0; ///< \todo bad constant, expand to complex arguments
                         }
 
                         // F[k] = cond
-                        _d.getForceVector().coeffRef(_globalIndex,0) =
-                                this->_myNodeBindedBoundaryConditions[_globalIndex]->getPotential();
+                        _d.getForceVector().coeffRef(_globalNodeIndex,0) =
+                                _myNodeBindedBoundaryConditions[_globalNodeIndex]->getPotential();
                         // K[k][k] = 1
-                        _localStiffnessMatrix(k,k) = 1; ///< \todo bad constant, expand to complex arguments
+                        _localStiffnessMatrix(_nodeIndex1,_nodeIndex1) = 1; ///< \todo bad constant, expand to complex arguments
                     }
                 }
 
+                /// \todo make generalization for complex elements
                 // Apply Dirichlet boundary conditions
-                /// \todo implement
+                //
+                // It is flux * I([N]^T)dS
+                // For simplex elements: I([N]^T)dS = ((nDim-1)!*S)/(nDim)! = S/nDim
 
-                /*for(auto _e : this->_myElementBindedBoundaryConditions)
+                if(_myElementBindedBoundaryConditions.contains(_elementIndex))
                 {
+                    _DimType_ _fluxValue =
+                            _myFiniteElements[_elementIndex].calculateSubElementVolume(
+                                _myElementBindedBoundaryConditions[_elementIndex].first) *
 
-                }*/
+                            _myElementBindedBoundaryConditions[_elementIndex].second->getFlux() /
+
+                            _nDimentions_;
+
+                    for(int _nodeIndex=0;_nodeIndex<_ElementType_::getNodesNumber();++_nodeIndex)
+                    {
+                        // Exclude opposite to the side node
+                        if(_nodeIndex == _myElementBindedBoundaryConditions[_elementIndex].first)
+                            continue;
+
+                        _d.getForceVector().coeffRef(
+                                    _myFiniteElements[_elementIndex].getNodeIndexes()[_nodeIndex],  //globalNodeIndex
+                                    0) =                                                            //column
+                                _fluxValue;
+                    }
+                }
 
                 // Construct global stiffnessMatrix by locals
-                for(int k=0;k<_ElementType_::getNodesNumber();++k)
-                    for(int p=0;p<_ElementType_::getNodesNumber();++p)
+                for(int _nodeIndex1=0;_nodeIndex1<_ElementType_::getNodesNumber();++_nodeIndex1)
+                    for(int _nodeIndex2=0;_nodeIndex2<_ElementType_::getNodesNumber();++_nodeIndex2)
                         /// \todo use Triplets!!!
                     _d.getStiffnessMatrix().coeffRef(
-                                _myFiniteElements[i].getNodeIndexes()[k],
-                                _myFiniteElements[i].getNodeIndexes()[p]) +=
-                            _localStiffnessMatrix(k,p);
+                                _myFiniteElements[_elementIndex].getNodeIndexes()[_nodeIndex1],
+                                _myFiniteElements[_elementIndex].getNodeIndexes()[_nodeIndex2]) +=
+                            _localStiffnessMatrix(_nodeIndex1,_nodeIndex2);
             }
             return _d;
         }
@@ -127,7 +148,7 @@ namespace FEM
             }
             else throw std::out_of_range("Grid::bindBoundaryConditionToNode(), nodeIndex out of range");
         }
-
+        /// For simplex elements, elementBoundaryId - is the index of opposite node
         public : void bindBoundaryConditionToElement(int elementIndex, int elementBoundaryId,
                 const BoundaryCondition<_DimType_> *boundaryCondition) throw (std::out_of_range)
         {
