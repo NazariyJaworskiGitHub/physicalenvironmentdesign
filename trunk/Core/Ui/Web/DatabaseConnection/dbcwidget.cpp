@@ -143,7 +143,7 @@ void DBCWidget::_fillConnectionsList(
         _myDatabaseNameEdit->setText("");
         _myUserNameEdit->setText("");
     }
-    if(internalStorage)  // dublicate
+    if(internalStorage && _data)  // dublicate
         *internalStorage = *_data;
 }
 
