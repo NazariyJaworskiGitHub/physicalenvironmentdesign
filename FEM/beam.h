@@ -14,7 +14,7 @@ namespace FEM
     template <typename _DimType_, typename _NodeType_>
     class Beam : public SimulationObject<_DimType_, _NodeType_,1>
     {
-        public : enum BOUNDARIES {LEFT, RIGHT};
+        public : enum BOUNDARIES {LEFT, RIGHT, TOP, BOTTOM, FRONT, BACK};
 
         private: QMap<int, EdgeGrid<_DimType_,_NodeType_>> _myGrids;
         public : EdgeGrid<_DimType_,_NodeType_> &createGrid(const int gridId)
