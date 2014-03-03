@@ -3,6 +3,7 @@
 
 namespace DelaunayGridGenerator
 {
+    template <typename _DimType_, typename _NodeType_, int _nDimentions_>
     class Generator
     {
         public: Generator(){}

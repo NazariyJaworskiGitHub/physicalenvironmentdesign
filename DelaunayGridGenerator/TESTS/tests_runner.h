@@ -3,6 +3,8 @@
 
 #include <QStringList>
 
+#include "test_piecewiselinearcomplex.h"
+
 //tip! use "-vs" to see emited signals
 QStringList arguments = {
 //    " ","-o","UnitTestsResults/UnitTest_XXX.txt"};
@@ -15,8 +17,15 @@ void run_tests_DelaunayGridGenerator()
     //QTest::qExec(&_myTest_DelaunayGridGenerator, arguments);
 }
 
+void run_tests_PiecewiseLinearComplex()
+{
+    Test_PiecewiseLinearComplex _myTest_PiecewiseLinearComplex;
+    QTest::qExec(&_myTest_PiecewiseLinearComplex, arguments);
+}
+
 void run_tests_all()
 {
+    run_tests_PiecewiseLinearComplex();
     run_tests_DelaunayGridGenerator();
 }
 #endif // TESTS_RUNNER_H
