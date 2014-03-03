@@ -23,6 +23,7 @@ namespace FEM
     ///   _nNodes_      - number of nodes per finite element;
     ///   _nDimentions_ - number of dimentions, where finite element exists
     /// \todo Finite element is also a simple domain
+    /// \todo rename it to Element
     template <typename _DimType_, typename _NodeType_, int _nNodes_, int _nDimentions_>
     class FiniteElement
     {
@@ -73,22 +74,6 @@ namespace FEM
                 throw std::out_of_range("FiniteElement(), index out of range, or repeated");
         }
 
-        /// \deprecated
-        public : FiniteElement(
-                QList<_NodeType_> *ptrToNodesList,
-                int ni, ...) throw(std::out_of_range):
-            _ptrToNodesList(ptrToNodesList)
-        {
-            _myNodeIndexes[0] = ni;
-            va_list _ptr;
-            va_start(_ptr, ni);
-            for(int i=1; i<_nNodes_; ++i)
-                _myNodeIndexes[i] = va_arg(_ptr, int);
-            va_end(_ptr);
-
-            _checkNodeIndexes();
-        }
-
         public : FiniteElement(
             QList<_NodeType_> *ptrToNodesList,
             const int *_nodeIndexesPtr) throw(std::out_of_range):
@@ -98,12 +83,12 @@ namespace FEM
             _checkNodeIndexes();
         }
 
-        public : virtual Eigen::Matrix<_DimType_, _nNodes_, _nNodes_>
+        /*public : virtual Eigen::Matrix<_DimType_, _nNodes_, _nNodes_>
                 calculateStiffnessMatrixEllipticEquation(
                 const _DimType_ *ptrToConductionCoefficients) const
-                throw (std::logic_error) = 0;
+                throw (std::logic_error) = 0;*/
 
-        public : virtual ~FiniteElement() {}
+        public : /*virtual*/ ~FiniteElement() {}
     };
 
     /// Note, that _nDimentions_+1 = _nNodes_

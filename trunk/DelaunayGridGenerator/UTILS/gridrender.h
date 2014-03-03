@@ -14,32 +14,103 @@
 #include "Wt/WGLWidget"
 #include "Wt/WMatrix4x4"
 
+#include "piecewiselinearcomplex.h"
+
 using namespace Wt;
 
 namespace Utilities
 {
+    /// Ui web widget for WebGl render
+    /// Algorithm: just see
+    /// http://www.webtoolkit.eu/wt/doc/reference/html/classWt_1_1WGLWidget.html
     class GridRender : public WGLWidget
-    {
+    {       
+        public : enum RENDERING_MODE {MODE_2D, MODE_3D};
+        /// default MODE_3D, see constructor
+        private: RENDERING_MODE _renderingMode;
+        public : RENDERING_MODE getRenderingMode() const {return _renderingMode;}
+        public : void setRenderingMode(RENDERING_MODE mode){_renderingMode = mode;}
+
+        /// \todo not shure that this should be double, maybe float?
+        private: std::vector<double>     _renderingNodesPositions;
+        //private: std::vector<double>     _renderingNodesColors;
+        //private: std::vector<double>     _renderingDataIndexes; /// \todo temporarily unused*/
+
         private: Program                _shaderProgram;
+
         private: AttribLocation         _vertexPositionAttribute;
         private: AttribLocation         _vertexColorAttribute;
+
         private: UniformLocation        _uniformModelMatrix;
         private: UniformLocation        _uniformViewMatrix;
         private: UniformLocation        _uniformClientMatrix;
         private: UniformLocation        _uniformProjectionMatrix;
-        private: Buffer                 _renderingObjectVertexPositionBuffer;
-        private: Buffer                 _renderingObjectVertexColorBuffer;
-        private: Buffer                 _renderingObjectElementBuffer;
+
+        private: Buffer                 _renderingNodesVertexPositionBuffer;
+        private: Buffer                 _renderingNodesVertexColorBuffer;
+
+        private: Buffer                 _renderingSegmentsVertexPositionBuffer;
+        private: Buffer                 _renderingSegmentsVertexColorBuffer;
+
+        private: Buffer                 _renderingFacetsVertexPositionBuffer;
+        private: Buffer                 _renderingFacetsVertexColorBuffer;
+        private: Buffer                 _renderingFacetsIndexBuffer;
 
         private: JavaScriptMatrix4x4    _jsMatrix;
         private: WMatrix4x4             _worldView;
         private: WMatrix4x4             _worldProjection;
 
         public: GridRender(WContainerWidget *parent);
+
+        private: DelaunayGridGenerator::CommonPlc2D *_refToRenderingPlc2D = nullptr;
+        public: void setRenderingPiecewiseLinearComplex(
+                DelaunayGridGenerator::CommonPlc2D *renderingPlc2D) throw (std::logic_error);
+        private: void _initializePlc2DNodesBuffers();
+        private: void _initializePlc2DFacetsBuffers();
+        private: void _drawPlc2DNodes();
+        private: void _drawPlc2DFacets();
+
+        private: DelaunayGridGenerator::CommonPlc3D *_refToRenderingPlc3D = nullptr;
+        public: void setRenderingPiecewiseLinearComplex(
+                DelaunayGridGenerator::CommonPlc3D *renderingPlc3D) throw (std::logic_error);
+
+        /// See WGLWidget::bufferDatafv() and WGLWidget::renderfv() for more info
+        private: void _loadPlc3DNodesToDevice() throw (std::runtime_error);
+        private: void _initializePlc3DNodesBuffers() throw(std::runtime_error);
+        private: void _initializePlc3DSegmentsBuffers();
+        private: void _initializePlc3DFacetsBuffers();
+        private: void _drawPlc3DNodes() throw(std::runtime_error);
+        private: void _drawPlc3DSegments();
+        private: void _drawPlc3DFacets();
+
+        private: void _preloadAllBuffers();
+
         public: void initializeGL() override;
         public: void paintGL() override;
         public: void resizeGL(int width, int height) override;
+        public: void updateGL() override;
     };
+
+    /// See WGLWidget::makeFloat() -> Utils::round_js_str() -> round_js_str()
+    /// at src/web/WebUtils.c
+    /// \todo replace this function
+    static inline char *generic_double_to_str(double d, char *buf)
+    {
+        if (!boost::math::isnan(d)) {
+            if (!boost::math::isinf(d)) {
+                sprintf(buf, "%.7e", d);
+            } else {
+                if (d > 0) {
+                    sprintf(buf, "Infinity");
+                } else {
+                    sprintf(buf, "-Infinity");
+                }
+            }
+        } else {
+            sprintf(buf, "NaN");
+        }
+        return buf;
+    }
 }
 
 #endif // GRIDRENDER_H
