@@ -38,8 +38,8 @@ namespace Utilities
 
         private: Program                _shaderProgram;
 
-        private: AttribLocation         _vertexPositionAttribute;
-        private: AttribLocation         _vertexColorAttribute;
+        private: AttribLocation         _attributeVertexPosition;
+        private: UniformLocation        _uniformVertexColor;
 
         private: UniformLocation        _uniformModelMatrix;
         private: UniformLocation        _uniformViewMatrix;
@@ -47,10 +47,7 @@ namespace Utilities
         private: UniformLocation        _uniformProjectionMatrix;
 
         private: Buffer                 _renderingNodesVertexPositionBuffer;
-        private: Buffer                 _renderingNodesVertexColorBuffer;
-
-        private: Buffer                 _renderingSegmentsVertexPositionBuffer;
-        private: Buffer                 _renderingSegmentsVertexColorBuffer;
+        private: Buffer                 _renderingSegmentsIndexBuffer;
 
         private: Buffer                 _renderingFacetsVertexPositionBuffer;
         private: Buffer                 _renderingFacetsVertexColorBuffer;
@@ -61,6 +58,19 @@ namespace Utilities
         private: WMatrix4x4             _worldProjection;
 
         public: GridRender(WContainerWidget *parent);
+
+        /// default [1.0, 1.0, 1.0, 1.0] - white, see constructor
+        private: FEM::Vector4D _PlcNodesColor;
+        public : void setRenderingPlcNodesColor(double R, double G, double B, double A)
+        {
+            _PlcNodesColor(R,G,B,A);
+        }
+        /// default [0.0, 1.0, 0.0, 1.0] - green, see constructor
+        private: FEM::Vector4D _PlcSegmentsColor;
+        public : void setRenderingPlcSegmentsColor(double R, double G, double B, double A)
+        {
+            _PlcSegmentsColor(R,G,B,A);
+        }
 
         private: DelaunayGridGenerator::CommonPlc2D *_refToRenderingPlc2D = nullptr;
         public: void setRenderingPiecewiseLinearComplex(
@@ -75,10 +85,9 @@ namespace Utilities
                 DelaunayGridGenerator::CommonPlc3D *renderingPlc3D) throw (std::logic_error);
 
         /// See WGLWidget::bufferDatafv() and WGLWidget::renderfv() for more info
-        private: void _loadPlc3DNodesToDevice() throw (std::runtime_error);
         private: void _initializePlc3DNodesBuffers() throw(std::runtime_error);
-        private: void _initializePlc3DSegmentsBuffers();
-        private: void _initializePlc3DFacetsBuffers();
+        private: void _initializePlc3DSegmentsBuffers() throw(std::runtime_error);
+        private: void _initializePlc3DFacetsBuffers() throw(std::runtime_error);
         private: void _drawPlc3DNodes() throw(std::runtime_error);
         private: void _drawPlc3DSegments();
         private: void _drawPlc3DFacets();
@@ -111,6 +120,29 @@ namespace Utilities
         }
         return buf;
     }
+
+    /*static inline char *itoa(int value, char *result, int base = 10) {
+      char* out = result;
+      int quotient = value;
+
+      if (quotient < 0)
+        quotient = -quotient;
+
+      do {
+        *out =
+          "0123456789abcdefghijklmnopqrstuvwxyz"[quotient % base];
+        ++out;
+        quotient /= base;
+      } while (quotient);
+
+      if (value < 0 && base == 10)
+        *out++ = '-';
+
+      std::reverse(result, out);
+      *out = 0;
+
+      return result;
+    }*/
 }
 
 #endif // GRIDRENDER_H

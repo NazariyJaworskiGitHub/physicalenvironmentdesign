@@ -31,6 +31,47 @@ namespace DelaunayGridGenerator
         private: QList<_SegmentType_> _segmentList;
         private: QList<_FacetType_> _facetList;
 
+        private: _NodeType_ _maxCoordinates;
+        private: _NodeType_ _minCoordinates;
+
+        public : _DimType_ getMaxCoord(int coordIndex) const
+        {
+            return _maxCoordinates[coordIndex];
+        }
+        public : _DimType_ getMinCoord(int coordIndex) const
+        {
+            return _minCoordinates[coordIndex];
+        }
+        public : _NodeType_ getMaxCoords() const
+        {
+            return _maxCoordinates;
+        }
+        public : _NodeType_ getMinCoords() const
+        {
+            return _minCoordinates;
+        }
+        public : void setMaxCoord(const _NodeType_ &target)
+        {
+            _maxCoordinates = target;
+        }
+        public : void setMinCoord(const _NodeType_ &target)
+        {
+            _minCoordinates = target;
+        }
+        public : void updateMaxAndMinCoordinates()
+        {
+            _maxCoordinates = _nodeList[0];
+            _minCoordinates = _nodeList[0];
+            for(_NodeType_ i : _nodeList)
+                for(int j=0; j<_nDimentions_; ++j)
+                {
+                    if(_maxCoordinates[j] < i[j])
+                        _maxCoordinates[j] = i[j];
+                    if(_minCoordinates[j] > i[j])
+                        _minCoordinates[j] = i[j];
+                }
+        }
+
         /// \todo code dublicate with FEM:Grid, need merege
         public : _NodeType_ &createNode(const _NodeType_ &target)
         {

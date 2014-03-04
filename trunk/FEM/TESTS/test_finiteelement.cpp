@@ -7,7 +7,7 @@ using namespace FEM;
 
 void Test_FiniteElement::test()
 {
-    QList<Node3D> p = {{1,2,3}, {1,2,3}, {1,2,3}, {1,2,3}};
+    QList<Node3D> p = {{1.0,2.0,3.0}, {1.0,2.0,3.0}, {1.0,2.0,3.0}, {1.0,2.0,3.0}};
 
     try
     {
@@ -23,12 +23,12 @@ void Test_FiniteElement::test()
     //deprecated FEM::FiniteElement<qreal,QVector3D,2,3> element1(&p, 0, 1);
     int indexes[] = {0,1,2,3};
     FEM::SimplexElement<qreal,Node3D,3> element1(&p, indexes);
-    element1[0].setX(10);
-    QVERIFY(p[0].x() == 10);
+    element1[0][0] = 10;
+    QVERIFY(p[0][0] == 10);
 
     try
     {
-        element1[-2].setX(555);
+        element1[-2][0] = 555;
     }
     catch(std::exception &e)
     {
@@ -37,7 +37,7 @@ void Test_FiniteElement::test()
     }
     try
     {
-        element1[999].setX(555);
+        element1[999][0] = 555;
     }
     catch(std::exception &e)
     {
@@ -46,8 +46,8 @@ void Test_FiniteElement::test()
     }
     //deprecated  FEM::FiniteElement<qreal,QVector3D,2,3> element2(element1);
     FEM::SimplexElement<qreal,Node3D,3> element2(element1);
-    element2[0].setX(20);
-    QVERIFY(p[0].x() == 20 && element1[0].x() == 20);
+    element2[0][0] = 20;
+    QVERIFY(p[0][0] == 20 && element1[0][0] == 20);
 
     try
     {
@@ -62,7 +62,7 @@ void Test_FiniteElement::test()
     }
 
     // counterclockwise
-    QList<FEM::Node2D> n = {{0,0.5}, {0,0}, {0.5,0}};
+    QList<FEM::Node2D> n = {{0.0,0.5}, {0.0,0.0}, {0.5,0.0}};
     qreal conductionCoefficients[3] = {100,100};
     //deprecated  FEM::FiniteElement<qreal,Node2D,3, 2> simplex(&n, 0, 1, 2);
     indexes[1] = 1;
@@ -72,11 +72,11 @@ void Test_FiniteElement::test()
                 K(1,0)==-50 && K(1,1)==100 && K(1,2)==-50 &&
                 K(2,0)==  0 && K(2,1)==-50 && K(2,2)== 50 );
 
-    QList<Node3D> p2 = {{1,2,3}, {2,2,3}, {1,4,3}, {1,2,6}};
+    QList<Node3D> p2 = {{1.0,2.0,3.0}, {2.0,2.0,3.0}, {1.0,4.0,3.0}, {1.0,2.0,6.0}};
     int indexes2[] = {0,1,2,3};
     FEM::Tetrahedron<qreal,Node3D> thdr(&p2,indexes2);
     //QVERIFY( thdr.calculateSubElementVolume(0) == 6);
-    QVERIFY( thdr.calculateSubElementVolume(1) == 3);
+    QVERIFY( thdr.calculateSubElementVolume(1) == 3.0);
     QVERIFY( thdr.calculateSubElementVolume(2) == 1.5);
-    QVERIFY( thdr.calculateSubElementVolume(3) == 1);
+    QVERIFY( thdr.calculateSubElementVolume(3) == 1.0);
 }
