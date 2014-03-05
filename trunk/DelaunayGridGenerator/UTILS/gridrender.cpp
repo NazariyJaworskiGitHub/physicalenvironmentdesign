@@ -6,8 +6,38 @@ GridRender::GridRender(WContainerWidget *parent):
     WGLWidget(parent),
     _renderingMode(MODE_3D),
     _PlcNodesColor(1.0, 1.0, 1.0, 1.0),
-    _PlcSegmentsColor(0.0, 1.0, 0.0, 1.0)
+    _PlcSegmentsColor(0.0, 1.0, 0.0, 1.0),
+    _PlcFacetsColor(0.8, 0.8, 0.8, 1.0)
 {
+    // User control initialization
+    //mouseWentDown().connect(this,&GridRender::_onMouseWentDown);
+    //mouseDragged().connect(this,&GridRender::_onMouseDragged);
+
+    /*setJavaScriptMember("_onMouseWentDown",
+                "function(a,c){"
+                "f.capture(null);"
+                "f.capture(h);"
+                "i=f.pageCoordinates(c);"
+                "};"
+                );
+    setJavaScriptMember("_onMouseDragged",
+                "function(a,c){"
+                "var d=f.pageCoordinates(c);
+                "a=d.x-i.x;"
+                "d=d.y-i.y;"
+                "this.paintGL();" +
+                _userControlMatrix.jsRef() +
+                "i=f.pageCoordinates(c)"
+                "};"
+                );
+    _onMouseWentDownJSlot.setJavaScript(
+                "function(o, e){" + _glObjJsRef() + "._onMouseWentDown(o, e);}");
+    _onMouseDraggedJSlot.setJavaScript(
+                "function(o, e){" + _glObjJsRef() + "._onMouseDragged(o, e);}");
+
+    mouseWentDown().connect(_onMouseWentDownJSlot);
+    mouseDragged().connect(_onMouseDraggedJSlot);*/
+
     /// \todo Just TEST
     DelaunayGridGenerator::CommonPlc3D *_myCommonPlc3D
             = new DelaunayGridGenerator::CommonPlc3D();
@@ -31,6 +61,10 @@ GridRender::GridRender(WContainerWidget *parent):
     _myCommonPlc3D->createSegment(4,6);
     _myCommonPlc3D->createSegment(5,7);
     _myCommonPlc3D->createSegment(6,7);
+    _myCommonPlc3D->createSegment(0,4);
+    _myCommonPlc3D->createSegment(1,5);
+    _myCommonPlc3D->createSegment(2,6);
+    _myCommonPlc3D->createSegment(3,7);
 
     {int _n[]={0,1,2}; _myCommonPlc3D->createFacet(_n);}
     {int _n[]={5,6,7}; _myCommonPlc3D->createFacet(_n);}
@@ -44,15 +78,12 @@ std::string vertexShaderSrc =
     "attribute  highp   vec3    vrtPos;                                 \n"
     "//attribute  highp   vec4    vrtClr;                                 \n"
     "uniform    highp   vec4    vrtClr;                                 \n"
-    "uniform    highp   mat4    mMatrix;                                \n"
-    "uniform    highp   mat4    vMatrix;                                \n"
-    "uniform    highp   mat4    cMatrix;                                \n"
-    "uniform    highp   mat4    pMatrix;                                \n"
+    "uniform    highp   mat4    sceneMatrix;                            \n"
     "varying    highp   vec4    vColor;                                 \n"
     "void main(void)                                                    \n"
     "{                                                                  \n"
     "    gl_Position =                                                  \n"
-    "       pMatrix * cMatrix * vMatrix * mMatrix * vec4(vrtPos, 1.0);  \n"
+    "       sceneMatrix * vec4(vrtPos, 1.0);                            \n"
     "    vColor = vrtClr;                                               \n"
     "}                                                                  \n";
 
@@ -101,12 +132,12 @@ void GridRender::setRenderingPiecewiseLinearComplex(
 
 /// \todo need method extraction see _initializePlc3DSegmentsBuffers()
 void GridRender::_initializePlc3DNodesBuffers() throw(std::runtime_error)
-{
+{    
     _renderingNodesVertexPositionBuffer = createBuffer();
     bindBuffer(ARRAY_BUFFER, _renderingNodesVertexPositionBuffer);
 
     if(!_refToRenderingPlc3D)
-        throw std::runtime_error("_loadPlc3DNodesToDevice(), bad pointer to PLC");
+        throw std::runtime_error("_initializePlc3DNodesBuffers(), bad pointer to PLC");
 
     /// \todo It is some kind of magic!
     if(_refToRenderingPlc3D->_nodeList.size() != 0)
@@ -143,11 +174,12 @@ void GridRender::_initializePlc3DNodesBuffers() throw(std::runtime_error)
 void GridRender::_initializePlc3DSegmentsBuffers() throw(std::runtime_error)
 {
     // It just the indexes, Nodes should be already loaded
+
     _renderingSegmentsIndexBuffer = createBuffer();
     bindBuffer(ELEMENT_ARRAY_BUFFER, _renderingSegmentsIndexBuffer);
 
     if(!_refToRenderingPlc3D)
-        throw std::runtime_error("_loadPlc3DNodesToDevice(), bad pointer to PLC");
+        throw std::runtime_error("_initializePlc3DSegmentsBuffers(), bad pointer to PLC");
 
     if(_refToRenderingPlc3D->_segmentList.size() != 0)
     {
@@ -178,30 +210,47 @@ void GridRender::_initializePlc3DSegmentsBuffers() throw(std::runtime_error)
 
 void GridRender::_initializePlc3DFacetsBuffers() throw(std::runtime_error)
 {
-    /*_renderingFacetsVertexPositionBuffer = createBuffer();
-    bindBuffer(ARRAY_BUFFER, _renderingFacetsVertexPositionBuffer);
-    bufferDatafv<std::vector<double>::iterator>(
-                ARRAY_BUFFER,
-                _renderingDataPositions.begin(),
-                _renderingDataPositions.end(),
-                STATIC_DRAW);
+    // It just the indexes, Nodes should be already loaded
 
-    _renderingFacetsVertexColorBuffer = createBuffer();
-    bindBuffer(ARRAY_BUFFER, _renderingFacetsVertexColorBuffer);
-    bufferDatafv<std::vector<double>::iterator>(
-                ARRAY_BUFFER,
-                _renderingDataColors.begin(),
-                _renderingDataColors.end(),
-                STATIC_DRAW);
+    _renderingFacetsIndexBuffer = createBuffer();
+    bindBuffer(ELEMENT_ARRAY_BUFFER, _renderingFacetsIndexBuffer);
 
-    /// \todo element bufer is not needed for now
-    //_renderingObjectElementBuffer = createBuffer();
-    //bindBuffer(ELEMENT_ARRAY_BUFFER, _renderingObjectElementBuffer);
-    //bufferDataiv(ELEMENT_ARRAY_BUFFER, objectElements, count, STATIC_DRAW, DT_UNSIGNED_BYTE);*/
+    if(!_refToRenderingPlc3D)
+        throw std::runtime_error("_initializePlc3DFacetsBuffers(), bad pointer to PLC");
+
+    if(_refToRenderingPlc3D->_facetList.size() != 0)
+    {
+        std::string _js;
+        _js += "ctx.bufferData(";
+        _js += "ctx.ELEMENT_ARRAY_BUFFER";
+        _js += ",";
+        char buf[30];
+        /// see WGLWidget::renderiv()
+        _js += "new Uint16Array([";
+        for(auto i = _refToRenderingPlc3D->_facetList.begin();
+            i != _refToRenderingPlc3D->_facetList.end(); ++i)
+        {
+            _js += (i == _refToRenderingPlc3D->_facetList.begin() ? "" : ",");
+            _js += itoa((*i).getNodeIndexes()[0], buf, 10);
+            _js += ",";
+            _js += itoa((*i).getNodeIndexes()[1], buf, 10);
+            _js += ",";
+            _js += itoa((*i).getNodeIndexes()[2], buf, 10);
+        }
+        _js += "])";
+        _js += ",";
+        _js += "ctx.STATIC_DRAW";
+        _js += ");";
+
+        injectJS(_js);
+        GLDEBUG;
+    }
 }
 
 void GridRender::_drawPlc3DNodes() throw(std::runtime_error)
 {
+    // Matrices should already be loaded
+
     if(!_refToRenderingPlc3D)
         throw std::runtime_error("_drawPlc3DNodes(),  bad pointer to PLC");
 
@@ -213,29 +262,16 @@ void GridRender::_drawPlc3DNodes() throw(std::runtime_error)
             _PlcNodesColor[2],
             _PlcNodesColor[3]);
 
-    // Find center of all Nodes
-    // Move there the center of coordinates
-    // Stretch all coordinates into box 1x1x1
-    WMatrix4x4 modelMatrix;
-    modelMatrix.setToIdentity();
-
-    // Apply matrixes
-    uniformMatrix4(_uniformModelMatrix, modelMatrix);
-    uniformMatrix4(_uniformViewMatrix, _worldView);
-    uniformMatrix4(_uniformClientMatrix, _jsMatrix);
-    uniformMatrix4(_uniformProjectionMatrix, _worldProjection);
     drawArrays(POINTS, 0, _refToRenderingPlc3D->_nodeList.size());
 }
 
 void GridRender::_drawPlc3DSegments()
 {
-    // It just the indexes, Nodes should be already loaded
+    // It just the indexes, nodes and matrices should be already loaded
 
     if(!_refToRenderingPlc3D)
-        throw std::runtime_error("_drawPlc3DNodes(),  bad pointer to PLC");
+        throw std::runtime_error("_drawPlc3DSegments(),  bad pointer to PLC");
 
-    /*bindBuffer(ARRAY_BUFFER, _renderingNodesVertexPositionBuffer);
-    vertexAttribPointer(_attributeVertexPosition, 3, FLOAT, false, 0, 0);*/
     uniform4f(_uniformVertexColor,
             _PlcSegmentsColor[0],
             _PlcSegmentsColor[1],
@@ -243,36 +279,30 @@ void GridRender::_drawPlc3DSegments()
             _PlcSegmentsColor[3]);
     bindBuffer(ELEMENT_ARRAY_BUFFER, _renderingSegmentsIndexBuffer);
 
-    // Find center of all Nodes
-    // Move there the center of coordinates
-    // Stretch all coordinates into box 1x1x1
-    WMatrix4x4 modelMatrix;
-    modelMatrix.setToIdentity();
-
-    // Apply matrixes
-    uniformMatrix4(_uniformModelMatrix, modelMatrix);
-    uniformMatrix4(_uniformViewMatrix, _worldView);
-    uniformMatrix4(_uniformClientMatrix, _jsMatrix);
-    uniformMatrix4(_uniformProjectionMatrix, _worldProjection);
     /// Must be UNSIGNED_SHORT or less
     /// see http://www.khronos.org/opengles/sdk/docs/man/xhtml/glDrawElements.xml
     drawElements(LINES, _refToRenderingPlc3D->_segmentList.size()*2, UNSIGNED_SHORT, 0);
 }
 
 void GridRender::_drawPlc3DFacets()
-{
-    /*bindBuffer(ARRAY_BUFFER, _renderingFacetsVertexPositionBuffer);
-    vertexAttribPointer(_vertexPositionAttribute, 3, FLOAT, false, 0, 0);
-    bindBuffer(ARRAY_BUFFER, _renderingFacetsVertexColorBuffer);
-    vertexAttribPointer(_vertexColorAttribute, 4, FLOAT, false, 0, 0);
-    WMatrix4x4 modelMatrix;
-    modelMatrix.setToIdentity();
-    // Apply matrixes
-    uniformMatrix4(_uniformModelMatrix, modelMatrix);
-    uniformMatrix4(_uniformViewMatrix, _worldView);
-    uniformMatrix4(_uniformClientMatrix, _jsMatrix);
-    uniformMatrix4(_uniformProjectionMatrix, _worldProjection);
-    drawArrays(TRIANGLES, 0, 3);*/
+{    
+    // It just the indexes, nodes and matrices should be already loaded
+
+    if(!_refToRenderingPlc3D)
+        throw std::runtime_error("_drawPlc3DFacets(),  bad pointer to PLC");
+
+    /*bindBuffer(ARRAY_BUFFER, _renderingNodesVertexPositionBuffer);
+            vertexAttribPointer(_attributeVertexPosition, 3, FLOAT, false, 0, 0);*/
+    uniform4f(_uniformVertexColor,
+              _PlcFacetsColor[0],
+            _PlcFacetsColor[1],
+            _PlcFacetsColor[2],
+            _PlcFacetsColor[3]);
+    bindBuffer(ELEMENT_ARRAY_BUFFER, _renderingFacetsIndexBuffer);
+
+    /// Must be UNSIGNED_SHORT or less
+    /// see http://www.khronos.org/opengles/sdk/docs/man/xhtml/glDrawElements.xml
+    drawElements(TRIANGLES, _refToRenderingPlc3D->_facetList.size()*3, UNSIGNED_SHORT, 0);
 }
 
 void GridRender::_preloadAllBuffers()
@@ -319,36 +349,41 @@ void GridRender::initializeGL()
     //enableVertexAttribArray(_vertexColorAttribute);
     _uniformVertexColor = getUniformLocation(_shaderProgram, "vrtClr");
 
-    _uniformModelMatrix = getUniformLocation(_shaderProgram, "mMatrix");
-    _uniformViewMatrix = getUniformLocation(_shaderProgram, "vMatrix");
-    _uniformClientMatrix = getUniformLocation(_shaderProgram, "cMatrix");
-    _uniformProjectionMatrix = getUniformLocation(_shaderProgram, "pMatrix");
+    _uniformSceneMatrix = getUniformLocation(_shaderProgram, "sceneMatrix");
 
     // Preloading buffers
     _preloadAllBuffers();
 
-    disable(DEPTH_TEST);
+    enable(DEPTH_TEST);
     disable(CULL_FACE);
     depthFunc(LEQUAL);
 
     viewport(0, 0, (unsigned) this->width().value(), (unsigned) this->height().value());
-    //viewport(0, 0, 800, 600);
+
+    _userSideModelMatrix = createJavaScriptMatrix4();
+    _userSideWorldViewMatrix = createJavaScriptMatrix4();
+    _userSideProjectionMatrix = createJavaScriptMatrix4();
+    _userSideSceneMatrix = createJavaScriptMatrix4();
+
+    WMatrix4x4 _m;
+    setJavaScriptMatrix4(_userSideModelMatrix, _m);
+
     // Setting of matrixes
-    _worldView.lookAt(
-        0, 0, 5,  // camera default position
+    _m.lookAt(
+        0, 0, 5,    // camera default position
         0, 0, 0,    // camera looks at
         0, 1, 0);   // up vector
     // After that, the camera should be at(0,0,0), looks at negative Z,
     // and the sky should be at positeve Y
-    _jsMatrix = createJavaScriptMatrix4();
-    setJavaScriptMatrix4(_jsMatrix, _worldView);
-    setClientSideLookAtHandler(
-        _jsMatrix,
-        0, 0, 0,    // camera looks at
-        0, 1, 0,    // up vector
-        0.005, 0.005);  // rotation rate
-    _worldProjection.perspective(60, this->width().value()/this->height().value(), 0.01, 10);
-    //_worldProjection.perspective(60, 800.0/600.0, 1, 1000);
+    setJavaScriptMatrix4(_userSideWorldViewMatrix, _m);
+
+    _m.setToIdentity();
+    _m.perspective(
+                60,
+                this->width().value()/this->height().value(),
+                1e-3,
+                100);
+    setJavaScriptMatrix4(_userSideProjectionMatrix, _m);
 }
 
 void GridRender::paintGL()
@@ -367,6 +402,10 @@ void GridRender::paintGL()
     {
         case MODE_3D:
         {
+            // Apply matrices
+            _buildSceneMatrix();
+            uniformMatrix4(_uniformSceneMatrix, _userSideSceneMatrix);
+
             // Draw PLC
             _drawPlc3DFacets();
             _drawPlc3DSegments();
@@ -391,4 +430,45 @@ void GridRender::resizeGL(int width, int height)
 void GridRender::updateGL()
 {
     _preloadAllBuffers();
+}
+
+void GridRender::_buildSceneMatrix()
+{
+    std::string _js;
+    _js += WT_CLASS ".glMatrix.mat4.multiply(" + _userSideProjectionMatrix.jsRef() + ",";
+    _js += _userSideWorldViewMatrix.jsRef() + ",";
+    _js += _userSideSceneMatrix.jsRef() + ");";
+
+    _js += WT_CLASS ".glMatrix.mat4.multiply(" + _userSideSceneMatrix.jsRef() + ",";
+    _js += _userSideModelMatrix.jsRef() + ",";
+    _js += _userSideSceneMatrix.jsRef() + ");";
+
+    injectJS(_js);
+    GLDEBUG;
+}
+
+/*void GridRender::_onMouseWentDown(const WMouseEvent &event)
+{
+    if(event.button() == WMouseEvent::LeftButton)
+        _oldMouseCoors((double)event.screen().x, (double)event.screen().y);
+}
+
+void GridRender::_onMouseDragged(const WMouseEvent &event)
+{
+    if(event.button() == WMouseEvent::LeftButton)
+    {
+        _matrixPipeline.worldViewMatrix.rotate(event.screen().x-_oldMouseCoors[0],0,1,0);
+        _matrixPipeline.worldViewMatrix.rotate(event.screen().y-_oldMouseCoors[1],1,0,0);
+        _oldMouseCoors((double)event.screen().x, (double)event.screen().y);
+        this->repaintGL(PAINT_GL);
+    }
+}*/
+
+std::string GridRender::_glObjJsRef()
+{
+    return "(function(){"
+        "var r = " + jsRef() + ";"
+        "var o = r ? jQuery.data(r,'obj') : null;"
+        "return o ? o : {ctx: null};"
+        "})()";
 }
