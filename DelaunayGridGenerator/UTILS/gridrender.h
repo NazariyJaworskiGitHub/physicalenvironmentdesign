@@ -31,31 +31,15 @@ namespace Utilities
         public : RENDERING_MODE getRenderingMode() const {return _renderingMode;}
         public : void setRenderingMode(RENDERING_MODE mode){_renderingMode = mode;}
 
-        /// \todo not shure that this should be double, maybe float?
-        private: std::vector<double>     _renderingNodesPositions;
-        //private: std::vector<double>     _renderingNodesColors;
-        //private: std::vector<double>     _renderingDataIndexes; /// \todo temporarily unused*/
-
         private: Program                _shaderProgram;
 
         private: AttribLocation         _attributeVertexPosition;
         private: UniformLocation        _uniformVertexColor;
-
-        private: UniformLocation        _uniformModelMatrix;
-        private: UniformLocation        _uniformViewMatrix;
-        private: UniformLocation        _uniformClientMatrix;
-        private: UniformLocation        _uniformProjectionMatrix;
+        private: UniformLocation        _uniformSceneMatrix;
 
         private: Buffer                 _renderingNodesVertexPositionBuffer;
         private: Buffer                 _renderingSegmentsIndexBuffer;
-
-        private: Buffer                 _renderingFacetsVertexPositionBuffer;
-        private: Buffer                 _renderingFacetsVertexColorBuffer;
         private: Buffer                 _renderingFacetsIndexBuffer;
-
-        private: JavaScriptMatrix4x4    _jsMatrix;
-        private: WMatrix4x4             _worldView;
-        private: WMatrix4x4             _worldProjection;
 
         public: GridRender(WContainerWidget *parent);
 
@@ -70,6 +54,12 @@ namespace Utilities
         public : void setRenderingPlcSegmentsColor(double R, double G, double B, double A)
         {
             _PlcSegmentsColor(R,G,B,A);
+        }
+        /// default [0.8, 0.8, 0.8, 1.0] - light gray, see constructor
+        private: FEM::Vector4D _PlcFacetsColor;
+        public : void setRenderingPlcFacetsColor(double R, double G, double B, double A)
+        {
+            _PlcFacetsColor(R,G,B,A);
         }
 
         private: DelaunayGridGenerator::CommonPlc2D *_refToRenderingPlc2D = nullptr;
@@ -98,6 +88,21 @@ namespace Utilities
         public: void paintGL() override;
         public: void resizeGL(int width, int height) override;
         public: void updateGL() override;
+
+        // User Java Script conrol
+        private: JavaScriptMatrix4x4    _userSideModelMatrix;
+        private: JavaScriptMatrix4x4    _userSideWorldViewMatrix;
+        private: JavaScriptMatrix4x4    _userSideProjectionMatrix;
+        private: JavaScriptMatrix4x4    _userSideSceneMatrix;
+        ///Multiplies Projection, World-View and Model matrices at client side
+        private: void _buildSceneMatrix();
+        private: JSlot                  _onMouseWentDownJSlot;
+        private: JSlot                  _onMouseDraggedJSlot;
+        /*private: FEM::Vector2D          _oldMouseCoors;
+        private: void _onMouseWentDown(const WMouseEvent &event);
+        private: void _onMouseDragged(const WMouseEvent &event);*/
+        /// See native WGLWidget::glObjJsRef()
+        private: std::string _glObjJsRef();
     };
 
     /// See WGLWidget::makeFloat() -> Utils::round_js_str() -> round_js_str()
