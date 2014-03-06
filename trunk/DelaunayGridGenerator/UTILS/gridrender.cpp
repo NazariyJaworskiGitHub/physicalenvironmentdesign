@@ -9,35 +9,6 @@ GridRender::GridRender(WContainerWidget *parent):
     _PlcSegmentsColor(0.0, 1.0, 0.0, 1.0),
     _PlcFacetsColor(0.8, 0.8, 0.8, 1.0)
 {
-    // User control initialization
-    //mouseWentDown().connect(this,&GridRender::_onMouseWentDown);
-    //mouseDragged().connect(this,&GridRender::_onMouseDragged);
-
-    /*setJavaScriptMember("_onMouseWentDown",
-                "function(a,c){"
-                "f.capture(null);"
-                "f.capture(h);"
-                "i=f.pageCoordinates(c);"
-                "};"
-                );
-    setJavaScriptMember("_onMouseDragged",
-                "function(a,c){"
-                "var d=f.pageCoordinates(c);
-                "a=d.x-i.x;"
-                "d=d.y-i.y;"
-                "this.paintGL();" +
-                _userControlMatrix.jsRef() +
-                "i=f.pageCoordinates(c)"
-                "};"
-                );
-    _onMouseWentDownJSlot.setJavaScript(
-                "function(o, e){" + _glObjJsRef() + "._onMouseWentDown(o, e);}");
-    _onMouseDraggedJSlot.setJavaScript(
-                "function(o, e){" + _glObjJsRef() + "._onMouseDragged(o, e);}");
-
-    mouseWentDown().connect(_onMouseWentDownJSlot);
-    mouseDragged().connect(_onMouseDraggedJSlot);*/
-
     /// \todo Just TEST
     DelaunayGridGenerator::CommonPlc3D *_myCommonPlc3D
             = new DelaunayGridGenerator::CommonPlc3D();
@@ -75,26 +46,24 @@ GridRender::GridRender(WContainerWidget *parent):
 
 /// for using a texture, replase vertexCol and vColor
 std::string vertexShaderSrc =
-    "attribute  highp   vec3    vrtPos;                                 \n"
-    "//attribute  highp   vec4    vrtClr;                                 \n"
-    "uniform    highp   vec4    vrtClr;                                 \n"
-    "uniform    highp   mat4    sceneMatrix;                            \n"
-    "varying    highp   vec4    vColor;                                 \n"
-    "void main(void)                                                    \n"
-    "{                                                                  \n"
-    "    gl_Position =                                                  \n"
-    "       sceneMatrix * vec4(vrtPos, 1.0);                            \n"
-    "    vColor = vrtClr;                                               \n"
-    "}                                                                  \n";
+    "attribute  highp   vec3    vrtPos;"
+    "uniform    highp   vec4    vrtClr;"
+    "uniform    highp   mat4    sceneMatrix;"
+    "varying    highp   vec4    vColor;"
+    "void main(void)"
+    "{"
+    "    gl_Position ="
+    "       sceneMatrix * vec4(vrtPos, 1.0);"
+    "    vColor = vrtClr;"
+    "}";
 
 std::string fragmentShaderSrc =
-    "precision  mediump float;                                          \n"
-    "varying    highp   vec4    vColor;                                 \n"
-    "void main(void)                                                    \n"
-    "{                                                                  \n"
-    "    gl_FragColor = vColor;                                         \n"
-    "    //gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);                       \n"
-    "}                                                                  \n";
+    "precision  mediump float;"
+    "varying    highp   vec4    vColor;"
+    "void main(void)"
+    "{"
+    "    gl_FragColor = vColor;"
+    "}";
 
 void GridRender::setRenderingPiecewiseLinearComplex(
         DelaunayGridGenerator::CommonPlc2D *renderingPlc2D) throw (std::logic_error)
@@ -384,6 +353,8 @@ void GridRender::initializeGL()
                 1e-3,
                 100);
     setJavaScriptMatrix4(_userSideProjectionMatrix, _m);
+
+    _initializeUserSideMouseControl();
 }
 
 void GridRender::paintGL()
@@ -447,28 +418,41 @@ void GridRender::_buildSceneMatrix()
     GLDEBUG;
 }
 
-/*void GridRender::_onMouseWentDown(const WMouseEvent &event)
-{
-    if(event.button() == WMouseEvent::LeftButton)
-        _oldMouseCoors((double)event.screen().x, (double)event.screen().y);
-}
-
-void GridRender::_onMouseDragged(const WMouseEvent &event)
-{
-    if(event.button() == WMouseEvent::LeftButton)
-    {
-        _matrixPipeline.worldViewMatrix.rotate(event.screen().x-_oldMouseCoors[0],0,1,0);
-        _matrixPipeline.worldViewMatrix.rotate(event.screen().y-_oldMouseCoors[1],1,0,0);
-        _oldMouseCoors((double)event.screen().x, (double)event.screen().y);
-        this->repaintGL(PAINT_GL);
-    }
-}*/
-
 std::string GridRender::_glObjJsRef()
 {
     return "(function(){"
         "var r = " + jsRef() + ";"
         "var o = r ? jQuery.data(r,'obj') : null;"
         "return o ? o : {ctx: null};"
-        "})()";
+            "})()";
+}
+
+void GridRender::_initializeUserSideMouseControl()
+{
+    setJavaScriptMember("_omc","null");
+    _onMouseWentDownJSlot.setJavaScript(
+                "function(a, c){"
+                //"debugger;"
+                "_omc=" WT_CLASS ".pageCoordinates(c);"
+                "}");
+    _onMouseDraggedJSlot.setJavaScript(
+                "function(a, c){"
+                //"debugger;"
+                "var d=" WT_CLASS ".pageCoordinates(c);"
+                WT_CLASS ".glMatrix.mat4.rotate(" +
+                _glObjJsRef() + "." + _userSideWorldViewMatrix.jsRef() + ","
+                "(d.x-_omc.x)/180.0,"
+                "new Float32Array([0,1,0])," +
+                _glObjJsRef() + "." + _userSideWorldViewMatrix.jsRef() + ");"
+                WT_CLASS ".glMatrix.mat4.rotate(" +
+                _glObjJsRef() + "." + _userSideWorldViewMatrix.jsRef() + ","
+                "(d.y-_omc.y)/180.0,"
+                "new Float32Array([1,0,0])," +
+                _glObjJsRef() + "." + _userSideWorldViewMatrix.jsRef() + ");" +
+                _glObjJsRef() + ".paintGL();"
+                "_omc=d;"
+                "}");
+
+    mouseWentDown().connect(_onMouseWentDownJSlot);
+    mouseDragged().connect(_onMouseDraggedJSlot);
 }
