@@ -89,7 +89,7 @@ namespace Utilities
         public: void resizeGL(int width, int height) override;
         public: void updateGL() override;
 
-        // User Java Script conrol
+        // User JavaScript conrol
         private: JavaScriptMatrix4x4    _userSideModelMatrix;
         private: JavaScriptMatrix4x4    _userSideWorldViewMatrix;
         private: JavaScriptMatrix4x4    _userSideProjectionMatrix;
@@ -98,11 +98,10 @@ namespace Utilities
         private: void _buildSceneMatrix();
         private: JSlot                  _onMouseWentDownJSlot;
         private: JSlot                  _onMouseDraggedJSlot;
-        /*private: FEM::Vector2D          _oldMouseCoors;
-        private: void _onMouseWentDown(const WMouseEvent &event);
-        private: void _onMouseDragged(const WMouseEvent &event);*/
         /// See native WGLWidget::glObjJsRef()
         private: std::string _glObjJsRef();
+        /// Makes user-side JavaScript callback functions for view mouse-control
+        private: void _initializeUserSideMouseControl();
     };
 
     /// See WGLWidget::makeFloat() -> Utils::round_js_str() -> round_js_str()
