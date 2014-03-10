@@ -18,6 +18,8 @@
 
 using namespace Wt;
 
+#define USER_SIDE_CONTROL
+
 namespace Utilities
 {
     /// Ui web widget for WebGl render
@@ -79,8 +81,8 @@ namespace Utilities
         private: void _initializePlc3DSegmentsBuffers() throw(std::runtime_error);
         private: void _initializePlc3DFacetsBuffers() throw(std::runtime_error);
         private: void _drawPlc3DNodes() throw(std::runtime_error);
-        private: void _drawPlc3DSegments();
-        private: void _drawPlc3DFacets();
+        private: void _drawPlc3DSegments() throw(std::runtime_error);
+        private: void _drawPlc3DFacets() throw(std::runtime_error);
 
         private: void _preloadAllBuffers();
 
@@ -90,7 +92,10 @@ namespace Utilities
         public: void updateGL() override;
 
         // User JavaScript conrol
+#ifdef USER_SIDE_CONTROL
+        /// \todo there are too many matrices! combine them
         private: JavaScriptMatrix4x4    _userSideModelMatrix;
+        private: JavaScriptMatrix4x4    _userSideUserControlMatrix;
         private: JavaScriptMatrix4x4    _userSideWorldViewMatrix;
         private: JavaScriptMatrix4x4    _userSideProjectionMatrix;
         private: JavaScriptMatrix4x4    _userSideSceneMatrix;
@@ -98,10 +103,25 @@ namespace Utilities
         private: void _buildSceneMatrix();
         private: JSlot                  _onMouseWentDownJSlot;
         private: JSlot                  _onMouseDraggedJSlot;
+        private: JSlot                  _onMouseWheelJSlot;
         /// See native WGLWidget::glObjJsRef()
         private: std::string _glObjJsRef();
         /// Makes user-side JavaScript callback functions for view mouse-control
         private: void _initializeUserSideMouseControl();
+
+        // Temporaly objects, just for TEST, to delete later
+#else
+        /// \todo there are too many matrices! combine them
+        private: WMatrix4x4             _mModel;
+        private: WMatrix4x4             _mWorld;
+        private: WMatrix4x4             _mControl;
+        private: WMatrix4x4             _mProj;
+        private: WMatrix4x4             _mScene;    // =Proj*World*Control*Model
+        private: int _oldMouseCoors[2];
+        private: void _onMouseWentDown(const WMouseEvent &event);
+        private: void _onMouseDragged(const WMouseEvent &event);
+        private: void _onMouseWheel(const WMouseEvent &event);
+#endif //USER_SIDE_CONTROL
     };
 
     /// See WGLWidget::makeFloat() -> Utils::round_js_str() -> round_js_str()

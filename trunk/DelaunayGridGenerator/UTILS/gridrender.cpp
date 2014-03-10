@@ -1,5 +1,7 @@
 #include "gridrender.h"
 
+#define USER_SIDE_CONTROL
+
 using namespace Utilities;
 
 GridRender::GridRender(WContainerWidget *parent):
@@ -9,39 +11,48 @@ GridRender::GridRender(WContainerWidget *parent):
     _PlcSegmentsColor(0.0, 1.0, 0.0, 1.0),
     _PlcFacetsColor(0.8, 0.8, 0.8, 1.0)
 {
+#ifdef USER_SIDE_CONTROL
+    // see _initializeUserSideMouseControl()
+#else
+    mouseWentDown().connect(this,&GridRender::_onMouseWentDown);
+    mouseDragged().connect(this,&GridRender::_onMouseDragged);
+    mouseWheel().connect(this,&GridRender::_onMouseWheel);
+#endif //USER_SIDE_CONTROL
+
     /// \todo Just TEST
-    DelaunayGridGenerator::CommonPlc3D *_myCommonPlc3D
-            = new DelaunayGridGenerator::CommonPlc3D();
+    {
+        DelaunayGridGenerator::CommonPlc3D *_myCommonPlc3D
+                = new DelaunayGridGenerator::CommonPlc3D();
 
-    _myCommonPlc3D->createNode(FEM::Node3D(0.0,0.0,0.0));
-    _myCommonPlc3D->createNode(FEM::Node3D(1.0,0.0,0.0));
-    _myCommonPlc3D->createNode(FEM::Node3D(0.0,1.0,0.0));
-    _myCommonPlc3D->createNode(FEM::Node3D(1.0,1.0,0.0));
-    _myCommonPlc3D->createNode(FEM::Node3D(0.0,0.0,1.0));
-    _myCommonPlc3D->createNode(FEM::Node3D(1.0,0.0,1.0));
-    _myCommonPlc3D->createNode(FEM::Node3D(0.0,1.0,1.0));
-    _myCommonPlc3D->createNode(FEM::Node3D(1.0,1.0,1.0));
+        _myCommonPlc3D->createNode(FEM::Node3D(0.0,0.0,0.0));
+        _myCommonPlc3D->createNode(FEM::Node3D(1.0,0.0,0.0));
+        _myCommonPlc3D->createNode(FEM::Node3D(0.0,1.0,0.0));
+        _myCommonPlc3D->createNode(FEM::Node3D(1.0,1.0,0.0));
+        _myCommonPlc3D->createNode(FEM::Node3D(0.0,0.0,1.0));
+        _myCommonPlc3D->createNode(FEM::Node3D(1.0,0.0,1.0));
+        _myCommonPlc3D->createNode(FEM::Node3D(0.0,1.0,1.0));
+        _myCommonPlc3D->createNode(FEM::Node3D(1.0,1.0,1.0));
 
-    _myCommonPlc3D->updateMaxAndMinCoordinates();
+        _myCommonPlc3D->updateMaxAndMinCoordinates();
 
-    _myCommonPlc3D->createSegment(0,1);
-    _myCommonPlc3D->createSegment(0,2);
-    _myCommonPlc3D->createSegment(1,3);
-    _myCommonPlc3D->createSegment(2,3);
-    _myCommonPlc3D->createSegment(4,5);
-    _myCommonPlc3D->createSegment(4,6);
-    _myCommonPlc3D->createSegment(5,7);
-    _myCommonPlc3D->createSegment(6,7);
-    _myCommonPlc3D->createSegment(0,4);
-    _myCommonPlc3D->createSegment(1,5);
-    _myCommonPlc3D->createSegment(2,6);
-    _myCommonPlc3D->createSegment(3,7);
+        _myCommonPlc3D->createSegment(0,1);
+        _myCommonPlc3D->createSegment(0,2);
+        _myCommonPlc3D->createSegment(1,3);
+        _myCommonPlc3D->createSegment(2,3);
+        _myCommonPlc3D->createSegment(4,5);
+        _myCommonPlc3D->createSegment(4,6);
+        _myCommonPlc3D->createSegment(5,7);
+        _myCommonPlc3D->createSegment(6,7);
+        _myCommonPlc3D->createSegment(0,4);
+        _myCommonPlc3D->createSegment(1,5);
+        _myCommonPlc3D->createSegment(2,6);
+        _myCommonPlc3D->createSegment(3,7);
 
-    {int _n[]={0,1,2}; _myCommonPlc3D->createFacet(_n);}
-    {int _n[]={5,6,7}; _myCommonPlc3D->createFacet(_n);}
+        {int _n[]={0,1,2}; _myCommonPlc3D->createFacet(_n);}
+        {int _n[]={5,6,7}; _myCommonPlc3D->createFacet(_n);}
 
-    setRenderingPiecewiseLinearComplex(_myCommonPlc3D);
-    //setRenderingPlcNodesColor(1,0,0,1);
+        setRenderingPiecewiseLinearComplex(_myCommonPlc3D);
+    }
 }
 
 /// for using a texture, replase vertexCol and vColor
@@ -234,7 +245,7 @@ void GridRender::_drawPlc3DNodes() throw(std::runtime_error)
     drawArrays(POINTS, 0, _refToRenderingPlc3D->_nodeList.size());
 }
 
-void GridRender::_drawPlc3DSegments()
+void GridRender::_drawPlc3DSegments() throw(std::runtime_error)
 {
     // It just the indexes, nodes and matrices should be already loaded
 
@@ -253,7 +264,7 @@ void GridRender::_drawPlc3DSegments()
     drawElements(LINES, _refToRenderingPlc3D->_segmentList.size()*2, UNSIGNED_SHORT, 0);
 }
 
-void GridRender::_drawPlc3DFacets()
+void GridRender::_drawPlc3DFacets() throw(std::runtime_error)
 {    
     // It just the indexes, nodes and matrices should be already loaded
 
@@ -329,21 +340,36 @@ void GridRender::initializeGL()
 
     viewport(0, 0, (unsigned) this->width().value(), (unsigned) this->height().value());
 
-    _userSideModelMatrix = createJavaScriptMatrix4();
-    _userSideWorldViewMatrix = createJavaScriptMatrix4();
-    _userSideProjectionMatrix = createJavaScriptMatrix4();
-    _userSideSceneMatrix = createJavaScriptMatrix4();
+#ifdef USER_SIDE_CONTROL
+    _userSideModelMatrix        = createJavaScriptMatrix4();
+    _userSideUserControlMatrix  = createJavaScriptMatrix4();
+    _userSideWorldViewMatrix    = createJavaScriptMatrix4();
+    _userSideProjectionMatrix   = createJavaScriptMatrix4();
+    _userSideSceneMatrix        = createJavaScriptMatrix4();
 
-    WMatrix4x4 _m;
+    WMatrix4x4 _m;  //It is identy now
+    FEM::Vector3D _translator;
+    // Find scale factor, and scale object into 1x1x1 box
+    _translator =
+            _refToRenderingPlc3D->getMaxCoords() -
+            _refToRenderingPlc3D->getMinCoords();
+    double _factor = _translator.getMaxValue();
+    if(_factor >= 1e-8)
+        _m.scale(1.0/_factor);
+    // Find the volume center and move the coordinates center there
+    _translator =
+            (_refToRenderingPlc3D->getMinCoords() +
+             _refToRenderingPlc3D->getMaxCoords())/2.0;
+    _m.translate(-_translator[0], -_translator[1], -_translator[2]);
     setJavaScriptMatrix4(_userSideModelMatrix, _m);
 
-    // Setting of matrixes
+    _m.setToIdentity();
+    setJavaScriptMatrix4(_userSideUserControlMatrix, _m);
+
     _m.lookAt(
-        0, 0, 5,    // camera default position
+        0, 0, 2,    // camera default position
         0, 0, 0,    // camera looks at
         0, 1, 0);   // up vector
-    // After that, the camera should be at(0,0,0), looks at negative Z,
-    // and the sky should be at positeve Y
     setJavaScriptMatrix4(_userSideWorldViewMatrix, _m);
 
     _m.setToIdentity();
@@ -355,6 +381,35 @@ void GridRender::initializeGL()
     setJavaScriptMatrix4(_userSideProjectionMatrix, _m);
 
     _initializeUserSideMouseControl();
+
+#else
+    FEM::Vector3D _translator;
+    // Find scale factor, and scale object into 1x1x1 box
+    _translator =
+            _refToRenderingPlc3D->getMaxCoords() -
+            _refToRenderingPlc3D->getMinCoords();
+    double _factor = _translator.getMaxValue();
+    if(_factor >= 1e-8)
+        _mModel.scale(1.0/_factor);
+    // Find the volume center and move the coordinates center there
+    _translator =
+            (_refToRenderingPlc3D->getMinCoords() +
+             _refToRenderingPlc3D->getMaxCoords())/2.0;
+    _mModel.translate(-_translator[0], -_translator[1], -_translator[2]);
+
+    _mWorld.setToIdentity();
+    _mWorld.lookAt(
+                0, 0, 2,    // camera default position
+                0, 0, 0,    // camera looks at
+                0, 1, 0);   // up vector
+
+    _mProj.setToIdentity();
+    _mProj.perspective(
+                60,
+                this->width().value()/this->height().value(),
+                1e-3,
+                100);
+#endif //USER_SIDE_CONTROL
 }
 
 void GridRender::paintGL()
@@ -374,8 +429,16 @@ void GridRender::paintGL()
         case MODE_3D:
         {
             // Apply matrices
+#ifdef USER_SIDE_CONTROL
             _buildSceneMatrix();
             uniformMatrix4(_uniformSceneMatrix, _userSideSceneMatrix);
+#else
+            using namespace boost::numeric::ublas;
+            _mScene.impl() = prod(_mProj.impl(), _mWorld.impl());
+            _mScene.impl() = prod(_mScene.impl(), _mControl.impl());
+            _mScene.impl() = prod(_mScene.impl(), _mModel.impl());
+            uniformMatrix4(_uniformSceneMatrix, _mScene);
+#endif //USER_SIDE_CONTROL
 
             // Draw PLC
             _drawPlc3DFacets();
@@ -403,11 +466,17 @@ void GridRender::updateGL()
     _preloadAllBuffers();
 }
 
+#ifdef USER_SIDE_CONTROL
 void GridRender::_buildSceneMatrix()
 {
     std::string _js;
+
     _js += WT_CLASS ".glMatrix.mat4.multiply(" + _userSideProjectionMatrix.jsRef() + ",";
     _js += _userSideWorldViewMatrix.jsRef() + ",";
+    _js += _userSideSceneMatrix.jsRef() + ");";
+
+    _js += WT_CLASS ".glMatrix.mat4.multiply(" + _userSideSceneMatrix.jsRef() + ",";
+    _js += _userSideUserControlMatrix.jsRef() + ",";
     _js += _userSideSceneMatrix.jsRef() + ");";
 
     _js += WT_CLASS ".glMatrix.mat4.multiply(" + _userSideSceneMatrix.jsRef() + ",";
@@ -429,30 +498,72 @@ std::string GridRender::_glObjJsRef()
 
 void GridRender::_initializeUserSideMouseControl()
 {
+    // matrices should be already binded, see initializeGL()
+
     setJavaScriptMember("_omc","null");
     _onMouseWentDownJSlot.setJavaScript(
                 "function(a, c){"
-                //"debugger;"
                 "_omc=" WT_CLASS ".pageCoordinates(c);"
                 "}");
     _onMouseDraggedJSlot.setJavaScript(
                 "function(a, c){"
-                //"debugger;"
                 "var d=" WT_CLASS ".pageCoordinates(c);"
-                WT_CLASS ".glMatrix.mat4.rotate(" +
-                _glObjJsRef() + "." + _userSideWorldViewMatrix.jsRef() + ","
-                "(d.x-_omc.x)/180.0,"
-                "new Float32Array([0,1,0])," +
-                _glObjJsRef() + "." + _userSideWorldViewMatrix.jsRef() + ");"
-                WT_CLASS ".glMatrix.mat4.rotate(" +
-                _glObjJsRef() + "." + _userSideWorldViewMatrix.jsRef() + ","
-                "(d.y-_omc.y)/180.0,"
-                "new Float32Array([1,0,0])," +
-                _glObjJsRef() + "." + _userSideWorldViewMatrix.jsRef() + ");" +
-                _glObjJsRef() + ".paintGL();"
+                "var _ref=" + _glObjJsRef() + ";"
+                "var _m=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];"
+                WT_CLASS ".glMatrix.mat4.rotate(_m,(d.y-_omc.y)/180.0,[1,0,0],_m);"
+                WT_CLASS ".glMatrix.mat4.rotate(_m,(d.x-_omc.x)/180.0,[0,1,0],_m);"
+                WT_CLASS ".glMatrix.mat4.multiply(_m,"
+                "_ref." + _userSideUserControlMatrix.jsRef() + ","
+                "_ref." + _userSideUserControlMatrix.jsRef() + ");"
                 "_omc=d;"
+                "_ref.paintGL();"
+                "}");
+    _onMouseWheelJSlot.setJavaScript(
+                "function(a, c){"
+                "var _ref=" + _glObjJsRef() + ";"
+                "var _f=1+0.05*" WT_CLASS ".wheelDelta(c);"
+                "var _m=[_f,0,0,0,0,_f,0,0,0,0,_f,0,0,0,0,1];"
+                WT_CLASS ".glMatrix.mat4.multiply("
+                "_ref." + _userSideUserControlMatrix.jsRef() + ","
+                "_m,"
+                "_ref." + _userSideUserControlMatrix.jsRef() + ");"
+                "_ref.paintGL();"
                 "}");
 
     mouseWentDown().connect(_onMouseWentDownJSlot);
     mouseDragged().connect(_onMouseDraggedJSlot);
+    mouseWheel().connect(_onMouseWheelJSlot);
 }
+#else
+void GridRender::_onMouseWentDown(const WMouseEvent &event)
+{
+    if(event.button() == WMouseEvent::LeftButton)
+    {
+        _oldMouseCoors[0] = event.screen().x;
+        _oldMouseCoors[1] = event.screen().y;
+    }
+}
+
+void GridRender::_onMouseDragged(const WMouseEvent &event)
+{
+    if(event.button() == WMouseEvent::LeftButton)
+    {
+        WMatrix4x4 _m;
+        _m.rotate(event.screen().y-_oldMouseCoors[1], 1.0, 0.0, 0.0);
+        _m.rotate(event.screen().x-_oldMouseCoors[0], 0.0, 1.0, 0.0);
+        using namespace boost::numeric::ublas;
+        _mControl.impl() = prod(_m.impl(), _mControl.impl());
+        _oldMouseCoors[0] = event.screen().x;
+        _oldMouseCoors[1] = event.screen().y;
+        this->repaintGL(PAINT_GL);
+    }
+}
+
+void GridRender::_onMouseWheel(const WMouseEvent &event)
+{
+    /// \todo remove constant, make it soft
+    _mControl.scale(1 + event.wheelDelta()*0.05);
+    this->repaintGL(PAINT_GL);
+}
+
+#endif //USER_SIDE_CONTROL

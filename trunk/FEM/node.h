@@ -11,8 +11,6 @@
 
 #include <qglobal.h>
 
-#include <QVector3D>
-
 namespace FEM
 {
     template <int _dim_, typename _DimType_ = double> class Node;
@@ -36,6 +34,7 @@ namespace FEM
     public:
         enum COORDINATES {X=0, Y, Z, W};
 
+        /// \todo make it private
         _DimType_ coord[_dim_];  ///< Coordinates array.
 
         /// \brief Common constructor
@@ -134,6 +133,22 @@ namespace FEM
             return *this;
         }
 
+        inline friend const Node operator*(const Node &n, _DimType_ scalar)
+        {
+            Node _rez;
+            for(int i=0;i<_dim_;++i)
+                _rez.coord[i]=n.coord[i]*scalar;
+            return _rez;
+        }
+
+        inline friend const Node operator*(_DimType_ scalar, const Node &n)
+        {
+            Node _rez;
+            for(int i=0;i<_dim_;++i)
+                _rez.coord[i]=n.coord[i]*scalar;
+            return _rez;
+        }
+
         /// \brief Divides Vector on scalar.
         /// \param[in] scalar .
         void divide(_DimType_ scalar)
@@ -146,6 +161,21 @@ namespace FEM
             for(int i=0;i<_dim_;++i)
                 coord[i]/=scalar;
             return *this;
+        }
+        inline friend const Node operator/(const Node &n, _DimType_ scalar)
+        {
+            Node _rez;
+            for(int i=0;i<_dim_;++i)
+                _rez.coord[i]=n.coord[i]/scalar;
+            return _rez;
+        }
+
+        inline friend const Node operator/(_DimType_ scalar, const Node &n)
+        {
+            Node _rez;
+            for(int i=0;i<_dim_;++i)
+                _rez.coord[i]=n.coord[i]/scalar;
+            return _rez;
         }
 
         /// \brief Adds scalar to Vector.
@@ -179,6 +209,14 @@ namespace FEM
             return *this;
         }
 
+        inline friend const Node operator+(const Node &n1, const Node &n2)
+        {
+            Node _rez;
+            for(int i=0;i<_dim_;++i)
+                _rez.coord[i]=n1.coord[i]+n2.coord[i];
+            return _rez;
+        }
+
         /// \brief Subtracts target Vector from Vector.
         /// \param[in] target .
         /// \warning Bouth vectors shoulde be at the same dimension.
@@ -193,6 +231,14 @@ namespace FEM
             for(int i=0;i<_dim_;++i)
                 coord[i]-=target.coord[i];
             return *this;
+        }
+
+        inline friend const Node operator-(const Node &n1, const Node &n2)
+        {
+            Node _rez;
+            for(int i=0;i<_dim_;++i)
+                _rez.coord[i]=n1.coord[i]-n2.coord[i];
+            return _rez;
         }
 
         /// \brief Check if the target Node is equal to Node.
@@ -263,6 +309,15 @@ namespace FEM
                 coord[i]=va_arg (_coordinates, _DimType_);
             va_end(_coordinates);
             return *this;
+        }
+
+        _DimType_ getMaxValue()
+        {
+            _DimType_ _rez = coord[0];
+            for(int i=1; i<_dim_; ++i)
+                if(coord[i]>_rez)
+                    _rez=coord[i];
+            return _rez;
         }
 
         /// \brief Common destructor
