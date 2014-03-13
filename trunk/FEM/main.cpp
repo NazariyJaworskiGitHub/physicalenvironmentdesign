@@ -63,7 +63,9 @@ int main()
 
     // Matrix assembling
     myBeam.setDomain(0,myBeam.getGrid(0).constructDomainEllipticEquation());
+    /// \todo drmemory says that here we have a memory leak
     std::cout << myBeam.getDomain(0).getStiffnessMatrix() << std::endl;
+    /// \todo drmemory says that here we have a memory leak
     std::cout << myBeam.getDomain(0).getForceVector() << std::endl;
 
     // Equations system solving
@@ -72,6 +74,7 @@ int main()
     Eigen::ConjugateGradient<Eigen::SparseMatrix<qreal>> solver;
     solver.compute(myBeam.getDomain(0).getStiffnessMatrix());
     Eigen::SparseMatrix<qreal> result = solver.solve(myBeam.getDomain(0).getForceVector());
+    /// \todo drmemory says that here we have a memory leak
     std::cout << result << std::endl;
 
     // Results rendering
