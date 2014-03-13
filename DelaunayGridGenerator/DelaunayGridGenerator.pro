@@ -1,14 +1,18 @@
-TEMPLATE = app
 CONFIG += console
-CONFIG += qt
 CONFIG += c++11
 CONFIG += no_keywords
 
 QT += testlib
 
+#INTEL OpenCL
+INCLUDEPATH += E:\OpenCL\Intel\include
+LIBS += -LE:\OpenCL\Intel\lib\x86\ -lOpenCL
+#AMD OpenCL
+LIBS += E:\OpenCL\AMD\lib\x86\libOpenCL.a
+
 #Wt Web ToolKit
-INCLUDEPATH += -isystem E:\Wt\Wt_3.3.0_boost_1.54.0_mingw_4.8.0_x32\include\
-INCLUDEPATH += -isystem E:\Boost\boost_1_54_0
+INCLUDEPATH += E:\Wt\Wt_3.3.0_boost_1.54.0_mingw_4.8.0_x32\include\
+INCLUDEPATH += E:\Boost\boost_1_54_0
 LIBS += E:\Wt\Wt_3.3.0_boost_1.54.0_mingw_4.8.0_x32\lib\libwt.a
 LIBS += E:\Wt\Wt_3.3.0_boost_1.54.0_mingw_4.8.0_x32\lib\libwthttp.a
 LIBS += E:\Boost\boost_1_54_0\lib\libboost_signals-mgw48-mt-1_54.a
@@ -36,7 +40,8 @@ SOURCES += main.cpp \
     piecewiselinearcomplex.cpp \
     datamanager.cpp \
     gridelement.cpp \
-    TESTS/test_piecewiselinearcomplex.cpp
+    TESTS/test_piecewiselinearcomplex.cpp \
+    GPU/openclmanager.cpp
 
 HEADERS += \
     TESTS/tests_runner.h \
@@ -47,4 +52,6 @@ HEADERS += \
     piecewiselinearcomplex.h \
     datamanager.h \
     gridelement.h \
-    TESTS/test_piecewiselinearcomplex.h
+    TESTS/test_piecewiselinearcomplex.h \
+    GPU/openclmanager.h \
+    GPU/clsources.h

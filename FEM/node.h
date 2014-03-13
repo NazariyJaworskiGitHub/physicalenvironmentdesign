@@ -60,14 +60,12 @@ namespace FEM
         /// \warning Bouth nodes shoulde be at the same dimension.
         Node( const Node &n )
         {
-            for(int i=0;i<_dim_;++i)
-                coord[i]=n.coord[i];
+            memcpy(coord,n.coord,_dim_*sizeof(_DimType_));
         }
 
         Node &operator =(const Node &target)
         {
-            for(int i=0;i<_dim_;++i)
-                coord[i]=target.coord[i];
+            memcpy(coord,target.coord,_dim_*sizeof(_DimType_));
             return *this;
         }
 
@@ -84,6 +82,15 @@ namespace FEM
             for(int i=0;i<_dim_;++i)
                 _dist+=(coord[i]-target.coord[i])*(coord[i]-target.coord[i]);
             return _dist;
+        }
+        _DimType_ distance( const Node &target )
+        {
+            /// \todo bad constatnt
+            _DimType_ _dist = 0.0;
+            for(int i=0;i<_dim_;++i)
+                _dist+=(coord[i]-target.coord[i])*(coord[i]-target.coord[i]);
+            /// \todo it may be not double, but float or long double
+            return sqrt(_dist);
         }
 
         /// \brief Makes the Vector normalized

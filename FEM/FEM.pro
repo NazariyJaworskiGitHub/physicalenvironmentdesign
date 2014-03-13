@@ -8,6 +8,9 @@ QT += testlib
 
 INCLUDEPATH += E:\ViennaCL-1.4.2\
 
+# For dr.memory debug
+QMAKE_CXXFLAGS += -ggdb
+
 SOURCES += main.cpp \
     boundarycondition.cpp \
     simulationobject.cpp \
