@@ -6,7 +6,7 @@
 
 #include <Eigen/Dense>
 
-#include "utils.h"
+#include "mathutils.h"
 
 //#include "viennacl/matrix.hpp"
 //#include "viennacl/linalg/prod.hpp"
@@ -127,7 +127,7 @@ namespace FEM
         //
         public : _DimType_ calculateSubElementVolume(int oppositeNodeIndex) const
         {
-            _DimType_ _volume = 0;   /// \todo bad constant
+            _DimType_ _volume = _DimType_(0.0);
 
             // We should subtract some of the nodes to find vectors,
             // let it be the last one
@@ -170,7 +170,7 @@ namespace FEM
                 _volume += _term * _term;
             }
 
-            return sqrt(_volume)/factorial(_nDimentions_-1);
+            return commonSqrt(_volume)/factorial(_nDimentions_-1);
         }
 
         /*//  For simplex elements
@@ -261,7 +261,7 @@ namespace FEM
             // calculate [C]
             for(int i=0;i<_nDimentions_+1;++i)
             {
-                _C(i,0) = 1;    ///< \todo bad constant
+                _C(i,0) = _DimType_(1.0);
                 for(int j=0; j< _nDimentions_; ++j)
                    _C(i,j+1) = (*(this->_ptrToNodesList))[this->_myNodeIndexes[i]][j];
             }

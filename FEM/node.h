@@ -4,12 +4,15 @@
 #ifndef NODE_H
 #define NODE_H
 
-#include <cmath>
-#include <stdarg.h>
-#include <memory.h>
+#include <cstdarg>
+#include <cstring>
 #include <stdexcept>
-
+#include <type_traits>
 #include <qglobal.h>
+
+//#include <iostream>
+
+#include "mathutils.h"
 
 namespace FEM
 {
@@ -34,33 +37,45 @@ namespace FEM
     private:
         _DimType_ _coord[_dim_];  ///< Coordinates array.
     public:
-        /// \brief Common constructor
-        Node()
-        {
-            memset(_coord,0,_dim_*sizeof(_DimType_));
-        }
-
         /// \brief Constructor. \n
         /// \warning It takes only \c dim arguments from argument list. \n
-        /// Also make shure that all parameters are \c _DimType_.
-        Node( const _DimType_ x, ...)
+        Node(const _DimType_ x = 0,
+             const typename std::conditional<_dim_>=2, _DimType_, void*>::type y = 0,
+             const typename std::conditional<_dim_>=3, _DimType_, void*>::type z = 0,
+             const typename std::conditional<_dim_>=4, _DimType_, void*>::type w = 0) noexcept
         {
-            _coord[0] = x;
-            va_list _coordinates;
-            va_start(_coordinates, x);
-            for(int i=1;i<_dim_;++i)
-                _coord[i]=va_arg (_coordinates, _DimType_);
-            va_end(_coordinates);
+            switch (_dim_)
+            {
+            case 4:
+                _coord[3] = *((_DimType_*)&w);
+            case 3:
+                _coord[2] = *((_DimType_*)&z);
+            case 2:
+                _coord[1] = *((_DimType_*)&y);
+            case 1:
+                _coord[0] = x;
+                break;
+            }
+            // suppose that __cdecl locate arguments in reverse order, so first will be the last
+            // also suppose that all arguments are located successively at stack
+            // arguments x,y,z,w are not "not used", don't worry about compiler warnings
+            /*/// \todo make memcpy
+            //memcpy(_coord,&x-(_dim_-1),_dim_*sizeof(_DimType_)); //reverse it!!!
+            for(int i=0;i<_dim_;++i)
+                _coord[i] = *(&x - i);
+            */
+
+
         }
 
         /// \brief Copy constructor. \n
         /// \warning Bouth nodes shoulde be at the same dimension.
-        Node( const Node &n )
+        Node( const Node &n ) noexcept
         {
             memcpy(_coord,n._coord,_dim_*sizeof(_DimType_));
         }
 
-        Node &operator =(const Node &target)
+        Node &operator =(const Node &target) noexcept
         {
             memcpy(_coord,target._coord,_dim_*sizeof(_DimType_));
             return *this;
@@ -72,63 +87,54 @@ namespace FEM
         /// \param[in] target Node, distance to which should be calculated, i.e. \f$ v \f$.
         /// \return Square distance.
         /// \warning Bouth nodes shoulde be at the same dimension.
-        _DimType_ distanceSquare( const Node &target ) const
+        _DimType_ distanceSquare( const Node &target ) const noexcept
         {
-            /// \todo bad constatnt
-            _DimType_ _dist = 0.0;
+            _DimType_ _dist = _DimType_(0.0);
             for(int i=0;i<_dim_;++i)
                 _dist+=(_coord[i]-target._coord[i])*(_coord[i]-target._coord[i]);
             return _dist;
         }
-        static _DimType_ distanceSquare(const Node &n1, const Node &n2)
+        static _DimType_ distanceSquare(const Node &n1, const Node &n2) noexcept
         {
-            /// \todo bad constatnt
-            _DimType_ _dist = 0.0;
+            _DimType_ _dist = _DimType_(0.0);
             for(int i=0;i<_dim_;++i)
                 _dist+=(n1._coord[i]-n2._coord[i])*(n1._coord[i]-n2._coord[i]);
             /// \todo it may be not double, but float or long double
             return _dist;
         }
-        _DimType_ distance( const Node &target ) const
+        _DimType_ distance( const Node &target ) const noexcept
         {
-            /// \todo bad constatnt
-            _DimType_ _dist = 0.0;
+            _DimType_ _dist = _DimType_(0.0);
             for(int i=0;i<_dim_;++i)
                 _dist+=(_coord[i]-target._coord[i])*(_coord[i]-target._coord[i]);
-            /// \todo it may be not double, but float or long double
-            return sqrt(_dist);
+            return commonSqrt(_dist);
         }
-        static _DimType_ distance(const Node &n1, const Node &n2)
+        static _DimType_ distance(const Node &n1, const Node &n2) noexcept
         {
-            /// \todo bad constatnt
-            _DimType_ _dist = 0.0;
+            _DimType_ _dist = _DimType_(0.0);
             for(int i=0;i<_dim_;++i)
                 _dist+=(n1._coord[i]-n2._coord[i])*(n1._coord[i]-n2._coord[i]);
-            /// \todo it may be not double, but float or long double
-            return sqrt(_dist);
+            return commonSqrt(_dist);
         }
-        _DimType_ length() const
+        _DimType_ length() const noexcept
         {
-            /// \todo bad constatnt
-            _DimType_ _length = 0.0;
+            _DimType_ _length = _DimType_(0.0);
             for(int i=0;i<_dim_;++i)
                 _length+=_coord[i]*_coord[i];
-            /// \todo it may be not double, but float or long double
-            return sqrt(_length);
+            return commonSqrt(_length);
         }
 
         /// \brief Makes the Vector normalized
         /// \li \f$ \widehat{u}=\frac{u}{\parallel u\parallel}, u\in\Re^n,\parallel u\parallel\neq0 \f$.
         /// \li See <a href="http://en.wikipedia.org/wiki/Normalized_vector">Unit vector</a>.
-        void normalize()
+        void normalize() noexcept
         {
-            /// \todo bad constatnt
-            _DimType_ _length = 0.0;
+            _DimType_ _length = _DimType_(0.0);
             for(int i=0;i<_dim_;++i)
                 _length+=_coord[i]*_coord[i];
-            if(_length>0.0)
+            if(_length>_DimType_(0.0))
             {
-                _length = sqrt(_length);    /// \todo it may be not double
+                _length = commonSqrt(_length);
                 for(int i=0;i<_dim_;++i)
                     _coord[i]/=_length;
             }
@@ -140,10 +146,9 @@ namespace FEM
         /// \param[in] target Vector, dot product with which should be calculated, i.e. \f$ v \f$.
         /// \return Dot product.
         /// \warning Bouth nodes shoulde be at the same dimension.
-        _DimType_ dotProduct( const Node &target ) const
+        _DimType_ dotProduct( const Node &target ) const noexcept
         {
-            /// \todo bad constatnt
-            _DimType_ _product = 0.0;
+            _DimType_ _product = _DimType_(0.0);
             for(int i=0;i<_dim_;++i)
                 _product+=_coord[i]*target._coord[i];
             return _product;
@@ -151,20 +156,20 @@ namespace FEM
 
         /// \brief Multiplies Vector on scalar.
         /// \param[in] scalar .
-        void multiply( _DimType_ scalar)
+        void multiply( _DimType_ scalar) noexcept
         {
             for(int i=0;i<_dim_;++i)
                 _coord[i]*=scalar;
         }
 
-        Node &operator *= (_DimType_ scalar)
+        Node &operator *= (_DimType_ scalar) noexcept
         {
             for(int i=0;i<_dim_;++i)
                 _coord[i]*=scalar;
             return *this;
         }
 
-        friend const Node operator*(const Node &n, _DimType_ scalar)
+        friend const Node operator*(const Node &n, _DimType_ scalar) noexcept
         {
             Node _rez;
             for(int i=0;i<_dim_;++i)
@@ -172,7 +177,7 @@ namespace FEM
             return _rez;
         }
 
-        friend const Node operator*(_DimType_ scalar, const Node &n)
+        friend const Node operator*(_DimType_ scalar, const Node &n) noexcept
         {
             Node _rez;
             for(int i=0;i<_dim_;++i)
@@ -182,18 +187,18 @@ namespace FEM
 
         /// \brief Divides Vector on scalar.
         /// \param[in] scalar .
-        void divide(_DimType_ scalar)
+        void divide(_DimType_ scalar) noexcept
         {
             for(int i=0;i<_dim_;++i)
                 _coord[i]/=scalar;
         }
-        Node &operator /= (_DimType_ scalar)
+        Node &operator /= (_DimType_ scalar) noexcept
         {
             for(int i=0;i<_dim_;++i)
                 _coord[i]/=scalar;
             return *this;
         }
-        friend const Node operator/(const Node &n, _DimType_ scalar)
+        friend const Node operator/(const Node &n, _DimType_ scalar) noexcept
         {
             Node _rez;
             for(int i=0;i<_dim_;++i)
@@ -203,46 +208,46 @@ namespace FEM
 
         /// \brief Adds scalar to Vector.
         /// \param[in] scalar .
-        void addScalar(_DimType_ scalar)
+        void addScalar(_DimType_ scalar) noexcept
         {
             for(int i=0;i<_dim_;++i)
                 _coord[i]+=scalar;
         }
 
-        Node &operator += (_DimType_ scalar)
+        Node &operator += (_DimType_ scalar) noexcept
         {
             for(int i=0;i<_dim_;++i)
                 _coord[i]+=scalar;
             return *this;
         }
-        Node &operator -= (_DimType_ scalar)
+        Node &operator -= (_DimType_ scalar) noexcept
         {
             for(int i=0;i<_dim_;++i)
                 _coord[i]-=scalar;
             return *this;
         }
-        friend const Node operator+(const Node &n, _DimType_ scalar)
+        friend const Node operator+(const Node &n, _DimType_ scalar) noexcept
         {
             Node _rez;
             for(int i=0;i<_dim_;++i)
                 _rez._coord[i]=n._coord[i]+scalar;
             return _rez;
         }
-        friend const Node operator+(_DimType_ scalar, const Node &n)
+        friend const Node operator+(_DimType_ scalar, const Node &n) noexcept
         {
             Node _rez;
             for(int i=0;i<_dim_;++i)
                 _rez._coord[i]=scalar+n._coord[i];
             return _rez;
         }
-        friend const Node operator-(const Node &n, _DimType_ scalar)
+        friend const Node operator-(const Node &n, _DimType_ scalar) noexcept
         {
             Node _rez;
             for(int i=0;i<_dim_;++i)
                 _rez._coord[i]=n._coord[i]-scalar;
             return _rez;
         }
-        friend const Node operator-(_DimType_ scalar, const Node &n)
+        friend const Node operator-(_DimType_ scalar, const Node &n) noexcept
         {
             Node _rez;
             for(int i=0;i<_dim_;++i)
@@ -253,20 +258,20 @@ namespace FEM
         /// \brief Adds target Vector to Vector.
         /// \param[in] target .
         /// \warning Bouth vectors shoulde be at the same dimension.
-        void addVector(const Node &target)
+        void addVector(const Node &target) noexcept
         {
             for(int i=0;i<_dim_;++i)
                 _coord[i]+=target._coord[i];
         }
 
-        Node &operator += (const Node &target)
+        Node &operator += (const Node &target) noexcept
         {
             for(int i=0;i<_dim_;++i)
                 _coord[i]+=target._coord[i];
             return *this;
         }
 
-        friend const Node operator+(const Node &n1, const Node &n2)
+        friend const Node operator+(const Node &n1, const Node &n2) noexcept
         {
             Node _rez;
             for(int i=0;i<_dim_;++i)
@@ -277,20 +282,20 @@ namespace FEM
         /// \brief Subtracts target Vector from Vector.
         /// \param[in] target .
         /// \warning Bouth vectors shoulde be at the same dimension.
-        void subtractVector(const Node &target)
+        void subtractVector(const Node &target) noexcept
         {
             for(int i=0;i<_dim_;++i)
                 _coord[i]-=target._coord[i];
         }
 
-        Node &operator -= (const Node &target)
+        Node &operator -= (const Node &target) noexcept
         {
             for(int i=0;i<_dim_;++i)
                 _coord[i]-=target._coord[i];
             return *this;
         }
 
-        friend const Node operator-(const Node &n1, const Node &n2)
+        friend const Node operator-(const Node &n1, const Node &n2) noexcept
         {
             Node _rez;
             for(int i=0;i<_dim_;++i)
@@ -303,10 +308,10 @@ namespace FEM
         /// \param eps Checking precision, default value is \c 1e-8
         /// \return \c true if equal.
         /// \warning Bouth nodes shoulde be at the same dimension.
-        bool equal(const Node &target, _DimType_ const &eps = 1e-8) const
+        bool fuzzyCompare(const Node &target, _DimType_ const &eps = 1e-8) const noexcept
         {
             for(int i=0;i<_dim_;++i)
-                if(fabs(_coord[i]-target._coord[i])>eps)
+                if(commonAbs(_coord[i]-target._coord[i])>eps)
                     return false;
             return true;
         }
@@ -314,18 +319,20 @@ namespace FEM
         /// \brief operator == \n See Node::equal(const Node &target, _DimType_ const &eps = 1e-8).
         /// \param target .
         /// \return \c true if equal.
-        bool operator == (const Node &target) const
+        bool operator == (const Node &target) const noexcept
         {
-            return equal(target);
+            return fuzzyCompare(target);
         }
 
-        bool operator != (const Node &target) const
+        bool operator != (const Node &target) const noexcept
         {
-            return !equal(target);
+            return !fuzzyCompare(target);
         }
 
         /// \brief Calculates the cross product with target Vector3D,
         /// \warning it works only in \f$ \Re^3 \f$.
+        /// Don't worry, there will be the error if you try to call
+        /// crossProduct() not from Node3D or Vector3D, see constructor
         /// \li \f$ \left[u,v\right]=u\times v=\begin{bmatrix}i & j & k \\u_x & u_y & u_z
         /// \\v_x & v_y & v_z \end{bmatrix}=\begin{bmatrix}u_y & u_z \\v_y & v_z
         /// \end{bmatrix}i-\begin{bmatrix}u_x & u_z \\v_x & v_z \end{bmatrix}j+
@@ -333,10 +340,8 @@ namespace FEM
         /// \li See <a href="http://en.wikipedia.org/wiki/Cross_product">Cross product</a>.
         /// \param[in] target Vector3D, cross product with which should be calculated, i.e. \f$ v \f$.
         /// \return Pointer to new Vector3D, which equal to cross product.
-        Node crossProduct( const Node &target ) const throw(std::runtime_error)
+        Node crossProduct( const Node &target ) const noexcept
         {
-            if(_dim_!=3)
-                throw std::runtime_error("trying to calculate the cross product not in 3D");
             return Node(
                     _coord[1]*target._coord[2] - _coord[2]*target._coord[1],
                     _coord[2]*target._coord[0] - _coord[0]*target._coord[2],
@@ -350,25 +355,44 @@ namespace FEM
             else return _coord[index];
         }
 
-        bool isNull() const
+        /// \todo
+        bool isNull() const noexcept
         {
             for(int i=0; i<_dim_; ++i)
                 if(qIsNull(_coord[i])) return true;
             return false;
         }
 
-        Node &operator () ( const _DimType_ x, ...)
+        Node &operator ()(const _DimType_ x = 0,
+             const typename std::conditional<_dim_>=2, _DimType_, void*>::type y = 0,
+             const typename std::conditional<_dim_>=3, _DimType_, void*>::type z = 0,
+             const typename std::conditional<_dim_>=4, _DimType_, void*>::type w = 0) noexcept
         {
-            _coord[0] = x;
-            va_list _coordinates;
-            va_start(_coordinates, x);
-            for(int i=1;i<_dim_;++i)
-                _coord[i]=va_arg (_coordinates, _DimType_);
-            va_end(_coordinates);
+            switch (_dim_)
+            {
+            case 4:
+                _coord[3] = *((_DimType_*)&w);
+            case 3:
+                _coord[2] = *((_DimType_*)&z);
+            case 2:
+                _coord[1] = *((_DimType_*)&y);
+            case 1:
+                _coord[0] = x;
+                break;
+            }
             return *this;
+
+            /*// suppose that __cdecl locate arguments in reverse order, so first will be the last
+            // also suppose that all arguments are located successively at stack
+            // arguments x,y,z,w are not "not used", don't worry about compiler warnings
+            /// \todo make memcpy
+            //memcpy(_coord,&x-(_dim_-1),_dim_*sizeof(_DimType_)); //reverse it!!!
+            for(int i=0;i<_dim_;++i)
+                _coord[i] = *(&x - i);
+            return *this;*/
         }
 
-        _DimType_ getMaxValue() const
+        _DimType_ getMaxValue() const noexcept
         {
             _DimType_ _rez = _coord[0];
             for(int i=1; i<_dim_; ++i)
@@ -376,7 +400,7 @@ namespace FEM
                     _rez=_coord[i];
             return _rez;
         }
-        _DimType_ getMinValue() const
+        _DimType_ getMinValue() const noexcept
         {
             _DimType_ _rez = _coord[0];
             for(int i=1; i<_dim_; ++i)
@@ -386,7 +410,8 @@ namespace FEM
         }
 
         /// \brief Common destructor
-        ~Node() {}
+        ~Node() noexcept
+        {}
     };
 }
 #endif // NODE_H

@@ -63,7 +63,7 @@ void Test_FiniteElement::test()
 
     // counterclockwise
     QList<FEM::Node2D> n = {{0.0,0.5}, {0.0,0.0}, {0.5,0.0}};
-    qreal conductionCoefficients[3] = {100,100};
+    qreal conductionCoefficients[2] = {100,100};
     //deprecated  FEM::FiniteElement<qreal,Node2D,3, 2> simplex(&n, 0, 1, 2);
     indexes[1] = 1;
     FEM::Triangle<qreal,Node2D> simplex(&n, indexes);

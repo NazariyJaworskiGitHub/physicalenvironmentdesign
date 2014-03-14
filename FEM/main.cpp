@@ -1,5 +1,4 @@
 #include <iostream>
-
 /// \todo just for test
 #include <Eigen/IterativeLinearSolvers>
 
