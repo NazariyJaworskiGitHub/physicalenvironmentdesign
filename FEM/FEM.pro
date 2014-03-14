@@ -21,7 +21,8 @@ SOURCES += main.cpp \
     grid.cpp \
     node.cpp \
     phase.cpp \
-    cuboid.cpp
+    cuboid.cpp \
+    TESTS/test_node.cpp
 
 HEADERS += \
     boundarycondition.h \
@@ -35,4 +36,5 @@ HEADERS += \
     node.h \
     phase.h \
     utils.h \
-    cuboid.h
+    cuboid.h \
+    TESTS/test_node.h

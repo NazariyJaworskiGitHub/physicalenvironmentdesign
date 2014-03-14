@@ -31,16 +31,13 @@ namespace FEM
     /// Another name for this class is Vector.
     template <int _dim_, typename _DimType_> class Node
     {
+    private:
+        _DimType_ _coord[_dim_];  ///< Coordinates array.
     public:
-        enum COORDINATES {X=0, Y, Z, W};
-
-        /// \todo make it private
-        _DimType_ coord[_dim_];  ///< Coordinates array.
-
         /// \brief Common constructor
         Node()
         {
-            memset(coord,0,_dim_*sizeof(_DimType_));
+            memset(_coord,0,_dim_*sizeof(_DimType_));
         }
 
         /// \brief Constructor. \n
@@ -48,11 +45,11 @@ namespace FEM
         /// Also make shure that all parameters are \c _DimType_.
         Node( const _DimType_ x, ...)
         {
-            coord[0] = x;
+            _coord[0] = x;
             va_list _coordinates;
             va_start(_coordinates, x);
             for(int i=1;i<_dim_;++i)
-                coord[i]=va_arg (_coordinates, _DimType_);
+                _coord[i]=va_arg (_coordinates, _DimType_);
             va_end(_coordinates);
         }
 
@@ -60,12 +57,12 @@ namespace FEM
         /// \warning Bouth nodes shoulde be at the same dimension.
         Node( const Node &n )
         {
-            memcpy(coord,n.coord,_dim_*sizeof(_DimType_));
+            memcpy(_coord,n._coord,_dim_*sizeof(_DimType_));
         }
 
         Node &operator =(const Node &target)
         {
-            memcpy(coord,target.coord,_dim_*sizeof(_DimType_));
+            memcpy(_coord,target._coord,_dim_*sizeof(_DimType_));
             return *this;
         }
 
@@ -75,22 +72,49 @@ namespace FEM
         /// \param[in] target Node, distance to which should be calculated, i.e. \f$ v \f$.
         /// \return Square distance.
         /// \warning Bouth nodes shoulde be at the same dimension.
-        _DimType_ distanceSquare( const Node &target )
+        _DimType_ distanceSquare( const Node &target ) const
         {
             /// \todo bad constatnt
             _DimType_ _dist = 0.0;
             for(int i=0;i<_dim_;++i)
-                _dist+=(coord[i]-target.coord[i])*(coord[i]-target.coord[i]);
+                _dist+=(_coord[i]-target._coord[i])*(_coord[i]-target._coord[i]);
             return _dist;
         }
-        _DimType_ distance( const Node &target )
+        static _DimType_ distanceSquare(const Node &n1, const Node &n2)
         {
             /// \todo bad constatnt
             _DimType_ _dist = 0.0;
             for(int i=0;i<_dim_;++i)
-                _dist+=(coord[i]-target.coord[i])*(coord[i]-target.coord[i]);
+                _dist+=(n1._coord[i]-n2._coord[i])*(n1._coord[i]-n2._coord[i]);
+            /// \todo it may be not double, but float or long double
+            return _dist;
+        }
+        _DimType_ distance( const Node &target ) const
+        {
+            /// \todo bad constatnt
+            _DimType_ _dist = 0.0;
+            for(int i=0;i<_dim_;++i)
+                _dist+=(_coord[i]-target._coord[i])*(_coord[i]-target._coord[i]);
             /// \todo it may be not double, but float or long double
             return sqrt(_dist);
+        }
+        static _DimType_ distance(const Node &n1, const Node &n2)
+        {
+            /// \todo bad constatnt
+            _DimType_ _dist = 0.0;
+            for(int i=0;i<_dim_;++i)
+                _dist+=(n1._coord[i]-n2._coord[i])*(n1._coord[i]-n2._coord[i]);
+            /// \todo it may be not double, but float or long double
+            return sqrt(_dist);
+        }
+        _DimType_ length() const
+        {
+            /// \todo bad constatnt
+            _DimType_ _length = 0.0;
+            for(int i=0;i<_dim_;++i)
+                _length+=_coord[i]*_coord[i];
+            /// \todo it may be not double, but float or long double
+            return sqrt(_length);
         }
 
         /// \brief Makes the Vector normalized
@@ -101,12 +125,12 @@ namespace FEM
             /// \todo bad constatnt
             _DimType_ _length = 0.0;
             for(int i=0;i<_dim_;++i)
-                _length+=coord[i]*coord[i];
+                _length+=_coord[i]*_coord[i];
             if(_length>0.0)
             {
-                _length = sqrt(_length);
+                _length = sqrt(_length);    /// \todo it may be not double
                 for(int i=0;i<_dim_;++i)
-                    coord[i]/=_length;
+                    _coord[i]/=_length;
             }
         }
 
@@ -116,12 +140,12 @@ namespace FEM
         /// \param[in] target Vector, dot product with which should be calculated, i.e. \f$ v \f$.
         /// \return Dot product.
         /// \warning Bouth nodes shoulde be at the same dimension.
-        _DimType_ dotProduct( const Node &target )
+        _DimType_ dotProduct( const Node &target ) const
         {
             /// \todo bad constatnt
             _DimType_ _product = 0.0;
             for(int i=0;i<_dim_;++i)
-                _product+=coord[i]*target.coord[i];
+                _product+=_coord[i]*target._coord[i];
             return _product;
         }
 
@@ -130,29 +154,29 @@ namespace FEM
         void multiply( _DimType_ scalar)
         {
             for(int i=0;i<_dim_;++i)
-                coord[i]*=scalar;
+                _coord[i]*=scalar;
         }
 
         Node &operator *= (_DimType_ scalar)
         {
             for(int i=0;i<_dim_;++i)
-                coord[i]*=scalar;
+                _coord[i]*=scalar;
             return *this;
         }
 
-        inline friend const Node operator*(const Node &n, _DimType_ scalar)
+        friend const Node operator*(const Node &n, _DimType_ scalar)
         {
             Node _rez;
             for(int i=0;i<_dim_;++i)
-                _rez.coord[i]=n.coord[i]*scalar;
+                _rez._coord[i]=n._coord[i]*scalar;
             return _rez;
         }
 
-        inline friend const Node operator*(_DimType_ scalar, const Node &n)
+        friend const Node operator*(_DimType_ scalar, const Node &n)
         {
             Node _rez;
             for(int i=0;i<_dim_;++i)
-                _rez.coord[i]=n.coord[i]*scalar;
+                _rez._coord[i]=scalar*n._coord[i];
             return _rez;
         }
 
@@ -161,27 +185,19 @@ namespace FEM
         void divide(_DimType_ scalar)
         {
             for(int i=0;i<_dim_;++i)
-                coord[i]/=scalar;
+                _coord[i]/=scalar;
         }
         Node &operator /= (_DimType_ scalar)
         {
             for(int i=0;i<_dim_;++i)
-                coord[i]/=scalar;
+                _coord[i]/=scalar;
             return *this;
         }
-        inline friend const Node operator/(const Node &n, _DimType_ scalar)
+        friend const Node operator/(const Node &n, _DimType_ scalar)
         {
             Node _rez;
             for(int i=0;i<_dim_;++i)
-                _rez.coord[i]=n.coord[i]/scalar;
-            return _rez;
-        }
-
-        inline friend const Node operator/(_DimType_ scalar, const Node &n)
-        {
-            Node _rez;
-            for(int i=0;i<_dim_;++i)
-                _rez.coord[i]=n.coord[i]/scalar;
+                _rez._coord[i]=n._coord[i]/scalar;
             return _rez;
         }
 
@@ -190,14 +206,48 @@ namespace FEM
         void addScalar(_DimType_ scalar)
         {
             for(int i=0;i<_dim_;++i)
-                coord[i]+=scalar;
+                _coord[i]+=scalar;
         }
 
         Node &operator += (_DimType_ scalar)
         {
             for(int i=0;i<_dim_;++i)
-                coord[i]+=scalar;
+                _coord[i]+=scalar;
             return *this;
+        }
+        Node &operator -= (_DimType_ scalar)
+        {
+            for(int i=0;i<_dim_;++i)
+                _coord[i]-=scalar;
+            return *this;
+        }
+        friend const Node operator+(const Node &n, _DimType_ scalar)
+        {
+            Node _rez;
+            for(int i=0;i<_dim_;++i)
+                _rez._coord[i]=n._coord[i]+scalar;
+            return _rez;
+        }
+        friend const Node operator+(_DimType_ scalar, const Node &n)
+        {
+            Node _rez;
+            for(int i=0;i<_dim_;++i)
+                _rez._coord[i]=scalar+n._coord[i];
+            return _rez;
+        }
+        friend const Node operator-(const Node &n, _DimType_ scalar)
+        {
+            Node _rez;
+            for(int i=0;i<_dim_;++i)
+                _rez._coord[i]=n._coord[i]-scalar;
+            return _rez;
+        }
+        friend const Node operator-(_DimType_ scalar, const Node &n)
+        {
+            Node _rez;
+            for(int i=0;i<_dim_;++i)
+                _rez._coord[i]=scalar-n._coord[i];
+            return _rez;
         }
 
         /// \brief Adds target Vector to Vector.
@@ -206,21 +256,21 @@ namespace FEM
         void addVector(const Node &target)
         {
             for(int i=0;i<_dim_;++i)
-                coord[i]+=target.coord[i];
+                _coord[i]+=target._coord[i];
         }
 
         Node &operator += (const Node &target)
         {
             for(int i=0;i<_dim_;++i)
-                coord[i]+=target.coord[i];
+                _coord[i]+=target._coord[i];
             return *this;
         }
 
-        inline friend const Node operator+(const Node &n1, const Node &n2)
+        friend const Node operator+(const Node &n1, const Node &n2)
         {
             Node _rez;
             for(int i=0;i<_dim_;++i)
-                _rez.coord[i]=n1.coord[i]+n2.coord[i];
+                _rez._coord[i]=n1._coord[i]+n2._coord[i];
             return _rez;
         }
 
@@ -230,21 +280,21 @@ namespace FEM
         void subtractVector(const Node &target)
         {
             for(int i=0;i<_dim_;++i)
-                coord[i]-=target.coord[i];
+                _coord[i]-=target._coord[i];
         }
 
         Node &operator -= (const Node &target)
         {
             for(int i=0;i<_dim_;++i)
-                coord[i]-=target.coord[i];
+                _coord[i]-=target._coord[i];
             return *this;
         }
 
-        inline friend const Node operator-(const Node &n1, const Node &n2)
+        friend const Node operator-(const Node &n1, const Node &n2)
         {
             Node _rez;
             for(int i=0;i<_dim_;++i)
-                _rez.coord[i]=n1.coord[i]-n2.coord[i];
+                _rez._coord[i]=n1._coord[i]-n2._coord[i];
             return _rez;
         }
 
@@ -253,10 +303,10 @@ namespace FEM
         /// \param eps Checking precision, default value is \c 1e-8
         /// \return \c true if equal.
         /// \warning Bouth nodes shoulde be at the same dimension.
-        bool equal(const Node &target, _DimType_ const &eps = 1e-8)
+        bool equal(const Node &target, _DimType_ const &eps = 1e-8) const
         {
             for(int i=0;i<_dim_;++i)
-                if(fabs(coord[i]-target.coord[i])>eps)
+                if(fabs(_coord[i]-target._coord[i])>eps)
                     return false;
             return true;
         }
@@ -264,12 +314,12 @@ namespace FEM
         /// \brief operator == \n See Node::equal(const Node &target, _DimType_ const &eps = 1e-8).
         /// \param target .
         /// \return \c true if equal.
-        bool operator == (const Node &target)
+        bool operator == (const Node &target) const
         {
             return equal(target);
         }
 
-        bool operator != (const Node &target)
+        bool operator != (const Node &target) const
         {
             return !equal(target);
         }
@@ -283,47 +333,55 @@ namespace FEM
         /// \li See <a href="http://en.wikipedia.org/wiki/Cross_product">Cross product</a>.
         /// \param[in] target Vector3D, cross product with which should be calculated, i.e. \f$ v \f$.
         /// \return Pointer to new Vector3D, which equal to cross product.
-        Vector3D *crossProduct( const Vector3D &target )
+        Node crossProduct( const Node &target ) const throw(std::runtime_error)
         {
-            Vector3D *_cross = new Vector3D();
-            _cross->coord[0] = this->coord[1]*target.coord[2] - this->coord[2]*target.coord[1];
-            _cross->coord[1] = this->coord[2]*target.coord[0] - this->coord[0]*target.coord[2];
-            _cross->coord[2] = this->coord[0]*target.coord[1] - this->coord[1]*target.coord[0];
-            return _cross;
+            if(_dim_!=3)
+                throw std::runtime_error("trying to calculate the cross product not in 3D");
+            return Node(
+                    _coord[1]*target._coord[2] - _coord[2]*target._coord[1],
+                    _coord[2]*target._coord[0] - _coord[0]*target._coord[2],
+                    _coord[0]*target._coord[1] - _coord[1]*target._coord[0]);
         }
 
         _DimType_ & operator [](int index) throw(std::out_of_range)
         {
             if(index<0 || index>=_dim_)
                 throw std::out_of_range("Node[i], i out of range");
-            else return coord[index];
+            else return _coord[index];
         }
 
         bool isNull() const
         {
             for(int i=0; i<_dim_; ++i)
-                /// \todo bad constant
-                if(!qIsNull(coord[i])) return false;
-            return true;
+                if(qIsNull(_coord[i])) return true;
+            return false;
         }
 
         Node &operator () ( const _DimType_ x, ...)
         {
-            coord[0] = x;
+            _coord[0] = x;
             va_list _coordinates;
             va_start(_coordinates, x);
             for(int i=1;i<_dim_;++i)
-                coord[i]=va_arg (_coordinates, _DimType_);
+                _coord[i]=va_arg (_coordinates, _DimType_);
             va_end(_coordinates);
             return *this;
         }
 
-        _DimType_ getMaxValue()
+        _DimType_ getMaxValue() const
         {
-            _DimType_ _rez = coord[0];
+            _DimType_ _rez = _coord[0];
             for(int i=1; i<_dim_; ++i)
-                if(coord[i]>_rez)
-                    _rez=coord[i];
+                if(_coord[i]>_rez)
+                    _rez=_coord[i];
+            return _rez;
+        }
+        _DimType_ getMinValue() const
+        {
+            _DimType_ _rez = _coord[0];
+            for(int i=1; i<_dim_; ++i)
+                if(_coord[i]<_rez)
+                    _rez=_coord[i];
             return _rez;
         }
 
