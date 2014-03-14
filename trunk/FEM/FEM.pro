@@ -6,7 +6,9 @@ CONFIG += no_keywords
 
 QT += testlib
 
-INCLUDEPATH += E:\ViennaCL-1.4.2\
+#INCLUDEPATH += E:\ViennaCL-1.4.2\
+
+INCLUDEPATH += e:\Boost\boost_1_54_0\
 
 # For dr.memory debug
 QMAKE_CXXFLAGS += -ggdb
@@ -35,6 +37,6 @@ HEADERS += \
     grid.h \
     node.h \
     phase.h \
-    utils.h \
     cuboid.h \
-    TESTS/test_node.h
+    TESTS/test_node.h \
+    mathutils.h

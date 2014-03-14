@@ -84,17 +84,17 @@ namespace FEM
                                     _localStiffnessMatrix(_nodeIndex2,_nodeIndex1);
 
                             // Set zero entire stiffnessMatrix row
-                            _localStiffnessMatrix(_nodeIndex1,_nodeIndex2) = 0; ///< \todo bad constant, expand to complex arguments
+                            _localStiffnessMatrix(_nodeIndex1,_nodeIndex2) = _DimType_(0.0);
 
                             // Set zero entire stiffnessMatrix column
-                            _localStiffnessMatrix(_nodeIndex2,_nodeIndex1) = 0; ///< \todo bad constant, expand to complex arguments
+                            _localStiffnessMatrix(_nodeIndex2,_nodeIndex1) = _DimType_(0.0);
                         }
 
                         // F[k] = cond
                         _d.getForceVector().coeffRef(_globalNodeIndex,0) =
                                 _myNodeBindedBoundaryConditions[_globalNodeIndex]->getPotential();
                         // K[k][k] = 1
-                        _localStiffnessMatrix(_nodeIndex1,_nodeIndex1) = 1; ///< \todo bad constant, expand to complex arguments
+                        _localStiffnessMatrix(_nodeIndex1,_nodeIndex1) = _DimType_(1.0);
                     }
                 }
 
