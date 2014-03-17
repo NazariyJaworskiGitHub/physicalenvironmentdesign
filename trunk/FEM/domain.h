@@ -4,6 +4,8 @@
 #include <QVector>
 #include <Eigen/Sparse>
 
+#include "real.h"
+
 namespace FEM
 {
     /// So-called "Domain" provides the calculation of stiffness
@@ -15,7 +17,7 @@ namespace FEM
     ///     \f$ \lfloor N\rfloor = \lfloor P \rfloor \left[ C\right]^{-1}, \left[ C\right]
     ///     =\begin{bmatrix}1 & x_i &y_i \\ 1 & x_j &y_j \\ 1 & x_k &y_k \end{bmatrix} \f$
     /// \todo write all formulas
-    template <typename _DimType_>
+    template <typename _DimType_ = Real>
     class Domain
     {
         private: Eigen::SparseMatrix<_DimType_> _myStiffnessMatrix;

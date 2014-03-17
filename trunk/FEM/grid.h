@@ -1,22 +1,21 @@
 #ifndef GRID_H
 #define GRID_H
 
-#include <iostream>
-
 #include <QList>
 #include <QMap>
 
 #include "boundarycondition.h"
 #include "domain.h"
 #include "finiteelement.h"
+#include "real.h"
 
 namespace FEM
 {
     template <
-        typename _DimType_,
         typename _NodeType_,    // See "node.h"
         int _nDimentions_,
-        typename _ElementType_> // See "finiteelement.h"
+        typename _ElementType_, // See "finiteelement.h"
+        typename _DimType_ = Real>
     // Tip! For now, grid can hold only the same type of elements
     class Grid
     {
@@ -141,7 +140,6 @@ namespace FEM
         public : void bindBoundaryConditionToNode(int nodeIndex,
                 const BoundaryCondition<_DimType_> *boundaryCondition) throw (std::out_of_range)
         {
-            /// \todo
             if(nodeIndex>=0 && nodeIndex < _myNodes.size())
             {
                 _myNodeBindedBoundaryConditions.insert(nodeIndex,boundaryCondition);
@@ -162,14 +160,15 @@ namespace FEM
         public : ~Grid(){}
     };
 
-    template <typename _DimType_, typename _NodeType_>
-    using EdgeGrid = Grid <_DimType_,_NodeType_,1,Edge<_DimType_, _NodeType_>>;
+    /// \todo set default templete parameter for _NodeType_
+    template < typename _NodeType_, typename _DimType_ = Real>
+    using EdgeGrid = Grid <_NodeType_,1,Edge<_NodeType_, _DimType_>, _DimType_>;
 
-    template <typename _DimType_, typename _NodeType_>
-    using TriangularGrid = Grid <_DimType_,_NodeType_,2,Triangle<_DimType_, _NodeType_>>;
+    template < typename _NodeType_, typename _DimType_ = Real>
+    using TriangularGrid = Grid <_NodeType_,2,Triangle<_NodeType_, _DimType_>, _DimType_>;
 
-    template <typename _DimType_, typename _NodeType_>
-    using TetrahedralGrid = Grid <_DimType_,_NodeType_,3, Tetrahedron<_DimType_, _NodeType_>>;
+    template < typename _NodeType_, typename _DimType_ = Real>
+    using TetrahedralGrid = Grid <_NodeType_,3, Tetrahedron<_NodeType_,_DimType_>,_DimType_>;
 }
 
 #endif // GRID_H

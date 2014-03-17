@@ -25,6 +25,7 @@ namespace Utilities
     /// Ui web widget for WebGl render
     /// Algorithm: just see
     /// http://www.webtoolkit.eu/wt/doc/reference/html/classWt_1_1WGLWidget.html
+    /// Remember that WebGL works only with floats and short indexes
     class GridRender : public WGLWidget
     {       
         public : enum RENDERING_MODE {MODE_2D, MODE_3D};
@@ -65,6 +66,7 @@ namespace Utilities
         }
 
         private: DelaunayGridGenerator::CommonPlc2D *_refToRenderingPlc2D = nullptr;
+        /// Remember that WebGL works only with floats and short indexes
         public: void setRenderingPiecewiseLinearComplex(
                 DelaunayGridGenerator::CommonPlc2D *renderingPlc2D) throw (std::logic_error);
         private: void _initializePlc2DNodesBuffers();
@@ -73,6 +75,7 @@ namespace Utilities
         private: void _drawPlc2DFacets();
 
         private: DelaunayGridGenerator::CommonPlc3D *_refToRenderingPlc3D = nullptr;
+        /// Remember that WebGL works only with floats and short indexes
         public: void setRenderingPiecewiseLinearComplex(
                 DelaunayGridGenerator::CommonPlc3D *renderingPlc3D) throw (std::logic_error);
 
@@ -144,29 +147,6 @@ namespace Utilities
         }
         return buf;
     }
-
-    /*static inline char *itoa(int value, char *result, int base = 10) {
-      char* out = result;
-      int quotient = value;
-
-      if (quotient < 0)
-        quotient = -quotient;
-
-      do {
-        *out =
-          "0123456789abcdefghijklmnopqrstuvwxyz"[quotient % base];
-        ++out;
-        quotient /= base;
-      } while (quotient);
-
-      if (value < 0 && base == 10)
-        *out++ = '-';
-
-      std::reverse(result, out);
-      *out = 0;
-
-      return result;
-    }*/
 }
 
 #endif // GRIDRENDER_H

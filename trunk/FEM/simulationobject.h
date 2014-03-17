@@ -6,10 +6,11 @@
 #include "boundarycondition.h"
 #include "domain.h"
 #include "phase.h"
+#include "real.h"
 
 namespace FEM
 {
-    template <typename _DimType_, typename _NodeType_, int _nDimentions_>
+    template <typename _NodeType_, int _nDimentions_, typename _DimType_ = Real>
     class SimulationObject
     {
         private: QMap<int, BoundaryCondition<_DimType_>> _myBoundaryConditions;

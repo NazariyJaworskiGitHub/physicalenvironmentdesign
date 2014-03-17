@@ -30,6 +30,9 @@ LIBS += -lwsock32
 QMAKE_CXXFLAGS += -Wno-unused-local-typedefs #disable a lot of boost warnings
 QMAKE_CXXFLAGS += -Wno-write-strings
 
+# For dr.memory debug
+Debug:QMAKE_CXXFLAGS += -ggdb
+
 #Warning!!! this section is the including of FEM branch,
 #remake project tree to avoid this section!!!
 INCLUDEPATH += E:\Developing\BPSPO\PhysicalEnvironmentDesign\FEM

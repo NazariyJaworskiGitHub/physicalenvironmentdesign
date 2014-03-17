@@ -1,7 +1,7 @@
 #ifndef CUBOID_H
 #define CUBOID_H
 
-#include <QMap>
+/*#include <QMap>
 
 #include "grid.h"
 #include "node.h"
@@ -15,6 +15,6 @@ namespace FEM
         /// \todo
         public: Cuboid(){}
     };
-}
+}*/
 
 #endif // CUBOID_H

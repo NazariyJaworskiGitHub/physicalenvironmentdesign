@@ -4,6 +4,7 @@
 /// \warning this includes FEM branch, remake project tree to avoid this
 #include "finiteelement.h"
 #include "node.h"
+#include "real.h"
 
 #include "datamanager.h"
 #include "gridelement.h"
@@ -17,11 +18,11 @@ namespace Utilities
 namespace DelaunayGridGenerator
 {
     template <
-        typename _DimType_,
         typename _NodeType_,
         typename _SegmentType_,
         typename _FacetType_,
-        int _nDimentions_>
+        int _nDimentions_,
+        typename _DimType_ = FEM::Real>
     class PiecewiseLinearComplex
     {
         /// \todo avoid any friends!
@@ -130,30 +131,24 @@ namespace DelaunayGridGenerator
     };
 
     typedef PiecewiseLinearComplex<
-        qreal,
         FEM::Node2D,
         FEM::FiniteElement<
-            qreal,
             FEM::Node2D,
             2,
             2>,
         FEM::FiniteElement<
-            qreal,
             FEM::Node2D,
             2,
             2>,
         2> CommonPlc2D;
 
     typedef PiecewiseLinearComplex<
-        qreal,
         FEM::Node3D,
         FEM::FiniteElement<
-            qreal,
             FEM::Node3D,
             2,
             3>,
         FEM::FiniteElement<
-            qreal,
             FEM::Node3D,
             3,
             3>,

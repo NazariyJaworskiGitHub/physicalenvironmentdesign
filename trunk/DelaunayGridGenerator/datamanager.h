@@ -5,10 +5,7 @@
 #include <QList>
 #include <stdexcept>
 
-#include <grid.h>
-#include <finiteelement.h>
-#include <node.h>
-
+#include "node.h"
 
 namespace DelaunayGridGenerator
 {
@@ -46,7 +43,7 @@ namespace DelaunayGridGenerator
         protected: _NodeType_ _minCoordinates;
         protected: _NodeType_ _maxCoordinates;
 
-        protected: static constexpr int _nChildren = (int)pow(2,_nDimentions_);
+        protected: static constexpr int _nChildren = (int)std::pow(2,_nDimentions_);
         public : static int getChildrenNumber(){return _nChildren;}
         public : static int getChildDataObjectsNumber() {return _nChildDataObjects_;}
 

@@ -4,20 +4,17 @@
 #ifndef NODE_H
 #define NODE_H
 
-#include <cstdarg>
 #include <cstring>
+#include <cmath>
 #include <stdexcept>
 #include <type_traits>
-#include <qglobal.h>
 
-//#include <iostream>
-
-#include "mathutils.h"
+#include "real.h"
 
 namespace FEM
 {
-    template <int _dim_, typename _DimType_ = double> class Node;
-    template <int _dim_, typename _DimType_ = double> using Vector = Node<_dim_, _DimType_>;
+    template <int _dim_, typename _DimType_ = Real> class Node;
+    template <int _dim_, typename _DimType_ = Real> using Vector = Node<_dim_, _DimType_>;
 
     typedef Node<1> Node1D;
     typedef Vector<1> Vector1D;
@@ -37,8 +34,11 @@ namespace FEM
     private:
         _DimType_ _coord[_dim_];  ///< Coordinates array.
     public:
+        const _DimType_ *getCoordinates() const noexcept {return _coord;}
+
         /// \brief Constructor. \n
         /// \warning It takes only \c dim arguments from argument list. \n
+        // You have to add extra lines if you want to continue with dimentions
         Node(const _DimType_ x = 0,
              const typename std::conditional<_dim_>=2, _DimType_, void*>::type y = 0,
              const typename std::conditional<_dim_>=3, _DimType_, void*>::type z = 0,
@@ -56,28 +56,18 @@ namespace FEM
                 _coord[0] = x;
                 break;
             }
-            // suppose that __cdecl locate arguments in reverse order, so first will be the last
-            // also suppose that all arguments are located successively at stack
-            // arguments x,y,z,w are not "not used", don't worry about compiler warnings
-            /*/// \todo make memcpy
-            //memcpy(_coord,&x-(_dim_-1),_dim_*sizeof(_DimType_)); //reverse it!!!
-            for(int i=0;i<_dim_;++i)
-                _coord[i] = *(&x - i);
-            */
-
-
         }
 
         /// \brief Copy constructor. \n
         /// \warning Bouth nodes shoulde be at the same dimension.
         Node( const Node &n ) noexcept
         {
-            memcpy(_coord,n._coord,_dim_*sizeof(_DimType_));
+            std::memcpy(_coord,n._coord,_dim_*sizeof(_DimType_));
         }
 
         Node &operator =(const Node &target) noexcept
         {
-            memcpy(_coord,target._coord,_dim_*sizeof(_DimType_));
+            std::memcpy(_coord,target._coord,_dim_*sizeof(_DimType_));
             return *this;
         }
 
@@ -107,21 +97,21 @@ namespace FEM
             _DimType_ _dist = _DimType_(0.0);
             for(int i=0;i<_dim_;++i)
                 _dist+=(_coord[i]-target._coord[i])*(_coord[i]-target._coord[i]);
-            return commonSqrt(_dist);
+            return std::sqrt(_dist);
         }
         static _DimType_ distance(const Node &n1, const Node &n2) noexcept
         {
             _DimType_ _dist = _DimType_(0.0);
             for(int i=0;i<_dim_;++i)
                 _dist+=(n1._coord[i]-n2._coord[i])*(n1._coord[i]-n2._coord[i]);
-            return commonSqrt(_dist);
+            return std::sqrt(_dist);
         }
         _DimType_ length() const noexcept
         {
             _DimType_ _length = _DimType_(0.0);
             for(int i=0;i<_dim_;++i)
                 _length+=_coord[i]*_coord[i];
-            return commonSqrt(_length);
+            return std::sqrt(_length);
         }
 
         /// \brief Makes the Vector normalized
@@ -134,7 +124,7 @@ namespace FEM
                 _length+=_coord[i]*_coord[i];
             if(_length>_DimType_(0.0))
             {
-                _length = commonSqrt(_length);
+                _length = std::sqrt(_length);
                 for(int i=0;i<_dim_;++i)
                     _coord[i]/=_length;
             }
@@ -311,7 +301,7 @@ namespace FEM
         bool fuzzyCompare(const Node &target, _DimType_ const &eps = 1e-8) const noexcept
         {
             for(int i=0;i<_dim_;++i)
-                if(commonAbs(_coord[i]-target._coord[i])>eps)
+                if(std::fabs(_coord[i]-target._coord[i])>eps)
                     return false;
             return true;
         }
@@ -340,12 +330,14 @@ namespace FEM
         /// \li See <a href="http://en.wikipedia.org/wiki/Cross_product">Cross product</a>.
         /// \param[in] target Vector3D, cross product with which should be calculated, i.e. \f$ v \f$.
         /// \return Pointer to new Vector3D, which equal to cross product.
-        Node crossProduct( const Node &target ) const noexcept
+        Vector3D crossProduct( const Vector3D &target ) const throw(std::runtime_error)
         {
-            return Node(
-                    _coord[1]*target._coord[2] - _coord[2]*target._coord[1],
-                    _coord[2]*target._coord[0] - _coord[0]*target._coord[2],
-                    _coord[0]*target._coord[1] - _coord[1]*target._coord[0]);
+            if(_dim_!=3)
+                throw std::runtime_error("Can't compute the cross product not in 3D");
+            return Vector3D(
+                    _coord[1]*target.getCoordinates()[2] - _coord[2]*target.getCoordinates()[1],
+                    _coord[2]*target.getCoordinates()[0] - _coord[0]*target.getCoordinates()[2],
+                    _coord[0]*target.getCoordinates()[1] - _coord[1]*target.getCoordinates()[0]);
         }
 
         _DimType_ & operator [](int index) throw(std::out_of_range)
@@ -359,10 +351,11 @@ namespace FEM
         bool isNull() const noexcept
         {
             for(int i=0; i<_dim_; ++i)
-                if(qIsNull(_coord[i])) return true;
-            return false;
+                if(std::fpclassify(_coord[i])!= FP_ZERO) return false;
+            return true;
         }
 
+        // You have to add extra lines if you want to continue with dimentions
         Node &operator ()(const _DimType_ x = 0,
              const typename std::conditional<_dim_>=2, _DimType_, void*>::type y = 0,
              const typename std::conditional<_dim_>=3, _DimType_, void*>::type z = 0,
@@ -381,15 +374,6 @@ namespace FEM
                 break;
             }
             return *this;
-
-            /*// suppose that __cdecl locate arguments in reverse order, so first will be the last
-            // also suppose that all arguments are located successively at stack
-            // arguments x,y,z,w are not "not used", don't worry about compiler warnings
-            /// \todo make memcpy
-            //memcpy(_coord,&x-(_dim_-1),_dim_*sizeof(_DimType_)); //reverse it!!!
-            for(int i=0;i<_dim_;++i)
-                _coord[i] = *(&x - i);
-            return *this;*/
         }
 
         _DimType_ getMaxValue() const noexcept
