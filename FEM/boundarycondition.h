@@ -1,9 +1,12 @@
 #ifndef BOUNDARYCONDITION_H
 #define BOUNDARYCONDITION_H
 
+#include "real.h"
+
 namespace FEM
 {
-    template <typename _DimType_> class BoundaryCondition
+    template <typename _DimType_ = Real>
+    class BoundaryCondition
     {
         private: _DimType_ _myPotential;   // I  (Neumann)
         public : const _DimType_ & getPotential() const {return _myPotential;}

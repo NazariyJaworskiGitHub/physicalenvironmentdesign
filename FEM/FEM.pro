@@ -11,7 +11,7 @@ QT += testlib
 INCLUDEPATH += e:\Boost\boost_1_54_0\
 
 # For dr.memory debug
-QMAKE_CXXFLAGS += -ggdb
+Debug:QMAKE_CXXFLAGS += -ggdb
 
 SOURCES += main.cpp \
     boundarycondition.cpp \
@@ -24,7 +24,8 @@ SOURCES += main.cpp \
     node.cpp \
     phase.cpp \
     cuboid.cpp \
-    TESTS/test_node.cpp
+    TESTS/test_node.cpp \
+    TESTS/test_beam.cpp
 
 HEADERS += \
     boundarycondition.h \
@@ -39,4 +40,6 @@ HEADERS += \
     phase.h \
     cuboid.h \
     TESTS/test_node.h \
-    mathutils.h
+    mathutils.h \
+    TESTS/test_beam.h \
+    real.h

@@ -3,6 +3,7 @@
 
 #include <QStringList>
 
+#include "TESTS/test_beam.h"
 #include "TESTS/test_finiteelement.h"
 #include "TESTS/test_node.h"
 
@@ -23,9 +24,16 @@ void run_tests_FiniteElement()
     QTest::qExec(&_myTest_FiniteElement, arguments);
 }
 
+void run_tests_Beam()
+{
+    Test_Beam _myTest_Beam;
+    QTest::qExec(&_myTest_Beam, arguments);
+}
+
 void run_tests_all()
 {
     run_tests_Node();
     run_tests_FiniteElement();
+    run_tests_Beam();
 }
 #endif // TESTS_RUNNER_H

@@ -1,3 +1,3 @@
 #include "gridelement.h"
 
-//using namespace DelaunayGridGenerator;
+using namespace DelaunayGridGenerator;

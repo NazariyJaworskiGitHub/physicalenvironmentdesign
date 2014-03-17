@@ -1,8 +1,11 @@
 #ifndef GRIDELEMENT_H
 #define GRIDELEMENT_H
 
-#include <finiteelement.h>
-#include <node.h>
+#include <cmath>
+
+#include "finiteelement.h"
+#include "node.h"
+#include "real.h"
 
 /// \todo put this defenition in template parameters
 /// \todo make some calculations depending on _DimType_
@@ -12,8 +15,8 @@
 namespace DelaunayGridGenerator
 {
     /// Covers the FiniteElement by adding grid generator functional
-    template <typename _DimType_, typename _NodeType_, int _nDimentions_>
-    class GridElement : public FEM::SimplexElement<_DimType_, _NodeType_, _nDimentions_>
+    template <typename _NodeType_, int _nDimentions_, typename _DimType_ = FEM::Real>
+    class GridElement : public FEM::SimplexElement<_NodeType_, _nDimentions_, _DimType_>
     {
         /// It is lazy load (Vortual holder) see http://design-pattern.ru/patterns/lazy-load.html
         /// \todo make tests for this lazy load, is it necessary?
@@ -41,7 +44,7 @@ namespace DelaunayGridGenerator
         }
 
         public : GridElement(const GridElement &target):
-            FEM::SimplexElement<_DimType_, _NodeType_, _nDimentions_>(target),
+            FEM::SimplexElement<_NodeType_, _nDimentions_, _DimType_>(target),
             _isSphereCenterAndRadiusInitialized(true),
             _sphereCenter(target._sphereCenter),
             _sphereRadius(target._sphereRadius)
@@ -51,7 +54,7 @@ namespace DelaunayGridGenerator
         public : GridElement(
             QList<_NodeType_> *ptrToNodesList,
             const int *_nodeIndexesPtr) throw(std::out_of_range):
-            FEM::SimplexElement<_DimType_, _NodeType_, _nDimentions_>(ptrToNodesList,_nodeIndexesPtr),
+            FEM::SimplexElement<_NodeType_, _nDimentions_, _DimType_>(ptrToNodesList,_nodeIndexesPtr),
             _isSphereCenterAndRadiusInitialized(false)
         {            
         }
@@ -102,7 +105,7 @@ namespace DelaunayGridGenerator
                 for(int j=1; j< _nDimentions_+1; ++j) // per columns
                    _M(i,j) = (*nodes[i])[j-1];
 
-                _M(i,_nDimentions_+1) = 1.0;    ///< \todo bad constant
+                _M(i,_nDimentions_+1) = _DimType_(1.0);
             }
 
             _DimType_ _A = _M.template block<_nDimentions_+1, _nDimentions_+1 -1>(0,1).determinant();
@@ -117,7 +120,7 @@ namespace DelaunayGridGenerator
                     _B.col(_locColInd) = _M.col(_globColInd);
                     ++_locColInd;
                 }
-                _result[b] = pow(-1.0,b)*_B.determinant()/(2.0*_A);
+                _result[b] = std::pow(-1.0,b)*_B.determinant()/(2.0*_A);
             }
 
             if(sphereRadius)

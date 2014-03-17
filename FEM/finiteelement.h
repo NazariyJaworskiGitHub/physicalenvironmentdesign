@@ -1,12 +1,12 @@
 #ifndef FINITEELEMENT_H
 #define FINITEELEMENT_H
 
-#include <cstdarg>
+#include <cstring>
+#include <Eigen/Dense>
 #include <QList>
 
-#include <Eigen/Dense>
-
 #include "mathutils.h"
+#include "real.h"
 
 //#include "viennacl/matrix.hpp"
 //#include "viennacl/linalg/prod.hpp"
@@ -24,7 +24,7 @@ namespace FEM
     ///   _nDimentions_ - number of dimentions, where finite element exists
     /// \todo Finite element is also a simple domain
     /// \todo rename it to Element
-    template <typename _DimType_, typename _NodeType_, int _nNodes_, int _nDimentions_>
+    template <typename _NodeType_, int _nNodes_, int _nDimentions_, typename _DimType_ = Real>
     class FiniteElement
     {
         protected: QList<_NodeType_> *_ptrToNodesList;
@@ -47,7 +47,7 @@ namespace FEM
         public : FiniteElement(const FiniteElement &target):
             _ptrToNodesList(target._ptrToNodesList)
         {
-            memcpy(_myNodeIndexes,target._myNodeIndexes,_nNodes_*sizeof(int));
+            std::memcpy(_myNodeIndexes,target._myNodeIndexes,_nNodes_*sizeof(int));
         }
 
         private: void _checkNodeIndexes() throw(std::out_of_range)
@@ -76,12 +76,12 @@ namespace FEM
 
         public : FiniteElement(
             QList<_NodeType_> *ptrToNodesList,
-            const int *_nodeIndexesPtr) throw(std::out_of_range):
+            const int *nodeIndexesPtr) throw(std::out_of_range):
         _ptrToNodesList(ptrToNodesList)
         {
-            memcpy(_myNodeIndexes,_nodeIndexesPtr,_nNodes_*sizeof(int));
+            std::memcpy(_myNodeIndexes,nodeIndexesPtr,_nNodes_*sizeof(int));
             _checkNodeIndexes();
-        }
+        }    
 
         /*public : virtual Eigen::Matrix<_DimType_, _nNodes_, _nNodes_>
                 calculateStiffnessMatrixEllipticEquation(
@@ -92,11 +92,11 @@ namespace FEM
     };
 
     /// Note, that _nDimentions_+1 = _nNodes_
-    template <typename _DimType_, typename _NodeType_, int _nDimentions_>
-    class SimplexElement : public FiniteElement<_DimType_, _NodeType_, _nDimentions_+1, _nDimentions_>
+    template <typename _NodeType_, int _nDimentions_, typename _DimType_ = Real>
+    class SimplexElement : public FiniteElement<_NodeType_, _nDimentions_+1, _nDimentions_, _DimType_>
     {
         public : SimplexElement(const SimplexElement &target):
-            FiniteElement<_DimType_, _NodeType_, _nDimentions_+1, _nDimentions_>(target)
+            FiniteElement<_NodeType_, _nDimentions_+1, _nDimentions_, _DimType_>(target)
         {
         }
 
@@ -111,7 +111,7 @@ namespace FEM
         public : SimplexElement(
             QList<_NodeType_> *ptrToNodesList,
             const int *_nodeIndexesPtr) throw(std::out_of_range):
-            FiniteElement<_DimType_, _NodeType_, _nDimentions_+1, _nDimentions_>(ptrToNodesList,_nodeIndexesPtr)
+            FiniteElement<_NodeType_, _nDimentions_+1, _nDimentions_, _DimType_>(ptrToNodesList,_nodeIndexesPtr)
         {
         }
 
@@ -170,7 +170,7 @@ namespace FEM
                 _volume += _term * _term;
             }
 
-            return commonSqrt(_volume)/factorial(_nDimentions_-1);
+            return std::sqrt(_volume)/factorial(_nDimentions_-1);
         }
 
         /*//  For simplex elements
@@ -275,11 +275,6 @@ namespace FEM
             if(!_isInversible)
                 throw std::logic_error("SimplexElement has zero-volume");
 
-            /// \deprecated
-            /*_DimType_ _factorial = 1;
-            for(int i=2; i<=_nDimentions_;++i)
-                _factorial*=i;
-            _DimType_ _volume = _determinant/_factorial;*/
             _DimType_ _volume = _determinant/factorial(_nDimentions_);
 
             // calculate [B]
@@ -294,14 +289,15 @@ namespace FEM
         }
     };
 
-    template <typename _DimType_, typename _NodeType_>
-    using Edge = SimplexElement<_DimType_, _NodeType_, 1>;
+    /// \todo set default templete parameter for _NodeType_
+    template <typename _NodeType_, typename _DimType_ = Real>
+    using Edge = SimplexElement<_NodeType_, 1, _DimType_>;
 
-    template <typename _DimType_, typename _NodeType_>
-    using Triangle = SimplexElement<_DimType_, _NodeType_, 2>;
+    template <typename _NodeType_, typename _DimType_ = Real>
+    using Triangle = SimplexElement<_NodeType_, 2, _DimType_>;
 
-    template <typename _DimType_, typename _NodeType_>
-    using Tetrahedron = SimplexElement<_DimType_, _NodeType_, 3>;
+    template <typename _NodeType_, typename _DimType_ = Real>
+    using Tetrahedron = SimplexElement<_NodeType_, 3, _DimType_>;
 }
 
 #endif // FINITEELEMENT_H
