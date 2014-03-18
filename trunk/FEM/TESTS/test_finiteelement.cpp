@@ -1,8 +1,8 @@
 #include "test_finiteelement.h"
 
 #include <iostream>
+#include "mathutils.h"
 #include "node.h"
-#include "real.h"
 
 using namespace FEM;
 
@@ -68,11 +68,12 @@ void Test_FiniteElement::test()
 
     // counterclockwise
     QList<FEM::Node2D> n = {{0.0,0.5}, {0.0,0.0}, {0.5,0.0}};
-    Real conductionCoefficients[2] = {100,100};
+    MathUtils::Real conductionCoefficients[2] = {100,100};
     //deprecated  FEM::FiniteElement<qreal,Node2D,3, 2> simplex(&n, 0, 1, 2);
     indexes[1] = 1;
     FEM::Triangle<Node2D> simplex(&n, indexes);
-    Eigen::Matrix<Real, 3, 3> K = simplex.calculateStiffnessMatrixEllipticEquation(conductionCoefficients);
+    Eigen::Matrix<MathUtils::Real, 3, 3> K =
+            simplex.calculateStiffnessMatrixEllipticEquation(conductionCoefficients);
     QVERIFY(    K(0,0)== 50 && K(0,1)==-50 && K(0,2)==  0 &&
                 K(1,0)==-50 && K(1,1)==100 && K(1,2)==-50 &&
                 K(2,0)==  0 && K(2,1)==-50 && K(2,2)== 50 );

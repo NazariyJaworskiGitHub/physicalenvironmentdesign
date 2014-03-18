@@ -42,9 +42,11 @@ SOURCES += main.cpp \
     UTILS/gridrender.cpp \
     piecewiselinearcomplex.cpp \
     datamanager.cpp \
-    gridelement.cpp \
     TESTS/test_piecewiselinearcomplex.cpp \
-    GPU/openclmanager.cpp
+    GPU/openclmanager.cpp \
+    nodewrapper.cpp \
+    TESTS/test_gridelement.cpp \
+    gridelement.cpp
 
 HEADERS += \
     TESTS/tests_runner.h \
@@ -54,7 +56,9 @@ HEADERS += \
     UTILS/gridrender.h \
     piecewiselinearcomplex.h \
     datamanager.h \
-    gridelement.h \
     TESTS/test_piecewiselinearcomplex.h \
     GPU/openclmanager.h \
-    GPU/clsources.h
+    GPU/clsources.h \
+    nodewrapper.h \
+    TESTS/test_gridelement.h \
+    gridelement.h

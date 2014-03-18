@@ -1,11 +1,11 @@
 #ifndef BOUNDARYCONDITION_H
 #define BOUNDARYCONDITION_H
 
-#include "real.h"
+#include "mathutils.h"
 
 namespace FEM
 {
-    template <typename _DimType_ = Real>
+    template <typename _DimType_ = MathUtils::Real>
     class BoundaryCondition
     {
         private: _DimType_ _myPotential;   // I  (Neumann)

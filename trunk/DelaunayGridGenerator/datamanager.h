@@ -6,39 +6,16 @@
 #include <stdexcept>
 
 #include "node.h"
+#include "nodewrapper.h"
 
 namespace DelaunayGridGenerator
 {
-    /*/// \todo complete the class
-    template <typename _DataObject_, typename _DimType_, typename _NodeType_, int _nDimentions_>
-    class DataManager
-    {
-        public: DataManager()
-        {
-
-        }
-        public : ~DataManager()
-        {
-
-        }
-    };
-
-    /// \todo complete the class
-    template <typename _DataObject_, typename _DimType_, typename _NodeType_, int _nDimentions_>
-    class ListDataManager : public DataManager<_DataObject_, _DimType_, _NodeType_, _nDimentions_>
-    {
-        public: ListDataManager()
-        {
-
-        }
-        public : ~ListDataManager()
-        {
-
-        }
-    };*/
-
-    template <int _nChildDataObjects_ ,typename _DataObject_, typename _NodeType_, int _nDimentions_>
-    class TreeDataManager /*: public DataManager<_DataObject_, _DimType_, _NodeType_, _nDimentions_>*/
+    template <
+        int _nChildDataObjects_ ,
+        typename _DataObject_,
+        typename _NodeType_,
+        int _nDimentions_>
+    class TreeDataManager
     {
         protected: _NodeType_ _minCoordinates;
         protected: _NodeType_ _maxCoordinates;
@@ -126,7 +103,8 @@ namespace DelaunayGridGenerator
                 {
                     _makeChildren();
 
-                    for(typename QList<_DataObject_*>::iterator _dObjPtr = _dataObjectsPtrList.begin();
+                    for(typename QList<_DataObject_*>::iterator _dObjPtr =
+                        _dataObjectsPtrList.begin();
                         _dObjPtr != _dataObjectsPtrList.end(); )
                     {
                         _index = _getIndex(**_dObjPtr);
@@ -187,8 +165,12 @@ namespace DelaunayGridGenerator
         }
     };
 
-    template <int _nChildDataObjects_ ,typename _NodeType_, int _nDimentions_>
-    class NodeTreeDataManager : public TreeDataManager<_nChildDataObjects_, _NodeType_, _NodeType_, _nDimentions_>
+    template <
+            int _nChildDataObjects_ ,
+            typename _NodeType_,
+            int _nDimentions_>
+    class NodeTreeDataManager :
+            public TreeDataManager<_nChildDataObjects_, _NodeType_, _NodeType_, _nDimentions_>
     {
         public: NodeTreeDataManager(const _NodeType_ &minCoordinates,
                                     const _NodeType_ &maxCoordinates):
@@ -206,15 +188,19 @@ namespace DelaunayGridGenerator
     typedef NodeTreeDataManager<1, FEM::Node2D, 2> Node2DTreeDataManager;
     typedef NodeTreeDataManager<1, FEM::Node3D, 3> Node3DTreeDataManager;
 
-    template <int _nChildDataObjects_ ,typename _NodeType_, typename _ElementType_, int _nDimentions_>
-    class ElementTreeDataManager : public TreeDataManager<_nChildDataObjects_, _ElementType_, _NodeType_, _nDimentions_>
+    template <
+            int _nChildDataObjects_ ,
+            typename _NodeType_,
+            typename _ElementType_,
+            int _nDimentions_>
+    class ElementTreeDataManager :
+            public TreeDataManager<_nChildDataObjects_, _ElementType_, _NodeType_, _nDimentions_>
     {
         public: ElementTreeDataManager(const _NodeType_ &minCoordinates,
                                        const _NodeType_ &maxCoordinates):
                 TreeDataManager<_nChildDataObjects_, _NodeType_, _NodeType_, _nDimentions_>(
                     minCoordinates, maxCoordinates)
         {
-
         }
 
         private: int _getIndex(const _ElementType_ &target) const override

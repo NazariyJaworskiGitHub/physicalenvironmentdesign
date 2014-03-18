@@ -16,7 +16,7 @@
 #include <Eigen/IterativeLinearSolvers>
 #include "iostream"
 #include <ctime>
-#include "real.h"
+#include "mathutils.h"
 
 #define BEAM_LENGTH         100
 #define TEMPERATURE         25
@@ -73,29 +73,29 @@ void Test_Beam::test()
     // Matrix assembling
     myBeam.setDomain(0,myBeam.getGrid(0).constructDomainEllipticEquation());
 
-    QList<QList<FEM::Real>> _coorectMatrix = {
+    QList<QList<MathUtils::Real>> _coorectMatrix = {
             { 1.0,  0.0,  0.0,  0.0,  0.0},
             { 0.0, 20.0,-10.0,  0.0,  0.0},
             { 0.0,-10.0, 20.0,-10.0,  0.0},
             { 0.0,  0.0,-10.0, 20.0,-10.0},
             { 0.0,  0.0,  0.0,-10.0, 10.0}
         };
-    FEM::Real _maxError = 0.0;
+    MathUtils::Real _maxError = 0.0;
     for(int i=0; i<NUMBER_OF_ELEMENTS+1;++i)
         for(int j=0; j<NUMBER_OF_ELEMENTS+1;++j)
         {
-            FEM::Real _res = std::fabs(myBeam.getDomain(0).getStiffnessMatrix().coeff(i,j) -
+            MathUtils::Real _res = std::fabs(myBeam.getDomain(0).getStiffnessMatrix().coeff(i,j) -
                               _coorectMatrix[i][j]);
             if(_maxError < _res) _maxError = _res;
         }
     std::cout << "Max error: " << _maxError <<"\n";
     QVERIFY (_maxError < 1e-8);
 
-    QList<FEM::Real> _correctVector = {25.0, 250.0, 0.0, 0.0, 500.0};
+    QList<MathUtils::Real> _correctVector = {25.0, 250.0, 0.0, 0.0, 500.0};
     _maxError = 0.0;
     for(int i=0; i<NUMBER_OF_ELEMENTS+1;++i)
     {
-        FEM::Real _res = std::fabs(myBeam.getDomain(0).getForceVector().coeff(i,0) -
+        MathUtils::Real _res = std::fabs(myBeam.getDomain(0).getForceVector().coeff(i,0) -
                           _correctVector[i]);
         if(_maxError < _res) _maxError = _res;
     }
@@ -104,18 +104,18 @@ void Test_Beam::test()
 
     // Equations system solving
     /// \todo use solver
-    Eigen::ConjugateGradient<Eigen::SparseMatrix<FEM::Real>> solver;
+    Eigen::ConjugateGradient<Eigen::SparseMatrix<MathUtils::Real>> solver;
     solver.setTolerance(1e-10);
     solver.setMaxIterations(1e+3);
     solver.compute(myBeam.getDomain(0).getStiffnessMatrix());
     /// \todo why sparse?
-    Eigen::SparseMatrix<FEM::Real> _result = solver.solve(myBeam.getDomain(0).getForceVector());
+    Eigen::SparseMatrix<MathUtils::Real> _result = solver.solve(myBeam.getDomain(0).getForceVector());
 
     _correctVector = {25.0, 75.0, 125.0, 175.0, 225.0};
     _maxError = 0.0;
     for(int i=0; i<NUMBER_OF_ELEMENTS+1;++i)
     {
-        FEM::Real _res = std::fabs(_result.coeff(i,0) - _correctVector[i]);
+        MathUtils::Real _res = std::fabs(_result.coeff(i,0) - _correctVector[i]);
         if(_maxError < _res) _maxError = _res;
     }
     std::cout << "Max error: " << _maxError <<"\n";

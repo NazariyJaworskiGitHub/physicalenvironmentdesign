@@ -7,7 +7,7 @@
 #include "boundarycondition.h"
 #include "domain.h"
 #include "finiteelement.h"
-#include "real.h"
+#include "mathutils.h"
 
 namespace FEM
 {
@@ -15,7 +15,7 @@ namespace FEM
         typename _NodeType_,    // See "node.h"
         int _nDimentions_,
         typename _ElementType_, // See "finiteelement.h"
-        typename _DimType_ = Real>
+        typename _DimType_ = MathUtils::Real>
     // Tip! For now, grid can hold only the same type of elements
     class Grid
     {
@@ -161,13 +161,13 @@ namespace FEM
     };
 
     /// \todo set default templete parameter for _NodeType_
-    template < typename _NodeType_, typename _DimType_ = Real>
+    template < typename _NodeType_, typename _DimType_ = MathUtils::Real>
     using EdgeGrid = Grid <_NodeType_,1,Edge<_NodeType_, _DimType_>, _DimType_>;
 
-    template < typename _NodeType_, typename _DimType_ = Real>
+    template < typename _NodeType_, typename _DimType_ = MathUtils::Real>
     using TriangularGrid = Grid <_NodeType_,2,Triangle<_NodeType_, _DimType_>, _DimType_>;
 
-    template < typename _NodeType_, typename _DimType_ = Real>
+    template < typename _NodeType_, typename _DimType_ = MathUtils::Real>
     using TetrahedralGrid = Grid <_NodeType_,3, Tetrahedron<_NodeType_,_DimType_>,_DimType_>;
 }
 

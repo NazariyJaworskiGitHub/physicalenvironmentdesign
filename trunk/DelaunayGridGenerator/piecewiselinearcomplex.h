@@ -4,7 +4,7 @@
 /// \warning this includes FEM branch, remake project tree to avoid this
 #include "finiteelement.h"
 #include "node.h"
-#include "real.h"
+#include "mathutils.h"
 
 #include "datamanager.h"
 #include "gridelement.h"
@@ -22,7 +22,7 @@ namespace DelaunayGridGenerator
         typename _SegmentType_,
         typename _FacetType_,
         int _nDimentions_,
-        typename _DimType_ = FEM::Real>
+        typename _DimType_ = MathUtils::Real>
     class PiecewiseLinearComplex
     {
         /// \todo avoid any friends!
