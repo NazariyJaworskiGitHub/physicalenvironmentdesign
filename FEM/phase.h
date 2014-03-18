@@ -4,12 +4,12 @@
 #include <cstring>
 #include <QString>
 
-#include "real.h"
+#include "mathutils.h"
 
 /// \todo is this correct namespace, or it should be more common?
 namespace FEM
 {
-    template <typename _DimType_ = Real>
+    template <typename _DimType_ = MathUtils::Real>
     class Phase
     {
         /// \todo it may be a functions
