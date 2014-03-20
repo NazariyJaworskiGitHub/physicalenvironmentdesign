@@ -1,17 +1,5 @@
 #include "test_beam.h"
 
-/// Tip! for simple 1D TEST <test_beam.cpp>\n
-/// (Qt 5.1.1, MinGW 4.8.0 x32, Eigen 3.2.1  Conjugate gradient default (or not!),
-/// release optimization level 3, 17.03.2014)\n
-/// accuracy results are:\n
-///  - float\n
-///     max error   4.57764e-005;\n
-///  - double\n
-///     max error   2.84217e-014;\n
-///  - long double\n
-///     max error   2.77556e-017;\n
-/// time consuming results are:\n
-
 /// \todo just for test
 #include <Eigen/IterativeLinearSolvers>
 #include "iostream"
@@ -84,22 +72,26 @@ void Test_Beam::test()
     for(int i=0; i<NUMBER_OF_ELEMENTS+1;++i)
         for(int j=0; j<NUMBER_OF_ELEMENTS+1;++j)
         {
-            MathUtils::Real _res = std::fabs(myBeam.getDomain(0).getStiffnessMatrix().coeff(i,j) -
-                              _coorectMatrix[i][j]);
+            MathUtils::Real _res = 100.0 * std::fabs(
+                        1.0 -
+                        myBeam.getDomain(0).getStiffnessMatrix().coeff(i,j) /
+                        _coorectMatrix[i][j]);
             if(_maxError < _res) _maxError = _res;
         }
-    std::cout << "Max error: " << _maxError <<"\n";
+    std::cout << "Max relative error: " << _maxError <<"%\n";
     QVERIFY (_maxError < 1e-8);
 
     QList<MathUtils::Real> _correctVector = {25.0, 250.0, 0.0, 0.0, 500.0};
     _maxError = 0.0;
     for(int i=0; i<NUMBER_OF_ELEMENTS+1;++i)
     {
-        MathUtils::Real _res = std::fabs(myBeam.getDomain(0).getForceVector().coeff(i,0) -
-                          _correctVector[i]);
+        MathUtils::Real _res = 100.0 * std::fabs(
+                    1.0 -
+                    myBeam.getDomain(0).getForceVector().coeff(i,0) /
+                    _correctVector[i]);
         if(_maxError < _res) _maxError = _res;
     }
-    std::cout << "Max error: " << _maxError <<"\n";
+    std::cout << "Max relative error: " << _maxError <<"%\n";
     QVERIFY (_maxError < 1e-8);
 
     // Equations system solving
@@ -115,10 +107,11 @@ void Test_Beam::test()
     _maxError = 0.0;
     for(int i=0; i<NUMBER_OF_ELEMENTS+1;++i)
     {
-        MathUtils::Real _res = std::fabs(_result.coeff(i,0) - _correctVector[i]);
+        MathUtils::Real _res = 100.0 * std::fabs(
+                    1.0 - _result.coeff(i,0) / _correctVector[i]);
         if(_maxError < _res) _maxError = _res;
     }
-    std::cout << "Max error: " << _maxError <<"\n";
+    std::cout << "Max relative error: " << _maxError <<"%\n";
     QVERIFY (_maxError < 1e-4);
     std::cout << "Solver iterations: " << solver.iterations() << "/" << solver.maxIterations() << "\n";
 

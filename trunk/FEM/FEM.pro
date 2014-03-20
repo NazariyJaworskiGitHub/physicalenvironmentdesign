@@ -25,7 +25,8 @@ SOURCES += main.cpp \
     phase.cpp \
     cuboid.cpp \
     TESTS/test_node.cpp \
-    TESTS/test_beam.cpp
+    TESTS/test_beam.cpp \
+    TESTS/test_precision.cpp
 
 HEADERS += \
     boundarycondition.h \
@@ -41,4 +42,5 @@ HEADERS += \
     cuboid.h \
     TESTS/test_node.h \
     mathutils.h \
-    TESTS/test_beam.h
+    TESTS/test_beam.h \
+    TESTS/test_precision.h

@@ -11,13 +11,23 @@ namespace MathUtils
     /// (Qt 5.1.1, MinGW 4.8.0 x32, Eigen 3.2.1  Conjugate gradient default,
     /// release optimization level 3, 17.03.2014)\n
     /// accuracy results are:\n
-    ///  - float\n
+    /// \li float\n
     ///     max error   4.57764e-005;\n
-    ///  - double\n
+    /// \li double\n
     ///     max error   2.84217e-014;\n
-    ///  - long double\n
+    /// \li long double\n
     ///     max error   2.77556e-017;\n
     /// time consuming results are:\n
+    ///
+    /// Note:
+    /// \li FLT_RADIX       2
+    /// \li FLT_DIG         6
+    /// \li DBL_DIG         15
+    /// \li LDBL_DIG        18
+    /// \li FLT_EPSILON     1.19209e-007
+    /// \li DBL_EPSILON     2.22045e-016
+    /// \li LDBL_EPSILON    1.0842e-019
+    /// \li FLT_EVAL_METHOD 2
 
     /// Change it to define Real type
     #define DIMENSION_TYPE_PRECISION float
@@ -62,6 +72,7 @@ namespace MathUtils
     //
     // Sx = -Bx/2A  Sy = -By/2A (2A = 4Vol)
     //
+    /// \todo it uses extended matrix (with those '1'), use compressed matrix
     template<typename _NodeType_,
              int _nDimentions_,
              typename _DimType_ = MathUtils::Real>
@@ -104,7 +115,9 @@ namespace MathUtils
         return _result;
     }
 
+    /// I need this for class-method implementations
     /// \todo code duplicate, method extraction needed
+    /// \todo it uses extended matrix (with those '1'), use compressed matrix
     template<typename _NodeType_,
              int _nDimentions_,
              typename _DimType_ = MathUtils::Real>
@@ -171,7 +184,136 @@ namespace MathUtils
             return false;
         }
     }
-}
+/*********************************************************************************************/
+    template<typename _DimType_ = MathUtils::Real>
+    inline _DimType_ round(_DimType_ x, _DimType_ eps) noexcept
+    {
+        return std::floor(x*(1.0/eps) + 0.5)/(1.0/eps);
+    }
 /*********************************************************************************************/
 
+    /// Calculate is the given Nodes are in same hyperplane (2D:line, 3D:plane, and so on)
+    /// returns 0 if thrue
+    /// return <0 if Node is at the left
+    /// return >0 if Node is at the right
+    /// Note that the result is depended on Plane defining Nodes order
+    /// (it should be counterclockwise)
+    //
+    // Example for 2D, Line equation:
+    // M = [ x  y  1] = [ x-xi  y-yi] = 0  (if !=0 then Node(x,y) is not on the line
+    //     [xi yi  1]   [xj-xi yj-yi]       moreover if <0 then Node is at the left side
+    //     [xj yj  1]                       and if >0 - at the right side)
+    //
+    // Example for 3D, Plane equation:
+    // M = [ x  y  z 1] = [ x-xi  y-yi  z-zi] = 0  (if !=0 then Node(x,y,z) is not on the plane)
+    //     [xi yi zi 1]   [xj-xi yj-yi zj-zi]       moreover if <0 then Node is at the left side
+    //     [xj yj zj 1]   [xk-xi yk-yi zk-zi]       and if >0 - at the right side)
+    //     [xk yk zk 1]
+    //
+    // And so on for higher dimensions
+    //
+    template<typename _NodeType_,
+             int _nDimentions_,
+             typename _DimType_ = MathUtils::Real>
+    _DimType_ calculateIsSamePlaneStatus(
+            const _NodeType_ &target,
+            const _NodeType_ nodes[])
+    {
+        Eigen::Matrix<_DimType_, _nDimentions_, _nDimentions_> _M;
+        for(int j=0;j<_nDimentions_;++j) // per columns (coordinetes)
+            _M(0,j) = target[j] - nodes[0][j];
+        _M(0,_nDimentions_) = _DimType_(1.0);
+        for(int i=1;i<_nDimentions_;++i) // per rows (nodes)
+        {
+            for(int j=0;j<_nDimentions_;++j) // per columns (coordinetes)
+                _M(i,j) = nodes[i][j] - nodes[0][j];
+        }
+        return _M.determinant();
+    }
+
+    /// I need this for class-method implementations
+    /// \todo code duplicate, method extraction needed
+    template<typename _NodeType_,
+             int _nDimentions_,
+             typename _DimType_ = MathUtils::Real>
+    _DimType_ calculateIsSamePlaneStatus(
+            const _NodeType_ &target,
+            const _NodeType_ * const nodes[])
+    {
+        Eigen::Matrix<_DimType_, _nDimentions_, _nDimentions_> _M;
+        for(int j=0;j<_nDimentions_;++j) // per columns (coordinetes)
+            _M(0,j) = target[j] - (*nodes)[0][j];
+        _M(0,_nDimentions_) = _DimType_(1.0);
+        for(int i=1;i<_nDimentions_;++i) // per rows (nodes)
+        {
+            for(int j=0;j<_nDimentions_;++j) // per columns (coordinetes)
+                _M(i,j) = (*nodes)[i][j] - (*nodes)[0][j];
+        }
+        return _M.determinant();
+    }
+/*********************************************************************************************/
+
+    /// Calculate generalized cross product
+    //
+    // P = [ i  j  k  w ...]
+    //     [ax ay az aw ...] i,j,k,w,... - orts
+    //     [bx by bz bw ...] a,b,c,... - vectors
+    //     [cx cy cz cw ...]
+    //     [...         ...]
+    //
+    template<typename _NodeType_,
+             int _nDimentions_,
+             typename _DimType_ = MathUtils::Real>
+    _NodeType_ calculateGeneralizedCrossProduct(const _NodeType_ nodes[])
+    {
+        _NodeType_ _rez;
+
+        // Tip: cycle per columns is the cycle per coordinate axis (i, j, k,...)
+        // i.e column[0] = i = x, column[1] = j = y, column[2] = k = z, and so on.
+        for(int _axisIndex=0; _axisIndex<_nDimentions_; ++_axisIndex)
+        {
+            // Local matrix of vectors is the minor per axis
+            Eigen::Matrix<_DimType_, _nDimentions_-1, _nDimentions_-1> _M;
+
+            for(int _minorColumnIndexGlobal=0, _minorColumnIndexLocal=0;
+                _minorColumnIndexGlobal<_nDimentions_; ++_minorColumnIndexGlobal)
+            {
+                if(_minorColumnIndexGlobal == _axisIndex) continue; // exclude current axis
+
+                // Tip: cycle per columns is the cycle per nodes
+                // We should subtract some of the nodes to find vectors,
+                // let it be the firs one
+                for(int _nodesIndex=1, _minorRowIndexLocal=0;
+                    _nodesIndex<_nDimentions_; ++_nodesIndex)
+                {
+                    // We should find the difference of coordinates
+                    _M(_minorRowIndexLocal,_minorColumnIndexLocal) =
+                           nodes[_nodesIndex][_minorColumnIndexGlobal] -
+                           nodes[0][_minorColumnIndexGlobal];
+
+                    ++_minorRowIndexLocal;
+                }
+
+                ++_minorColumnIndexLocal;
+            }
+            _rez[_axisIndex] = _M.determinant();
+        }
+        return _rez;
+    }
+
+/*********************************************************************************************/
+
+    /*/// Calculate the projection matrix to subplane which is defined by the nodes
+    template<typename _NodeType_,
+             int _nDimentions_,
+             typename _DimType_ = MathUtils::Real>
+    inline Eigen::Matrix<_DimType_, _nDimentions_, _nDimentions_> calculateProjector(
+            const _NodeType_ nodes[])
+    {
+        // calculate rotation matrix
+
+        // calculate projection matrix
+    }*/
+/*********************************************************************************************/
+}
 #endif // MATHUTILS_H

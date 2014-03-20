@@ -6,11 +6,18 @@
 #include "TESTS/test_beam.h"
 #include "TESTS/test_finiteelement.h"
 #include "TESTS/test_node.h"
+#include "TESTS/test_precision.h"
 
 //tip! use "-vs" to see emited signals
 QStringList arguments = {
 //    " ","-o","UnitTestsResults/UnitTest_XXX.txt"};
     " ","-silent"};
+
+void run_tests_Precision()
+{
+    Test_Precision _myTest_Precision;
+    QTest::qExec(&_myTest_Precision, arguments);
+}
 
 void run_tests_Node()
 {
@@ -32,6 +39,7 @@ void run_tests_Beam()
 
 void run_tests_all()
 {
+    run_tests_Precision();
     run_tests_Node();
     run_tests_FiniteElement();
     run_tests_Beam();

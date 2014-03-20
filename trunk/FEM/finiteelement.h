@@ -33,9 +33,9 @@ namespace FEM
         protected: QList<_NodeType_> *_ptrToNodesList;
         protected: int _myNodeIndexes[_nNodes_];
 
-        public : static int getNodesNumber() {return _nNodes_;}
+        public : static int getNodesNumber() noexcept {return _nNodes_;}
 
-        public : const int * getNodeIndexes() const
+        public : const int * getNodeIndexes() const noexcept
         {
             return _myNodeIndexes;
         }
@@ -54,7 +54,7 @@ namespace FEM
             return (*_ptrToNodesList)[_myNodeIndexes[index]];
         }
 
-        public : FiniteElement(const FiniteElement &target):
+        public : FiniteElement(const FiniteElement &target) noexcept:
             _ptrToNodesList(target._ptrToNodesList)
         {
             std::memcpy(_myNodeIndexes,target._myNodeIndexes,_nNodes_*sizeof(int));
@@ -93,12 +93,13 @@ namespace FEM
             _checkNodeIndexes();
         }    
 
+        /// \todo make it virtual
         /*public : virtual Eigen::Matrix<_DimType_, _nNodes_, _nNodes_>
                 calculateStiffnessMatrixEllipticEquation(
                 const _DimType_ *ptrToConductionCoefficients) const
                 throw (std::logic_error) = 0;*/
 
-        public : /*virtual*/ ~FiniteElement() {}
+        public : /*virtual*/ ~FiniteElement() noexcept {}
     };
 
     /// Note, that _nDimentions_+1 = _nNodes_
@@ -108,18 +109,10 @@ namespace FEM
     class SimplexElement :
             public FiniteElement<_NodeType_, _nDimentions_+1, _nDimentions_, _DimType_>
     {
-        public : SimplexElement(const SimplexElement &target):
+        public : SimplexElement(const SimplexElement &target) noexcept:
             FiniteElement<_NodeType_, _nDimentions_+1, _nDimentions_, _DimType_>(target)
         {
         }
-
-        /// \todo deprecated, argument transition
-        /*public : SimplexElement(
-                QList<_NodeType_> *ptrToNodesList,
-                int ni, ...) throw(std::out_of_range):
-            FiniteElement<_DimType_, _NodeType_, _nDimentions_+1, _nDimentions_>(ptrToNodesList, )
-        {
-        }*/
 
         public : SimplexElement(
             QList<_NodeType_> *ptrToNodesList,
@@ -136,54 +129,26 @@ namespace FEM
         //        (n-1)!|[cx cy cz cw ...]| |.| - length of the vector
         //              |[...         ...]|
         //
+        // Each minor(term) of orts is the volume of subelement's projection
+        //
         // Tip: _nDimentions_+1 = _nNodes_
         //
+        /// \todo need method extraction see MathUtils::calculateGeneralizedCrossProduct()
         public : _DimType_ calculateSubElementVolume(int oppositeNodeIndex) const
         {
-            _DimType_ _volume = _DimType_(0.0);
-
-            // We should subtract some of the nodes to find vectors,
-            // let it be the last one
-            int _baseNodeIndex;
-            if(oppositeNodeIndex != _nDimentions_+1 -1)
-                _baseNodeIndex = _nDimentions_+1 -1;
-            else
-                _baseNodeIndex = _nDimentions_+1 -2;
-
-            // Tip: cycle per columns is the cycle per coordinate axis (i, j, k,...)
-            // i.e column[0] = i = x, column[1] = j = y, column[2] = k = z, and so on.
-            for(int _axisIndex=0; _axisIndex<_nDimentions_; ++_axisIndex)
+            _NodeType_ _nodes[_nDimentions_];
+            for(int i=0, j=0; i<_nDimentions_+1; ++i)
             {
-                // Local matrix of vectors is the minor per axis
-                Eigen::Matrix<_DimType_, _nDimentions_-1, _nDimentions_-1> _M;
-
-                for(int _minorColumnIndexGlobal=0, _minorColumnIndexLocal=0;
-                    _minorColumnIndexGlobal<_nDimentions_; ++_minorColumnIndexGlobal)
-                {
-                    if(_minorColumnIndexGlobal == _axisIndex) continue; // exclude current axis
-
-                    // Tip: cycle per columns is the cycle per nodes
-                    for(int _nodesIndex=0, _minorRowIndexLocal=0;
-                        _nodesIndex<_nDimentions_+1; ++_nodesIndex)
-                    {
-                        // Exclude opposite node and base node
-                        if(_nodesIndex == oppositeNodeIndex || _nodesIndex == _baseNodeIndex) continue;
-
-                        // We should find the difference of coordinates
-                        _M(_minorRowIndexLocal,_minorColumnIndexLocal) =
-                               (*(this->_ptrToNodesList))[this->_myNodeIndexes[_nodesIndex]][_minorColumnIndexGlobal] -
-                               (*(this->_ptrToNodesList))[this->_myNodeIndexes[_baseNodeIndex]][_minorColumnIndexGlobal];
-
-                        ++_minorRowIndexLocal;
-                    }
-
-                    ++_minorColumnIndexLocal;
-                }
-                _DimType_ _term = _M.determinant();    ///< \todo Test this method
-                _volume += _term * _term;
+                // Exclude the opposite node
+                if(i == oppositeNodeIndex) continue;
+                _nodes[j] = (*(this->_ptrToNodesList))[this->_myNodeIndexes[i]];
+                ++j;
             }
-
-            return std::sqrt(_volume)/MathUtils::factorial(_nDimentions_-1);
+            return (MathUtils::calculateGeneralizedCrossProduct<
+                        _NodeType_,
+                        _nDimentions_,
+                        _DimType_>(_nodes)).length()/
+                    MathUtils::factorial(_nDimentions_-1);
         }
 
         /*//  For simplex elements
