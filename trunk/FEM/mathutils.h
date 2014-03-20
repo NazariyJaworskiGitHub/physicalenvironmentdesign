@@ -35,7 +35,7 @@ namespace MathUtils
     typedef DIMENSION_TYPE_PRECISION Real;
 
 /*********************************************************************************************/
-    /// Calculate factorial
+    /// Calculate factorial;
     inline unsigned factorial(unsigned n) noexcept
     {
         unsigned _factorial = 1;
@@ -44,12 +44,16 @@ namespace MathUtils
         return _factorial;
     }
 /*********************************************************************************************/
-    /// Calculates the center of element's circumscribed hypersphere
-    /// see http://mathworld.wolfram.com/Circumsphere.html
+
+    /// Calculates the center of element's circumscribed hypersphere;
+    /// See http://mathworld.wolfram.com/Circumsphere.html
     /// and http://mathworld.wolfram.com/Circumcircle.html
-    /// for mathematical issues
-    /// Element should has non-zero volume!
-    /// sphereRadius - pointer to the place, where radius should be stored, if need
+    /// for mathematical issues;
+    /// Element should has non-zero volume!;
+    /// sphereRadius - pointer to the place, where radius should be stored, if need;
+    ///
+    /// _NodeIteratorType_ - object which has the overloaded [] operator that returns
+    ///   the reference to the Node, default it just the _NodeType_*;
     //
     // Example for 2D:
     //
@@ -72,11 +76,13 @@ namespace MathUtils
     //
     // Sx = -Bx/2A  Sy = -By/2A (2A = 4Vol)
     //
-    /// \todo it uses extended matrix (with those '1'), use compressed matrix
+    /// \todo it uses extended matrix (with those '1'), use compressed matrix;
+    /// \todo try to use lambda functions;
     template<typename _NodeType_,
              int _nDimentions_,
+             typename _NodeIteratorType_ = _NodeType_*,
              typename _DimType_ = MathUtils::Real>
-    _NodeType_ calculateCircumSphereCenter(const _NodeType_ nodes[],
+    _NodeType_ calculateCircumSphereCenter(const _NodeIteratorType_ nodes,
             _DimType_ *sphereRadius = nullptr)
     {
         // build M without first row
@@ -114,57 +120,12 @@ namespace MathUtils
 
         return _result;
     }
-
-    /// I need this for class-method implementations
-    /// \todo code duplicate, method extraction needed
-    /// \todo it uses extended matrix (with those '1'), use compressed matrix
-    template<typename _NodeType_,
-             int _nDimentions_,
-             typename _DimType_ = MathUtils::Real>
-    _NodeType_ calculateCircumSphereCenter(const _NodeType_ * const nodes[],
-            _DimType_ *sphereRadius = nullptr)
-    {
-        // build M without first row
-        Eigen::Matrix<_DimType_, _nDimentions_+1, _nDimentions_+2> _M;
-        for(int i=0;i<_nDimentions_+1;++i) // per rows = per nodes
-        {
-            _M(i,0) = _DimType_(0.0);
-            for(int c=0;c<_nDimentions_;++c) // per coordinates
-                _M(i,0) += (*nodes[i])[c] * (*nodes[i])[c];
-
-            for(int j=1; j< _nDimentions_+1; ++j) // per columns
-                _M(i,j) = (*nodes[i])[j-1];
-
-            _M(i,_nDimentions_+1) = _DimType_(1.0);
-        }
-
-        // element should has non-zero volume
-        _DimType_ _A = _M.template block<_nDimentions_+1, _nDimentions_+1>(0,1).determinant();
-
-        _NodeType_ _result;
-        for(int b=0;b<_nDimentions_;++b) //per Bx, By, and so on
-        {
-            Eigen::Matrix<_DimType_, _nDimentions_+1, _nDimentions_+1> _B;
-            for(int _locColInd=0, _globColInd=0; _locColInd<_nDimentions_+1; ++_globColInd)
-            {
-                if(b+1==_globColInd) continue;
-                _B.col(_locColInd) = _M.col(_globColInd);
-                ++_locColInd;
-            }
-            _result[b] = std::pow(-1.0,b)*_B.determinant()/(2.0*_A);
-        }
-
-        if(sphereRadius)
-            *sphereRadius = _result.distance(*nodes[0]);
-
-        return _result;
-    }
 /*********************************************************************************************/
-    /// Check Delaunay status - is the given target NOT located inside circumscribed hypershphere
+    /// Check Delaunay status - is the given target NOT located inside circumscribed hypershphere;
     /// sphereLocatedNodes - is the pointer to list, where hypersphere located nodes are stored
     /// for further additional checks, if the given target is hypersphere located it be added
-    /// to this list
-    /// \todo check tolerance
+    /// to this list;
+    /// \todo check tolerance;
     template<typename _NodeType_,
              typename _DimType_ = MathUtils::Real>
     bool calculateIsNotDelaunayStatus(
@@ -192,12 +153,15 @@ namespace MathUtils
     }
 /*********************************************************************************************/
 
-    /// Calculate is the given Nodes are in same hyperplane (2D:line, 3D:plane, and so on)
-    /// returns 0 if thrue
-    /// return <0 if Node is at the left
-    /// return >0 if Node is at the right
+    /// Calculate is the given Nodes are in same hyperplane (2D:line, 3D:plane, and so on);
+    /// returns 0 if thrue;
+    /// return <0 if Node is at the left;
+    /// return >0 if Node is at the right;
     /// Note that the result is depended on Plane defining Nodes order
-    /// (it should be counterclockwise)
+    /// (it should be counterclockwise);
+    ///
+    /// _NodeIteratorType_ - object which has the overloaded [] operator that returns
+    ///   the reference to the Node, default it just the _NodeType_*;
     //
     // Example for 2D, Line equation:
     // M = [ x  y  1] = [ x-xi  y-yi] = 0  (if !=0 then Node(x,y) is not on the line
@@ -214,10 +178,11 @@ namespace MathUtils
     //
     template<typename _NodeType_,
              int _nDimentions_,
+             typename _NodeIteratorType_ = _NodeType_*,
              typename _DimType_ = MathUtils::Real>
     _DimType_ calculateIsSamePlaneStatus(
             const _NodeType_ &target,
-            const _NodeType_ nodes[])
+            const _NodeIteratorType_ nodes)
     {
         Eigen::Matrix<_DimType_, _nDimentions_, _nDimentions_> _M;
         for(int j=0;j<_nDimentions_;++j) // per columns (coordinetes)
@@ -230,30 +195,12 @@ namespace MathUtils
         }
         return _M.determinant();
     }
-
-    /// I need this for class-method implementations
-    /// \todo code duplicate, method extraction needed
-    template<typename _NodeType_,
-             int _nDimentions_,
-             typename _DimType_ = MathUtils::Real>
-    _DimType_ calculateIsSamePlaneStatus(
-            const _NodeType_ &target,
-            const _NodeType_ * const nodes[])
-    {
-        Eigen::Matrix<_DimType_, _nDimentions_, _nDimentions_> _M;
-        for(int j=0;j<_nDimentions_;++j) // per columns (coordinetes)
-            _M(0,j) = target[j] - (*nodes)[0][j];
-        _M(0,_nDimentions_) = _DimType_(1.0);
-        for(int i=1;i<_nDimentions_;++i) // per rows (nodes)
-        {
-            for(int j=0;j<_nDimentions_;++j) // per columns (coordinetes)
-                _M(i,j) = (*nodes)[i][j] - (*nodes)[0][j];
-        }
-        return _M.determinant();
-    }
 /*********************************************************************************************/
 
-    /// Calculate generalized cross product
+    /// Calculate generalized cross product;
+    ///
+    /// _NodeIteratorType_ - object which has the overloaded [] operator that returns
+    ///   the reference to the Node, default it just the _NodeType_*;
     //
     // P = [ i  j  k  w ...]
     //     [ax ay az aw ...] i,j,k,w,... - orts
@@ -261,10 +208,12 @@ namespace MathUtils
     //     [cx cy cz cw ...]
     //     [...         ...]
     //
+    /// \todo try to use lambda functions;
     template<typename _NodeType_,
              int _nDimentions_,
+             typename _NodeIteratorType_ = _NodeType_*,
              typename _DimType_ = MathUtils::Real>
-    _NodeType_ calculateGeneralizedCrossProduct(const _NodeType_ nodes[])
+    _NodeType_ calculateGeneralizedCrossProduct(const _NodeIteratorType_ nodes)
     {
         _NodeType_ _rez;
 

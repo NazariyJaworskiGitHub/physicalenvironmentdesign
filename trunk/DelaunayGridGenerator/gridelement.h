@@ -27,6 +27,15 @@ namespace DelaunayGridGenerator
         private: _DimType_  _sphereRadius;
         public : _DimType_ getCircumSphereRadius() noexcept {return _sphereRadius;}
 
+        private: struct _NodesDummyIterator
+        {
+            const GridElement &ref;
+            const _WrappedNodeType_ &operator [] (int index) const noexcept
+            {
+                return *ref._ptrsToWrappedNodes[index];
+            }
+        };
+
         /// \todo avoid variadic arguments list (make type control)
         public : GridElement( _WrappedNodeType_ *n1, ...) noexcept
         {
@@ -37,9 +46,13 @@ namespace DelaunayGridGenerator
                 _ptrsToWrappedNodes[i]=va_arg(_coordinates, _WrappedNodeType_*);
             va_end(_coordinates);
 
+            _NodesDummyIterator _iterator = {*this};
             _sphereCenter = MathUtils::calculateCircumSphereCenter<
-                    _WrappedNodeType_, _nDimentions_>(
-                        _ptrsToWrappedNodes, &_sphereRadius);
+                    _WrappedNodeType_,
+                    _nDimentions_,
+                    _NodesDummyIterator,
+                    _DimType_>(
+                        _iterator, &_sphereRadius);
         }
 
         public : bool calculateIsNotDelaunayStatus(
