@@ -9,6 +9,7 @@
 
 namespace DelaunayGridGenerator
 {
+    /// \todo inherit FiniteElement or SimplexElement
     template <
         typename _WrappedNodeType_,
         int _nDimentions_,
@@ -21,35 +22,13 @@ namespace DelaunayGridGenerator
         public : typename QLinkedList<GridElement*>::Iterator &getPointerToMyself() noexcept {
             return _ptrToMyself;}
 
-        /// It is lazy load (Virtual holder) see http://design-pattern.ru/patterns/lazy-load.html
-        /// \todo make tests for this lazy load, is it necessary?
-        /// \todo compose flag and data together (make pait or something)
-        private: bool _isSphereCenterAndRadiusInitialized;
-        /// \todo it is not necessary to store wrapped node, but simple one instead;
         private: _WrappedNodeType_ _sphereCenter;
-        public : const _WrappedNodeType_ &getCircumSphereCenter()
-        {
-            if(!_isSphereCenterAndRadiusInitialized)
-            {
-                _isSphereCenterAndRadiusInitialized = true;
-                _initializeCircumSphereCenterAndRadius();
-            }
-            return _sphereCenter;
-        }
+        public : const _WrappedNodeType_ &getCircumSphereCenter() noexcept {return _sphereCenter;}
         private: _DimType_  _sphereRadius;
-        public : _DimType_ getCircumSphereRadius()
-        {
-            if(!_isSphereCenterAndRadiusInitialized)
-            {
-                _isSphereCenterAndRadiusInitialized = true;
-                _initializeCircumSphereCenterAndRadius();
-            }
-            return _sphereRadius;
-        }
+        public : _DimType_ getCircumSphereRadius() noexcept {return _sphereRadius;}
 
         /// \todo avoid variadic arguments list (make type control)
-        public : GridElement( _WrappedNodeType_ *n1, ...) noexcept :
-            _isSphereCenterAndRadiusInitialized(false)
+        public : GridElement( _WrappedNodeType_ *n1, ...) noexcept
         {
             _ptrsToWrappedNodes[0] = n1;
             va_list _coordinates;
@@ -57,18 +36,10 @@ namespace DelaunayGridGenerator
             for(int i=1;i<_nDimentions_+1;++i)
                 _ptrsToWrappedNodes[i]=va_arg(_coordinates, _WrappedNodeType_*);
             va_end(_coordinates);
-        }
-        private: void _initializeCircumSphereCenterAndRadius()
-        {
+
             _sphereCenter = MathUtils::calculateCircumSphereCenter<
                     _WrappedNodeType_, _nDimentions_>(
                         _ptrsToWrappedNodes, &_sphereRadius);
-            /*_WrappedNodeType_ _wrNodesArr[_nDimentions_+1];
-            for(int i=0; i< _nDimentions_+1; ++i)
-                _wrNodesArr[i] = *_ptrsToWrappedNodes[i];
-            _sphereCenter = MathUtils::calculateCircumSphereCenter<
-                                _WrappedNodeType_, _nDimentions_>(
-                                    _wrNodesArr, &_sphereRadius);*/
         }
 
         public : bool calculateIsNotDelaunayStatus(

@@ -7,7 +7,9 @@
 #include <cstring>
 #include <cmath>
 #include <stdexcept>
+#include <limits>
 #include <type_traits>
+
 #include "mathutils.h"
 
 namespace FEM
@@ -37,7 +39,7 @@ namespace FEM
         const _DimType_ *getCoordinates() const noexcept {return _coord;}
 
         /// \brief Constructor. \n
-        /// \warning It takes only \c dim arguments from argument list. \n
+        /// \warning It takes only \c _nDimentions_ arguments from argument list. \n
         // You have to add extra lines if you want to continue with dimentions
         Node(const _DimType_ x = 0,
              const typename std::conditional<_nDimentions_>=2, _DimType_, void*>::type y = 0,
@@ -398,6 +400,14 @@ namespace FEM
                 if(_coord[i]<_rez)
                     _rez=_coord[i];
             return _rez;
+        }
+
+        /// \todo test this, make shure that you need this
+        void roundToDiscreteSpace(_DimType_ discretizationStep =
+                std::numeric_limits<_DimType_>::epsilon()) noexcept
+        {
+            for(int i=0; i<_nDimentions_; ++i)
+                _coord[i] = MathUtils::round<_DimType_>(_coord[i],discretizationStep);
         }
 
         /// \brief Common destructor

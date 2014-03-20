@@ -2,7 +2,6 @@
 #define NODEWRAPPER_H
 
 #include <QLinkedList>
-
 #include "node.h"
 
 namespace DelaunayGridGenerator
