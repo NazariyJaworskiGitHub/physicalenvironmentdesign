@@ -121,6 +121,18 @@ namespace FEM
         {
         }
 
+        private: struct _NodesDummyIterator
+        {
+            const SimplexElement &ref;
+            int excludedNodeIndex;
+            const _NodeType_ & operator [](int index) const noexcept
+            {
+                if(index >= excludedNodeIndex)
+                    return (*ref._ptrToNodesList)[ref._myNodeIndexes[index+1]];
+                else return (*ref._ptrToNodesList)[ref._myNodeIndexes[index]];
+            }
+        };
+
         // Use generalized cross product
         //
         //              |[ i  j  k  w ...]|
@@ -136,7 +148,7 @@ namespace FEM
         /// \todo need method extraction see MathUtils::calculateGeneralizedCrossProduct()
         public : _DimType_ calculateSubElementVolume(int oppositeNodeIndex) const
         {
-            _NodeType_ _nodes[_nDimentions_];
+            /*_NodeType_ _nodes[_nDimentions_];
             for(int i=0, j=0; i<_nDimentions_+1; ++i)
             {
                 // Exclude the opposite node
@@ -147,7 +159,15 @@ namespace FEM
             return (MathUtils::calculateGeneralizedCrossProduct<
                         _NodeType_,
                         _nDimentions_,
+                        _NodeType_,
                         _DimType_>(_nodes)).length()/
+                    MathUtils::factorial(_nDimentions_-1);*/
+            _NodesDummyIterator _iterator = {*this, oppositeNodeIndex};
+            return (MathUtils::calculateGeneralizedCrossProduct<
+                        _NodeType_,
+                        _nDimentions_,
+                        _NodesDummyIterator,
+                        _DimType_>(_iterator)).length()/
                     MathUtils::factorial(_nDimentions_-1);
         }
 
