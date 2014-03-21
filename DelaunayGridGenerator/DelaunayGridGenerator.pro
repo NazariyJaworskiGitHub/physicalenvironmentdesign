@@ -46,7 +46,8 @@ SOURCES += main.cpp \
     GPU/openclmanager.cpp \
     nodewrapper.cpp \
     TESTS/test_gridelement.cpp \
-    gridelement.cpp
+    gridelement.cpp \
+    TESTS/test_nodewrapper.cpp
 
 HEADERS += \
     TESTS/tests_runner.h \
@@ -61,4 +62,6 @@ HEADERS += \
     GPU/clsources.h \
     nodewrapper.h \
     TESTS/test_gridelement.h \
-    gridelement.h
+    gridelement.h \
+    TESTS/test_nodewrapper.h \
+    listwrapperinterface.h

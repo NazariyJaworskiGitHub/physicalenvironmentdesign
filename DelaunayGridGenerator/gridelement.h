@@ -1,10 +1,9 @@
 #ifndef SIMPLEXELEMENTWRAPPER_H
 #define SIMPLEXELEMENTWRAPPER_H
 
-#include <cmath>
 #include <cstdarg>
-#include <type_traits>
 
+#include "listwrapperinterface.h"
 #include "mathutils.h"
 
 namespace DelaunayGridGenerator
@@ -16,11 +15,9 @@ namespace DelaunayGridGenerator
         typename _DimType_ = MathUtils::Real>
     class GridElement
     {
-        private: _WrappedNodeType_ *_ptrsToWrappedNodes[_nDimentions_+1];
+        LIST_WRAPPED_INTERFACE(GridElement)
 
-        private: typename QLinkedList<GridElement*>::Iterator _ptrToMyself;
-        public : typename QLinkedList<GridElement*>::Iterator &getPointerToMyself() noexcept {
-            return _ptrToMyself;}
+        private: _WrappedNodeType_ *_ptrsToWrappedNodes[_nDimentions_+1];
 
         private: _WrappedNodeType_ _sphereCenter;
         public : const _WrappedNodeType_ &getCircumSphereCenter() noexcept {return _sphereCenter;}
@@ -37,7 +34,8 @@ namespace DelaunayGridGenerator
         };
 
         /// \todo avoid variadic arguments list (make type control)
-        public : GridElement( _WrappedNodeType_ *n1, ...) noexcept
+        public : GridElement( _WrappedNodeType_ *n1, ...) noexcept :
+            _myState(UNKNOWN)
         {
             _ptrsToWrappedNodes[0] = n1;
             va_list _coordinates;
@@ -53,6 +51,14 @@ namespace DelaunayGridGenerator
                     _NodesDummyIterator,
                     _DimType_>(
                         _iterator, &_sphereRadius);
+        }
+        public : GridElement(const GridElement &target) noexcept :
+            _ptrsToWrappedNodes(target._ptrsToWrappedNodes),
+            _sphereCenter(target._sphereCenter),
+            _sphereRadius(target._sphereRadius),
+            _ptrToMyself(target._ptrToMyself),
+            _myState(target._myState)
+        {
         }
 
         public : bool calculateIsNotDelaunayStatus(

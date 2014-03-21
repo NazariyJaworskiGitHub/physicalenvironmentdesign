@@ -22,10 +22,15 @@ void Test_GridElement::test()
 
     /// \todo 3D
 
-    GridElement<WrappedNode2D,2> _myElement(
+    GridElement<WrappedNode2D,2> _myElement1(
                 &_wrappedNodes[0],
                 &_wrappedNodes[1],
                 &_wrappedNodes[2]);
-    QVERIFY((_myElement.getCircumSphereCenter()-_c2).isNull());
-    QVERIFY(_myElement.getCircumSphereRadius() == _circumRadius2);
+    QVERIFY((_myElement1.getCircumSphereCenter()-_c2).isNull());
+    QVERIFY(_myElement1.getCircumSphereRadius() == _circumRadius2);
+
+    /*GridElement<WrappedNode2D,2> _myElement2(_myElement1);
+    //QVERIFY((_myElement2.);
+    QVERIFY((_myElement2.getCircumSphereCenter()-_c2).isNull());
+    QVERIFY(_myElement2.getCircumSphereRadius() == _circumRadius2);*/
 }

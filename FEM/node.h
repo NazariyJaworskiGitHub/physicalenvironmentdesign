@@ -7,8 +7,6 @@
 #include <cstring>
 #include <cmath>
 #include <stdexcept>
-#include <limits>
-#include <type_traits>
 
 #include "mathutils.h"
 
@@ -33,7 +31,7 @@ namespace FEM
     /// Another name for this class is Vector.
     template <int _nDimentions_, typename _DimType_> class Node
     {
-    private:
+    protected:
         _DimType_ _coord[_nDimentions_];  ///< Coordinates array.
     public:
         const _DimType_ *getCoordinates() const noexcept {return _coord;}
@@ -400,14 +398,6 @@ namespace FEM
                 if(_coord[i]<_rez)
                     _rez=_coord[i];
             return _rez;
-        }
-
-        /// \todo test this, make shure that you need this
-        void roundToDiscreteSpace(_DimType_ discretizationStep =
-                std::numeric_limits<_DimType_>::epsilon()) noexcept
-        {
-            for(int i=0; i<_nDimentions_; ++i)
-                _coord[i] = MathUtils::round<_DimType_>(_coord[i],discretizationStep);
         }
 
         /// \brief Common destructor
