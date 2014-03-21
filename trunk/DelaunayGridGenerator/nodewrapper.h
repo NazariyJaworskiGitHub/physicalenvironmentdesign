@@ -1,7 +1,10 @@
 #ifndef NODEWRAPPER_H
 #define NODEWRAPPER_H
 
-#include <QLinkedList>
+#include <limits>
+
+#include "listwrapperinterface.h"
+#include "mathutils.h"
 #include "node.h"
 
 namespace DelaunayGridGenerator
@@ -12,23 +15,39 @@ namespace DelaunayGridGenerator
     /// that's why one need to use wrapped objects with self-pointers to achieve O(1) in
     /// both cases. See help references or
     /// http://qt-project.org/doc/qt-5.1/qtcore/containers.html#algorithmic-complexity
-    /// For each Node in any domensions one should store:
-    ///  self-pointer to alive/dead nodes lists;
-    template< typename _NodeType_ >
+    /// \todo add Node-stole constructor, do not copy Nodes
+    template< typename _NodeType_,
+              typename _DimType_ = MathUtils::Real>
     class NodeWrapper : public _NodeType_
     {
-        private: typename QLinkedList<NodeWrapper*>::Iterator _ptrToMyself;
-        public : typename QLinkedList<NodeWrapper*>::Iterator & getPointerToMyself() noexcept {
-            return _ptrToMyself;}
-        private: bool _isAlive;
-        public : bool isAlive() const noexcept {return _isAlive;}
+        LIST_WRAPPED_INTERFACE(NodeWrapper)
+
         /// \todo it makes copy, avoid that
         public : NodeWrapper(const _NodeType_ &target) noexcept:
-            _NodeType_(target), _isAlive(true){}
+            _NodeType_(target),
+            _myState(UNKNOWN)
+        {
+        }
         public : NodeWrapper(const NodeWrapper &target) noexcept:
-            _NodeType_(target), _ptrToMyself(target._ptrToMyself), _isAlive(target._isAlive) {}
+            _NodeType_(target),
+            _ptrToMyself(target._ptrToMyself),
+            _myState(target._myState)
+        {
+        }
         public : NodeWrapper() noexcept:
-            _NodeType_(), _isAlive(true){}
+            _NodeType_(),
+            _myState(UNKNOWN)
+        {
+        }
+
+        /// \todo test this, make shure that you need this
+        void roundToDiscreteSpace(_DimType_ discretizationStep =
+                std::numeric_limits<_DimType_>::epsilon()) noexcept
+        {
+            for(_DimType_ &c : this->_coord)
+                c = MathUtils::round<_DimType_>(c,discretizationStep);
+        }
+
         public : ~NodeWrapper() noexcept {}
     };
 

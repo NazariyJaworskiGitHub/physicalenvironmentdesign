@@ -4,12 +4,19 @@
 #include <QStringList>
 
 #include "test_gridelement.h"
+#include "test_nodewrapper.h"
 #include "test_piecewiselinearcomplex.h"
 
 //tip! use "-vs" to see emited signals
 QStringList arguments = {
 //    " ","-o","UnitTestsResults/UnitTest_XXX.txt"};
     " ","-silent"};
+
+void run_tests_NodeWrapper()
+{
+    Test_NodeWrapper _myTest_NodeWrapper;
+    QTest::qExec(&_myTest_NodeWrapper, arguments);
+}
 
 void run_tests_GridElement()
 {
@@ -32,6 +39,7 @@ void run_tests_PiecewiseLinearComplex()
 
 void run_tests_all()
 {
+    run_tests_NodeWrapper();
     run_tests_GridElement();
     run_tests_PiecewiseLinearComplex();
     run_tests_DelaunayGridGenerator();
