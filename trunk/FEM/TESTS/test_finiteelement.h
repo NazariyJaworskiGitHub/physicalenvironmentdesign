@@ -3,6 +3,7 @@
 
 #include <QTest>
 #include "finiteelement.h"
+#include "simplexelement.h"
 
 class Test_FiniteElement : public QObject
 {
