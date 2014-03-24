@@ -2,6 +2,7 @@
 #define MATHUTILS_H
 
 #include <Eigen/Dense>
+#include <Eigen/LU>
 #include <cmath>
 #include <QList>
 
@@ -121,7 +122,7 @@ namespace MathUtils
         return _result;
     }
 /*********************************************************************************************/
-    /// Check Delaunay status - is the given target NOT located inside circumscribed hypershphere;
+    ///Calculate is the given target NOT located inside circumscribed hypershphere;
     /// sphereLocatedNodes - is the pointer to list, where hypersphere located nodes are stored
     /// for further additional checks, if the given target is hypersphere located it be added
     /// to this list;
@@ -176,6 +177,7 @@ namespace MathUtils
     //
     // And so on for higher dimensions
     //
+    /// \todo rename it to IsCoplanar
     template<typename _NodeType_,
              int _nDimentions_,
              typename _NodeIteratorType_ = _NodeType_*,
@@ -187,13 +189,44 @@ namespace MathUtils
         Eigen::Matrix<_DimType_, _nDimentions_, _nDimentions_> _M;
         for(int j=0;j<_nDimentions_;++j) // per columns (coordinetes)
             _M(0,j) = target[j] - nodes[0][j];
-        _M(0,_nDimentions_) = _DimType_(1.0);
         for(int i=1;i<_nDimentions_;++i) // per rows (nodes)
         {
             for(int j=0;j<_nDimentions_;++j) // per columns (coordinetes)
                 _M(i,j) = nodes[i][j] - nodes[0][j];
         }
         return _M.determinant();
+    }
+
+/*********************************************************************************************/
+    /// Calculate is the given Nodes are in same hyperplane
+    /// see http://en.wikipedia.org/wiki/Coplanarity
+    ///
+    /// _NodeIteratorType_ - object which has the overloaded [] operator that returns
+    ///   the reference to the Node, default it just the _NodeType_*;
+    //
+    // Set of nodes are coplanar (collinear) if and only if the rank of the those nodes
+    // coordinates matrix is <= number of nodes - 2 ( = number of vectors -1),
+    // i.e. there are linearly dependent vector;
+    //
+    /// \todo try to not use FullPivLU
+    /// \todo try to use fixed size matrix
+    template<typename _NodeType_,
+             int _nDimentions_,
+             typename _NodeIteratorType_ = _NodeType_*,
+             typename _DimType_ = MathUtils::Real>
+    inline bool calculateIsSamePlaneStatus2(const _NodeIteratorType_ nodes[], int nNodes)
+        throw(std::runtime_error)
+    {
+        if(nNodes<2)
+            throw std::runtime_error("calculateIsSamePlaneStatus2: less than two nodes is given");
+        Eigen::Matrix<_DimType_, Eigen::Dynamic, Eigen::Dynamic> _M(nNodes-1,_nDimentions_);
+        for(int i=0;i<nNodes-1;++i) // per rows (nodes)
+            for(int j=0;j<_nDimentions_;++j) // per columns (coordinetes)
+                _M(i,j) = nodes[i][j]-nodes[nNodes-1][j];
+        Eigen::FullPivLU<Eigen::Matrix<_DimType_, Eigen::Dynamic, Eigen::Dynamic>> _luM(_M);
+        if(_luM.rank() < nNodes - 1)
+            return true;
+        else return false;
     }
 /*********************************************************************************************/
 
@@ -250,19 +283,6 @@ namespace MathUtils
         return _rez;
     }
 
-/*********************************************************************************************/
-
-    /*/// Calculate the projection matrix to subplane which is defined by the nodes
-    template<typename _NodeType_,
-             int _nDimentions_,
-             typename _DimType_ = MathUtils::Real>
-    inline Eigen::Matrix<_DimType_, _nDimentions_, _nDimentions_> calculateProjector(
-            const _NodeType_ nodes[])
-    {
-        // calculate rotation matrix
-
-        // calculate projection matrix
-    }*/
 /*********************************************************************************************/
 }
 #endif // MATHUTILS_H

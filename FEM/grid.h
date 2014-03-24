@@ -6,15 +6,15 @@
 
 #include "boundarycondition.h"
 #include "domain.h"
-#include "finiteelement.h"
+#include "simplexelement.h"
 #include "mathutils.h"
 
 namespace FEM
 {
     template <
-        typename _NodeType_,    // See "node.h"
+        typename _NodeType_,
         int _nDimentions_,
-        typename _ElementType_, // See "finiteelement.h"
+        typename _ElementType_,
         typename _DimType_ = MathUtils::Real>
     // Tip! For now, grid can hold only the same type of elements
     class Grid

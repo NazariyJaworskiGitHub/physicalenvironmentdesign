@@ -26,7 +26,8 @@ SOURCES += main.cpp \
     cuboid.cpp \
     TESTS/test_node.cpp \
     TESTS/test_beam.cpp \
-    TESTS/test_precision.cpp
+    TESTS/test_precision.cpp \
+    simplexelement.cpp
 
 HEADERS += \
     boundarycondition.h \
@@ -43,4 +44,5 @@ HEADERS += \
     TESTS/test_node.h \
     mathutils.h \
     TESTS/test_beam.h \
-    TESTS/test_precision.h
+    TESTS/test_precision.h \
+    simplexelement.h
