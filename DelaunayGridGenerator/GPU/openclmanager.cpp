@@ -1,5 +1,5 @@
 #include "openclmanager.h"
-
+/*
 #include <iostream>
 
 #include "clsources.h"
@@ -209,3 +209,4 @@ void OpenCLManager::runTEST()
 OpenCLManager::~OpenCLManager()
 {
 }
+*/

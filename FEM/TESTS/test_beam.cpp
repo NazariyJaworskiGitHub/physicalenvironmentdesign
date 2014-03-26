@@ -115,6 +115,11 @@ void Test_Beam::test()
     QVERIFY (_maxError < 1e-4);
     std::cout << "Solver iterations: " << solver.iterations() << "/" << solver.maxIterations() << "\n";
 
+    std::cout << "Norm Relative error: " <<
+                 (myBeam.getDomain(0).getStiffnessMatrix()*
+                  _result-myBeam.getDomain(0).getForceVector()).norm() /
+                 myBeam.getDomain(0).getForceVector().norm() << "\n";
+
     // Results rendering
     /// \todo use glrender
     // ...

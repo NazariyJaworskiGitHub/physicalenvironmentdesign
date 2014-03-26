@@ -5,10 +5,10 @@ CONFIG += no_keywords
 QT += testlib
 
 #INTEL OpenCL
-INCLUDEPATH += E:\OpenCL\Intel\include
-LIBS += -LE:\OpenCL\Intel\lib\x86\ -lOpenCL
+#INCLUDEPATH += E:\OpenCL\Intel\include
+#LIBS += -LE:\OpenCL\Intel\lib\x86\ -lOpenCL
 #AMD OpenCL
-LIBS += E:\OpenCL\AMD\lib\x86\libOpenCL.a
+#LIBS += E:\OpenCL\AMD\lib\x86\libOpenCL.a
 
 #Wt Web ToolKit
 INCLUDEPATH += E:\Wt\Wt_3.3.0_boost_1.54.0_mingw_4.8.0_x32\include\
