@@ -46,34 +46,24 @@ namespace FEM
         //        (n-1)!|[cx cy cz cw ...]| |.| - length of the vector
         //              |[...         ...]|
         //
-        // Each minor(term) of orts is the volume of subelement's projection
+        // Each minor of orts is the volume of subelement's projection
         //
         // Tip: _nDimentions_+1 = _nNodes_
         //
         /// \todo need method extraction see MathUtils::calculateGeneralizedCrossProduct()
         public : _DimType_ calculateSubElementVolume(int oppositeNodeIndex) const
         {
-            /*_NodeType_ _nodes[_nDimentions_];
-            for(int i=0, j=0; i<_nDimentions_+1; ++i)
-            {
-                // Exclude the opposite node
-                if(i == oppositeNodeIndex) continue;
-                _nodes[j] = (*(this->_ptrToNodesList))[this->_myNodeIndexes[i]];
-                ++j;
-            }
-            return (MathUtils::calculateGeneralizedCrossProduct<
-                        _NodeType_,
-                        _nDimentions_,
-                        _NodeType_,
-                        _DimType_>(_nodes)).length()/
-                    MathUtils::factorial(_nDimentions_-1);*/
             _NodesDummyIterator _iterator = {*this, oppositeNodeIndex};
-            return (MathUtils::calculateGeneralizedCrossProduct<
+            return MathUtils::calculateSimplexVoulumeByCayleyMengerDeterminant<
+                    _NodeType_,
+                    _NodesDummyIterator,
+                    _DimType_>(_iterator,_nDimentions_);
+            /*return (MathUtils::calculateGeneralizedCrossProduct<
                         _NodeType_,
                         _nDimentions_,
                         _NodesDummyIterator,
                         _DimType_>(_iterator)).length()/
-                    MathUtils::factorial(_nDimentions_-1);
+                    MathUtils::factorial(_nDimentions_-1);*/
         }
 
         /*//  For simplex elements

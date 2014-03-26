@@ -37,7 +37,7 @@ namespace MathUtils
 
 /*********************************************************************************************/
     /// Calculate factorial;
-    inline unsigned factorial(unsigned n) noexcept
+    inline unsigned factorial(const unsigned n) noexcept
     {
         unsigned _factorial = 1;
         for(unsigned i=2; i<=n;++i)
@@ -122,6 +122,60 @@ namespace MathUtils
         return _result;
     }
 /*********************************************************************************************/
+    /// Calculates the center of element's (or subelement) circumscribed hypersphere by
+    /// Cayley-Menger determinant;
+    /// see http://mathworld.wolfram.com/Cayley-MengerDeterminant.html;
+    /// or http://en.wikipedia.org/wiki/Distance_geometry;
+    //
+    // solve [G]*{u}={1} to find projectors {u}
+    //
+    //       [     0  d(ab)^2 d(ac)^2 ...]
+    // [G] = [d(ab)^2      0  d(bc)^2 ...]
+    //       [d(ac)^2 d(bc)^2      0  ...]
+    //       [ ...     ...     ...    ...]
+    //
+    //          1   [u1*ax u2*bx u3*cx ...]
+    // {c} = -------[u1*ay u2*bx u3*cx ...]
+    //       sum(ui)[u1*az u2*bx u3*cx ...]
+    //              [ ...   ...   ...  ...]
+    //
+    /// \todo remove exception make calculations for less than 2 nodes
+    template<typename _NodeType_,
+             int _nDimentions_,
+             typename _NodeIteratorType_ = _NodeType_*,
+             typename _DimType_ = MathUtils::Real>
+    _NodeType_ calculateCircumSphereCenterByCayleyMengerDeterminant(
+            const _NodeIteratorType_ nodes,
+            const int nNodes,
+            _DimType_ *sphereRadius = nullptr) /*throw(std::runtime_error)*/
+    {
+        /*if(nNodes<2)
+            throw std::runtime_error("calculateCircumSphereCenterByCayleyMengerDeterminant: "
+                                     "less than two nodes is given");*/
+        Eigen::Matrix<_DimType_, Eigen::Dynamic, Eigen::Dynamic> _M(nNodes,nNodes);
+        for(int i=0;i<nNodes;++i) // per rows
+        {
+            _M(i,i) = _DimType_(0.0);
+            for(int j=i+1;j<nNodes;++j) // per columns
+                _M(i,j) = _M(j,i) = nodes[i].distanceSquare(nodes[j]);
+        }
+        Eigen::Matrix<_DimType_, Eigen::Dynamic, Eigen::Dynamic> _u(nNodes,1);
+        _u.setOnes();
+        _u = _M.lu().solve(_u);
+        _DimType_ _sum = _u.sum();
+        _NodeType_ _result;
+        for(int i=0;i<_nDimentions_;++i)
+        {
+            for(int j=0;j<nNodes;++j)
+                _result[i]+=_u(j,0)*nodes[j][i];
+            _result[i] /= _sum;
+        }
+        if(sphereRadius)
+            *sphereRadius = _result.distance(nodes[0]);
+        return _result;
+    }
+/*********************************************************************************************/
+
     ///Calculate is the given target NOT located inside circumscribed hypershphere;
     /// sphereLocatedNodes - is the pointer to list, where hypersphere located nodes are stored
     /// for further additional checks, if the given target is hypersphere located it be added
@@ -148,7 +202,7 @@ namespace MathUtils
     }
 /*********************************************************************************************/
     template<typename _DimType_ = MathUtils::Real>
-    inline _DimType_ round(_DimType_ x, _DimType_ eps) noexcept
+    inline _DimType_ round(const _DimType_ x, const _DimType_ eps) noexcept
     {
         return std::floor(x*(1.0/eps) + 0.5)/(1.0/eps);
     }
@@ -198,8 +252,8 @@ namespace MathUtils
     }
 
 /*********************************************************************************************/
-    /// Calculate is the given Nodes are in same hyperplane
-    /// see http://en.wikipedia.org/wiki/Coplanarity
+    /// Calculate is the given Nodes are in same hyperplane;
+    /// see http://en.wikipedia.org/wiki/Coplanarity;
     ///
     /// _NodeIteratorType_ - object which has the overloaded [] operator that returns
     ///   the reference to the Node, default it just the _NodeType_*;
@@ -210,11 +264,12 @@ namespace MathUtils
     //
     /// \todo try to not use FullPivLU
     /// \todo try to use fixed size matrix
+    /// \todo remove exception make calculations for less than 2 nodes
     template<typename _NodeType_,
              int _nDimentions_,
              typename _NodeIteratorType_ = _NodeType_*,
              typename _DimType_ = MathUtils::Real>
-    inline bool calculateIsSamePlaneStatus2(const _NodeIteratorType_ nodes[], int nNodes)
+    bool calculateIsSamePlaneStatus2(const _NodeIteratorType_ nodes, const int nNodes)
         throw(std::runtime_error)
     {
         if(nNodes<2)
@@ -282,7 +337,41 @@ namespace MathUtils
         }
         return _rez;
     }
-
+/*********************************************************************************************/
+    /// Calculate simplex element (or subelement) volume by Cayley-Menger determinant;
+    /// see http://mathworld.wolfram.com/Cayley-MengerDeterminant.html;
+    /// or http://en.wikipedia.org/wiki/Distance_geometry;
+    //
+    //      (-1)^(N+1) [0      1       1       1  ...]
+    // V^2 = ----------[1      0  d(ab)^2 d(ac)^2 ...]
+    //       2^N(N!)^2 [1 d(ab)^2      0  d(bc)^2 ...]
+    //                 [1 d(ac)^2 d(bc)^2      0  ...]
+    //                 [   ...     ...      ...   ...]
+    /// \todo test it
+    /// \todo remove exception make calculations for less than 2 nodes
+    template<typename _NodeType_,
+             typename _NodeIteratorType_ = _NodeType_*,
+             typename _DimType_ = MathUtils::Real>
+    _DimType_ calculateSimplexVoulumeByCayleyMengerDeterminant(
+            const _NodeIteratorType_ nodes, const int nNodes) /*throw(std::runtime_error)*/
+    {
+        /*if(nNodes<2)
+            throw std::runtime_error("calculateSimplexVoulumeByCayleyMengerDeterminant: less"
+                                     " than two nodes is given");*/
+        Eigen::Matrix<_DimType_, Eigen::Dynamic, Eigen::Dynamic> _M(nNodes+1,nNodes+1);
+        _M.col(0).fill(_DimType_(1.0));
+        _M.row(0).fill(_DimType_(1.0));
+        _M(0,0) = _DimType_(0.0);
+        for(int i=0;i<nNodes;++i) // per rows
+        {
+            _M(i+1,i+1) = _DimType_(0.0);
+            for(int j=i+1;j<nNodes;++j) // per columns
+                _M(i+1,j+1) = _M(j+1,i+1) = nodes[i].distanceSquare(nodes[j]);
+        }
+        return std::sqrt(
+                    (std::pow(-1,nNodes)/(std::pow(2,nNodes-1)*std::pow(factorial(nNodes-1),2)))*
+                    _M.determinant());
+    }
 /*********************************************************************************************/
 }
 #endif // MATHUTILS_H

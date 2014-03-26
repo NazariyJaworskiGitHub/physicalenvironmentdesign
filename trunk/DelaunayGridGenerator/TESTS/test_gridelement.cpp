@@ -13,14 +13,31 @@ void Test_GridElement::test()
         FEM::Node2D(0,0), FEM::Node2D(1,0), FEM::Node2D(0,1)};
     MathUtils::Real _circumRadius1;
     MathUtils::Real _circumRadius2;
+
     FEM::Node2D _c1 = MathUtils::calculateCircumSphereCenter<FEM::Node2D,2>(
                 _simpleNodes2D,&_circumRadius1);
     WrappedNode2D _c2 = MathUtils::calculateCircumSphereCenter<WrappedNode2D,2>(
                 _wrappedNodes2D,&_circumRadius2);
+
     QVERIFY(_circumRadius1 == _circumRadius2);
     QVERIFY((_c1-_c2).isNull());
     QVERIFY((_c1-FEM::Node2D(0.5,0.5))[0] < 1e-4);
     QVERIFY(std::fabs(_circumRadius1 - std::sqrt(2)/2) < 1e-4);
+
+    MathUtils::Real _circumRadius3;
+    MathUtils::Real _circumRadius4;
+    WrappedNode2D _c3 =
+            MathUtils::calculateCircumSphereCenterByCayleyMengerDeterminant<WrappedNode2D,2>(
+                _wrappedNodes2D,3,&_circumRadius3);
+    WrappedNode2D _c4 =
+            MathUtils::calculateCircumSphereCenterByCayleyMengerDeterminant<WrappedNode2D,2>(
+                _wrappedNodes2D,2,&_circumRadius4);
+    QVERIFY(_circumRadius1 == _circumRadius3);
+    QVERIFY((_c1-_c3).isNull());
+    QVERIFY((_c3-FEM::Node2D(0.5,0.5))[0] < 1e-4);
+    QVERIFY(std::fabs(_circumRadius3 - std::sqrt(2)/2) < 1e-4);
+    QVERIFY((_c4-FEM::Node2D(0.5,0.0))[0] < 1e-4);
+    QVERIFY(std::fabs(_circumRadius4 - 0.5) < 1e-4);
 
     /// \todo 3D
 

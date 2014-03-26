@@ -1,6 +1,6 @@
 #ifndef OPENCLMANAGER_H
 #define OPENCLMANAGER_H
-
+/*
 #define __CL_ENABLE_EXCEPTIONS
 #include "CL/cl.hpp"
 
@@ -36,5 +36,5 @@ class OpenCLManager
 
     public: ~OpenCLManager();
 };
-
+*/
 #endif // OPENCLMANAGER_H
