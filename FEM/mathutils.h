@@ -18,7 +18,6 @@ namespace MathUtils
     ///     max error   2.84217e-014;\n
     /// \li long double\n
     ///     max error   2.77556e-017;\n
-    /// time consuming results are:\n
     ///
     /// Note:
     /// \li FLT_RADIX       2
@@ -45,12 +44,20 @@ namespace MathUtils
         return _factorial;
     }
 /*********************************************************************************************/
+    /// Round to discretization step
+    template<typename _DimType_ = MathUtils::Real>
+    inline _DimType_ round(const _DimType_ x, const _DimType_ eps) noexcept
+    {
+        return std::floor(x*(1.0/eps) + 0.5)/(1.0/eps);
+    }
+
+/*********************************************************************************************/
 
     /// Calculates the center of element's circumscribed hypersphere;
     /// See http://mathworld.wolfram.com/Circumsphere.html
     /// and http://mathworld.wolfram.com/Circumcircle.html
     /// for mathematical issues;
-    /// Element should has non-zero volume!;
+    /// It assumes that simplex has non-zero volume (is correct);
     /// sphereRadius - pointer to the place, where radius should be stored, if need;
     ///
     /// _NodeIteratorType_ - object which has the overloaded [] operator that returns
@@ -83,7 +90,8 @@ namespace MathUtils
              int _nDimentions_,
              typename _NodeIteratorType_ = _NodeType_*,
              typename _DimType_ = MathUtils::Real>
-    _NodeType_ calculateCircumSphereCenter(const _NodeIteratorType_ nodes,
+    _NodeType_ calculateCircumSphereCenter(
+            const _NodeIteratorType_ simplexNodes,
             _DimType_ *sphereRadius = nullptr)
     {
         // build M without first row
@@ -92,10 +100,10 @@ namespace MathUtils
         {
             _M(i,0) = _DimType_(0.0);
             for(int c=0;c<_nDimentions_;++c) // per coordinates
-                _M(i,0) += nodes[i][c] * nodes[i][c];
+                _M(i,0) += simplexNodes[i][c] * simplexNodes[i][c];
 
             for(int j=1; j< _nDimentions_+1; ++j) // per columns
-                _M(i,j) = nodes[i][j-1];
+                _M(i,j) = simplexNodes[i][j-1];
 
             _M(i,_nDimentions_+1) = _DimType_(1.0);
         }
@@ -117,7 +125,7 @@ namespace MathUtils
         }
 
         if(sphereRadius)
-            *sphereRadius = _result.distance(nodes[0]);
+            *sphereRadius = _result.distance(simplexNodes[0]);
 
         return _result;
     }
@@ -126,6 +134,10 @@ namespace MathUtils
     /// Cayley-Menger determinant;
     /// see http://mathworld.wolfram.com/Cayley-MengerDeterminant.html;
     /// or http://en.wikipedia.org/wiki/Distance_geometry;
+    /// It assumes that simplex has non-zero volume (is correct);
+    ///
+    /// _NodeIteratorType_ - object which has the overloaded [] operator that returns
+    ///   the reference to the Node, default it just the _NodeType_*;
     //
     // solve [G]*{u}={1} to find projectors {u}
     //
@@ -139,25 +151,21 @@ namespace MathUtils
     //       sum(ui)[u1*az u2*bx u3*cx ...]
     //              [ ...   ...   ...  ...]
     //
-    /// \todo remove exception make calculations for less than 2 nodes
     template<typename _NodeType_,
              int _nDimentions_,
              typename _NodeIteratorType_ = _NodeType_*,
              typename _DimType_ = MathUtils::Real>
     _NodeType_ calculateCircumSphereCenterByCayleyMengerDeterminant(
-            const _NodeIteratorType_ nodes,
+            const _NodeIteratorType_ simplexNodes,
             const int nNodes,
-            _DimType_ *sphereRadius = nullptr) /*throw(std::runtime_error)*/
+            _DimType_ *sphereRadius = nullptr)
     {
-        /*if(nNodes<2)
-            throw std::runtime_error("calculateCircumSphereCenterByCayleyMengerDeterminant: "
-                                     "less than two nodes is given");*/
         Eigen::Matrix<_DimType_, Eigen::Dynamic, Eigen::Dynamic> _M(nNodes,nNodes);
         for(int i=0;i<nNodes;++i) // per rows
         {
             _M(i,i) = _DimType_(0.0);
             for(int j=i+1;j<nNodes;++j) // per columns
-                _M(i,j) = _M(j,i) = nodes[i].distanceSquare(nodes[j]);
+                _M(i,j) = _M(j,i) = simplexNodes[i].distanceSquare(simplexNodes[j]);
         }
         Eigen::Matrix<_DimType_, Eigen::Dynamic, Eigen::Dynamic> _u(nNodes,1);
         _u.setOnes();
@@ -167,20 +175,25 @@ namespace MathUtils
         for(int i=0;i<_nDimentions_;++i)
         {
             for(int j=0;j<nNodes;++j)
-                _result[i]+=_u(j,0)*nodes[j][i];
+                _result[i]+=_u(j,0)*simplexNodes[j][i];
             _result[i] /= _sum;
         }
         if(sphereRadius)
-            *sphereRadius = _result.distance(nodes[0]);
+            *sphereRadius = _result.distance(simplexNodes[0]);
         return _result;
     }
 /*********************************************************************************************/
 
-    ///Calculate is the given target NOT located inside circumscribed hypershphere;
+    /// Calculate is the given target NOT located inside circumscribed hypershphere;
     /// sphereLocatedNodes - is the pointer to list, where hypersphere located nodes are stored
     /// for further additional checks, if the given target is hypersphere located it be added
     /// to this list;
-    /// \todo check tolerance;
+    ///
+    /// _NodeIteratorType_ - object which has the overloaded [] operator that returns
+    ///   the reference to the Node, default it just the _NodeType_*;
+    ///
+    /// \todo check tolerance, fuzzy comparsions etc;
+    /// \todo fill unit-test
     template<typename _NodeType_,
              typename _DimType_ = MathUtils::Real>
     bool calculateIsNotDelaunayStatus(
@@ -201,12 +214,6 @@ namespace MathUtils
         }
     }
 /*********************************************************************************************/
-    template<typename _DimType_ = MathUtils::Real>
-    inline _DimType_ round(const _DimType_ x, const _DimType_ eps) noexcept
-    {
-        return std::floor(x*(1.0/eps) + 0.5)/(1.0/eps);
-    }
-/*********************************************************************************************/
 
     /// Calculate is the given Nodes are in same hyperplane (2D:line, 3D:plane, and so on);
     /// returns 0 if thrue;
@@ -214,6 +221,7 @@ namespace MathUtils
     /// return >0 if Node is at the right;
     /// Note that the result is depended on Plane defining Nodes order
     /// (it should be counterclockwise);
+    /// It assumes that simplex has non-zero volume (is correct);
     ///
     /// _NodeIteratorType_ - object which has the overloaded [] operator that returns
     ///   the reference to the Node, default it just the _NodeType_*;
@@ -231,7 +239,7 @@ namespace MathUtils
     //
     // And so on for higher dimensions
     //
-    /// \todo rename it to IsCoplanar
+    /// \todo rename it to Clipping test
     template<typename _NodeType_,
              int _nDimentions_,
              typename _NodeIteratorType_ = _NodeType_*,
@@ -264,12 +272,14 @@ namespace MathUtils
     //
     /// \todo try to not use FullPivLU
     /// \todo try to use fixed size matrix
-    /// \todo remove exception make calculations for less than 2 nodes
+    /// \todo make fuzzy comparsions
     template<typename _NodeType_,
              int _nDimentions_,
              typename _NodeIteratorType_ = _NodeType_*,
              typename _DimType_ = MathUtils::Real>
-    bool calculateIsSamePlaneStatus2(const _NodeIteratorType_ nodes, const int nNodes)
+    bool calculateIsSamePlaneStatusByMatrixRank(
+            const _NodeIteratorType_ nodes,
+            const int nNodes)
         throw(std::runtime_error)
     {
         if(nNodes<2)
@@ -286,6 +296,7 @@ namespace MathUtils
 /*********************************************************************************************/
 
     /// Calculate generalized cross product;
+    /// Note that the origin is the firs node;
     ///
     /// _NodeIteratorType_ - object which has the overloaded [] operator that returns
     ///   the reference to the Node, default it just the _NodeType_*;
@@ -296,12 +307,14 @@ namespace MathUtils
     //     [cx cy cz cw ...]
     //     [...         ...]
     //
-    /// \todo try to use lambda functions;
+    // don't forget (-1)^index before minor's determinants
+    //
     template<typename _NodeType_,
              int _nDimentions_,
              typename _NodeIteratorType_ = _NodeType_*,
              typename _DimType_ = MathUtils::Real>
-    _NodeType_ calculateGeneralizedCrossProduct(const _NodeIteratorType_ nodes)
+    _NodeType_ calculateGeneralizedCrossProduct(
+            const _NodeIteratorType_ simplexNodes)
     {
         _NodeType_ _rez;
 
@@ -325,15 +338,15 @@ namespace MathUtils
                 {
                     // We should find the difference of coordinates
                     _M(_minorRowIndexLocal,_minorColumnIndexLocal) =
-                           nodes[_nodesIndex][_minorColumnIndexGlobal] -
-                           nodes[0][_minorColumnIndexGlobal];
+                           simplexNodes[_nodesIndex][_minorColumnIndexGlobal] -
+                           simplexNodes[0][_minorColumnIndexGlobal];
 
                     ++_minorRowIndexLocal;
                 }
 
                 ++_minorColumnIndexLocal;
             }
-            _rez[_axisIndex] = _M.determinant();
+            _rez[_axisIndex] = std::pow(-1.0,_axisIndex) * _M.determinant();
         }
         return _rez;
     }
@@ -341,23 +354,22 @@ namespace MathUtils
     /// Calculate simplex element (or subelement) volume by Cayley-Menger determinant;
     /// see http://mathworld.wolfram.com/Cayley-MengerDeterminant.html;
     /// or http://en.wikipedia.org/wiki/Distance_geometry;
+    ///
+    /// _NodeIteratorType_ - object which has the overloaded [] operator that returns
+    ///   the reference to the Node, default it just the _NodeType_*;
     //
     //      (-1)^(N+1) [0      1       1       1  ...]
     // V^2 = ----------[1      0  d(ab)^2 d(ac)^2 ...]
     //       2^N(N!)^2 [1 d(ab)^2      0  d(bc)^2 ...]
     //                 [1 d(ac)^2 d(bc)^2      0  ...]
     //                 [   ...     ...      ...   ...]
-    /// \todo test it
-    /// \todo remove exception make calculations for less than 2 nodes
     template<typename _NodeType_,
              typename _NodeIteratorType_ = _NodeType_*,
              typename _DimType_ = MathUtils::Real>
     _DimType_ calculateSimplexVoulumeByCayleyMengerDeterminant(
-            const _NodeIteratorType_ nodes, const int nNodes) /*throw(std::runtime_error)*/
+            const _NodeIteratorType_ simplexNodes,
+            const int nNodes)
     {
-        /*if(nNodes<2)
-            throw std::runtime_error("calculateSimplexVoulumeByCayleyMengerDeterminant: less"
-                                     " than two nodes is given");*/
         Eigen::Matrix<_DimType_, Eigen::Dynamic, Eigen::Dynamic> _M(nNodes+1,nNodes+1);
         _M.col(0).fill(_DimType_(1.0));
         _M.row(0).fill(_DimType_(1.0));
@@ -366,11 +378,131 @@ namespace MathUtils
         {
             _M(i+1,i+1) = _DimType_(0.0);
             for(int j=i+1;j<nNodes;++j) // per columns
-                _M(i+1,j+1) = _M(j+1,i+1) = nodes[i].distanceSquare(nodes[j]);
+                _M(i+1,j+1) = _M(j+1,i+1) = simplexNodes[i].distanceSquare(simplexNodes[j]);
         }
         return std::sqrt(
                     (std::pow(-1,nNodes)/(std::pow(2,nNodes-1)*std::pow(factorial(nNodes-1),2)))*
                     _M.determinant());
+    }
+/*********************************************************************************************/
+    /// Calculate the barycentric coordinates of given Node relative to given simplex;
+    /// see http://en.wikipedia.org/wiki/Barycentric_coordinate_system;
+    /// Note, that barycentric coordinates are equal to L-coordinates (Natural-coordinates,
+    /// see FEM-literature) and equal to shape-functions at simplex FEM;
+    /// It assumes that simplex has non-zero volume (is correct);
+    ///
+    /// _NodeIteratorType_ - object which has the overloaded [] operator that returns
+    ///   the reference to the Node, default it just the _NodeType_*;
+    //
+    // [ x ]   [xi xj ...] [ L1 = h1 = N1]
+    // [ y ] = [yi yj ...]*[ L2 = h2 = N2]  h1+h2+...+hn = 1
+    // [...]   [...   ...] [     ...     ]
+    // [ 1 ]   [ 1  1 ...] [ Ln = hn = Nn]
+    //
+    // then
+    //
+    // [ h1]   [xj-xi xk-xi ...]^1 [ x - xi]
+    // [ h2] = [yj-xi yk-yi ...]  *[ y - yi] hn = 1 - h1+...+hn-1
+    // [...]   [ ...   ...  ...]   [  ...  ]
+    //
+    // or just solve the system
+    //
+    template<typename _NodeType_,
+             typename _BarycentricResultNodeType_, //_nDimension_+1
+             int _nDimentions_,
+             typename _NodeIteratorType_ = _NodeType_*,
+             typename _DimType_ = MathUtils::Real>
+    _BarycentricResultNodeType_ calculateBarycentricCoordinates(
+            const _NodeType_ target,
+            const _NodeIteratorType_ simplexNodes)
+    {
+        Eigen::Matrix<_DimType_, _nDimentions_, _nDimentions_> _M;
+        Eigen::Matrix<_DimType_, _nDimentions_, 1> _u;
+        for(int i=0;i<_nDimentions_;++i) // per rows (per coordinates)
+        {
+            _u(i,0) = target[i] - simplexNodes[_nDimentions_][i];
+            for(int j=0;j<_nDimentions_;++j) // per columns (per nodes)
+                // Note, that i subtract the last-one, not the first-one node
+                _M(i,j) = simplexNodes[j][i] - simplexNodes[_nDimentions_][i];
+        }
+        _u = _M.lu().solve(_u);
+        _BarycentricResultNodeType_ _result;
+        for(int i=0;i<_nDimentions_;++i)
+            _result[i] = _u(i,0);
+        _result[_nDimentions_] = 1 - _u.sum();
+        return _result;
+    }
+
+/*********************************************************************************************/
+    /// Calculate if the given segment intersects the given simplex by barycentric test;
+    /// see [(1994) Hanson - Geometry for N-Dimensional Graphics];
+    /// ftp://www.cs.indiana.edu/pub/hanson/Siggraph01QuatCourse/ggndgeom.pdf;
+    /// It assumes that simplex has non-zero volume (is correct);
+    /// returns false if segment is coplanar to simplex's hyperplane;
+    ///
+    /// _NodeIteratorType_ - object which has the overloaded [] operator that returns
+    ///   the reference to the Node, default it just the _NodeType_*;
+    ///
+    /// \todo make fuzzy comparsion
+    template<typename _NodeType_,
+             int _nDimentions_,
+             typename _NodeIteratorType_ = _NodeType_*,
+             typename _DimType_ = MathUtils::Real>
+    bool calculateSegmentSubsimplexBarycenticIntersection(
+            const _NodeType_ segmentBegin,  // C
+            const _NodeType_ segmentEnd,    // P
+            const _NodeIteratorType_ simplexNodes, // {s}
+            _NodeType_ *intersectionNode = nullptr,
+            const _DimType_ eps = 1e-8)
+    {
+        // Find a ray-subplane intersection point;
+        //   Z(t) = segmentBegin + t*(segmentEnd-segmentBegin);
+        //       n*(s0-C)
+        //   t = --------,   n = cross({s}); - normal of simplex;
+        //       n*(P-C)
+        _NodeType_ _ray = segmentEnd-segmentBegin;
+        _NodeType_ _simplexNormal = calculateGeneralizedCrossProduct<
+                _NodeType_, _nDimentions_, _NodeIteratorType_, _DimType_>(simplexNodes);
+        // if n*(P-C) is near zero, ray is coplanar to simplex hyperplane;
+        _DimType_ _proj = _simplexNormal * _ray;
+        if(std::fabs(_proj) < eps)
+            return false;
+        _DimType_ _t = (_simplexNormal * (simplexNodes[0] - segmentBegin))/_proj;
+
+        // Check if point is in segment;
+        if(_t < eps || _t > 1.0 + eps)
+            return false;
+
+        // Check is the point in simplex (barycentric test);
+        _NodeType_ _intersection = segmentBegin + _t*_ray;
+        _DimType_ _simplexVolume = _simplexNormal.length()/factorial(_nDimentions_-1);
+        _DimType_ _sum = _DimType_(0.0);
+        for(int i=0;i<_nDimentions_;++i)
+        {
+            struct _DummyIterator
+            {
+                const _NodeIteratorType_ *ptr;
+                int excludedNodeIndex;
+                const _NodeType_ &replasedNode;
+                const _NodeType_ & operator [](int index) const noexcept
+                {
+                    if(index == excludedNodeIndex)
+                        return replasedNode;
+                    else return (*ptr)[index];
+                }
+            } _dummyIterator = {&simplexNodes, i, _intersection};
+            _DimType_ _barycentricCoordinate = _simplexNormal * calculateGeneralizedCrossProduct<
+                    _NodeType_, _nDimentions_, _DummyIterator>(_dummyIterator)/_simplexVolume;
+            // there is an intersection if barycentric coordinate is >= 0
+            if(_barycentricCoordinate < eps)
+                return false;
+            _sum += _barycentricCoordinate;
+        }
+        if(_sum > 1 + eps)
+            return false;
+        if(intersectionNode)
+            *intersectionNode = _intersection;
+        return true;
     }
 /*********************************************************************************************/
 }

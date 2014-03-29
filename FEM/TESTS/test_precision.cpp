@@ -22,7 +22,8 @@ void Test_Precision::test()
     double b = 1.0;
     long double c = 2.0;
 
-    std::cout   << "+---------------+----------------+---------------+---------------+\n"
+    std::cout   << " Current precision is " << typeid(Real).name() << "\n"
+                << "+---------------+----------------+---------------+---------------+\n"
                 << "|               | float \t | double \t | long double   |\n"
                 << "+---------------+--------------------------------+---------------+\n"
                 << "| DIG10         | " << std::numeric_limits<float>::digits10 << "\t\t | "
