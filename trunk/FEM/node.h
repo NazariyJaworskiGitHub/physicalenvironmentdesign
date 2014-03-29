@@ -38,6 +38,8 @@ namespace FEM
 
         /// \brief Constructor. \n
         /// \warning It takes only \c _nDimentions_ arguments from argument list. \n
+        /// \warning it is not the explicit constructor to make possible {}-initializations, so
+        /// make shure that your parameters are coorect;
         // You have to add extra lines if you want to continue with dimentions
         Node(const _DimType_ x = 0,
              const typename std::conditional<_nDimentions_>=2, _DimType_, void*>::type y = 0,
@@ -142,6 +144,10 @@ namespace FEM
             for(int i=0;i<_nDimentions_;++i)
                 _product+=_coord[i]*target._coord[i];
             return _product;
+        }
+        friend _DimType_ operator*(const Node &n1, const Node &n2) noexcept
+        {
+            return n1.dotProduct(n2);
         }
 
         /// \brief Multiplies Vector on scalar.
@@ -354,8 +360,7 @@ namespace FEM
             else return _coord[index];
         }
 
-        /// \todo rename to isZero
-        bool isNull() const noexcept
+        bool isZero() const noexcept
         {
             for(int i=0; i<_nDimentions_; ++i)
                 if(std::fpclassify(_coord[i])!= FP_ZERO) return false;

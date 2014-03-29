@@ -17,9 +17,9 @@ void Test_Node::test()
         std::cout << "Expected error: " << e.what() << '\n';
     }
     QVERIFY(_n1[0] == 0.0 && _n1[1] == 0.0 && _n1[2] == 0.0);
-    QVERIFY(_n1.isNull());
+    QVERIFY(_n1.isZero());
     _n1[1]=1e-30;
-    QVERIFY(!_n1.isNull());
+    QVERIFY(!_n1.isZero());
     Node3D _n2(1.0,2.0,3.0);
     QVERIFY(_n2[0] == 1.0 && _n2[1] == 2.0 && _n2[2] == 3.0);
     Node3D _n3 = _n2;
