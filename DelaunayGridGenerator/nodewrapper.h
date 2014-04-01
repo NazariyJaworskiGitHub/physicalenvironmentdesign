@@ -50,8 +50,6 @@ namespace DelaunayGridGenerator
 
         public : ~NodeWrapper() noexcept {}
     };
-
-    typedef NodeWrapper<FEM::Node1D> WrappedNode1D;
     typedef NodeWrapper<FEM::Node2D> WrappedNode2D;
     typedef NodeWrapper<FEM::Node3D> WrappedNode3D;
     typedef NodeWrapper<FEM::Node4D> WrappedNode4D;

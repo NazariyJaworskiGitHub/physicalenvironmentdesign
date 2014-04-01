@@ -47,7 +47,8 @@ SOURCES += main.cpp \
     nodewrapper.cpp \
     TESTS/test_gridelement.cpp \
     gridelement.cpp \
-    TESTS/test_nodewrapper.cpp
+    TESTS/test_nodewrapper.cpp \
+    TESTS/test_datamanager.cpp
 
 HEADERS += \
     TESTS/tests_runner.h \
@@ -64,4 +65,5 @@ HEADERS += \
     TESTS/test_gridelement.h \
     gridelement.h \
     TESTS/test_nodewrapper.h \
-    listwrapperinterface.h
+    listwrapperinterface.h \
+    TESTS/test_datamanager.h
