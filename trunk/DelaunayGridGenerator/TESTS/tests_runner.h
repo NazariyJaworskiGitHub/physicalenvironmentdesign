@@ -3,6 +3,7 @@
 
 #include <QStringList>
 
+#include "test_datamanager.h"
 #include "test_gridelement.h"
 #include "test_nodewrapper.h"
 #include "test_piecewiselinearcomplex.h"
@@ -24,6 +25,12 @@ void run_tests_GridElement()
     QTest::qExec(&_myTest_GridElement, arguments);
 }
 
+void run_tests_DataManager()
+{
+    Test_DataManager _myTest_DataManager;
+    QTest::qExec(&_myTest_DataManager, arguments);
+}
+
 void run_tests_DelaunayGridGenerator()
 {
     /// \todo
@@ -41,6 +48,7 @@ void run_tests_all()
 {
     run_tests_NodeWrapper();
     run_tests_GridElement();
+    run_tests_DataManager();
     run_tests_PiecewiseLinearComplex();
     run_tests_DelaunayGridGenerator();
 }

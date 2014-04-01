@@ -2,9 +2,11 @@
 #define DATAMANAGER_H
 
 #include <cmath>
-#include <QList>
+#include <cstring>
+#include <QLinkedList>
 #include <stdexcept>
 
+#include "gridelement.h"
 #include "node.h"
 #include "nodewrapper.h"
 
@@ -14,30 +16,35 @@ namespace DelaunayGridGenerator
         int _nChildDataObjects_ ,
         typename _DataObject_,
         typename _NodeType_,
-        int _nDimentions_>
+        int _nDimentions_,
+        typename _DimType_ = MathUtils::Real>
     class TreeDataManager
-    {
+    {       
         protected: _NodeType_ _minCoordinates;
         protected: _NodeType_ _maxCoordinates;
 
         protected: static constexpr int _nChildren = (int)std::pow(2,_nDimentions_);
         public : static int getChildrenNumber(){return _nChildren;}
-        public : static int getChildDataObjectsNumber() {return _nChildDataObjects_;}
+        public : static int getChildMaxDataObjectsNumber() {return _nChildDataObjects_;}
 
         protected: TreeDataManager *_child[_nChildren];
-        protected: QList<_DataObject_*> _dataObjectsPtrList;
+        protected: QLinkedList<_DataObject_*> _dataObjectsPtrList;
+
+        protected: TreeDataManager const *_ptrToRoot = nullptr;
 
         public : TreeDataManager(const _NodeType_ &minCoordinates,
-                                 const _NodeType_ &maxCoordinates):
+                                 const _NodeType_ &maxCoordinates,
+                                 const TreeDataManager *ptrToRoot = nullptr):
             _minCoordinates(minCoordinates),
-            _maxCoordinates(maxCoordinates)
+            _maxCoordinates(maxCoordinates),
+            _ptrToRoot(ptrToRoot)
         {
-            for(auto i: _child)
-                i = nullptr;
+            for(int i=0; i<_nChildren; ++i)
+                _child[i] = nullptr;
         }
 
         /// Returns index of child that contains target or -1 if there are no such child
-        protected: int _getChildIndex(const _NodeType_ &target) const
+        protected: int _getIndex(const _NodeType_ &target) const
         {
             if(_child[0])
             {
@@ -49,13 +56,52 @@ namespace DelaunayGridGenerator
                     // else 0 at current digit
                     _index<<1; //shift to next digit
                 }
+                return _index;
             }
             return -1; // no such children
         }
 
-        /// Override this to define how the _DataObject_ should be stored
-        /// it should return -1 if no child is found, see _getChildIndex
-        protected: virtual int _getIndex(const _DataObject_ &target) const = 0;
+        /// Returns index of child that contains target or -1 if there are no such child
+        /// Element should be stored at the child, which range fully covers circumscribed
+        /// hypersphere of element;
+        protected: int _getIndex(const _DataObject_ &target) const
+        {
+            if(this->_child[0])
+            {
+                _DimType_ _boundingBoxMinCoord;
+                _DimType_ _boundingBoxMaxCoord;
+
+                int _index = 0;
+                for(int i=_nDimentions_-1;i>=0;--i)
+                {
+                    _boundingBoxMinCoord = target.getCircumSphereCenter()[i] -
+                            target.getCircumSphereRadius();
+                    if(_boundingBoxMinCoord < this->_ptrToRoot->_minCoordinates[i])
+                        _boundingBoxMinCoord = this->_ptrToRoot->_minCoordinates[i];
+
+                    _boundingBoxMaxCoord = target.getCircumSphereCenter()[i] +
+                            target.getCircumSphereRadius();
+                    if(_boundingBoxMaxCoord > this->_ptrToRoot->_maxCoordinates[i])
+                        _boundingBoxMaxCoord = this->_ptrToRoot->_maxCoordinates[i];
+
+                    if(
+                            _boundingBoxMinCoord >=
+                            (this->_minCoordinates[i] + this->_maxCoordinates[i])/2.0 &&
+                            _boundingBoxMaxCoord <= this->_maxCoordinates[i])
+                        _index += 1; // 1 at current digit
+                    else if(
+                            _boundingBoxMinCoord >= this->_minCoordinates[i] &&
+                            _boundingBoxMaxCoord <=
+                            (this->_minCoordinates[i] + this->_maxCoordinates[i])/2.0)
+                        ;// 0 at current digit
+                    else
+                        return -1;
+                    _index<<1; //shift to next digit
+                }
+                return _index;
+            }
+            return -1;
+        }
 
         /// Makes children with new bounds
         // it depends on how the _getChildIndex works e.g:
@@ -65,45 +111,48 @@ namespace DelaunayGridGenerator
             if(_child[0])
                 throw std::runtime_error("_makeChildren(): children already exist");
 
+            _NodeType_ _newMinCoords;
+            _NodeType_ _newMaxCoords;
+
             for(int i=0; i<_nChildren; ++i)
             {
-                _NodeType_ _newMinCoords;
-                _NodeType_ _newMaxCoords;
-
                 for(int j=_nDimentions_-1;j>=0;--j)
                 {
                     if(i&(1<<j))
                     {
-                        _newMinCoords[j] = (_minCoordinates[i]+_maxCoordinates[i])/2.0;
+                        _newMinCoords[j] = (_minCoordinates[j]+_maxCoordinates[j])/2.0;
                         _newMaxCoords[j] = _maxCoordinates[j];
                     }
                     else
                     {
                         _newMinCoords[j] = _minCoordinates[j];
-                        _newMaxCoords[j] = (_minCoordinates[i]+_maxCoordinates[i])/2.0;
+                        _newMaxCoords[j] = (_minCoordinates[j]+_maxCoordinates[j])/2.0;
                     }
                 }
-                _child[i] = new TreeDataManager(_newMinCoords,_newMaxCoords);
+                _child[i] = new TreeDataManager(_newMinCoords,_newMaxCoords, _ptrToRoot);
             }
         }
 
-        /// It uses virtual getIndex method to store the _DataObject_
         /// Stores the given pointer to target, tree will be split if necessary
-        public: void addDataObject(const _DataObject_ *target)
+        /// *target is NOT const, because it modifies cross-references
+        public: void addDataObject(_DataObject_ *target)
         {
             int _index = _getIndex(*target);
             if(_index != -1)
                 _child[_index]->addDataObject(target);
             else
             {
-                /// \todo put here cross-reference section
+
+                this->_dataObjectsPtrList.append(target);
+                target->getPointerToMyselfDM() = this->_dataObjectsPtrList.end();
+                target->getPointerToMyselfDM()--;
 
                 // !_child[0] - for cases, where a data object can't be placed at the child
                 if(_dataObjectsPtrList.size() > _nChildDataObjects_ && !_child[0])
                 {
                     _makeChildren();
 
-                    for(typename QList<_DataObject_*>::iterator _dObjPtr =
+                    for(typename QLinkedList<_DataObject_*>::iterator _dObjPtr =
                         _dataObjectsPtrList.begin();
                         _dObjPtr != _dataObjectsPtrList.end(); )
                     {
@@ -121,29 +170,26 @@ namespace DelaunayGridGenerator
             }
         }
 
-        /// It uses virtual getIndex method to store the _DataObject_
         /// Deletes the given pointer to target
-        public: void deleteDataObject(const _DataObject_ *target) throw(std::runtime_error)
+        /// *target is NOT const, because it modifies cross-references
+        public: void deleteDataObject(_DataObject_ *target) noexcept
         {
             int _index = _getIndex(*target);
             if(_index != -1)
                 _child[_index]->deleteDataObject(target);
             else
-                /// \todo put here cross-reference section
-                /// \todo is this exception is necessary?
-                if(!_dataObjectsPtrList.removeOne(target))
-                    throw std::runtime_error("deleteDataObject(): object is not found");
+                _dataObjectsPtrList.erase(target->getPointerToMyselfDM());
         }
 
         /// Get all data objects that are stored at the tree
         /// nodes that can store the given target
-        public: QList<_DataObject_*> getDataObjects(const _NodeType_ &target) const
+        public: QLinkedList<_DataObject_*> getDataObjects(const _NodeType_ &target) const
         {
-            QList<_DataObject_*> _curList;
-            _curList.append(_dataObjectsPtrList);
-            int _index = _getChildIndex(target);
+            QLinkedList<_DataObject_*> _curList;
+            _curList += _dataObjectsPtrList;
+            int _index = _getIndex(target);
             if(_index != -1)
-                _curList.append(_child[_index]->getDataObjects(target));
+                _curList += _child[_index]->getDataObjects(target);
             return _curList;
         }
 
@@ -151,10 +197,10 @@ namespace DelaunayGridGenerator
         public: void clear()
         {
             if(_child[0])
-                for(auto i : _child)
+                for(int i=0; i<_nChildren; ++i)
                 {
-                    delete i;
-                    i = nullptr;
+                    delete _child[i];
+                    _child[i] = nullptr;
                 }
             _dataObjectsPtrList.clear();
         }
@@ -165,53 +211,9 @@ namespace DelaunayGridGenerator
         }
     };
 
-    template <
-            int _nChildDataObjects_ ,
-            typename _NodeType_,
-            int _nDimentions_>
-    class NodeTreeDataManager :
-            public TreeDataManager<_nChildDataObjects_, _NodeType_, _NodeType_, _nDimentions_>
-    {
-        public: NodeTreeDataManager(const _NodeType_ &minCoordinates,
-                                    const _NodeType_ &maxCoordinates):
-                TreeDataManager<_nChildDataObjects_, _NodeType_, _NodeType_, _nDimentions_>(
-                    minCoordinates, maxCoordinates)
-        {
-
-        }
-
-        private: int _getIndex(const _NodeType_ &target) const override
-        {
-            return _getChildIndex(target);
-        }
-    };
-    typedef NodeTreeDataManager<1, FEM::Node2D, 2> Node2DTreeDataManager;
-    typedef NodeTreeDataManager<1, FEM::Node3D, 3> Node3DTreeDataManager;
-
-    template <
-            int _nChildDataObjects_ ,
-            typename _NodeType_,
-            typename _ElementType_,
-            int _nDimentions_>
-    class ElementTreeDataManager :
-            public TreeDataManager<_nChildDataObjects_, _ElementType_, _NodeType_, _nDimentions_>
-    {
-        public: ElementTreeDataManager(const _NodeType_ &minCoordinates,
-                                       const _NodeType_ &maxCoordinates):
-                TreeDataManager<_nChildDataObjects_, _NodeType_, _NodeType_, _nDimentions_>(
-                    minCoordinates, maxCoordinates)
-        {
-        }
-
-        private: int _getIndex(const _ElementType_ &target) const override
-        {
-            if(this->_child[0])
-            {
-                /// \todo
-            }
-            return -1;
-        }
-    };
+    /// \todo make analysis of how many elements should be optimally stored at the child
+    typedef TreeDataManager<5, Triangle, FEM::Node2D, 2> Element2DTreeDataManager;
+    typedef TreeDataManager<5, Tetrahedron, FEM::Node3D, 3> Element3DTreeDataManager;
 }
 
 #endif // DATAMANAGER_H
