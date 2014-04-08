@@ -12,9 +12,9 @@
 
 namespace FEM
 {
-    template <int _nDimentions_, typename _DimType_ = MathUtils::Real> class Node;
-    template <int _nDimentions_, typename _DimType_ = MathUtils::Real> using Vector =
-        Node<_nDimentions_, _DimType_>;
+    template <int _nDimensions_, typename _DimType_ = MathUtils::Real> class Node;
+    template <int _nDimensions_, typename _DimType_ = MathUtils::Real> using Vector =
+        Node<_nDimensions_, _DimType_>;
 
     typedef Node<1> Node1D;
     typedef Vector<1> Vector1D;
@@ -27,26 +27,26 @@ namespace FEM
 
 
     /// \brief The Node class provides simple support of Nodes and Vectors \n
-    /// Node \f$ u\in DimType^n \f$, where \c _nDimentions_ is the size of coordinates array, i.e. \f$ n \f$. \n
+    /// Node \f$ u\in DimType^n \f$, where \c _nDimensions_ is the size of coordinates array, i.e. \f$ n \f$. \n
     /// Another name for this class is Vector.
-    template <int _nDimentions_, typename _DimType_> class Node
+    template <int _nDimensions_, typename _DimType_> class Node
     {
     protected:
-        _DimType_ _coord[_nDimentions_];  ///< Coordinates array.
+        _DimType_ _coord[_nDimensions_];  ///< Coordinates array.
     public:
         const _DimType_ *getCoordinates() const noexcept {return _coord;}
 
         /// \brief Constructor. \n
-        /// \warning It takes only \c _nDimentions_ arguments from argument list. \n
+        /// \warning It takes only \c _nDimensions_ arguments from argument list. \n
         /// \warning it is not the explicit constructor to make possible {}-initializations, so
         /// make shure that your parameters are coorect;
         // You have to add extra lines if you want to continue with dimentions
         Node(const _DimType_ x = 0,
-             const typename std::conditional<_nDimentions_>=2, _DimType_, void*>::type y = 0,
-             const typename std::conditional<_nDimentions_>=3, _DimType_, void*>::type z = 0,
-             const typename std::conditional<_nDimentions_>=4, _DimType_, void*>::type w = 0) noexcept
+             const typename std::conditional<_nDimensions_>=2, _DimType_, void*>::type y = 0,
+             const typename std::conditional<_nDimensions_>=3, _DimType_, void*>::type z = 0,
+             const typename std::conditional<_nDimensions_>=4, _DimType_, void*>::type w = 0) noexcept
         {
-            switch (_nDimentions_)
+            switch (_nDimensions_)
             {
             case 4:
                 _coord[3] = *((_DimType_*)&w);
@@ -64,12 +64,12 @@ namespace FEM
         /// \warning Bouth nodes shoulde be at the same dimension.
         Node( const Node &n ) noexcept
         {
-            std::memcpy(_coord,n._coord,_nDimentions_*sizeof(_DimType_));
+            std::memcpy(_coord,n._coord,_nDimensions_*sizeof(_DimType_));
         }
 
         Node &operator =(const Node &target) noexcept
         {
-            std::memcpy(_coord,target._coord,_nDimentions_*sizeof(_DimType_));
+            std::memcpy(_coord,target._coord,_nDimensions_*sizeof(_DimType_));
             return *this;
         }
 
@@ -82,14 +82,14 @@ namespace FEM
         _DimType_ distanceSquare( const Node &target ) const noexcept
         {
             _DimType_ _dist = _DimType_(0.0);
-            for(int i=0;i<_nDimentions_;++i)
+            for(int i=0;i<_nDimensions_;++i)
                 _dist+=(_coord[i]-target._coord[i])*(_coord[i]-target._coord[i]);
             return _dist;
         }
         static _DimType_ distanceSquare(const Node &n1, const Node &n2) noexcept
         {
             _DimType_ _dist = _DimType_(0.0);
-            for(int i=0;i<_nDimentions_;++i)
+            for(int i=0;i<_nDimensions_;++i)
                 _dist+=(n1._coord[i]-n2._coord[i])*(n1._coord[i]-n2._coord[i]);
             /// \todo it may be not double, but float or long double
             return _dist;
@@ -97,21 +97,21 @@ namespace FEM
         _DimType_ distance( const Node &target ) const noexcept
         {
             _DimType_ _dist = _DimType_(0.0);
-            for(int i=0;i<_nDimentions_;++i)
+            for(int i=0;i<_nDimensions_;++i)
                 _dist+=(_coord[i]-target._coord[i])*(_coord[i]-target._coord[i]);
             return std::sqrt(_dist);
         }
         static _DimType_ distance(const Node &n1, const Node &n2) noexcept
         {
             _DimType_ _dist = _DimType_(0.0);
-            for(int i=0;i<_nDimentions_;++i)
+            for(int i=0;i<_nDimensions_;++i)
                 _dist+=(n1._coord[i]-n2._coord[i])*(n1._coord[i]-n2._coord[i]);
             return std::sqrt(_dist);
         }
         _DimType_ length() const noexcept
         {
             _DimType_ _length = _DimType_(0.0);
-            for(int i=0;i<_nDimentions_;++i)
+            for(int i=0;i<_nDimensions_;++i)
                 _length+=_coord[i]*_coord[i];
             return std::sqrt(_length);
         }
@@ -122,12 +122,12 @@ namespace FEM
         void normalize() noexcept
         {
             _DimType_ _length = _DimType_(0.0);
-            for(int i=0;i<_nDimentions_;++i)
+            for(int i=0;i<_nDimensions_;++i)
                 _length+=_coord[i]*_coord[i];
             if(_length>_DimType_(0.0))
             {
                 _length = std::sqrt(_length);
-                for(int i=0;i<_nDimentions_;++i)
+                for(int i=0;i<_nDimensions_;++i)
                     _coord[i]/=_length;
             }
         }
@@ -141,7 +141,7 @@ namespace FEM
         _DimType_ dotProduct( const Node &target ) const noexcept
         {
             _DimType_ _product = _DimType_(0.0);
-            for(int i=0;i<_nDimentions_;++i)
+            for(int i=0;i<_nDimensions_;++i)
                 _product+=_coord[i]*target._coord[i];
             return _product;
         }
@@ -154,13 +154,13 @@ namespace FEM
         /// \param[in] scalar .
         void multiply( _DimType_ scalar) noexcept
         {
-            for(int i=0;i<_nDimentions_;++i)
+            for(int i=0;i<_nDimensions_;++i)
                 _coord[i]*=scalar;
         }
 
         Node &operator *= (_DimType_ scalar) noexcept
         {
-            for(int i=0;i<_nDimentions_;++i)
+            for(int i=0;i<_nDimensions_;++i)
                 _coord[i]*=scalar;
             return *this;
         }
@@ -168,7 +168,7 @@ namespace FEM
         friend const Node operator*(const Node &n, _DimType_ scalar) noexcept
         {
             Node _rez;
-            for(int i=0;i<_nDimentions_;++i)
+            for(int i=0;i<_nDimensions_;++i)
                 _rez._coord[i]=n._coord[i]*scalar;
             return _rez;
         }
@@ -176,7 +176,7 @@ namespace FEM
         friend const Node operator*(_DimType_ scalar, const Node &n) noexcept
         {
             Node _rez;
-            for(int i=0;i<_nDimentions_;++i)
+            for(int i=0;i<_nDimensions_;++i)
                 _rez._coord[i]=scalar*n._coord[i];
             return _rez;
         }
@@ -185,19 +185,19 @@ namespace FEM
         /// \param[in] scalar .
         void divide(_DimType_ scalar) noexcept
         {
-            for(int i=0;i<_nDimentions_;++i)
+            for(int i=0;i<_nDimensions_;++i)
                 _coord[i]/=scalar;
         }
         Node &operator /= (_DimType_ scalar) noexcept
         {
-            for(int i=0;i<_nDimentions_;++i)
+            for(int i=0;i<_nDimensions_;++i)
                 _coord[i]/=scalar;
             return *this;
         }
         friend const Node operator/(const Node &n, _DimType_ scalar) noexcept
         {
             Node _rez;
-            for(int i=0;i<_nDimentions_;++i)
+            for(int i=0;i<_nDimensions_;++i)
                 _rez._coord[i]=n._coord[i]/scalar;
             return _rez;
         }
@@ -206,47 +206,47 @@ namespace FEM
         /// \param[in] scalar .
         void addScalar(_DimType_ scalar) noexcept
         {
-            for(int i=0;i<_nDimentions_;++i)
+            for(int i=0;i<_nDimensions_;++i)
                 _coord[i]+=scalar;
         }
 
         Node &operator += (_DimType_ scalar) noexcept
         {
-            for(int i=0;i<_nDimentions_;++i)
+            for(int i=0;i<_nDimensions_;++i)
                 _coord[i]+=scalar;
             return *this;
         }
         Node &operator -= (_DimType_ scalar) noexcept
         {
-            for(int i=0;i<_nDimentions_;++i)
+            for(int i=0;i<_nDimensions_;++i)
                 _coord[i]-=scalar;
             return *this;
         }
         friend const Node operator+(const Node &n, _DimType_ scalar) noexcept
         {
             Node _rez;
-            for(int i=0;i<_nDimentions_;++i)
+            for(int i=0;i<_nDimensions_;++i)
                 _rez._coord[i]=n._coord[i]+scalar;
             return _rez;
         }
         friend const Node operator+(_DimType_ scalar, const Node &n) noexcept
         {
             Node _rez;
-            for(int i=0;i<_nDimentions_;++i)
+            for(int i=0;i<_nDimensions_;++i)
                 _rez._coord[i]=scalar+n._coord[i];
             return _rez;
         }
         friend const Node operator-(const Node &n, _DimType_ scalar) noexcept
         {
             Node _rez;
-            for(int i=0;i<_nDimentions_;++i)
+            for(int i=0;i<_nDimensions_;++i)
                 _rez._coord[i]=n._coord[i]-scalar;
             return _rez;
         }
         friend const Node operator-(_DimType_ scalar, const Node &n) noexcept
         {
             Node _rez;
-            for(int i=0;i<_nDimentions_;++i)
+            for(int i=0;i<_nDimensions_;++i)
                 _rez._coord[i]=scalar-n._coord[i];
             return _rez;
         }
@@ -256,13 +256,13 @@ namespace FEM
         /// \warning Bouth vectors shoulde be at the same dimension.
         void addVector(const Node &target) noexcept
         {
-            for(int i=0;i<_nDimentions_;++i)
+            for(int i=0;i<_nDimensions_;++i)
                 _coord[i]+=target._coord[i];
         }
 
         Node &operator += (const Node &target) noexcept
         {
-            for(int i=0;i<_nDimentions_;++i)
+            for(int i=0;i<_nDimensions_;++i)
                 _coord[i]+=target._coord[i];
             return *this;
         }
@@ -270,7 +270,7 @@ namespace FEM
         friend const Node operator+(const Node &n1, const Node &n2) noexcept
         {
             Node _rez;
-            for(int i=0;i<_nDimentions_;++i)
+            for(int i=0;i<_nDimensions_;++i)
                 _rez._coord[i]=n1._coord[i]+n2._coord[i];
             return _rez;
         }
@@ -280,13 +280,13 @@ namespace FEM
         /// \warning Bouth vectors shoulde be at the same dimension.
         void subtractVector(const Node &target) noexcept
         {
-            for(int i=0;i<_nDimentions_;++i)
+            for(int i=0;i<_nDimensions_;++i)
                 _coord[i]-=target._coord[i];
         }
 
         Node &operator -= (const Node &target) noexcept
         {
-            for(int i=0;i<_nDimentions_;++i)
+            for(int i=0;i<_nDimensions_;++i)
                 _coord[i]-=target._coord[i];
             return *this;
         }
@@ -294,7 +294,7 @@ namespace FEM
         friend const Node operator-(const Node &n1, const Node &n2) noexcept
         {
             Node _rez;
-            for(int i=0;i<_nDimentions_;++i)
+            for(int i=0;i<_nDimensions_;++i)
                 _rez._coord[i]=n1._coord[i]-n2._coord[i];
             return _rez;
         }
@@ -306,7 +306,7 @@ namespace FEM
         /// \warning Bouth nodes shoulde be at the same dimension.
         bool fuzzyCompare(const Node &target, _DimType_ const &eps = 1e-8) const noexcept
         {
-            for(int i=0;i<_nDimentions_;++i)
+            for(int i=0;i<_nDimensions_;++i)
                 if(std::fabs(_coord[i]-target._coord[i])>eps)
                     return false;
             return true;
@@ -338,7 +338,7 @@ namespace FEM
         /// \return Pointer to new Vector3D, which equal to cross product.
         Vector3D crossProduct( const Vector3D &target ) const throw(std::runtime_error)
         {
-            if(_nDimentions_!=3)
+            if(_nDimensions_!=3)
                 throw std::runtime_error("Can't compute the cross product not in 3D");
             return Vector3D(
                     _coord[1]*target.getCoordinates()[2] - _coord[2]*target.getCoordinates()[1],
@@ -348,32 +348,32 @@ namespace FEM
 
         const _DimType_ & operator [](int index) const throw(std::out_of_range)
         {
-            if(index<0 || index>=_nDimentions_)
+            if(index<0 || index>=_nDimensions_)
                 throw std::out_of_range("Node[i], i out of range");
             else return _coord[index];
         }
 
         _DimType_ & operator [](int index) throw(std::out_of_range)
         {
-            if(index<0 || index>=_nDimentions_)
+            if(index<0 || index>=_nDimensions_)
                 throw std::out_of_range("Node[i], i out of range");
             else return _coord[index];
         }
 
         bool isZero() const noexcept
         {
-            for(int i=0; i<_nDimentions_; ++i)
+            for(int i=0; i<_nDimensions_; ++i)
                 if(std::fpclassify(_coord[i])!= FP_ZERO) return false;
             return true;
         }
 
         // You have to add extra lines if you want to continue with dimentions
         Node &operator ()(const _DimType_ x = 0,
-             const typename std::conditional<_nDimentions_>=2, _DimType_, void*>::type y = 0,
-             const typename std::conditional<_nDimentions_>=3, _DimType_, void*>::type z = 0,
-             const typename std::conditional<_nDimentions_>=4, _DimType_, void*>::type w = 0) noexcept
+             const typename std::conditional<_nDimensions_>=2, _DimType_, void*>::type y = 0,
+             const typename std::conditional<_nDimensions_>=3, _DimType_, void*>::type z = 0,
+             const typename std::conditional<_nDimensions_>=4, _DimType_, void*>::type w = 0) noexcept
         {
-            switch (_nDimentions_)
+            switch (_nDimensions_)
             {
             case 4:
                 _coord[3] = *((_DimType_*)&w);
@@ -391,7 +391,7 @@ namespace FEM
         _DimType_ getMaxValue() const noexcept
         {
             _DimType_ _rez = _coord[0];
-            for(int i=1; i<_nDimentions_; ++i)
+            for(int i=1; i<_nDimensions_; ++i)
                 if(_coord[i]>_rez)
                     _rez=_coord[i];
             return _rez;
@@ -399,7 +399,7 @@ namespace FEM
         _DimType_ getMinValue() const noexcept
         {
             _DimType_ _rez = _coord[0];
-            for(int i=1; i<_nDimentions_; ++i)
+            for(int i=1; i<_nDimensions_; ++i)
                 if(_coord[i]<_rez)
                     _rez=_coord[i];
             return _rez;

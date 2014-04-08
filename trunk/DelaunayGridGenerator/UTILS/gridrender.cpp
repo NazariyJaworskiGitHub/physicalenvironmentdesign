@@ -120,7 +120,7 @@ void GridRender::_initializePlc3DNodesBuffers() throw(std::runtime_error)
         throw std::runtime_error("_initializePlc3DNodesBuffers(), bad pointer to PLC");
 
     /// \todo It is some kind of magic!
-    if(_refToRenderingPlc3D->_nodeList.size() != 0)
+    if(_refToRenderingPlc3D->getNodeList().size() != 0)
     {
         std::string _js;
         _js += "ctx.bufferData(";
@@ -130,10 +130,10 @@ void GridRender::_initializePlc3DNodesBuffers() throw(std::runtime_error)
         /// \todo it may change on x64, see http://habrahabr.ru/company/microsoft/blog/133998/
         /// or https://developer.mozilla.org/en-US/docs/Web/JavaScript/Typed_arrays
         _js += "new Float32Array([";
-        for(auto i = _refToRenderingPlc3D->_nodeList.begin();
-            i != _refToRenderingPlc3D->_nodeList.end(); ++i)
+        for(auto i = _refToRenderingPlc3D->getNodeList().begin();
+            i != _refToRenderingPlc3D->getNodeList().end(); ++i)
         {
-            _js += (i == _refToRenderingPlc3D->_nodeList.begin() ? "" : ",");
+            _js += (i == _refToRenderingPlc3D->getNodeList().begin() ? "" : ",");
             _js += generic_double_to_str((*i)[0], buf);
             _js += ",";
             _js += generic_double_to_str((*i)[1], buf);
@@ -161,7 +161,7 @@ void GridRender::_initializePlc3DSegmentsBuffers() throw(std::runtime_error)
     if(!_refToRenderingPlc3D)
         throw std::runtime_error("_initializePlc3DSegmentsBuffers(), bad pointer to PLC");
 
-    if(_refToRenderingPlc3D->_segmentList.size() != 0)
+    if(_refToRenderingPlc3D->getSegmentList().size() != 0)
     {
         std::string _js;
         _js += "ctx.bufferData(";
@@ -170,10 +170,10 @@ void GridRender::_initializePlc3DSegmentsBuffers() throw(std::runtime_error)
         char buf[30];
         /// see WGLWidget::renderiv()
         _js += "new Uint16Array([";
-        for(auto i = _refToRenderingPlc3D->_segmentList.begin();
-            i != _refToRenderingPlc3D->_segmentList.end(); ++i)
+        for(auto i = _refToRenderingPlc3D->getSegmentList().begin();
+            i != _refToRenderingPlc3D->getSegmentList().end(); ++i)
         {
-            _js += (i == _refToRenderingPlc3D->_segmentList.begin() ? "" : ",");
+            _js += (i == _refToRenderingPlc3D->getSegmentList().begin() ? "" : ",");
             _js += itoa((*i).getNodeIndexes()[0], buf, 10);
             _js += ",";
             _js += itoa((*i).getNodeIndexes()[1], buf, 10);
@@ -198,7 +198,7 @@ void GridRender::_initializePlc3DFacetsBuffers() throw(std::runtime_error)
     if(!_refToRenderingPlc3D)
         throw std::runtime_error("_initializePlc3DFacetsBuffers(), bad pointer to PLC");
 
-    if(_refToRenderingPlc3D->_facetList.size() != 0)
+    if(_refToRenderingPlc3D->getFacetList().size() != 0)
     {
         std::string _js;
         _js += "ctx.bufferData(";
@@ -207,10 +207,10 @@ void GridRender::_initializePlc3DFacetsBuffers() throw(std::runtime_error)
         char buf[30];
         /// see WGLWidget::renderiv()
         _js += "new Uint16Array([";
-        for(auto i = _refToRenderingPlc3D->_facetList.begin();
-            i != _refToRenderingPlc3D->_facetList.end(); ++i)
+        for(auto i = _refToRenderingPlc3D->getFacetList().begin();
+            i != _refToRenderingPlc3D->getFacetList().end(); ++i)
         {
-            _js += (i == _refToRenderingPlc3D->_facetList.begin() ? "" : ",");
+            _js += (i == _refToRenderingPlc3D->getFacetList().begin() ? "" : ",");
             _js += itoa((*i).getNodeIndexes()[0], buf, 10);
             _js += ",";
             _js += itoa((*i).getNodeIndexes()[1], buf, 10);
@@ -242,7 +242,7 @@ void GridRender::_drawPlc3DNodes() throw(std::runtime_error)
             _PlcNodesColor[2],
             _PlcNodesColor[3]);
 
-    drawArrays(POINTS, 0, _refToRenderingPlc3D->_nodeList.size());
+    drawArrays(POINTS, 0, _refToRenderingPlc3D->getNodeList().size());
 }
 
 void GridRender::_drawPlc3DSegments() throw(std::runtime_error)
@@ -261,7 +261,7 @@ void GridRender::_drawPlc3DSegments() throw(std::runtime_error)
 
     /// Must be UNSIGNED_SHORT or less
     /// see http://www.khronos.org/opengles/sdk/docs/man/xhtml/glDrawElements.xml
-    drawElements(LINES, _refToRenderingPlc3D->_segmentList.size()*2, UNSIGNED_SHORT, 0);
+    drawElements(LINES, _refToRenderingPlc3D->getSegmentList().size()*2, UNSIGNED_SHORT, 0);
 }
 
 void GridRender::_drawPlc3DFacets() throw(std::runtime_error)
@@ -282,7 +282,7 @@ void GridRender::_drawPlc3DFacets() throw(std::runtime_error)
 
     /// Must be UNSIGNED_SHORT or less
     /// see http://www.khronos.org/opengles/sdk/docs/man/xhtml/glDrawElements.xml
-    drawElements(TRIANGLES, _refToRenderingPlc3D->_facetList.size()*3, UNSIGNED_SHORT, 0);
+    drawElements(TRIANGLES, _refToRenderingPlc3D->getFacetList().size()*3, UNSIGNED_SHORT, 0);
 }
 
 void GridRender::_preloadAllBuffers()

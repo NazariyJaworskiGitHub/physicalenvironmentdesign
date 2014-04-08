@@ -19,12 +19,12 @@ namespace FEM
     ///   _NodeType_    - should hold the numbers per coordinate, for example QVector3d,
     ///                   each number should be accesible by [] operator;
     ///   _nNodes_      - number of nodes per finite element;
-    ///   _nDimentions_ - number of dimentions, where finite element exists
+    ///   _nDimensions_ - number of dimentions, where finite element exists
     /// \todo Finite element is also a simple domain
     /// \todo rename it to Element
     template <typename _NodeType_,
               int _nNodes_,
-              int _nDimentions_,
+              int _nDimensions_,
               typename _DimType_ = MathUtils::Real>
     class FiniteElement
     {

@@ -87,7 +87,7 @@ namespace MathUtils
     /// \todo it uses extended matrix (with those '1'), use compressed matrix;
     /// \todo try to use lambda functions;
     template<typename _NodeType_,
-             int _nDimentions_,
+             int _nDimensions_,
              typename _NodeIteratorType_ = _NodeType_*,
              typename _DimType_ = MathUtils::Real>
     _NodeType_ calculateCircumSphereCenter(
@@ -95,27 +95,27 @@ namespace MathUtils
             _DimType_ *sphereRadius = nullptr)
     {
         // build M without first row
-        Eigen::Matrix<_DimType_, _nDimentions_+1, _nDimentions_+2> _M;
-        for(int i=0;i<_nDimentions_+1;++i) // per rows = per nodes
+        Eigen::Matrix<_DimType_, _nDimensions_+1, _nDimensions_+2> _M;
+        for(int i=0;i<_nDimensions_+1;++i) // per rows = per nodes
         {
             _M(i,0) = _DimType_(0.0);
-            for(int c=0;c<_nDimentions_;++c) // per coordinates
+            for(int c=0;c<_nDimensions_;++c) // per coordinates
                 _M(i,0) += simplexNodes[i][c] * simplexNodes[i][c];
 
-            for(int j=1; j< _nDimentions_+1; ++j) // per columns
+            for(int j=1; j< _nDimensions_+1; ++j) // per columns
                 _M(i,j) = simplexNodes[i][j-1];
 
-            _M(i,_nDimentions_+1) = _DimType_(1.0);
+            _M(i,_nDimensions_+1) = _DimType_(1.0);
         }
 
         // element should has non-zero volume
-        _DimType_ _A = _M.template block<_nDimentions_+1, _nDimentions_+1>(0,1).determinant();
+        _DimType_ _A = _M.template block<_nDimensions_+1, _nDimensions_+1>(0,1).determinant();
 
         _NodeType_ _result;
-        for(int b=0;b<_nDimentions_;++b) //per Bx, By, and so on
+        for(int b=0;b<_nDimensions_;++b) //per Bx, By, and so on
         {
-            Eigen::Matrix<_DimType_, _nDimentions_+1, _nDimentions_+1> _B;
-            for(int _locColInd=0, _globColInd=0; _locColInd<_nDimentions_+1; ++_globColInd)
+            Eigen::Matrix<_DimType_, _nDimensions_+1, _nDimensions_+1> _B;
+            for(int _locColInd=0, _globColInd=0; _locColInd<_nDimensions_+1; ++_globColInd)
             {
                 if(b+1==_globColInd) continue;
                 _B.col(_locColInd) = _M.col(_globColInd);
@@ -152,7 +152,7 @@ namespace MathUtils
     //              [ ...   ...   ...  ...]
     //
     template<typename _NodeType_,
-             int _nDimentions_,
+             int _nDimensions_,
              typename _NodeIteratorType_ = _NodeType_*,
              typename _DimType_ = MathUtils::Real>
     _NodeType_ calculateCircumSphereCenterByCayleyMengerDeterminant(
@@ -172,7 +172,7 @@ namespace MathUtils
         _u = _M.lu().solve(_u);
         _DimType_ _sum = _u.sum();
         _NodeType_ _result;
-        for(int i=0;i<_nDimentions_;++i)
+        for(int i=0;i<_nDimensions_;++i)
         {
             for(int j=0;j<nNodes;++j)
                 _result[i]+=_u(j,0)*simplexNodes[j][i];
@@ -241,19 +241,19 @@ namespace MathUtils
     //
     /// \todo rename it to Clipping test
     template<typename _NodeType_,
-             int _nDimentions_,
+             int _nDimensions_,
              typename _NodeIteratorType_ = _NodeType_*,
              typename _DimType_ = MathUtils::Real>
-    _DimType_ calculateIsSamePlaneStatus(
+    _DimType_ calculateIsCoplanarStatusWithClippingCheck(
             const _NodeType_ &target,
             const _NodeIteratorType_ nodes)
     {
-        Eigen::Matrix<_DimType_, _nDimentions_, _nDimentions_> _M;
-        for(int j=0;j<_nDimentions_;++j) // per columns (coordinetes)
+        Eigen::Matrix<_DimType_, _nDimensions_, _nDimensions_> _M;
+        for(int j=0;j<_nDimensions_;++j) // per columns (coordinetes)
             _M(0,j) = target[j] - nodes[0][j];
-        for(int i=1;i<_nDimentions_;++i) // per rows (nodes)
+        for(int i=1;i<_nDimensions_;++i) // per rows (nodes)
         {
-            for(int j=0;j<_nDimentions_;++j) // per columns (coordinetes)
+            for(int j=0;j<_nDimensions_;++j) // per columns (coordinetes)
                 _M(i,j) = nodes[i][j] - nodes[0][j];
         }
         return _M.determinant();
@@ -274,19 +274,19 @@ namespace MathUtils
     /// \todo try to use fixed size matrix
     /// \todo make fuzzy comparsions
     template<typename _NodeType_,
-             int _nDimentions_,
+             int _nDimensions_,
              typename _NodeIteratorType_ = _NodeType_*,
              typename _DimType_ = MathUtils::Real>
-    bool calculateIsSamePlaneStatusByMatrixRank(
+    bool calculateIsCoplanarStatusByMatrixRank(
             const _NodeIteratorType_ nodes,
             const int nNodes)
         throw(std::runtime_error)
     {
         if(nNodes<2)
             throw std::runtime_error("calculateIsSamePlaneStatus2: less than two nodes is given");
-        Eigen::Matrix<_DimType_, Eigen::Dynamic, Eigen::Dynamic> _M(nNodes-1,_nDimentions_);
+        Eigen::Matrix<_DimType_, Eigen::Dynamic, Eigen::Dynamic> _M(nNodes-1,_nDimensions_);
         for(int i=0;i<nNodes-1;++i) // per rows (nodes)
-            for(int j=0;j<_nDimentions_;++j) // per columns (coordinetes)
+            for(int j=0;j<_nDimensions_;++j) // per columns (coordinetes)
                 _M(i,j) = nodes[i][j]-nodes[nNodes-1][j];
         Eigen::FullPivLU<Eigen::Matrix<_DimType_, Eigen::Dynamic, Eigen::Dynamic>> _luM(_M);
         if(_luM.rank() < nNodes - 1)
@@ -310,7 +310,7 @@ namespace MathUtils
     // don't forget (-1)^index before minor's determinants
     //
     template<typename _NodeType_,
-             int _nDimentions_,
+             int _nDimensions_,
              typename _NodeIteratorType_ = _NodeType_*,
              typename _DimType_ = MathUtils::Real>
     _NodeType_ calculateGeneralizedCrossProduct(
@@ -320,13 +320,13 @@ namespace MathUtils
 
         // Tip: cycle per columns is the cycle per coordinate axis (i, j, k,...)
         // i.e column[0] = i = x, column[1] = j = y, column[2] = k = z, and so on.
-        for(int _axisIndex=0; _axisIndex<_nDimentions_; ++_axisIndex)
+        for(int _axisIndex=0; _axisIndex<_nDimensions_; ++_axisIndex)
         {
             // Local matrix of vectors is the minor per axis
-            Eigen::Matrix<_DimType_, _nDimentions_-1, _nDimentions_-1> _M;
+            Eigen::Matrix<_DimType_, _nDimensions_-1, _nDimensions_-1> _M;
 
             for(int _minorColumnIndexGlobal=0, _minorColumnIndexLocal=0;
-                _minorColumnIndexGlobal<_nDimentions_; ++_minorColumnIndexGlobal)
+                _minorColumnIndexGlobal<_nDimensions_; ++_minorColumnIndexGlobal)
             {
                 if(_minorColumnIndexGlobal == _axisIndex) continue; // exclude current axis
 
@@ -334,7 +334,7 @@ namespace MathUtils
                 // We should subtract some of the nodes to find vectors,
                 // let it be the firs one
                 for(int _nodesIndex=1, _minorRowIndexLocal=0;
-                    _nodesIndex<_nDimentions_; ++_nodesIndex)
+                    _nodesIndex<_nDimensions_; ++_nodesIndex)
                 {
                     // We should find the difference of coordinates
                     _M(_minorRowIndexLocal,_minorColumnIndexLocal) =
@@ -409,27 +409,27 @@ namespace MathUtils
     //
     template<typename _NodeType_,
              typename _BarycentricResultNodeType_, //_nDimension_+1
-             int _nDimentions_,
+             int _nDimensions_,
              typename _NodeIteratorType_ = _NodeType_*,
              typename _DimType_ = MathUtils::Real>
     _BarycentricResultNodeType_ calculateBarycentricCoordinates(
             const _NodeType_ target,
             const _NodeIteratorType_ simplexNodes)
     {
-        Eigen::Matrix<_DimType_, _nDimentions_, _nDimentions_> _M;
-        Eigen::Matrix<_DimType_, _nDimentions_, 1> _u;
-        for(int i=0;i<_nDimentions_;++i) // per rows (per coordinates)
+        Eigen::Matrix<_DimType_, _nDimensions_, _nDimensions_> _M;
+        Eigen::Matrix<_DimType_, _nDimensions_, 1> _u;
+        for(int i=0;i<_nDimensions_;++i) // per rows (per coordinates)
         {
-            _u(i,0) = target[i] - simplexNodes[_nDimentions_][i];
-            for(int j=0;j<_nDimentions_;++j) // per columns (per nodes)
+            _u(i,0) = target[i] - simplexNodes[_nDimensions_][i];
+            for(int j=0;j<_nDimensions_;++j) // per columns (per nodes)
                 // Note, that i subtract the last-one, not the first-one node
-                _M(i,j) = simplexNodes[j][i] - simplexNodes[_nDimentions_][i];
+                _M(i,j) = simplexNodes[j][i] - simplexNodes[_nDimensions_][i];
         }
         _u = _M.lu().solve(_u);
         _BarycentricResultNodeType_ _result;
-        for(int i=0;i<_nDimentions_;++i)
+        for(int i=0;i<_nDimensions_;++i)
             _result[i] = _u(i,0);
-        _result[_nDimentions_] = 1 - _u.sum();
+        _result[_nDimensions_] = 1 - _u.sum();
         return _result;
     }
 
@@ -445,7 +445,7 @@ namespace MathUtils
     ///
     /// \todo make fuzzy comparsion
     template<typename _NodeType_,
-             int _nDimentions_,
+             int _nDimensions_,
              typename _NodeIteratorType_ = _NodeType_*,
              typename _DimType_ = MathUtils::Real>
     bool calculateSegmentSubsimplexBarycenticIntersection(
@@ -462,7 +462,7 @@ namespace MathUtils
         //       n*(P-C)
         _NodeType_ _ray = segmentEnd-segmentBegin;
         _NodeType_ _simplexNormal = calculateGeneralizedCrossProduct<
-                _NodeType_, _nDimentions_, _NodeIteratorType_, _DimType_>(simplexNodes);
+                _NodeType_, _nDimensions_, _NodeIteratorType_, _DimType_>(simplexNodes);
         // if n*(P-C) is near zero, ray is coplanar to simplex hyperplane;
         _DimType_ _proj = _simplexNormal * _ray;
         if(std::fabs(_proj) < eps)
@@ -475,9 +475,9 @@ namespace MathUtils
 
         // Check is the point in simplex (barycentric test);
         _NodeType_ _intersection = segmentBegin + _t*_ray;
-        _DimType_ _simplexVolume = _simplexNormal.length()/factorial(_nDimentions_-1);
+        _DimType_ _simplexVolume = _simplexNormal.length()/factorial(_nDimensions_-1);
         _DimType_ _sum = _DimType_(0.0);
-        for(int i=0;i<_nDimentions_;++i)
+        for(int i=0;i<_nDimensions_;++i)
         {
             struct _DummyIterator
             {
@@ -492,7 +492,7 @@ namespace MathUtils
                 }
             } _dummyIterator = {&simplexNodes, i, _intersection};
             _DimType_ _barycentricCoordinate = _simplexNormal * calculateGeneralizedCrossProduct<
-                    _NodeType_, _nDimentions_, _DummyIterator>(_dummyIterator)/_simplexVolume;
+                    _NodeType_, _nDimensions_, _DummyIterator>(_dummyIterator)/_simplexVolume;
             // there is an intersection if barycentric coordinate is >= 0
             if(_barycentricCoordinate < eps)
                 return false;

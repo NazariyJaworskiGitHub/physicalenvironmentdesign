@@ -10,12 +10,13 @@ namespace DelaunayGridGenerator
 {
     template <
         typename _WrappedNodeType_,
-        int _nDimentions_,
+        int _nDimensions_,
         typename _DimType_ = MathUtils::Real>
+    /// \todo don't use indexes, remake all to pointers;
     class GridElement : public FEM::FiniteElement<
             _WrappedNodeType_,
-            _nDimentions_+1,
-            _nDimentions_,
+            _nDimensions_+1,
+            _nDimensions_,
             _DimType_>
     {
         LIST_WRAPPED_INTERFACE(GridElement)
@@ -27,31 +28,21 @@ namespace DelaunayGridGenerator
         private: _DimType_  _sphereRadius;
         public : _DimType_ getCircumSphereRadius() const noexcept {return _sphereRadius;}
 
-        private: struct _NodesDummyIterator
-        {
-            const GridElement &ref;
-            const _WrappedNodeType_ &operator [] (int index) const noexcept
-            {
-                return (*ref._ptrToNodesList)[ref._myNodeIndexes[index]];
-            }
-        };
-
         public : GridElement(
                 QList<_WrappedNodeType_> *ptrToNodesList, int *nodeIndexesPtr):
-            FEM::FiniteElement<_WrappedNodeType_,_nDimentions_+1,_nDimentions_,_DimType_>(
+            FEM::FiniteElement<_WrappedNodeType_,_nDimensions_+1,_nDimensions_,_DimType_>(
                         ptrToNodesList,nodeIndexesPtr),
             _myState(UNKNOWN)
         {
-            _NodesDummyIterator _iterator = {*this};
             _sphereCenter = MathUtils::calculateCircumSphereCenter<
                     _WrappedNodeType_,
-                    _nDimentions_,
-                    _NodesDummyIterator,
+                    _nDimensions_,
+                    FEM::FiniteElement<_WrappedNodeType_,_nDimensions_+1,_nDimensions_,_DimType_>,
                     _DimType_>(
-                        _iterator, &_sphereRadius);
+                        *this, &_sphereRadius);
         }
         public : GridElement(const GridElement &target) noexcept :
-            FEM::FiniteElement<_WrappedNodeType_,_nDimentions_+1,_nDimentions_,_DimType_>(target),
+            FEM::FiniteElement<_WrappedNodeType_,_nDimensions_+1,_nDimensions_,_DimType_>(target),
             _ptrToMyself(target._ptrToMyself),
             _myState(target._myState),
             _sphereCenter(target._sphereCenter),
@@ -75,6 +66,37 @@ namespace DelaunayGridGenerator
 
     typedef GridElement<WrappedNode2D,2> Triangle;
     typedef GridElement<WrappedNode3D,3> Tetrahedron;
+
+    template <
+        typename _WrappedNodeType_,
+        int _nDimensions_,
+        typename _DimType_ = MathUtils::Real>
+    /// \todo don't use indexes, remake all to pointers;
+    class GridFacet : public FEM::FiniteElement<
+            _WrappedNodeType_,
+            _nDimensions_,
+            _nDimensions_,
+            _DimType_>
+    {
+        LIST_WRAPPED_INTERFACE(GridFacet)
+
+        public : GridFacet(
+                QList<_WrappedNodeType_> *ptrToNodesList, int *nodeIndexesPtr):
+            FEM::FiniteElement<_WrappedNodeType_,_nDimensions_,_nDimensions_,_DimType_>(
+                        ptrToNodesList,nodeIndexesPtr),
+            _myState(UNKNOWN)
+        {
+        }
+        public : GridFacet(const GridFacet &target) noexcept :
+            FEM::FiniteElement<_WrappedNodeType_,_nDimensions_,_nDimensions_,_DimType_>(target),
+            _ptrToMyself(target._ptrToMyself),
+            _myState(target._myState)
+        {
+        }
+
+
+        public : ~GridFacet() noexcept {}
+    };
 }
 
 #endif // SIMPLEXELEMENTWRAPPER_H
