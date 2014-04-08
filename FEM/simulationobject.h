@@ -10,7 +10,7 @@
 
 namespace FEM
 {
-    template <typename _NodeType_, int _nDimentions_, typename _DimType_ = MathUtils::Real>
+    template <typename _NodeType_, int _nDimensions_, typename _DimType_ = MathUtils::Real>
     class SimulationObject
     {
         private: QMap<int, BoundaryCondition<_DimType_>> _myBoundaryConditions;

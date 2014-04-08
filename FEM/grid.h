@@ -13,7 +13,7 @@ namespace FEM
 {
     template <
         typename _NodeType_,
-        int _nDimentions_,
+        int _nDimensions_,
         typename _ElementType_,
         typename _DimType_ = MathUtils::Real>
     // Tip! For now, grid can hold only the same type of elements
@@ -111,7 +111,7 @@ namespace FEM
 
                             _myElementBindedBoundaryConditions[_elementIndex].second->getFlux() /
 
-                            _nDimentions_;
+                            _nDimensions_;
 
                     for(int _nodeIndex=0;_nodeIndex<_ElementType_::getNodesNumber();++_nodeIndex)
                     {

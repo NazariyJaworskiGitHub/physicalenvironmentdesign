@@ -12,24 +12,28 @@
             return _ptrToMyself;} \
     private: STATE _myState; \
     public : STATE getState() const noexcept {return _myState;} \
-    public : void appendToList(QLinkedList< TYPE *> &list, STATE newState) noexcept \
+    private: void _appendToList(QLinkedList< TYPE *> &list, STATE newState) noexcept \
     { \
         _myState = newState; \
         list.append(this); \
         _ptrToMyself = list.end(); \
         --_ptrToMyself; \
     } \
+    public : void appendToAliveList(QLinkedList< TYPE *> &aliveList) noexcept \
+    { \
+        _appendToList(aliveList, ALIVE);\
+    } \
     public : void kill(QLinkedList< TYPE *> &aliveList, \
                        QLinkedList< TYPE *> &killedList) noexcept \
     { \
         aliveList.erase(_ptrToMyself); \
-        appendToList(killedList, DEAD); \
+        _appendToList(killedList, DEAD); \
     } \
     public : void resurrect(QLinkedList< TYPE *> &aliveList, \
                             QLinkedList< TYPE *> &killedList) noexcept \
     { \
         killedList.erase(_ptrToMyself); \
-        appendToList(aliveList, ALIVE); \
+        _appendToList(aliveList, ALIVE); \
     }
 
 /// Macro implements methods for DataManager binding

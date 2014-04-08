@@ -6,22 +6,22 @@
 
 namespace FEM
 {
-    /// Note, that _nDimentions_+1 = _nNodes_
+    /// Note, that _nDimensions_+1 = _nNodes_
     template <typename _NodeType_,
-              int _nDimentions_,
+              int _nDimensions_,
               typename _DimType_ = MathUtils::Real>
     class SimplexElement :
-            public FiniteElement<_NodeType_, _nDimentions_+1, _nDimentions_, _DimType_>
+            public FiniteElement<_NodeType_, _nDimensions_+1, _nDimensions_, _DimType_>
     {
         public : SimplexElement(const SimplexElement &target) noexcept:
-            FiniteElement<_NodeType_, _nDimentions_+1, _nDimentions_, _DimType_>(target)
+            FiniteElement<_NodeType_, _nDimensions_+1, _nDimensions_, _DimType_>(target)
         {
         }
 
         public : SimplexElement(
             QList<_NodeType_> *ptrToNodesList,
             const int *_nodeIndexesPtr) throw(std::out_of_range):
-            FiniteElement<_NodeType_, _nDimentions_+1, _nDimentions_, _DimType_>(
+            FiniteElement<_NodeType_, _nDimensions_+1, _nDimensions_, _DimType_>(
                 ptrToNodesList,_nodeIndexesPtr)
         {
         }
@@ -48,7 +48,7 @@ namespace FEM
         //
         // Each minor of orts is the volume of subelement's projection
         //
-        // Tip: _nDimentions_+1 = _nNodes_
+        // Tip: _nDimensions_+1 = _nNodes_
         //
         /// \todo need method extraction see MathUtils::calculateGeneralizedCrossProduct()
         public : _DimType_ calculateSubElementVolume(int oppositeNodeIndex) const
@@ -57,13 +57,13 @@ namespace FEM
             return MathUtils::calculateSimplexVoulumeByCayleyMengerDeterminant<
                     _NodeType_,
                     _NodesDummyIterator,
-                    _DimType_>(_iterator,_nDimentions_);
+                    _DimType_>(_iterator,_nDimensions_);
             /*return (MathUtils::calculateGeneralizedCrossProduct<
                         _NodeType_,
-                        _nDimentions_,
+                        _nDimensions_,
                         _NodesDummyIterator,
                         _DimType_>(_iterator)).length()/
-                    MathUtils::factorial(_nDimentions_-1);*/
+                    MathUtils::factorial(_nDimensions_-1);*/
         }
 
         /*//  For simplex elements
@@ -88,7 +88,7 @@ namespace FEM
             for(int i=0;i<_nNodes_;++i)
             {
                 _C(i,0) = 1;
-                for(int j=0; j< _nDimentions_; ++j)
+                for(int j=0; j< _nDimensions_; ++j)
                    _C(i,j+1) = (*_ptrToNodesList)[_myNodeIndexes[i]][j];
             }
 
@@ -101,7 +101,7 @@ namespace FEM
                 throw std::logic_error("FiniteElement has zero-volume");
 
             _DimType_ _factorial = 1;
-            for(int i=2; i<=_nDimentions_;++i)
+            for(int i=2; i<=_nDimensions_;++i)
                 _factorial*=i;
             return _determinant/_factorial;
         }*/
@@ -135,28 +135,28 @@ namespace FEM
         //  Segerlind  L 1976 Applied Finite Element Analysis
         //  (New York: Wiley, John, and Sons, Incorporated)
         //
-        // Tip: _nDimentions_+1 = _nNodes_
+        // Tip: _nDimensions_+1 = _nNodes_
         //
         /// \todo it fits only up to 4x4 matrices
-        public : Eigen::Matrix<_DimType_, _nDimentions_+1, _nDimentions_+1>
+        public : Eigen::Matrix<_DimType_, _nDimensions_+1, _nDimensions_+1>
                 calculateStiffnessMatrixEllipticEquation(
                 const _DimType_ *ptrToConductionCoefficients) const
                 throw (std::runtime_error)
         {
             // prepare conduction matrix
-            Eigen::Matrix<_DimType_, _nDimentions_, _nDimentions_> _conductionMatrix;
-            _conductionMatrix.setZero(_nDimentions_, _nDimentions_);
-            for(int i=0;i<_nDimentions_;i++)
+            Eigen::Matrix<_DimType_, _nDimensions_, _nDimensions_> _conductionMatrix;
+            _conductionMatrix.setZero(_nDimensions_, _nDimensions_);
+            for(int i=0;i<_nDimensions_;i++)
                 _conductionMatrix(i,i) = ptrToConductionCoefficients[i];
 
-            Eigen::Matrix<_DimType_, _nDimentions_+1, _nDimentions_+1> _C;
-            Eigen::Matrix<_DimType_, _nDimentions_+1, _nDimentions_+1> _invC;
+            Eigen::Matrix<_DimType_, _nDimensions_+1, _nDimensions_+1> _C;
+            Eigen::Matrix<_DimType_, _nDimensions_+1, _nDimensions_+1> _invC;
 
             // calculate [C]
-            for(int i=0;i<_nDimentions_+1;++i)
+            for(int i=0;i<_nDimensions_+1;++i)
             {
                 _C(i,0) = _DimType_(1.0);
-                for(int j=0; j< _nDimentions_; ++j)
+                for(int j=0; j< _nDimensions_; ++j)
                    _C(i,j+1) = (*(this->_ptrToNodesList))[this->_myNodeIndexes[i]][j];
             }
 
@@ -169,14 +169,14 @@ namespace FEM
             if(!_isInversible)
                 throw std::runtime_error("SimplexElement has zero-volume");
 
-            _DimType_ _volume = _determinant/MathUtils::factorial(_nDimentions_);
+            _DimType_ _volume = _determinant/MathUtils::factorial(_nDimensions_);
 
             // calculate [B]
             // tip!: it is just the references:
             auto _B =
-                    _invC.template block<_nDimentions_+1 -1, _nDimentions_+1>(1,0);
+                    _invC.template block<_nDimensions_+1 -1, _nDimensions_+1>(1,0);
             auto _transposedB =
-                    _invC.transpose().template block<_nDimentions_+1, _nDimentions_+1 -1>(0,1);
+                    _invC.transpose().template block<_nDimensions_+1, _nDimensions_+1 -1>(0,1);
 
             // calculate and return [K]
             return _volume * _transposedB * _conductionMatrix * _B;

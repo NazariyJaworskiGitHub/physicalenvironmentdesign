@@ -16,14 +16,14 @@ namespace DelaunayGridGenerator
         int _nChildDataObjects_ ,
         typename _DataObject_,
         typename _NodeType_,
-        int _nDimentions_,
+        int _nDimensions_,
         typename _DimType_ = MathUtils::Real>
     class TreeDataManager
     {       
         protected: _NodeType_ _minCoordinates;
         protected: _NodeType_ _maxCoordinates;
 
-        protected: static constexpr int _nChildren = (int)std::pow(2,_nDimentions_);
+        protected: static constexpr int _nChildren = (int)std::pow(2,_nDimensions_);
         public : static int getChildrenNumber(){return _nChildren;}
         public : static int getChildMaxDataObjectsNumber() {return _nChildDataObjects_;}
 
@@ -49,7 +49,7 @@ namespace DelaunayGridGenerator
             if(_child[0])
             {
                 int _index = 0;
-                for(int i=_nDimentions_-1;i>=0;--i)
+                for(int i=_nDimensions_-1;i>=0;--i)
                 {
                     if(target[i] >= (_minCoordinates[i]+_maxCoordinates[i])/2.0)
                         _index += 1; // 1 at current digit
@@ -72,7 +72,7 @@ namespace DelaunayGridGenerator
                 _DimType_ _boundingBoxMaxCoord;
 
                 int _index = 0;
-                for(int i=_nDimentions_-1;i>=0;--i)
+                for(int i=_nDimensions_-1;i>=0;--i)
                 {
                     _boundingBoxMinCoord = target.getCircumSphereCenter()[i] -
                             target.getCircumSphereRadius();
@@ -96,6 +96,7 @@ namespace DelaunayGridGenerator
                         ;// 0 at current digit
                     else
                         return -1;
+                    /// \todo test it
                     _index<<1; //shift to next digit
                 }
                 return _index;
@@ -116,7 +117,7 @@ namespace DelaunayGridGenerator
 
             for(int i=0; i<_nChildren; ++i)
             {
-                for(int j=_nDimentions_-1;j>=0;--j)
+                for(int j=_nDimensions_-1;j>=0;--j)
                 {
                     if(i&(1<<j))
                     {

@@ -22,21 +22,32 @@ namespace DelaunayGridGenerator
     {
         LIST_WRAPPED_INTERFACE(NodeWrapper)
 
+        /// Use it to know the global index of current node, whatever it means;
+        /// \todo don't use indexes, remake all to pointers;
+        private: int _myGlobalIndex = -1;
+        public : int getGlobalIndex() const noexcept
+        {
+            return _myGlobalIndex;
+        }
+
         /// \todo it makes copy, avoid that
-        public : NodeWrapper(const _NodeType_ &target) noexcept:
+        public : NodeWrapper(const _NodeType_ &target, int globalIndex = -1) noexcept:
             _NodeType_(target),
-            _myState(UNKNOWN)
+            _myState(UNKNOWN),
+            _myGlobalIndex(globalIndex)
         {
         }
-        public : NodeWrapper(const NodeWrapper &target) noexcept:
+        public : NodeWrapper(const NodeWrapper &target, int globalIndex = -1) noexcept:
             _NodeType_(target),
             _ptrToMyself(target._ptrToMyself),
-            _myState(target._myState)
+            _myState(target._myState),
+            _myGlobalIndex(globalIndex)
         {
         }
         public : NodeWrapper() noexcept:
             _NodeType_(),
-            _myState(UNKNOWN)
+            _myState(UNKNOWN),
+            _myGlobalIndex(-1)
         {
         }
 

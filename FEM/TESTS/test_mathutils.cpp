@@ -64,11 +64,11 @@ void Test_MathUtils::test_calculateIsNotDelaunayStatus()
 void Test_MathUtils::test_calculateIsSamePlaneStatus()
 {
     Node2D nodes[] = {{0.2,0.2}, {0.8,0.5}};
-    Real _result = calculateIsSamePlaneStatus<Node2D,2>(Node2D(0.6,0.2),nodes);
+    Real _result = calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(Node2D(0.6,0.2),nodes);
     QVERIFY(_result > 0);
-    _result = calculateIsSamePlaneStatus<Node2D,2>(Node2D(0.2,0.4),nodes);
+    _result = calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(Node2D(0.2,0.4),nodes);
     QVERIFY(_result < 0);
-    _result = calculateIsSamePlaneStatus<Node2D,2>(Node2D(0.4,0.3),nodes);
+    _result = calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(Node2D(0.4,0.3),nodes);
     QVERIFY(std::fabs(_result) < 1e-4);
 }
 
@@ -79,34 +79,34 @@ void Test_MathUtils::test_calculateIsSamePlaneStatusByMatrixRank()
 
     try
     {
-        _result = calculateIsSamePlaneStatusByMatrixRank<Node3D,3>(_simpleNodes3D,1);
+        _result = calculateIsCoplanarStatusByMatrixRank<Node3D,3>(_simpleNodes3D,1);
     }
     catch(std::exception &e)
     {
         QVERIFY(e.what());
         std::cout << "Expected error: " << e.what() << '\n';
     }
-    _result = calculateIsSamePlaneStatusByMatrixRank<Node3D,3>(_simpleNodes3D,2);
+    _result = calculateIsCoplanarStatusByMatrixRank<Node3D,3>(_simpleNodes3D,2);
     QVERIFY(!_result);
-    _result = calculateIsSamePlaneStatusByMatrixRank<Node3D,3>(_simpleNodes3D,3);
+    _result = calculateIsCoplanarStatusByMatrixRank<Node3D,3>(_simpleNodes3D,3);
     QVERIFY(!_result);
-    _result = calculateIsSamePlaneStatusByMatrixRank<Node3D,3>(_simpleNodes3D,4);
+    _result = calculateIsCoplanarStatusByMatrixRank<Node3D,3>(_simpleNodes3D,4);
     QVERIFY(!_result);
     Node3D _simpleNodes3D_2[] = {{1,2,3}, {1,2,3}, {2,4,6}, {4,8,12}};
     try
     {
-        _result = calculateIsSamePlaneStatusByMatrixRank<Node3D,3>(_simpleNodes3D_2,0);
+        _result = calculateIsCoplanarStatusByMatrixRank<Node3D,3>(_simpleNodes3D_2,0);
     }
     catch(std::exception &e)
     {
         QVERIFY(e.what());
         std::cout << "Expected error: " << e.what() << '\n';
     }
-    _result = calculateIsSamePlaneStatusByMatrixRank<Node3D,3>(_simpleNodes3D_2,2);
+    _result = calculateIsCoplanarStatusByMatrixRank<Node3D,3>(_simpleNodes3D_2,2);
     QVERIFY(_result);
-    _result = calculateIsSamePlaneStatusByMatrixRank<Node3D,3>(_simpleNodes3D_2,3);
+    _result = calculateIsCoplanarStatusByMatrixRank<Node3D,3>(_simpleNodes3D_2,3);
     QVERIFY(_result);
-    _result = calculateIsSamePlaneStatusByMatrixRank<Node3D,3>(_simpleNodes3D_2,4);
+    _result = calculateIsCoplanarStatusByMatrixRank<Node3D,3>(_simpleNodes3D_2,4);
     QVERIFY(_result);
 }
 
