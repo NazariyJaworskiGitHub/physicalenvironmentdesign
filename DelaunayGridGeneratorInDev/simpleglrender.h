@@ -7,6 +7,7 @@
 #include <QMouseEvent>
 
 #include "piecewiselinearcomplex.h"
+#include "generator.h"
 
 class SimpleGLRender : public QGLWidget
 {
@@ -18,6 +19,8 @@ class SimpleGLRender : public QGLWidget
     public: double angleOX;
     public: bool isPressed;
     public: QString dataString;
+
+    private: void _drawOrigin() noexcept;
 
     /// default [1.0, 1.0, 1.0, 1.0] - white, see constructor
     private: FEM::Vector4D _PlcNodesColor;
@@ -38,9 +41,9 @@ class SimpleGLRender : public QGLWidget
         _PlcFacetsColor(R,G,B,A);
     }
 
-    private: DelaunayGridGenerator::CommonPlc3D *_refToRenderingPlc3D = nullptr;
+    private: const DelaunayGridGenerator::CommonPlc3D *_refToRenderingPlc3D = nullptr;
     public: void setRenderingPiecewiseLinearComplex(
-            DelaunayGridGenerator::CommonPlc3D *renderingPlc3D) throw (std::logic_error)
+            const DelaunayGridGenerator::CommonPlc3D *renderingPlc3D) throw (std::logic_error)
     {
         _refToRenderingPlc3D = renderingPlc3D;
     }
@@ -48,7 +51,17 @@ class SimpleGLRender : public QGLWidget
     private: void _drawPlc3DSegments() throw(std::runtime_error);
     private: void _drawPlc3DFacets() throw(std::runtime_error);
 
-    private: void _drawOrigin() noexcept;
+    private: const DelaunayGridGenerator::DelaunayGridGenerator3D
+        *_refToRenderingDelaunayGridGenerator3D = nullptr;
+    public: void setRenderingDelaunayGridGenerator3D(
+            const DelaunayGridGenerator::DelaunayGridGenerator3D *renderingDelaunayGridGenerator3D)
+        throw (std::logic_error)
+    {
+        _refToRenderingDelaunayGridGenerator3D = renderingDelaunayGridGenerator3D;
+    }
+    private: void _drawDelaunayGridGenerator3DNodes() throw(std::runtime_error);
+    private: void _drawDelaunayGridGenerator3DFacets() throw(std::runtime_error);
+    private: void _drawDelaunayGridGenerator3DElements() throw(std::runtime_error);
 
     public: SimpleGLRender(QWidget *pwgt) noexcept;
     public: void initializeGL() override;
