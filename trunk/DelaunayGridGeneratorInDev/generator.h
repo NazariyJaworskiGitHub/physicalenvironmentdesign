@@ -20,6 +20,7 @@ namespace DelaunayGridGenerator
     /// that's why one need to use wrapped objects with self-pointers to achieve O(1) in
     /// both cases. See help references or
     /// http://qt-project.org/doc/qt-5.1/qtcore/containers.html#algorithmic-complexity
+    /// \todo the <int> is used for node indexing, but what if there will be more nodes?
     template <
         typename _WrappedNodeType_,
         typename _FacetType_,
@@ -31,6 +32,8 @@ namespace DelaunayGridGenerator
         typename _DimType_ = MathUtils::Real>
     class Generator
     {
+        private: _DimType_ _DiscretizationStep;
+
         private: QList<_WrappedNodeType_>           _nodesList;
 
         // "real" lists of manipulated object
@@ -91,9 +94,12 @@ namespace DelaunayGridGenerator
         }
 
         /// If grid is empty, constructs the first facet,
-        /// append it to alive facets and start the front.
         /// It should be done in O(N^(_nDimensions_-1)) steps
-        private: void _constructFirstFacet() throw(std::runtime_error)
+        /// Algorithm:
+        /// 1) Take first node;
+        /// 2) Take next node, which match Delaunay criteria (check all nodes);
+        /// 3) repeat step 2) until one finds all needed nodes.
+        private: _FacetType_* _constructFirstFacet() throw(std::runtime_error)
         {
             if(_aliveNodesPtrs.size() < _nDimensions_)
                 throw std::runtime_error("_constructFirstFacet(),  not enough nodes");
@@ -157,13 +163,16 @@ namespace DelaunayGridGenerator
                                 _nDimensions_,
                                 _NodeIndexIterator,
                                 _DimType_>(_indexIterator, i+1, &_sphereRadius);
+                    _sphereRadius = MathUtils::round(_sphereRadius,_DiscretizationStep);
                     for( ; _curAliveNode!=_nodesList.end(); ++_curAliveNode)
                     {
                         // ignore already used nodes
                         if(_isAlreadyUsedNode(
                                 (*_curAliveNode).getGlobalIndex(),_facetNodesIndexes,i))
                             continue;
-                        _DimType_ _dist = (*_curAliveNode).distance(_sphereCenter);
+                        _DimType_ _dist = MathUtils::round(
+                                    (*_curAliveNode).distance(_sphereCenter),
+                                    _DiscretizationStep);
                         if(_dist < _sphereRadius)
                         {
                             _facetNodesIndexes[i] = (*_curAliveNode).getGlobalIndex();
@@ -174,15 +183,98 @@ namespace DelaunayGridGenerator
                 }
             }
 
-            // Construct first facet;
-            _FacetType_ *_newAliveFacet = new _FacetType_(&_nodesList, _facetNodesIndexes);
-            _newAliveFacet->setFrontConstructionDirectionBouth();
-            _newAliveFacet->appendToAliveList(_aliveFacetsPtrs);
+            return new _FacetType_(&_nodesList, _facetNodesIndexes);
+            // It will be GridFacet::DIRECTION_BOUTH by default, see constructor
         }
 
         /// Construct element with given facet
-        private: void _constructElement(_FacetType_ *_curFacet) throw(std::runtime_error)
+        /// It should be done in O(N) steps
+        private: _WrappedElementType_* _constructElement(_FacetType_ *_curFacet)
+            throw(std::runtime_error)
         {
+            if(_aliveNodesPtrs.size() < _nDimensions_+1)
+                throw std::runtime_error("_constructElement(),  not enough nodes");
+
+            int _ElementNodesIndexes[_nDimensions_+1];
+            memcpy(_ElementNodesIndexes,_curFacet->getNodeIndexes(),_nDimensions_*sizeof(int));
+            _NodeIndexIterator _indexIterator = {*this,_ElementNodesIndexes};
+            QList<_WrappedNodeType_*> _sphereLocatedNodes;
+            _WrappedNodeType_ _sphereCenter;
+            _DimType_ _sphereRadius;
+
+            for(auto _curAliveNode = _aliveNodesPtrs.begin();
+                _curAliveNode != _aliveNodesPtrs.end(); ++_curAliveNode)
+            {
+                // ignore already used nodes
+                if(_isAlreadyUsedNode(
+                            (*_curAliveNode)->getGlobalIndex(),
+                            _ElementNodesIndexes,
+                            _nDimensions_))
+                    continue;
+
+                // Check nodes side relative to facet
+                _DimType_ _determinant = MathUtils::round(
+                            MathUtils::calculateIsCoplanarStatusWithClippingCheck<
+                                _WrappedNodeType_,
+                                _nDimensions_,
+                                _NodeIndexIterator,
+                                _DimType_>
+                                (**_curAliveNode,_indexIterator),
+                            _DiscretizationStep);
+                if(_determinant == _DimType_(0.0) ||            // Node is lineary dependent
+                        (_determinant < _DimType_(0.0) &&       // GridFacet::DIRECTION_LEFT
+                         _curFacet->getFrontConstructionDirection()
+                         == _FacetType_::DIRECTION_RIGHT) ||
+                        (_determinant > _DimType_(0.0) &&       // GridFacet::DIRECTION_RIGHT
+                         _curFacet->getFrontConstructionDirection()
+                         == _FacetType_::DIRECTION_LEFT))
+                    continue;
+
+                while(_curAliveNode != _aliveNodesPtrs.end())
+                {
+                    // Check Delaunay criteria
+                    // If node is on sphere - push it to _sphereLocatedNodes
+                    _ElementNodesIndexes[_nDimensions_] = (*_curAliveNode)->getGlobalIndex();
+                    /// \todo use MathUtils::calculateIsNotDelaunayStatus
+
+                    _sphereCenter = MathUtils::calculateCircumSphereCenter<
+                            _WrappedNodeType_,
+                            _nDimensions_,
+                            _NodeIndexIterator,
+                            _DimType_>(_indexIterator, &_sphereRadius);
+                    _sphereRadius = MathUtils::round(_sphereRadius,_DiscretizationStep);
+                    _sphereLocatedNodes.clear();
+                    _sphereLocatedNodes.append(*_curAliveNode);
+                    for( ++_curAliveNode; _curAliveNode != _aliveNodesPtrs.end(); ++_curAliveNode)
+                    {
+                        // ignore already used nodes
+                        if(_isAlreadyUsedNode(
+                                    (*_curAliveNode)->getGlobalIndex(),
+                                    _ElementNodesIndexes,
+                                    _nDimensions_ /* +1 */))
+                            // It can't be the last node, so don't check it
+                            continue;
+                        _DimType_ _dist = MathUtils::round(
+                                    (*_curAliveNode)->distance(_sphereCenter),
+                                    _DiscretizationStep);
+                        if(_dist <= _sphereRadius)
+                        {
+                            if(_dist == _sphereRadius)
+                                _sphereLocatedNodes.append(*_curAliveNode);
+                            else
+                                break;
+                        }
+                    }
+                }
+            }
+            // Check intersections on sphere located nodes
+            /// \todo
+
+            return new _WrappedElementType_(
+                        &_nodesList,
+                        _ElementNodesIndexes,
+                        _sphereCenter,
+                        _sphereRadius);
         }
 
         /// \todo use just for inDev testing, delete later
@@ -194,13 +286,16 @@ namespace DelaunayGridGenerator
 
             _copyAndWrapPlcNodesToInternalStorage();
 
-            _constructFirstFacet();
+            // Construct first facet;
+            _FacetType_ *_firstAliveFacet = _constructFirstFacet();
+            _firstAliveFacet->appendToAliveList(_aliveFacetsPtrs);
 
-            /*for(auto _curAliveFacet = _aliveFacetsPtrs.begin();
-                _curAliveFacet!=_aliveFacetsPtrs.end(); ++_curAliveFacet)
-            {
-                _constructElement(*_curAliveFacet);
-            }*/
+//            _WrappedElementType_ *_firstElement = _constructElement(_firstAliveFacet);
+//            for(auto _curAliveFacet = _aliveFacetsPtrs.begin();
+//                _curAliveFacet!=_aliveFacetsPtrs.end(); ++_curAliveFacet)
+//            {
+//                _constructElement(*_curAliveFacet);
+//            }
         }
 
         /// Constructs the grid;
@@ -234,7 +329,8 @@ namespace DelaunayGridGenerator
             /// \todo
         }
 
-        public : Generator() noexcept {}
+        public : Generator() noexcept :
+            _DiscretizationStep(std::numeric_limits<_DimType_>::epsilon()){}
         public : ~Generator() noexcept
         {
             if(_ptrToElementsDataManager)

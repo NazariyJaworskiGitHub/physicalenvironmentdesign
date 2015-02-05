@@ -29,9 +29,10 @@ namespace DelaunayGridGenerator
         public : _DimType_ getCircumSphereRadius() const noexcept {return _sphereRadius;}
 
         public : GridElement(
-                QList<_WrappedNodeType_> *ptrToNodesList, int *nodeIndexesPtr):
+                QList<_WrappedNodeType_> *ptrToNodesList,
+                int *nodeIndexesPtr):
             FEM::FiniteElement<_WrappedNodeType_,_nDimensions_+1,_nDimensions_,_DimType_>(
-                        ptrToNodesList,nodeIndexesPtr)//,
+                        ptrToNodesList, nodeIndexesPtr)//,
             //_myState(STATE_UNKNOWN)
         {
             _sphereCenter = MathUtils::calculateCircumSphereCenter<
@@ -40,6 +41,19 @@ namespace DelaunayGridGenerator
                     FEM::FiniteElement<_WrappedNodeType_,_nDimensions_+1,_nDimensions_,_DimType_>,
                     _DimType_>(
                         *this, &_sphereRadius);
+        }
+        public : GridElement(
+                QList<_WrappedNodeType_> *ptrToNodesList,
+                int *nodeIndexesPtr,
+                _WrappedNodeType_ sphereCenter,
+                _DimType_  sphereRadius) noexcept :
+            FEM::FiniteElement<_WrappedNodeType_,_nDimensions_+1,_nDimensions_,_DimType_>(
+                        ptrToNodesList, nodeIndexesPtr),
+            //_ptrToMyself(target._ptrToMyself),
+            //_myState(target._myState),
+            _sphereCenter(sphereCenter),
+            _sphereRadius(sphereRadius)
+        {
         }
         public : GridElement(const GridElement &target) noexcept :
             FEM::FiniteElement<_WrappedNodeType_,_nDimensions_+1,_nDimensions_,_DimType_>(target),
@@ -81,30 +95,21 @@ namespace DelaunayGridGenerator
         LIST_WRAPPED_INTERFACE(GridFacet)
 
         public : enum FRONT_CONSTRUCTION_DIRECTION {
-                          DIRECTION_UNKNOWN,
+                          DIRECTION_BOUTH,
                           DIRECTION_LEFT,
-                          DIRECTION_RIGHT,
-                          DIRECTION_BOUTH};
+                          DIRECTION_RIGHT};
         private: FRONT_CONSTRUCTION_DIRECTION _myFrontConstructionDirection;
         public : FRONT_CONSTRUCTION_DIRECTION getFrontConstructionDirection() const noexcept {
             return _myFrontConstructionDirection;}
         public : void setFrontConstructionDirection(FRONT_CONSTRUCTION_DIRECTION newDirection) noexcept {
             _myFrontConstructionDirection = newDirection;}
-        public : void setFrontConstructionDirectionUnknown() noexcept {
-            _myFrontConstructionDirection = DIRECTION_UNKNOWN;}
-        public : void setFrontConstructionDirectionLeft() noexcept {
-            _myFrontConstructionDirection = DIRECTION_LEFT;}
-        public : void setFrontConstructionDirectionRight() noexcept {
-            _myFrontConstructionDirection = DIRECTION_RIGHT;}
-        public : void setFrontConstructionDirectionBouth() noexcept {
-            _myFrontConstructionDirection = DIRECTION_BOUTH;}
 
         public : GridFacet(
                 QList<_WrappedNodeType_> *ptrToNodesList, int *nodeIndexesPtr):
             FEM::FiniteElement<_WrappedNodeType_,_nDimensions_,_nDimensions_,_DimType_>(
                         ptrToNodesList,nodeIndexesPtr),
             _myState(STATE_UNKNOWN),
-            _myFrontConstructionDirection(DIRECTION_UNKNOWN)
+            _myFrontConstructionDirection(DIRECTION_BOUTH)
         {
         }
         public : GridFacet(const GridFacet &target) noexcept :
