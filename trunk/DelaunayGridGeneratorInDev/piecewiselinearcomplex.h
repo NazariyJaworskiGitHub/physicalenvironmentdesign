@@ -9,6 +9,7 @@
 namespace DelaunayGridGenerator
 {
     /// Manages initial information for a grid construction
+    /// \todo what if one adds two equal nodes, facets or segments?
     template <
         typename _NodeType_,
         typename _SegmentType_,
