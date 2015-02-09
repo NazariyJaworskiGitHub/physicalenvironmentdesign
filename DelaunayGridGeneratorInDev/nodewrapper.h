@@ -22,6 +22,12 @@ namespace DelaunayGridGenerator
     {
         LIST_WRAPPED_INTERFACE(NodeWrapper)
 
+        // I can't define templited cross-referenced forward declaration of facet, because
+        // it uses this templated nodes, so i use poiter to void, and then static_cast
+        /// \todo Don't use std::vector! (but QVector<void*> still doesn't work :( )
+        private: std::vector<void*> _myAliveFacets;
+        public : std::vector<void*> & getMyAliveFacets() noexcept {return _myAliveFacets;}
+
         /// Use it to know the global index of current node, whatever it means;
         /// \todo don't use indexes, remake all to pointers;
         private: int _myGlobalIndex = -1;

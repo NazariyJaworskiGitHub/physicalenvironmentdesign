@@ -64,16 +64,16 @@ namespace DelaunayGridGenerator
         {
         }
 
-        public : bool calculateIsNotDelaunayStatus(
-                const _WrappedNodeType_ &target,
-                QList<_WrappedNodeType_*> *sphereLocatedNodesPtr) const noexcept
-        {
-            return MathUtils::calculateIsNotDelaunayStatus<_WrappedNodeType_>(
-                        target,
-                        _sphereCenter,
-                        _sphereRadius,
-                        sphereLocatedNodesPtr);
-        }
+//        public : bool calculateIsNotDelaunayStatus(
+//                const _WrappedNodeType_ &target,
+//                QList<_WrappedNodeType_*> *sphereLocatedNodesPtr) const noexcept
+//        {
+//            return MathUtils::calculateIsNotDelaunayStatus<_WrappedNodeType_>(
+//                        target,
+//                        _sphereCenter,
+//                        _sphereRadius,
+//                        sphereLocatedNodesPtr);
+//        }
 
         public : ~GridElement() noexcept {}
     };
@@ -101,8 +101,15 @@ namespace DelaunayGridGenerator
         private: FRONT_CONSTRUCTION_DIRECTION _myFrontConstructionDirection;
         public : FRONT_CONSTRUCTION_DIRECTION getFrontConstructionDirection() const noexcept {
             return _myFrontConstructionDirection;}
-        public : void setFrontConstructionDirection(FRONT_CONSTRUCTION_DIRECTION newDirection) noexcept {
+        public : void setFrontConstructionDirection(
+                FRONT_CONSTRUCTION_DIRECTION newDirection) noexcept {
             _myFrontConstructionDirection = newDirection;}
+
+        public: void registerAtNodes() noexcept
+        {
+            for(int i=0; i<_nDimensions_; i++)
+                (*this)[i].getMyAliveFacets().push_back(this);
+        }
 
         public : GridFacet(
                 QList<_WrappedNodeType_> *ptrToNodesList, int *nodeIndexesPtr):
@@ -112,23 +119,23 @@ namespace DelaunayGridGenerator
             _myFrontConstructionDirection(DIRECTION_BOUTH)
         {
         }
-        public : GridFacet(const GridFacet &target) noexcept :
-            FEM::FiniteElement<_WrappedNodeType_,_nDimensions_,_nDimensions_,_DimType_>(target),
-            _ptrToMyself(target._ptrToMyself),
-            _myState(target._myState),
-            _myFrontConstructionDirection(target._myFrontConstructionDirection)
-        {
-        }
+//        public : GridFacet(const GridFacet &target) noexcept :
+//            FEM::FiniteElement<_WrappedNodeType_,_nDimensions_,_nDimensions_,_DimType_>(target),
+//            _ptrToMyself(target._ptrToMyself),
+//            _myState(target._myState),
+//            _myFrontConstructionDirection(target._myFrontConstructionDirection)
+//        {
+//        }
 
-        public : _WrappedNodeType_ calculateCircumSphereCenter(_DimType_ *sphereRadius = nullptr)
-        {
-            return MathUtils::calculateCircumSphereCenterByCayleyMengerDeterminant<
-                    _WrappedNodeType_,
-                    _nDimensions_,
-                    FEM::FiniteElement<_WrappedNodeType_,_nDimensions_,_nDimensions_,_DimType_>,
-                    _DimType_>(
-                        *this, _nDimensions_, sphereRadius);
-        }
+//        public : _WrappedNodeType_ calculateCircumSphereCenter(_DimType_ *sphereRadius = nullptr)
+//        {
+//            return MathUtils::calculateCircumSphereCenterByCayleyMengerDeterminant<
+//                    _WrappedNodeType_,
+//                    _nDimensions_,
+//                    FEM::FiniteElement<_WrappedNodeType_,_nDimensions_,_nDimensions_,_DimType_>,
+//                    _DimType_>(
+//                        *this, _nDimensions_, sphereRadius);
+//        }
 
         public : ~GridFacet() noexcept {}
     };
