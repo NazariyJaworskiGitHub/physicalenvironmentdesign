@@ -91,7 +91,7 @@ namespace MathUtils
              typename _NodeIteratorType_ = _NodeType_*,
              typename _DimType_ = MathUtils::Real>
     _NodeType_ calculateCircumSphereCenter(
-            const _NodeIteratorType_ simplexNodes,
+            const _NodeIteratorType_ &simplexNodes,
             _DimType_ *sphereRadius = nullptr)
     {
         // build M without first row
@@ -156,7 +156,7 @@ namespace MathUtils
              typename _NodeIteratorType_ = _NodeType_*,
              typename _DimType_ = MathUtils::Real>
     _NodeType_ calculateCircumSphereCenterByCayleyMengerDeterminant(
-            const _NodeIteratorType_ simplexNodes,
+            const _NodeIteratorType_ &simplexNodes,
             const int nNodes,
             _DimType_ *sphereRadius = nullptr)
     {
@@ -413,7 +413,7 @@ namespace MathUtils
              typename _NodeIteratorType_ = _NodeType_*,
              typename _DimType_ = MathUtils::Real>
     _BarycentricResultNodeType_ calculateBarycentricCoordinates(
-            const _NodeType_ target,
+            const _NodeType_ &target,
             const _NodeIteratorType_ simplexNodes)
     {
         Eigen::Matrix<_DimType_, _nDimensions_, _nDimensions_> _M;
@@ -449,8 +449,8 @@ namespace MathUtils
              typename _NodeIteratorType_ = _NodeType_*,
              typename _DimType_ = MathUtils::Real>
     bool calculateSegmentSubsimplexBarycenticIntersection(
-            const _NodeType_ segmentBegin,  // C
-            const _NodeType_ segmentEnd,    // P
+            const _NodeType_ &segmentBegin,  // C
+            const _NodeType_ &segmentEnd,    // P
             const _NodeIteratorType_ simplexNodes, // {s}
             _NodeType_ *intersectionNode = nullptr,
             const _DimType_ eps = 1e-8)
@@ -499,6 +499,78 @@ namespace MathUtils
             _sum += _barycentricCoordinate;
         }
         if(_sum > 1 + eps)
+            return false;
+        if(intersectionNode)
+            *intersectionNode = _intersection;
+        return true;
+    }
+/*********************************************************************************************/
+    /// Calculate if the given segment intersects the given simplex by barycentric test;
+    /// (rounoff version)
+    /// see [(1994) Hanson - Geometry for N-Dimensional Graphics];
+    /// ftp://www.cs.indiana.edu/pub/hanson/Siggraph01QuatCourse/ggndgeom.pdf;
+    /// It assumes that simplex has non-zero volume (is correct);
+    /// returns false if segment is coplanar to simplex's hyperplane;
+    ///
+    /// _NodeIteratorType_ - object which has the overloaded [] operator that returns
+    ///   the reference to the Node, default it just the _NodeType_*;
+    template<typename _NodeType_,
+             int _nDimensions_,
+             typename _NodeIteratorType_ = _NodeType_*,
+             typename _DimType_ = MathUtils::Real>
+    bool calculateSegmentSubsimplexBarycenticIntersectionRound(
+            const _NodeType_ &segmentBegin,  // C
+            const _NodeType_ &segmentEnd,    // P
+            const _NodeIteratorType_ simplexNodes, // {s}
+            _NodeType_ *intersectionNode = nullptr,
+            const _DimType_ eps = 1e-8)
+    {
+        // Find a ray-subplane intersection point;
+        //   Z(t) = segmentBegin + t*(segmentEnd-segmentBegin);
+        //       n*(s0-C)
+        //   t = --------,   n = cross({s}); - normal of simplex;
+        //       n*(P-C)
+        _NodeType_ _ray = segmentEnd-segmentBegin;
+        _NodeType_ _simplexNormal = calculateGeneralizedCrossProduct<
+                _NodeType_, _nDimensions_, _NodeIteratorType_, _DimType_>(simplexNodes);
+        // if n*(P-C) is near zero, ray is coplanar to simplex hyperplane;
+        _DimType_ _proj = round(_simplexNormal * _ray, eps);
+        if(_proj == _DimType_(0.0))
+            return false;
+        _DimType_ _t = round((_simplexNormal * (simplexNodes[0] - segmentBegin))/_proj, eps);
+
+        // Check if point is in segment;
+        if(_t < _DimType_(0.0) || _t > _DimType_(1.0))
+            return false;
+
+        // Check is the point in simplex (barycentric test);
+        _NodeType_ _intersection = segmentBegin + _t*_ray;
+        _DimType_ _simplexVolume = _simplexNormal.length()/factorial(_nDimensions_-1);
+        _DimType_ _sum = _DimType_(0.0);
+        for(int i=0;i<_nDimensions_;++i)
+        {
+            struct _DummyIterator
+            {
+                const _NodeIteratorType_ *ptr;
+                int excludedNodeIndex;
+                const _NodeType_ &replasedNode;
+                const _NodeType_ & operator [](int index) const noexcept
+                {
+                    if(index == excludedNodeIndex)
+                        return replasedNode;
+                    else return (*ptr)[index];
+                }
+            } _dummyIterator = {&simplexNodes, i, _intersection};
+            _DimType_ _barycentricCoordinate =
+                        _simplexNormal * calculateGeneralizedCrossProduct<
+                    _NodeType_, _nDimensions_, _DummyIterator>(_dummyIterator)/_simplexVolume;
+            // there is an intersection if barycentric coordinate is >= 0
+            if(round(_barycentricCoordinate,eps) < _DimType_(0.0))
+                return false;
+            _sum += _barycentricCoordinate;
+        }
+        _sum = round(_sum, eps);
+        if(_sum > _DimType_(1.0))
             return false;
         if(intersectionNode)
             *intersectionNode = _intersection;
