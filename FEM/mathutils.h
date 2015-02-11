@@ -3,6 +3,7 @@
 
 #include <Eigen/Dense>
 #include <Eigen/LU>
+/// \todo make some common matrix functionality in case without "Eigen"
 #include <cmath>
 #include <QList>
 
@@ -30,7 +31,9 @@ namespace MathUtils
     /// \li FLT_EVAL_METHOD 2
 
     /// Change it to define Real type
+    #ifndef DIMENSION_TYPE_PRECISION
     #define DIMENSION_TYPE_PRECISION float
+    #endif //DIMENSION_TYPE_PRECISION
 
     typedef DIMENSION_TYPE_PRECISION Real;
 
@@ -45,6 +48,7 @@ namespace MathUtils
     }
 /*********************************************************************************************/
     /// Round to discretization step
+    /// \todo it tested for FLT_EVAL_METHOD == 2, try tor wrap those constants into _DimType_()
     template<typename _DimType_ = MathUtils::Real>
     inline _DimType_ round(const _DimType_ x, const _DimType_ eps) noexcept
     {
@@ -514,6 +518,7 @@ namespace MathUtils
     ///
     /// _NodeIteratorType_ - object which has the overloaded [] operator that returns
     ///   the reference to the Node, default it just the _NodeType_*;
+    /// \todo make test!!!
     template<typename _NodeType_,
              int _nDimensions_,
              typename _NodeIteratorType_ = _NodeType_*,
@@ -574,6 +579,64 @@ namespace MathUtils
             return false;
         if(intersectionNode)
             *intersectionNode = _intersection;
+        return true;
+    }
+/*********************************************************************************************/
+    /// Calculate subsimplex-subsimplex intersection by volume orientation
+    /// (i.e node position) test;
+    /// see [(2002) Devillers - Faster Triangle-Triangle Intersection Tests];
+    /// \todo try also Moller or Tropp tests (especially Tropp!);
+    ///
+    /// Note!:
+    ///   if subsimplexes are coplanar - there is no intersection;
+    ///   if subsimplexes have adjacent node or segment - there is no intersection;
+    /// \todo to avoid that, if needed
+    ///
+    /// _NodeIteratorType_ - object which has the overloaded [] operator that returns
+    /// the reference to the Node, default it just the _NodeType_*;
+    template<typename _NodeType_,
+             int _nDimensions_,
+             typename _NodeIteratorType_ = _NodeType_*,
+             typename _DimType_ = MathUtils::Real>
+    bool calculateSubsimplexSubsimplexIntersectionRound(
+            const _NodeIteratorType_ subsimplexNodesA,
+            const _NodeIteratorType_ subsimplexNodesB,
+            const _DimType_ eps = 1e-8)
+    {
+        Eigen::Matrix<_DimType_, _nDimensions_, _nDimensions_> _M;
+
+        // Phase 1: check position subsimplexNodesB relative to subsimplexNodesA
+        auto _base = &subsimplexNodesA;
+        auto _target = &subsimplexNodesB;
+        for(int _phase = 0; _phase<2; ++_phase)
+        {
+            bool _side;
+            for(int k=0; k<_nDimensions_; ++k) // nodes of subsimplexNodesA
+            {
+                for(int i=0; i<_nDimensions_; ++i) // rows, i.e. coordinates
+                    for(int j=0; j<_nDimensions_; ++j) // cols, i.e. nodes
+                        _M(i,j) = (*_target)[j][i] - (*_base)[k][i];
+                _DimType_ _det = round(_M.determinant(), eps);
+                if(_det == _DimType_(0.0))
+                    return false;   // node is adjacent or coplanar
+                else if(k == 0)
+                {
+                    if(_det > _DimType_(0.0))
+                        _side = true;   // i.e. on the "right"
+                    else
+                        _side = false;  // i.e. on the "left"
+                }
+                else if(
+                        (_det > _DimType_(0.0) && !_side) ||
+                        (_det < _DimType_(0.0) && _side))
+                    break;  // it may be an intersection, swith subsimplexes and try again
+                else if(k == _nDimensions_-1)
+                    return false;   // all nodes are at the same side
+            }
+            // Phase 2: check position subsimplexNodesA relative to subsimplexNodesB
+            _base = &subsimplexNodesB;
+            _target = &subsimplexNodesA;
+        }
         return true;
     }
 /*********************************************************************************************/

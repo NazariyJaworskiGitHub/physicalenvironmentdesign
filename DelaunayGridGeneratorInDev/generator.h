@@ -75,7 +75,7 @@ namespace DelaunayGridGenerator
         private: struct _NodeIndexIterator
         {
             const Generator &_ref;
-            int *ptrToIndexses;
+            const int *ptrToIndexses;
             const _WrappedNodeType_ &operator [] (int index) const noexcept
             {
                 return _ref._nodesList[ptrToIndexses[index]];
@@ -110,7 +110,7 @@ namespace DelaunayGridGenerator
                 throw std::runtime_error("_constructFirstFacet(),  not enough nodes");
 
             int _facetNodesIndexes[_nDimensions_];
-            _NodeIndexIterator _indexIterator = {*this,_facetNodesIndexes};
+            _NodeIndexIterator _indexIterator = {*this, _facetNodesIndexes};
 
             // Get first alive node;
             /// \todo don't use indexes, remake all to pointers;
@@ -201,20 +201,25 @@ namespace DelaunayGridGenerator
             if(_aliveNodesPtrs.size() < _nDimensions_+1)
                 throw std::runtime_error("_constructElement(),  not enough nodes");
 
-            int _ElementNodesIndexes[_nDimensions_+1];
-            memcpy(_ElementNodesIndexes,curFacet->getNodeIndexes(),_nDimensions_*sizeof(int));
-            _NodeIndexIterator _indexIterator = {*this,_ElementNodesIndexes};
+            int _elementNodesIndexes[_nDimensions_+1];
+            memcpy(_elementNodesIndexes,curFacet->getNodeIndexes(),_nDimensions_*sizeof(int));
+            _NodeIndexIterator _indexIterator = {*this,_elementNodesIndexes};
             QLinkedList<_WrappedNodeType_*> _sphereLocatedNodes;
             _WrappedNodeType_ _sphereCenter;
             _DimType_ _sphereRadius;
 
-            auto _curAliveNode = _aliveNodesPtrs.begin();
-            while(_curAliveNode != _aliveNodesPtrs.end())
+            /// \todo remove this
+            int _TEST_INDEX;
+            for(auto _curAliveNode = _aliveNodesPtrs.begin();
+                  _curAliveNode != _aliveNodesPtrs.end(); ++_curAliveNode)
             {
+                /// \todo remove this
+                _TEST_INDEX = (*_curAliveNode)->getGlobalIndex();
+
                 // ignore already used nodes
                 if(_isAlreadyUsedNode(
                             (*_curAliveNode)->getGlobalIndex(),
-                            _ElementNodesIndexes,
+                            _elementNodesIndexes,
                             _nDimensions_))
                     continue;
 
@@ -239,12 +244,14 @@ namespace DelaunayGridGenerator
                          == _FacetType_::DIRECTION_RIGHT) ||
                         (_determinant > _DimType_(0.0) &&       // GridFacet::DIRECTION_RIGHT
                          curFacet->getFrontConstructionDirection()
-                         == _FacetType_::DIRECTION_LEFT))
+                         == _FacetType_::DIRECTION_LEFT) ||
+                        (curFacet->getFrontConstructionDirection()
+                         != _FacetType_::DIRECTION_BOUTH))
                     continue;
 
                 // Check Delaunay criteria
                 // If node is on sphere - push it to _sphereLocatedNodes
-                _ElementNodesIndexes[_nDimensions_] = (*_curAliveNode)->getGlobalIndex();
+                _elementNodesIndexes[_nDimensions_] = (*_curAliveNode)->getGlobalIndex();
                 /// \todo use MathUtils::calculateIsNotDelaunayStatus
 
                 _sphereCenter = MathUtils::calculateCircumSphereCenter<
@@ -258,10 +265,13 @@ namespace DelaunayGridGenerator
 
                 for( ++_curAliveNode; _curAliveNode != _aliveNodesPtrs.end(); ++_curAliveNode)
                 {
+                    /// \todo remove this
+                    _TEST_INDEX = (*_curAliveNode)->getGlobalIndex();
+
                     // ignore already used nodes
                     if(_isAlreadyUsedNode(
                                 (*_curAliveNode)->getGlobalIndex(),
-                                _ElementNodesIndexes,
+                                _elementNodesIndexes,
                                 _nDimensions_ /* +1 */))
                         // It can't be the last node, so don't check it
                         continue;
@@ -283,63 +293,107 @@ namespace DelaunayGridGenerator
                                         _DiscretizationStep);
                             // It can't be lineary dependent
                             if((_determinant > _DimType_(0.0) &&
-                                // GridFacet::DIRECTION_RIGHT
                                     curFacet->getFrontConstructionDirection()
                                     == _FacetType_::DIRECTION_RIGHT) ||
                                     (_determinant < _DimType_(0.0) &&
-                                     // GridFacet::DIRECTION_LEFT
                                      curFacet->getFrontConstructionDirection()
-                                     == _FacetType_::DIRECTION_LEFT))
+                                     == _FacetType_::DIRECTION_LEFT) ||
+                                    /// \todo is it can be bouth direction?
+                                    (curFacet->getFrontConstructionDirection()
+                                     == _FacetType_::DIRECTION_BOUTH))
                                 _sphereLocatedNodes.append(*_curAliveNode);
                         }
-                        else
-                        {
-                            // One should decrease current iterator, because given
-                            // loop will increase it at next step, and miss the target
-                            --_curAliveNode;
-                            break;
-                        }
+                        else break;
                     }
                 }
-                ++_curAliveNode;
+                // One should decrease current iterator, because given
+                // loop will increase it at next step, and miss the target
+                --_curAliveNode;
             }
 
             // Check intersections on sphere located nodes
-//            if(_sphereLocatedNodes.size() > 1)
-//                for(auto _curAliveNode = _sphereLocatedNodes.begin();
-//                    _curAliveNode != _sphereLocatedNodes.end(); ++_curAliveNode)
-//                {
-//                    for(int i=0; i<_curAliveNode->getMyAliveFacets().size(); ++i)
-//                    {
-//                        _FacetType_* _targetAliveFacet = static_cast<_FacetType_*>(
-//                                    _curAliveNode->getMyAliveFacets()[i]);
-//                        // Exclude dead facets, if there is an intersection, then
-//                        // there exist at least one alive facet, which intersects
-//                        if(_targetAliveFacet->getState() == _FacetType_::STATE_DEAD)
-//                            continue;
+            if(_sphereLocatedNodes.size() > 1)
+            {
+                for(auto _curAliveNode = _sphereLocatedNodes.begin();
+                    _curAliveNode != _sphereLocatedNodes.end(); ++_curAliveNode)
+                {
+                    /// \todo remove this
+                    _TEST_INDEX = (*_curAliveNode)->getGlobalIndex();
 
-//                        for(int j=0; ; ++j)
-//                            if(
-//                                    MathUtils::calculateSegmentSubsimplexBarycenticIntersectionRound<
-//                                        _WrappedNodeType_,
-//                                        _nDimensions_,
-//                                        _NodeIndexIterator,
-//                                    _DimType_>(
-//                                        (*curFacet)[j],
-//                                        ,
-//                                        *_targetAliveFacet,
-//                                        nullptr,
-//                                        _DiscretizationStep
-//                                    )
-//                            {
-//                            /// \todo
-//                            }
-//                    }
-//                }
+                    bool _isIntersection = false;
+                    for(int i=0; i<(*_curAliveNode)->getMyAliveFacets().size(); ++i)
+                    {
+                        _FacetType_* _targetAliveFacet = static_cast<_FacetType_*>(
+                                    (*_curAliveNode)->getMyAliveFacets()[i]);
+                        // Exclude dead facets, if there is an intersection, then
+                        // there exist at least one alive facet, which intersects
+                        /// \todo if you get alive facets, can there be the dead-one?
+                        if(_targetAliveFacet->getState() == _FacetType_::STATE_DEAD)
+                            continue;
 
+                        _NodeIndexIterator _indexIteratorTargetAliveFacet =
+                            {*this, _targetAliveFacet->getNodeIndexes()};
+
+                        for(int i=0; i<_nDimensions_; ++i)
+                        {
+                            int _newFacetNodesIndexes[_nDimensions_];
+                            // Need this to skip one by one base nodes and construct new facets
+                            for(int j=0, k=0; j<_nDimensions_; ++j, ++k)
+                            {
+                                if(k == i)
+                                    ++k;
+                                _newFacetNodesIndexes[j] = _elementNodesIndexes[k];
+                            }
+                            _NodeIndexIterator _indexIteratorCurrentNewFacet =
+                                {*this,_newFacetNodesIndexes};
+
+                            if(
+                                    MathUtils::calculateSubsimplexSubsimplexIntersectionRound<
+                                    _WrappedNodeType_,
+                                    _nDimensions_,
+                                    _NodeIndexIterator,
+                                    _DimType_>(
+                                        _indexIteratorCurrentNewFacet,
+                                        _indexIteratorTargetAliveFacet,
+                                        _DiscretizationStep))
+                            {
+                                _isIntersection = true;
+                                break;
+                            }
+                        }
+                        if(_isIntersection)
+                            break;
+                    }
+                    if(!_isIntersection)
+                    {
+                        _elementNodesIndexes[_nDimensions_] = (*_curAliveNode)->getGlobalIndex();
+                        break;
+                    }
+                }
+            }
+
+            // Create new facets
+            _FacetType_ *_newFacets[_nDimensions_+1];
+            _newFacets[0] = curFacet;
+            for(int i=0; i<_nDimensions_; ++i)
+            {
+                int _newFacetNodesIndexes[_nDimensions_];
+                // Need this to skip one by one base nodes and construct new facets
+                /// \todo need refactoring (already using)
+                for(int j=0, k=0; j<_nDimensions_; ++j, ++k)
+                {
+                    if(k == i)
+                        ++k;
+                    _newFacetNodesIndexes[j] = _elementNodesIndexes[k];
+                }
+                _newFacets[i+1] = new _FacetType_(&_nodesList, _newFacetNodesIndexes);
+            }
+
+            // Create new element
             return new _WrappedElementType_(
                         &_nodesList,
-                        _ElementNodesIndexes,
+                        _elementNodesIndexes,
+                        _newFacets,
                         _sphereCenter,
                         _sphereRadius);
         }
@@ -357,7 +411,7 @@ namespace DelaunayGridGenerator
             _FacetType_ *_firstAliveFacet = _constructFirstFacet();
             _firstAliveFacet->appendToAliveList(_aliveFacetsPtrs);
 
-//            _WrappedElementType_ *_firstElement = _constructElement(_firstAliveFacet);
+            _WrappedElementType_ *_firstElement = _constructElement(_firstAliveFacet);
 //            for(auto _curAliveFacet = _aliveFacetsPtrs.begin();
 //                _curAliveFacet!=_aliveFacetsPtrs.end(); ++_curAliveFacet)
 //            {
