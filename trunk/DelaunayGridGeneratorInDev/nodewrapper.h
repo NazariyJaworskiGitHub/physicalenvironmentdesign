@@ -25,11 +25,14 @@ namespace DelaunayGridGenerator
         // I can't define templited cross-referenced forward declaration of facet, because
         // it uses this templated nodes, so i use poiter to void, and then static_cast
         /// \todo Don't use std::vector! (but QVector<void*> still doesn't work :( )
+        /// \todo What if sizeof(void*) != sizeof(_FacetType_*) ?
+        /// \todo Is needed only alive facets or all facets?
         private: std::vector<void*> _myAliveFacets;
         public : std::vector<void*> & getMyAliveFacets() noexcept {return _myAliveFacets;}
 
         /// Use it to know the global index of current node, whatever it means;
         /// \todo don't use indexes, remake all to pointers;
+        /// \todo what if index is bigger than int?
         private: int _myGlobalIndex = -1;
         public : int getGlobalIndex() const noexcept
         {

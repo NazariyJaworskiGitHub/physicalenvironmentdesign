@@ -174,3 +174,24 @@ void Test_MathUtils::test_calculateSegmentSubsimplexBarycenticIntersection()
                 Node2D(0.7,0.2), Node2D(0.8,0.0), _nodes, &_intersection);
     QVERIFY(!_result);
 }
+
+void Test_MathUtils::test_calculateSubsimplexSubsimplexIntersectionRound()
+{
+    Node2D _nodes2DA1[] = {{1.0,1.0}, {3.0,2.0}};
+    Node2D _nodes2DB1[] = {{4.0,1.0}, {3.0,3.0}};
+    bool _result = calculateSubsimplexSubsimplexIntersectionRound<Node2D, 2>(
+                _nodes2DA1, _nodes2DB1);
+    QVERIFY(!_result);
+
+    Node2D _nodes2DA2[] = {{1.0,1.0}, {3.0,2.0}};
+    Node2D _nodes2DB2[] = {{4.0,1.0}, {3.0,2.0}};
+    _result = calculateSubsimplexSubsimplexIntersectionRound<Node2D, 2>(
+                _nodes2DA2, _nodes2DB2);
+    QVERIFY(!_result);
+
+    Node2D _nodes2DA3[] = {{1.0,1.0}, {3.0,2.0}};
+    Node2D _nodes2DB3[] = {{3.0,1.0}, {2.0,3.0}};
+    _result = calculateSubsimplexSubsimplexIntersectionRound<Node2D, 2>(
+                _nodes2DA3, _nodes2DB3);
+    QVERIFY(_result);
+}
