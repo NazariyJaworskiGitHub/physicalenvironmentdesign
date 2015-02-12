@@ -27,10 +27,16 @@ void SimpleGLRender::initializeGL()
     aGLFormat.setVersion(aGLFormat.majorVersion(),aGLFormat.minorVersion());
     QGLFormat::setDefaultFormat(aGLFormat);
 
-    /*glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective( 60.0f, this->width()/(double)this->height(), 0.1, 1000.0f );
-    glViewport(0,0,this->width(),this->height());*/
+    GLfloat light0_diffuse[] = {1.0, 1.0, 1.0};
+    GLfloat light0_direction[] = {0.0, 0.0, 1.0, 0.0};
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    glEnable(GL_COLOR_MATERIAL);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, light0_diffuse);
+    glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+    glEnable(GL_NORMALIZE);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, light0_diffuse);
+    glLightfv(GL_LIGHT0, GL_POSITION, light0_direction);
 }
 
 void SimpleGLRender::resizeGL(int nWidth, int nHeight)
@@ -100,24 +106,26 @@ void SimpleGLRender::keyPressEvent(QKeyEvent *e)
 {
     if(e->key() == Qt::Key_Space)
     {
-        dataString = "Spacebar!";
+        dataString = "Spacebar! New iteration";
+        _ptrToRenderingDelaunayGridGenerator3D->_TEST_iteration(_ptrToRenderingPlc3D);
         this->updateGL();
     }
 }
 
 void SimpleGLRender::_drawPlc3DNodes() throw(std::runtime_error)
 {
-    if(!_refToRenderingPlc3D)
+    if(!_ptrToRenderingPlc3D)
         throw std::runtime_error("_drawPlc3DNodes(),  bad pointer to PLC");
 
-    if(_refToRenderingPlc3D->getNodeList().size() != 0)
+    if(_ptrToRenderingPlc3D->getNodeList().size() != 0)
     {
+        glDisable(GL_LIGHTING);
         glPointSize(3);
         glColor4d(_PlcNodesColor[0], _PlcNodesColor[1], _PlcNodesColor[2], _PlcNodesColor[3]);
 
         //unsigned _n = 0;
-        for(auto _i = _refToRenderingPlc3D->getNodeList().begin();
-            _i != _refToRenderingPlc3D->getNodeList().end(); ++_i)
+        for(auto _i = _ptrToRenderingPlc3D->getNodeList().begin();
+            _i != _ptrToRenderingPlc3D->getNodeList().end(); ++_i)
         {
             glBegin(GL_POINTS);
             glVertex3d((*_i)[0], (*_i)[1], (*_i)[2]);
@@ -126,23 +134,24 @@ void SimpleGLRender::_drawPlc3DNodes() throw(std::runtime_error)
             //++_n;
         }
         glPointSize(1);
+        glEnable(GL_LIGHTING);
     }
 }
 
 void SimpleGLRender::_drawPlc3DSegments() throw(std::runtime_error)
 {
-    if(!_refToRenderingPlc3D)
+    if(!_ptrToRenderingPlc3D)
         throw std::runtime_error("_drawPlc3DNodes(),  bad pointer to PLC");
 
-    if(_refToRenderingPlc3D->getSegmentList().size() != 0)
+    if(_ptrToRenderingPlc3D->getSegmentList().size() != 0)
     {
         glColor4d(
                 _PlcSegmentsColor[0],
                 _PlcSegmentsColor[1],
                 _PlcSegmentsColor[2],
                 _PlcSegmentsColor[3]);
-        for(auto _i = _refToRenderingPlc3D->getSegmentList().begin();
-            _i != _refToRenderingPlc3D->getSegmentList().end(); ++_i)
+        for(auto _i = _ptrToRenderingPlc3D->getSegmentList().begin();
+            _i != _ptrToRenderingPlc3D->getSegmentList().end(); ++_i)
         {
             glBegin(GL_LINES);
             glVertex3d((*_i)[0][0], (*_i)[0][1], (*_i)[0][2]);
@@ -154,19 +163,22 @@ void SimpleGLRender::_drawPlc3DSegments() throw(std::runtime_error)
 
 void SimpleGLRender::_drawPlc3DFacets() throw(std::runtime_error)
 {
-    if(!_refToRenderingPlc3D)
+    if(!_ptrToRenderingPlc3D)
         throw std::runtime_error("_drawPlc3DNodes(),  bad pointer to PLC");
 
-    if(_refToRenderingPlc3D->getFacetList().size() != 0)
+    if(_ptrToRenderingPlc3D->getFacetList().size() != 0)
     {
         glColor4d(
                 _PlcFacetsColor[0],
                 _PlcFacetsColor[1],
                 _PlcFacetsColor[2],
                 _PlcFacetsColor[3]);
-        for(auto _i = _refToRenderingPlc3D->getFacetList().begin();
-            _i != _refToRenderingPlc3D->getFacetList().end(); ++_i)
+        for(auto _i = _ptrToRenderingPlc3D->getFacetList().begin();
+            _i != _ptrToRenderingPlc3D->getFacetList().end(); ++_i)
         {
+
+            glNormal3fv(((*_i)[1] - (*_i)[0]).crossProduct(
+                        (*_i)[2] - (*_i)[0]).getCoordinates());
             glBegin(GL_TRIANGLES);
             glVertex3d((*_i)[0][0], (*_i)[0][1], (*_i)[0][2]);
             glVertex3d((*_i)[1][0], (*_i)[1][1], (*_i)[1][2]);
@@ -178,15 +190,16 @@ void SimpleGLRender::_drawPlc3DFacets() throw(std::runtime_error)
 
 void SimpleGLRender::_drawDelaunayGridGenerator3DNodes() throw(std::runtime_error)
 {
-    if(!_refToRenderingDelaunayGridGenerator3D)
+    if(!_ptrToRenderingDelaunayGridGenerator3D)
         throw std::runtime_error("_drawDelaunayGridGenerator3DNodes(),  bad pointer to Generator");
 
-    if(_refToRenderingDelaunayGridGenerator3D->getNodeList().size() != 0)
+    if(_ptrToRenderingDelaunayGridGenerator3D->getNodeList().size() != 0)
     {
         unsigned _n = 0;
-        for(auto _i = _refToRenderingDelaunayGridGenerator3D->getNodeList().begin();
-            _i != _refToRenderingDelaunayGridGenerator3D->getNodeList().end(); ++_i)
+        for(auto _i = _ptrToRenderingDelaunayGridGenerator3D->getNodeList().begin();
+            _i != _ptrToRenderingDelaunayGridGenerator3D->getNodeList().end(); ++_i)
         {
+            glDisable(GL_LIGHTING);
             if((*_i).getState() == DelaunayGridGenerator::WrappedNode3D::STATE_ALIVE)
                 glColor3ub(255,0,0);
             else
@@ -196,40 +209,54 @@ void SimpleGLRender::_drawDelaunayGridGenerator3DNodes() throw(std::runtime_erro
             glEnd();
             this->renderText((*_i)[0], (*_i)[1], (*_i)[2], QString::number(_n));
             ++_n;
+            glEnable(GL_LIGHTING);
         }
     }
 }
 
 void SimpleGLRender::_drawDelaunayGridGenerator3DFacets() throw(std::runtime_error)
 {
-    if(!_refToRenderingDelaunayGridGenerator3D)
+    if(!_ptrToRenderingDelaunayGridGenerator3D)
         throw std::runtime_error("_drawDelaunayGridGenerator3DFacets(),  bad pointer to Generator");
 
-    if(_refToRenderingDelaunayGridGenerator3D->getAliveFacetsList().size() != 0)
+    if(_ptrToRenderingDelaunayGridGenerator3D->getAliveFacetsList().size() != 0)
     {
-        glColor3ub(255,0,0);
-        for(auto _i = _refToRenderingDelaunayGridGenerator3D->getAliveFacetsList().begin();
-            _i != _refToRenderingDelaunayGridGenerator3D->getAliveFacetsList().end(); ++_i)
+        for(auto _i = _ptrToRenderingDelaunayGridGenerator3D->getAliveFacetsList().begin();
+            _i != _ptrToRenderingDelaunayGridGenerator3D->getAliveFacetsList().end(); ++_i)
         {
+            glColor3ub(200,200,200);
+            glNormal3fv(((**_i)[1] - (**_i)[0]).crossProduct(
+                        (**_i)[2] - (**_i)[0]).getCoordinates());
+            glBegin(GL_TRIANGLES);
+            glVertex3d((**_i)[0][0], (**_i)[0][1], (**_i)[0][2]);
+            glVertex3d((**_i)[1][0], (**_i)[1][1], (**_i)[1][2]);
+            glVertex3d((**_i)[2][0], (**_i)[2][1], (**_i)[2][2]);
+            glEnd();
+
+            glDisable(GL_LIGHTING);
+            glColor3ub(255,0,0);
             glBegin(GL_LINE_LOOP);
             glVertex3d((**_i)[0][0], (**_i)[0][1], (**_i)[0][2]);
             glVertex3d((**_i)[1][0], (**_i)[1][1], (**_i)[1][2]);
             glVertex3d((**_i)[2][0], (**_i)[2][1], (**_i)[2][2]);
             glEnd();
+            glEnable(GL_LIGHTING);
         }
     }
 
-    if(_refToRenderingDelaunayGridGenerator3D->getDeadFacetsList().size() != 0)
+    if(_ptrToRenderingDelaunayGridGenerator3D->getDeadFacetsList().size() != 0)
     {
         glColor3ub(0,255,255);
-        for(auto _i = _refToRenderingDelaunayGridGenerator3D->getDeadFacetsList().begin();
-            _i != _refToRenderingDelaunayGridGenerator3D->getDeadFacetsList().end(); ++_i)
+        for(auto _i = _ptrToRenderingDelaunayGridGenerator3D->getDeadFacetsList().begin();
+            _i != _ptrToRenderingDelaunayGridGenerator3D->getDeadFacetsList().end(); ++_i)
         {
+            glDisable(GL_LIGHTING);
             glBegin(GL_LINE_LOOP);
             glVertex3d((**_i)[0][0], (**_i)[0][1], (**_i)[0][2]);
             glVertex3d((**_i)[1][0], (**_i)[1][1], (**_i)[1][2]);
             glVertex3d((**_i)[2][0], (**_i)[2][1], (**_i)[2][2]);
             glEnd();
+            glEnable(GL_LIGHTING);
         }
     }
 }
@@ -241,6 +268,7 @@ void SimpleGLRender::_drawDelaunayGridGenerator3DElements() throw(std::runtime_e
 
 void SimpleGLRender::_drawOrigin() noexcept
 {
+    glDisable(GL_LIGHTING);
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
 
@@ -290,4 +318,5 @@ void SimpleGLRender::_drawOrigin() noexcept
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glViewport(0,0,_width,_height);
+    glEnable(GL_LIGHTING);
 }

@@ -26,9 +26,8 @@ namespace DelaunayGridGenerator
         // it uses this templated nodes, so i use poiter to void, and then static_cast
         /// \todo Don't use std::vector! (but QVector<void*> still doesn't work :( )
         /// \todo What if sizeof(void*) != sizeof(_FacetType_*) ?
-        /// \todo Is needed only alive facets or all facets?
-        private: std::vector<void*> _myAliveFacets;
-        public : std::vector<void*> & getMyAliveFacets() noexcept {return _myAliveFacets;}
+        private: std::vector<void*> _myFacets;
+        public : std::vector<void*> & getFacets() noexcept {return _myFacets;}
 
         /// Use it to know the global index of current node, whatever it means;
         /// \todo don't use indexes, remake all to pointers;

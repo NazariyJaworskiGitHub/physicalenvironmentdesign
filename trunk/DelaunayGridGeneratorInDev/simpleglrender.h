@@ -41,23 +41,24 @@ class SimpleGLRender : public QGLWidget
         _PlcFacetsColor(R,G,B,A);
     }
 
-    private: const DelaunayGridGenerator::CommonPlc3D *_refToRenderingPlc3D = nullptr;
+    private: const DelaunayGridGenerator::CommonPlc3D *_ptrToRenderingPlc3D = nullptr;
     public: void setRenderingPiecewiseLinearComplex(
             const DelaunayGridGenerator::CommonPlc3D *renderingPlc3D) throw (std::logic_error)
     {
-        _refToRenderingPlc3D = renderingPlc3D;
+        _ptrToRenderingPlc3D = renderingPlc3D;
     }
     private: void _drawPlc3DNodes() throw(std::runtime_error);
     private: void _drawPlc3DSegments() throw(std::runtime_error);
     private: void _drawPlc3DFacets() throw(std::runtime_error);
 
-    private: const DelaunayGridGenerator::DelaunayGridGenerator3D
-        *_refToRenderingDelaunayGridGenerator3D = nullptr;
+    /// \todo it should be const, but then, i cant run single iteration
+    private: /*const*/ DelaunayGridGenerator::DelaunayGridGenerator3D
+        *_ptrToRenderingDelaunayGridGenerator3D = nullptr;
     public: void setRenderingDelaunayGridGenerator3D(
-            const DelaunayGridGenerator::DelaunayGridGenerator3D *renderingDelaunayGridGenerator3D)
+            /*const*/ DelaunayGridGenerator::DelaunayGridGenerator3D *renderingDelaunayGridGenerator3D)
         throw (std::logic_error)
     {
-        _refToRenderingDelaunayGridGenerator3D = renderingDelaunayGridGenerator3D;
+        _ptrToRenderingDelaunayGridGenerator3D = renderingDelaunayGridGenerator3D;
     }
     private: void _drawDelaunayGridGenerator3DNodes() throw(std::runtime_error);
     private: void _drawDelaunayGridGenerator3DFacets() throw(std::runtime_error);
