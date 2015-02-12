@@ -32,6 +32,9 @@ namespace DelaunayGridGenerator
         typename _DimType_ = MathUtils::Real>
     class Generator
     {
+        /// \todo it is only for tests, remove is later
+        friend class Test_Generator;
+
         private: _DimType_ _DiscretizationStep;
 
         private: QList<_WrappedNodeType_>           _nodesList;
@@ -84,7 +87,7 @@ namespace DelaunayGridGenerator
 
         private: bool _isAlreadyUsedNode(
                 int targetIndex,
-                int *usedIdexes,
+                const int *usedIdexes,
                 int usedNodesCout) const noexcept
         {
             for(int j=0; j<usedNodesCout; j++)
@@ -93,8 +96,28 @@ namespace DelaunayGridGenerator
             return false;
         }
 
+        /// \todo perhaps it should be at differen class, FiniteElement for example
+        /// \todo use std::is_permutation
+        private: bool _isSameNodeIndexses(
+                const int *nodeIndexesA,
+                const int *nodeIndexesB) const noexcept
+        {
+            for(int i=0; i<_nDimensions_; ++i)
+            {
+                bool _isFound = false;
+                for(int j=0; j<_nDimensions_; ++j)
+                    if(nodeIndexesA[i] == nodeIndexesB[j])
+                    {
+                        _isFound = true;
+                        break;
+                    }
+                if(!_isFound)
+                    return false;
+            }
+            return true;
+        }
+
         /// If grid is empty, constructs the first facet,
-        /// (including all cross-reference and lists update steps)
         /// It should be done in O(N^(_nDimensions_-1)) steps.
         /// \todo use tree to make it in O(N^(_nDimensions_-2)log(N))
         /// Algorithm:
@@ -103,7 +126,7 @@ namespace DelaunayGridGenerator
         /// 3) repeat step 2) until one finds all needed nodes.
         /// It is the modification of Fleischmann's approach,
         /// for more details see "Fleischmann - Three-Dimensional Delaunay Mesh
-        /// Generation Using a Modified Advancing Front Approach""
+        /// Generation Using a Modified Advancing Front Approach"
         private: _FacetType_* _constructFirstFacet() throw(std::runtime_error)
         {
             if(_aliveNodesPtrs.size() < _nDimensions_)
@@ -187,35 +210,34 @@ namespace DelaunayGridGenerator
                     }
                 }
             }
-
-            return new _FacetType_(&_nodesList, _facetNodesIndexes);
             // It will be GridFacet::DIRECTION_BOUTH by default, see constructor
+            return new _FacetType_(&_nodesList, _facetNodesIndexes);
         }
 
-        /// Construct element with given facet
-        /// (including all cross-reference and lists update steps)
-        /// It should be done in O(N) steps
-        private: _WrappedElementType_* _constructElement(_FacetType_ *curFacet)
+        /// Construct element with given facet;
+        /// It should be done in O(N) steps;
+        /// \todo use tree to make it in O(log(N))
+        /// If there is no matching node - given facet is in metastructure,
+        /// so it can't be constructed an element, and method returns nullptr.
+        private: _WrappedElementType_* _constructElement(_FacetType_ *curAliveFacet)
             throw(std::runtime_error)
         {
-            if(_aliveNodesPtrs.size() < _nDimensions_+1)
+            // Note, if there are _nDimensions_ nodes, then it is last facet,
+            // and it is in metastructure
+            if(_aliveNodesPtrs.size() < _nDimensions_)
                 throw std::runtime_error("_constructElement(),  not enough nodes");
 
             int _elementNodesIndexes[_nDimensions_+1];
-            memcpy(_elementNodesIndexes,curFacet->getNodeIndexes(),_nDimensions_*sizeof(int));
+            memcpy(_elementNodesIndexes,curAliveFacet->getNodeIndexes(),_nDimensions_*sizeof(int));
             _NodeIndexIterator _indexIterator = {*this,_elementNodesIndexes};
             QLinkedList<_WrappedNodeType_*> _sphereLocatedNodes;
             _WrappedNodeType_ _sphereCenter;
             _DimType_ _sphereRadius;
+            bool _isMetastructure = true;
 
-            /// \todo remove this
-            int _TEST_INDEX;
             for(auto _curAliveNode = _aliveNodesPtrs.begin();
                   _curAliveNode != _aliveNodesPtrs.end(); ++_curAliveNode)
             {
-                /// \todo remove this
-                _TEST_INDEX = (*_curAliveNode)->getGlobalIndex();
-
                 // ignore already used nodes
                 if(_isAlreadyUsedNode(
                             (*_curAliveNode)->getGlobalIndex(),
@@ -240,14 +262,18 @@ namespace DelaunayGridGenerator
                             _DiscretizationStep);
                 if(_determinant == _DimType_(0.0) ||            // Node is lineary dependent
                         (_determinant < _DimType_(0.0) &&       // GridFacet::DIRECTION_LEFT
-                         curFacet->getFrontConstructionDirection()
+                         curAliveFacet->getFrontConstructionDirection()
                          == _FacetType_::DIRECTION_RIGHT) ||
                         (_determinant > _DimType_(0.0) &&       // GridFacet::DIRECTION_RIGHT
-                         curFacet->getFrontConstructionDirection()
-                         == _FacetType_::DIRECTION_LEFT) ||
-                        (curFacet->getFrontConstructionDirection()
-                         != _FacetType_::DIRECTION_BOUTH))
+                         curAliveFacet->getFrontConstructionDirection()
+                         == _FacetType_::DIRECTION_LEFT) /*||
+                        (_determinant != _DimType_(0.0) &&
+                         curAliveFacet->getFrontConstructionDirection()
+                         != _FacetType_::DIRECTION_BOUTH)*/)
                     continue;
+
+                // Ok! one found at least one node
+                _isMetastructure = false;
 
                 // Check Delaunay criteria
                 // If node is on sphere - push it to _sphereLocatedNodes
@@ -265,9 +291,6 @@ namespace DelaunayGridGenerator
 
                 for( ++_curAliveNode; _curAliveNode != _aliveNodesPtrs.end(); ++_curAliveNode)
                 {
-                    /// \todo remove this
-                    _TEST_INDEX = (*_curAliveNode)->getGlobalIndex();
-
                     // ignore already used nodes
                     if(_isAlreadyUsedNode(
                                 (*_curAliveNode)->getGlobalIndex(),
@@ -293,13 +316,12 @@ namespace DelaunayGridGenerator
                                         _DiscretizationStep);
                             // It can't be lineary dependent
                             if((_determinant > _DimType_(0.0) &&
-                                    curFacet->getFrontConstructionDirection()
+                                    curAliveFacet->getFrontConstructionDirection()
                                     == _FacetType_::DIRECTION_RIGHT) ||
                                     (_determinant < _DimType_(0.0) &&
-                                     curFacet->getFrontConstructionDirection()
+                                     curAliveFacet->getFrontConstructionDirection()
                                      == _FacetType_::DIRECTION_LEFT) ||
-                                    /// \todo is it can be bouth direction?
-                                    (curFacet->getFrontConstructionDirection()
+                                    (curAliveFacet->getFrontConstructionDirection()
                                      == _FacetType_::DIRECTION_BOUTH))
                                 _sphereLocatedNodes.append(*_curAliveNode);
                         }
@@ -311,28 +333,28 @@ namespace DelaunayGridGenerator
                 --_curAliveNode;
             }
 
+            // No nodes were found, the facet is in metastructure
+            if(_isMetastructure)
+                return nullptr;
+
             // Check intersections on sphere located nodes
             if(_sphereLocatedNodes.size() > 1)
             {
                 for(auto _curAliveNode = _sphereLocatedNodes.begin();
                     _curAliveNode != _sphereLocatedNodes.end(); ++_curAliveNode)
                 {
-                    /// \todo remove this
-                    _TEST_INDEX = (*_curAliveNode)->getGlobalIndex();
-
                     bool _isIntersection = false;
-                    for(int i=0; i<(*_curAliveNode)->getMyAliveFacets().size(); ++i)
+                    for(int i=0; i<(*_curAliveNode)->getFacets().size(); ++i)
                     {
-                        _FacetType_* _targetAliveFacet = static_cast<_FacetType_*>(
-                                    (*_curAliveNode)->getMyAliveFacets()[i]);
+                        _FacetType_* _targetFacet = static_cast<_FacetType_*>(
+                                    (*_curAliveNode)->getFacets()[i]);
                         // Exclude dead facets, if there is an intersection, then
                         // there exist at least one alive facet, which intersects
-                        /// \todo if you get alive facets, can there be the dead-one?
-                        if(_targetAliveFacet->getState() == _FacetType_::STATE_DEAD)
+                        if(_targetFacet->getState() == _FacetType_::STATE_DEAD)
                             continue;
 
                         _NodeIndexIterator _indexIteratorTargetAliveFacet =
-                            {*this, _targetAliveFacet->getNodeIndexes()};
+                            {*this, _targetFacet->getNodeIndexes()};
 
                         for(int i=0; i<_nDimensions_; ++i)
                         {
@@ -340,7 +362,7 @@ namespace DelaunayGridGenerator
                             // Need this to skip one by one base nodes and construct new facets
                             for(int j=0, k=0; j<_nDimensions_; ++j, ++k)
                             {
-                                if(k == i)
+                                if(k == _nDimensions_-1-i)
                                     ++k;
                                 _newFacetNodesIndexes[j] = _elementNodesIndexes[k];
                             }
@@ -366,36 +388,133 @@ namespace DelaunayGridGenerator
                     }
                     if(!_isIntersection)
                     {
-                        _elementNodesIndexes[_nDimensions_] = (*_curAliveNode)->getGlobalIndex();
+                        _elementNodesIndexes[_nDimensions_] =
+                                (*_curAliveNode)->getGlobalIndex();
                         break;
                     }
                 }
-            }
-
-            // Create new facets
-            _FacetType_ *_newFacets[_nDimensions_+1];
-            _newFacets[0] = curFacet;
-            for(int i=0; i<_nDimensions_; ++i)
-            {
-                int _newFacetNodesIndexes[_nDimensions_];
-                // Need this to skip one by one base nodes and construct new facets
-                /// \todo need refactoring (already using)
-                for(int j=0, k=0; j<_nDimensions_; ++j, ++k)
-                {
-                    if(k == i)
-                        ++k;
-                    _newFacetNodesIndexes[j] = _elementNodesIndexes[k];
-                }
-                _newFacets[i+1] = new _FacetType_(&_nodesList, _newFacetNodesIndexes);
             }
 
             // Create new element
             return new _WrappedElementType_(
                         &_nodesList,
                         _elementNodesIndexes,
-                        _newFacets,
                         _sphereCenter,
                         _sphereRadius);
+        }
+
+        /// After construction of the new element,
+        /// one should update cross-references,
+        /// alive/dead lists and grid elements state.
+        /// Also, new Facets should be created and registered.
+        /// If given element is nullptr (was not constructed) then
+        /// given facet is in metastructure, and will be killed.
+        private: void _updateListsAndStates(
+                _WrappedElementType_ *newElement,
+                _FacetType_ *curAliveFacet) noexcept
+        {
+            // If no element was constructed, the
+            // facet is in metastructure, kill it!
+            if(newElement == nullptr)
+            {
+                curAliveFacet->setMetastructure();
+                curAliveFacet->kill(_aliveFacetsPtrs, _deadFacetsPtrs);
+                curAliveFacet->tryToKillNodes(_aliveNodesPtrs, _deadNodesPtrs);
+                return;
+            }
+
+            // Check if new facets already exist at neighbor elements.
+            // Try all alive facets adjoined to last element's node.
+            // If facet is really new  - create it, and register at lisits.
+            _FacetType_ *_newFacets[_nDimensions_+1];
+            _newFacets[0] = curAliveFacet;
+            for(int i=0; i<_nDimensions_; ++i)  // for all new facets
+            {
+                int _newFacetNodesIndexes[_nDimensions_];
+                // Need this to skip one by one base nodes and construct new facets
+                for(int j=0, k=0; j<_nDimensions_; ++j, ++k)
+                {
+                    // skip from the end, it is importatnt!
+                    // see next search directions updates
+                    if(k == _nDimensions_-1-i)
+                        ++k;
+                    _newFacetNodesIndexes[j] = newElement->getNodeIndexes()[k];
+                }
+
+                // Check adjoined facets
+                bool _alreadyExist = false;
+                for(int f=0; f<(*newElement)[_nDimensions_].getFacets().size(); ++f)
+                {
+                    _FacetType_* _targetFacet = static_cast<_FacetType_*>(
+                                (*newElement)[_nDimensions_].getFacets()[f]);
+
+                    // Exclude dead facets
+                    if(_targetFacet->getState() == _FacetType_::STATE_DEAD)
+                        continue;
+
+                    // If facet already exist, update it, and it's nodes, if needed
+                    if(_isSameNodeIndexses(
+                                _targetFacet->getNodeIndexes(),
+                                _newFacetNodesIndexes))
+                    {
+                        _newFacets[i+1] = _targetFacet;
+                        _targetFacet->kill(_aliveFacetsPtrs, _deadFacetsPtrs);
+                        _targetFacet->tryToKillNodes(_aliveNodesPtrs, _deadNodesPtrs);
+                        _alreadyExist = true;
+                        break;
+                    }
+                }
+
+                // Create new facet and register it
+                if(!_alreadyExist)
+                {
+                    // It will be GridFacet::DIRECTION_BOUTH by default, see constructor
+                    _newFacets[i+1] = new _FacetType_(&_nodesList, _newFacetNodesIndexes);
+                    _newFacets[i+1]->registerAtNodes();
+                    _newFacets[i+1]->appendToAliveList(_aliveFacetsPtrs);
+                }
+            }
+
+            // Update search directions
+            for(int i=0; i<_nDimensions_+1; ++i)  // for all new facets
+            {
+                // Exclude dead facets
+                if(_newFacets[i]->getState() == _FacetType_::STATE_DEAD)
+                    continue;
+
+                if(_newFacets[i]->getFrontConstructionDirection()
+                        == _FacetType_::DIRECTION_BOUTH)
+                {
+                    _DimType_ _determinant = MathUtils::round(
+                                MathUtils::calculateIsCoplanarStatusWithClippingCheck<
+                                _WrappedNodeType_,
+                                _nDimensions_,
+                                _FacetType_,
+                                _DimType_>
+                                ((*newElement)[_nDimensions_-i], *_newFacets[i]),
+                            _DiscretizationStep);
+                    // It can't be lineary dependent,
+                    // it can be only left or right
+                    if(_determinant > _DimType_(0.0)) // found at right, so next search at left
+                        _newFacets[i]->setFrontConstructionDirection(
+                                    _FacetType_::DIRECTION_LEFT);
+                    else
+                        _newFacets[i]->setFrontConstructionDirection(
+                                    _FacetType_::DIRECTION_RIGHT);
+                }
+                else if((_newFacets[i]->getFrontConstructionDirection()
+                         == _FacetType_::DIRECTION_LEFT) ||
+                        (_newFacets[i]->getFrontConstructionDirection()
+                         == _FacetType_::DIRECTION_RIGHT) ||
+                        _newFacets[i]->isMetastructure())
+                {
+                    _newFacets[i]->kill(_aliveFacetsPtrs, _deadFacetsPtrs);
+                    _newFacets[i]->tryToKillNodes(_aliveNodesPtrs, _deadNodesPtrs);
+                }
+            }
+
+            newElement->setFacets(_newFacets);
+            _elementsPtrs.append(newElement);
         }
 
         /// \todo use just for inDev testing, delete later
@@ -403,20 +522,45 @@ namespace DelaunayGridGenerator
         {
             if(!ptrToPlc)
                 throw std::runtime_error("constructGrid(), bad pointer to PLC");
-            _ptrToPlc = ptrToPlc; // need this for internal functions
+
+            _ptrToPlc = ptrToPlc;
 
             _copyAndWrapPlcNodesToInternalStorage();
 
-            // Construct first facet;
             _FacetType_ *_firstAliveFacet = _constructFirstFacet();
+            _firstAliveFacet->registerAtNodes();
             _firstAliveFacet->appendToAliveList(_aliveFacetsPtrs);
 
-            _WrappedElementType_ *_firstElement = _constructElement(_firstAliveFacet);
-//            for(auto _curAliveFacet = _aliveFacetsPtrs.begin();
-//                _curAliveFacet!=_aliveFacetsPtrs.end(); ++_curAliveFacet)
-//            {
-//                _constructElement(*_curAliveFacet);
-//            }
+            while(!_aliveFacetsPtrs.empty())
+            {
+                _WrappedElementType_ *_newElement = _constructElement(_aliveFacetsPtrs.first());
+                _updateListsAndStates(_newElement,_aliveFacetsPtrs.first());
+            }
+        }
+
+        /// \todo use just for inDev testing, delete later
+        public : void _TEST_iteration(const _PlcType_ *ptrToPlc) throw(std::runtime_error)
+        {
+            if(_aliveNodesPtrs.empty())
+            {
+                clear();
+                _ptrToPlc = ptrToPlc;
+                _copyAndWrapPlcNodesToInternalStorage();
+            }
+            else
+            {
+                if(_aliveFacetsPtrs.empty())
+                {
+                    _FacetType_ *_firstAliveFacet = _constructFirstFacet();
+                    _firstAliveFacet->registerAtNodes();
+                    _firstAliveFacet->appendToAliveList(_aliveFacetsPtrs);
+                }
+                else
+                {
+                    _WrappedElementType_ *_newElement = _constructElement(_aliveFacetsPtrs.first());
+                    _updateListsAndStates(_newElement,_aliveFacetsPtrs.first());
+                }
+            }
         }
 
         /// Constructs the grid;

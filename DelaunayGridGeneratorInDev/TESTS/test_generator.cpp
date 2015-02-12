@@ -17,7 +17,15 @@ void Test_Generator::test()
 
     _myCommonPlc2D.updateMaxAndMinCoordinates();
 
-    DelaunayGridGenerator2D _myGenerator;
+    DelaunayGridGenerator2D _myGenerator2D;
 
-    _myGenerator.constructGrid(&_myCommonPlc2D);
+    // Note, next lines calls the private functions,
+    // it is only for testing, don't use it as example
+//    {
+//        _myGenerator2D._ptrToPlc = const_cast<CommonPlc2D*>(&_myCommonPlc2D);
+//        _myGenerator2D._copyAndWrapPlcNodesToInternalStorage();
+//        Edge *_firstAliveFacet = _myGenerator2D._constructFirstFacet();
+//        _firstAliveFacet->appendToAliveList(_myGenerator2D._aliveFacetsPtrs);
+//        Triangle *_firstElement = _myGenerator2D._constructElement(_firstAliveFacet);
+//    }
 }
