@@ -43,6 +43,25 @@ namespace DelaunayGridGenerator
             for(int i=0; i<_nDimensions_; ++i)
                 (*this->_ptrToNodesList)[this->_myNodeIndexes[i]].getFacets().push_back(this);
         }
+        public : void unRegisterAtNodes() noexcept
+        {
+            for(int i=0; i<_nDimensions_; ++i)
+            {
+                for(auto _ptr = (*this->_ptrToNodesList)[
+                    this->_myNodeIndexes[i]].getFacets().begin();
+                    _ptr !=(*this->_ptrToNodesList)[
+                    this->_myNodeIndexes[i]].getFacets().end();
+                    ++_ptr)
+                {
+                    if(static_cast<GridFacet*>(*_ptr) == this)
+                    {
+                        (*this->_ptrToNodesList)[this->_myNodeIndexes[i]
+                                ].getFacets().erase(_ptr);
+                        break;
+                    }
+                }
+            }
+        }
 
         public : void tryToKillNodes(
                 QLinkedList<_WrappedNodeType_ *> &aliveList,
@@ -51,14 +70,13 @@ namespace DelaunayGridGenerator
             for(int i=0; i<_nDimensions_; ++i)
             {
                 bool _isDead = true;
-                for(int j=0;
-                    j<(*this->_ptrToNodesList)[this->_myNodeIndexes[i]].getFacets().size();
-                    ++j)
+                for(auto _ptr = (*this->_ptrToNodesList)[
+                    this->_myNodeIndexes[i]].getFacets().begin();
+                    _ptr !=(*this->_ptrToNodesList)[
+                    this->_myNodeIndexes[i]].getFacets().end();
+                    ++_ptr)
                 {
-                    if(static_cast<GridFacet*>(
-                                (*this->_ptrToNodesList)[this->_myNodeIndexes[i]].getFacets()[j]
-                                )->getState()
-                            == STATE_ALIVE)
+                    if(static_cast<GridFacet*>(*_ptr)->getState() == STATE_ALIVE)
                     {
                         _isDead = false;
                         break;
@@ -96,8 +114,10 @@ namespace DelaunayGridGenerator
 //                    _DimType_>(
 //                        *this, _nDimensions_, sphereRadius);
 //        }
-
-        public : ~GridFacet() noexcept {}
+        public : ~GridFacet() noexcept
+        {
+            unRegisterAtNodes();
+        }
     };
 
     typedef GridFacet<WrappedNode2D,2> Edge;

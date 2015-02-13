@@ -47,6 +47,15 @@ namespace MathUtils
         return _factorial;
     }
 /*********************************************************************************************/
+    /// Get pseudo-random number in range
+    /// \todo make it thread safe with Qrand
+    template<typename _DimType_ = MathUtils::Real>
+    inline _DimType_ rand(const _DimType_ a, const _DimType_ b) noexcept
+    {
+        return a + std::rand()*(b-a)/RAND_MAX;
+    }
+
+/*********************************************************************************************/
     /// Round to discretization step
     /// \todo it tested for FLT_EVAL_METHOD == 2, try tor wrap those constants into _DimType_()
     template<typename _DimType_ = MathUtils::Real>

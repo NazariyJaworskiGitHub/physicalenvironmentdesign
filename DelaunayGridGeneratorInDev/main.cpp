@@ -18,28 +18,38 @@ int main(int argc, char *argv[])
 //    _myCommonPlc3D->createNode(FEM::Node3D(0.0,0.0,1.0));
 //    _myCommonPlc3D->createNode(FEM::Node3D(1.0,1.0,1.0));
 
-    /// TEST 2
-    _myCommonPlc3D->createNode(FEM::Node3D(0.0,0.0,0.0));
-    _myCommonPlc3D->createNode(FEM::Node3D(1.0,0.0,0.0));
-    _myCommonPlc3D->createNode(FEM::Node3D(0.0,1.0,0.0));
-    _myCommonPlc3D->createNode(FEM::Node3D(1.0,1.0,0.0));
-    _myCommonPlc3D->createNode(FEM::Node3D(0.5,0.5,0.5));
-    _myCommonPlc3D->createNode(FEM::Node3D(0.0,0.0,1.0));
-    _myCommonPlc3D->createNode(FEM::Node3D(1.0,0.0,1.0));
-    _myCommonPlc3D->createNode(FEM::Node3D(0.0,1.0,1.0));
-    _myCommonPlc3D->createNode(FEM::Node3D(1.0,1.0,1.0));
-
-//    /// TEST 3
+//    /// TEST 2
 //    _myCommonPlc3D->createNode(FEM::Node3D(0.0,0.0,0.0));
 //    _myCommonPlc3D->createNode(FEM::Node3D(1.0,0.0,0.0));
-//    _myCommonPlc3D->createNode(FEM::Node3D(0.75,0.0,0.0));
 //    _myCommonPlc3D->createNode(FEM::Node3D(0.0,1.0,0.0));
 //    _myCommonPlc3D->createNode(FEM::Node3D(1.0,1.0,0.0));
+//    _myCommonPlc3D->createNode(FEM::Node3D(0.5,0.5,0.5));
 //    _myCommonPlc3D->createNode(FEM::Node3D(0.0,0.0,1.0));
 //    _myCommonPlc3D->createNode(FEM::Node3D(1.0,0.0,1.0));
 //    _myCommonPlc3D->createNode(FEM::Node3D(0.0,1.0,1.0));
 //    _myCommonPlc3D->createNode(FEM::Node3D(1.0,1.0,1.0));
-//    _myCommonPlc3D->createNode(FEM::Node3D(0.5,0.55,0.5));
+
+    /// TEST 3
+    _myCommonPlc3D->createNode(FEM::Node3D(0.0,0.0,0.0));
+    _myCommonPlc3D->createNode(FEM::Node3D(1.0,0.0,0.0));
+    _myCommonPlc3D->createNode(FEM::Node3D(0.75,0.0,0.0));
+    _myCommonPlc3D->createNode(FEM::Node3D(0.0,1.0,0.0));
+    _myCommonPlc3D->createNode(FEM::Node3D(1.0,1.0,0.0));
+    _myCommonPlc3D->createNode(FEM::Node3D(0.0,0.0,1.0));
+    _myCommonPlc3D->createNode(FEM::Node3D(1.0,0.0,1.0));
+    _myCommonPlc3D->createNode(FEM::Node3D(0.0,1.0,1.0));
+    _myCommonPlc3D->createNode(FEM::Node3D(1.0,1.0,1.0));
+    _myCommonPlc3D->createNode(FEM::Node3D(0.5,0.55,0.5));
+
+//    /// TEST 4
+//    for(int i=0; i<50; i++)
+//    {
+//        _myCommonPlc3D->createNode(
+//                    FEM::Node3D(
+//                        MathUtils::rand(0.0,1.0),
+//                        MathUtils::rand(0.0,1.0),
+//                        MathUtils::rand(0.0,1.0)));
+//    }
 
     _myCommonPlc3D->updateMaxAndMinCoordinates();
 
@@ -61,7 +71,6 @@ int main(int argc, char *argv[])
 
     DelaunayGridGenerator::DelaunayGridGenerator3D *_myGenerator3D =
             new DelaunayGridGenerator::DelaunayGridGenerator3D();
-    //_myGenerator3D->_TEST_constructGrid(_myCommonPlc3D);
 
     SimpleGLRender _render(NULL);
     _render.setRenderingPiecewiseLinearComplex(_myCommonPlc3D);
@@ -72,7 +81,6 @@ int main(int argc, char *argv[])
                 (_myCommonPlc3D->getMaxCoord(2)-_myCommonPlc3D->getMinCoord(2))/2);
     _render.initializeGL();
     _render.setWindowTitle("Triangulation");
-    //_render.move(0,0);
     _render.resize(800,600);
     _render.show();
 
