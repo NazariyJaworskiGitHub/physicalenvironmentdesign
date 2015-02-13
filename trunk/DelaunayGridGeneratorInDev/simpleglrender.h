@@ -11,31 +11,34 @@
 
 class SimpleGLRender : public QGLWidget
 {
-    public: FEM::Vector3D CameraPos;
-    public: FEM::Vector3D ScenePos;
-    public: int OldMouseX;
-    public: int OldMouseY;
-    public: double angleOY;
-    public: double angleOX;
-    public: bool isPressed;
-    public: QString dataString;
+    public: FEM::Vector3D CameraPos     = FEM::Vector3D(0.0, 0.0, 2.0);
+    public: FEM::Vector3D ScenePos      = FEM::Vector3D(0.0, 0.0, 0.0);
+    public: int OldMouseX               = 0;
+    public: int OldMouseY               = 0;
+    public: double angleOY              = 0;
+    public: double angleOX              = 0;
+    public: bool isPressed              = false;
+    public: QString dataString          = "Test string";
+
+    private: FEM::Vector4D _EnvironmentColor    = FEM::Vector4D(0.25, 0.5, 0.5, 1.0);
+    public : void setEnvironmenColor(double R, double G, double B, double A)
+    {
+        _EnvironmentColor(R,G,B,A);
+    }
 
     private: void _drawOrigin() noexcept;
 
-    /// default [1.0, 1.0, 1.0, 1.0] - white, see constructor
-    private: FEM::Vector4D _PlcNodesColor;
+    private: FEM::Vector4D _PlcNodesColor       = FEM::Vector4D(1.0, 1.0, 1.0, 1.0);
     public : void setRenderingPlcNodesColor(double R, double G, double B, double A)
     {
         _PlcNodesColor(R,G,B,A);
     }
-    /// default [0.0, 1.0, 0.0, 1.0] - green, see constructor
-    private: FEM::Vector4D _PlcSegmentsColor;
+    private: FEM::Vector4D _PlcSegmentsColor    = FEM::Vector4D(0.0, 1.0, 0.0, 1.0);
     public : void setRenderingPlcSegmentsColor(double R, double G, double B, double A)
     {
         _PlcSegmentsColor(R,G,B,A);
     }
-    /// default [0.8, 0.8, 0.8, 1.0] - light gray, see constructor
-    private: FEM::Vector4D _PlcFacetsColor;
+    private: FEM::Vector4D _PlcFacetsColor      = FEM::Vector4D(0.8, 0.8, 0.8, 1.0);
     public : void setRenderingPlcFacetsColor(double R, double G, double B, double A)
     {
         _PlcFacetsColor(R,G,B,A);
@@ -51,6 +54,31 @@ class SimpleGLRender : public QGLWidget
     private: void _drawPlc3DSegments() throw(std::runtime_error);
     private: void _drawPlc3DFacets() throw(std::runtime_error);
 
+    private: FEM::Vector4D _GeneratorAliveNodesColor    = FEM::Vector4D(1.0, 0.0, 0.0, 1.0);
+    public : void setGeneratorAliveNodesColor(double R, double G, double B, double A)
+    {
+        _GeneratorAliveNodesColor(R,G,B,A);
+    }
+    private: FEM::Vector4D _GeneratorDeadNodesColor     = FEM::Vector4D(1.0, 1.0, 0.0, 1.0);
+    public : void setGeneratorDeadNodesColor(double R, double G, double B, double A)
+    {
+        _GeneratorDeadNodesColor(R,G,B,A);
+    }
+    private: FEM::Vector4D _GeneratorAliveFacetsColor   = FEM::Vector4D(0.8, 0.8, 0.8, 0.5);
+    public : void setGeneratorAliveFacetsColor(double R, double G, double B, double A)
+    {
+        _GeneratorAliveFacetsColor(R,G,B,A);
+    }
+    private: FEM::Vector4D _GeneratorAliveFacetsEdgesColor = FEM::Vector4D(1.0, 0.0, 0.0, 1.0);
+    public : void setGeneratorAliveFacetsEdgesColor(double R, double G, double B, double A)
+    {
+        _GeneratorAliveFacetsEdgesColor(R,G,B,A);
+    }
+    private: FEM::Vector4D _GeneratorDeadFacetsEdgesColor = FEM::Vector4D(0.0, 1.0, 1.0, 1.0);
+    public : void setGeneratorDeadFacetsEdgesColor(double R, double G, double B, double A)
+    {
+        _GeneratorDeadFacetsEdgesColor(R,G,B,A);
+    }
     /// \todo it should be const, but then, i cant run single iteration
     private: /*const*/ DelaunayGridGenerator::DelaunayGridGenerator3D
         *_ptrToRenderingDelaunayGridGenerator3D = nullptr;

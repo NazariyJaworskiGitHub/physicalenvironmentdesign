@@ -54,6 +54,14 @@ namespace DelaunayGridGenerator
         {
             return _nodesList;
         }
+        public : const QLinkedList<_WrappedNodeType_*> & getAliveNodeList() const noexcept
+        {
+            return _aliveNodesPtrs;
+        }
+        public : const QLinkedList<_WrappedNodeType_*> & getDeadNodeList() const noexcept
+        {
+            return _deadNodesPtrs;
+        }
         public : const QLinkedList<_FacetType_*> & getAliveFacetsList() const noexcept
         {
             return _aliveFacetsPtrs;
@@ -127,6 +135,7 @@ namespace DelaunayGridGenerator
         /// It is the modification of Fleischmann's approach,
         /// for more details see "Fleischmann - Three-Dimensional Delaunay Mesh
         /// Generation Using a Modified Advancing Front Approach"
+        /// Don't forget to delete facet later
         private: _FacetType_* _constructFirstFacet() throw(std::runtime_error)
         {
             if(_aliveNodesPtrs.size() < _nDimensions_)
@@ -211,6 +220,7 @@ namespace DelaunayGridGenerator
                 }
             }
             // It will be GridFacet::DIRECTION_BOUTH by default, see constructor
+            // Don't forget to delete!
             return new _FacetType_(&_nodesList, _facetNodesIndexes);
         }
 
@@ -219,6 +229,7 @@ namespace DelaunayGridGenerator
         /// \todo use tree to make it in O(log(N))
         /// If there is no matching node - given facet is in metastructure,
         /// so it can't be constructed an element, and method returns nullptr.
+        /// Don't forget to delete element later
         private: _WrappedElementType_* _constructElement(_FacetType_ *curAliveFacet)
             throw(std::runtime_error)
         {
@@ -344,10 +355,10 @@ namespace DelaunayGridGenerator
                     _curAliveNode != _sphereLocatedNodes.end(); ++_curAliveNode)
                 {
                     bool _isIntersection = false;
-                    for(int i=0; i<(*_curAliveNode)->getFacets().size(); ++i)
+                    for(auto _f = (*_curAliveNode)->getFacets().begin();
+                        _f != (*_curAliveNode)->getFacets().end(); ++_f)
                     {
-                        _FacetType_* _targetFacet = static_cast<_FacetType_*>(
-                                    (*_curAliveNode)->getFacets()[i]);
+                        _FacetType_* _targetFacet = static_cast<_FacetType_*>(*_f);
                         // Exclude dead facets, if there is an intersection, then
                         // there exist at least one alive facet, which intersects
                         if(_targetFacet->getState() == _FacetType_::STATE_DEAD)
@@ -396,6 +407,7 @@ namespace DelaunayGridGenerator
             }
 
             // Create new element
+            // Don't forget to delete!
             return new _WrappedElementType_(
                         &_nodesList,
                         _elementNodesIndexes,
@@ -409,6 +421,7 @@ namespace DelaunayGridGenerator
         /// Also, new Facets should be created and registered.
         /// If given element is nullptr (was not constructed) then
         /// given facet is in metastructure, and will be killed.
+        /// Don't forget to delete facets later
         private: void _updateListsAndStates(
                 _WrappedElementType_ *newElement,
                 _FacetType_ *curAliveFacet) noexcept
@@ -443,10 +456,15 @@ namespace DelaunayGridGenerator
 
                 // Check adjoined facets
                 bool _alreadyExist = false;
-                for(int f=0; f<(*newElement)[_nDimensions_].getFacets().size(); ++f)
+                for(auto _f = (*newElement)[_nDimensions_].getFacets().begin();
+                    _f != (*newElement)[_nDimensions_].getFacets().end(); ++_f)
                 {
-                    _FacetType_* _targetFacet = static_cast<_FacetType_*>(
-                                (*newElement)[_nDimensions_].getFacets()[f]);
+                    _FacetType_* _targetFacet = static_cast<_FacetType_*>(*_f);
+
+                    // Exclude just created facets
+                    for(int p=0; p<i; ++p)
+                        if(_targetFacet == _newFacets[p+1])
+                            continue;
 
                     // Exclude dead facets
                     if(_targetFacet->getState() == _FacetType_::STATE_DEAD)
@@ -469,6 +487,7 @@ namespace DelaunayGridGenerator
                 if(!_alreadyExist)
                 {
                     // It will be GridFacet::DIRECTION_BOUTH by default, see constructor
+                    // Don't forget to delete!
                     _newFacets[i+1] = new _FacetType_(&_nodesList, _newFacetNodesIndexes);
                     _newFacets[i+1]->registerAtNodes();
                     _newFacets[i+1]->appendToAliveList(_aliveFacetsPtrs);
@@ -518,27 +537,6 @@ namespace DelaunayGridGenerator
         }
 
         /// \todo use just for inDev testing, delete later
-        public : void _TEST_constructGrid(const _PlcType_ *ptrToPlc) throw(std::runtime_error)
-        {
-            if(!ptrToPlc)
-                throw std::runtime_error("constructGrid(), bad pointer to PLC");
-
-            _ptrToPlc = ptrToPlc;
-
-            _copyAndWrapPlcNodesToInternalStorage();
-
-            _FacetType_ *_firstAliveFacet = _constructFirstFacet();
-            _firstAliveFacet->registerAtNodes();
-            _firstAliveFacet->appendToAliveList(_aliveFacetsPtrs);
-
-            while(!_aliveFacetsPtrs.empty())
-            {
-                _WrappedElementType_ *_newElement = _constructElement(_aliveFacetsPtrs.first());
-                _updateListsAndStates(_newElement,_aliveFacetsPtrs.first());
-            }
-        }
-
-        /// \todo use just for inDev testing, delete later
         public : void _TEST_iteration(const _PlcType_ *ptrToPlc) throw(std::runtime_error)
         {
             if(_aliveNodesPtrs.empty())
@@ -565,41 +563,78 @@ namespace DelaunayGridGenerator
 
         /// Constructs the grid;
         /// Input - Piecewise Linear Complex;
-        /// Output - FEM::Grid;
+        /// Output - new FEM::Grid, dont forget to delete later;
+        /// Note, all internal data will be saved until new call of this function or
+        /// until new clear() call. Data will be copied to new grid object,
+        /// so make shure, that you have enough memory to ceep it.
         /// \todo
-        public : void constructGrid(const _PlcType_ *ptrToPlc) throw(std::runtime_error)
+        public : _GridType_* constructGrid(const _PlcType_ *ptrToPlc) throw(std::runtime_error)
         {
-
             if(!ptrToPlc)
                 throw std::runtime_error("constructGrid(), bad pointer to PLC");
-            /*_ptrToPlc = ptrToPlc; // need this for internal functions
 
+            // Prepare to new grid construction
+            clear();
+            _ptrToPlc = ptrToPlc;
             // initialize tree data manager
-            _ptrToElementsDataManager = new _ElementsTreeDataManagerType_(
-                        _ptrToPlc->getMinCoords(),
-                        _ptrToPlc->getMaxCoords(),
-                        _ptrToElementsDataManager);
-
+//            _ptrToElementsDataManager = new _ElementsTreeDataManagerType_(
+//                        _ptrToPlc->getMinCoords(),
+//                        _ptrToPlc->getMaxCoords(),
+//                        _ptrToElementsDataManager);
             _copyAndWrapPlcNodesToInternalStorage();
 
-            _constructFirstFacet();
+            // Create first facet
+            _FacetType_ *_firstAliveFacet = _constructFirstFacet();
+            _firstAliveFacet->registerAtNodes();
+            _firstAliveFacet->appendToAliveList(_aliveFacetsPtrs);
 
-            delete _ptrToElementsDataManager;
-            _ptrToElementsDataManager = nullptr;*/
+            // while exist alive facets, create new elements
+            while(!_aliveFacetsPtrs.empty())
+            {
+                _WrappedElementType_ *_newElement = _constructElement(_aliveFacetsPtrs.first());
+                _updateListsAndStates(_newElement,_aliveFacetsPtrs.first());
+            }
         }
 
         /// Clear all inner storages and prepare to next calculations
-        public : void clear()
+        /// It delets all created elements and facets.
+        /// Next clear all lists.
+        public : void clear() noexcept
         {
-            /// \todo
+            auto _element = _elementsPtrs.begin();
+            while(_element != _elementsPtrs.end())
+            {
+                delete(*_element);  // see destructor
+                _element = _elementsPtrs.erase(_element);
+            }
+
+            auto _aliveFacet = _aliveFacetsPtrs.begin();
+            while(_aliveFacet != _aliveFacetsPtrs.end())
+            {
+                delete(*_aliveFacet);  // see destructor
+                _aliveFacet = _aliveFacetsPtrs.erase(_aliveFacet);
+            }
+
+            auto _deadFacet = _deadFacetsPtrs.begin();
+            while(_deadFacet != _deadFacetsPtrs.end())
+            {
+                delete(*_deadFacet);  // see destructor
+                _deadFacet = _deadFacetsPtrs.erase(_deadFacet);
+            }
+
+            _aliveNodesPtrs.clear();
+            _deadNodesPtrs.clear();
+            _nodesList.clear();
+
+            if(_ptrToElementsDataManager)
+                delete _ptrToElementsDataManager;
         }
 
         public : Generator() noexcept :
             _DiscretizationStep(std::numeric_limits<_DimType_>::epsilon() * 10){}
         public : ~Generator() noexcept
         {
-            if(_ptrToElementsDataManager)
-                delete _ptrToElementsDataManager;
+            clear();
         }
     };
 
