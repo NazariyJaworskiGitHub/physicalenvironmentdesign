@@ -8,6 +8,7 @@
 #include "domain.h"
 #include "simplexelement.h"
 #include "mathutils.h"
+#include "node.h"
 
 namespace FEM
 {
@@ -32,7 +33,7 @@ namespace FEM
             return _myNodes.last();
         }
 
-        public : _NodeType_ & getNode(int nodeIndex) throw (std::out_of_range)
+        public : _NodeType_ & getNode(int nodeIndex) const throw (std::out_of_range)
         {
             if(nodeIndex>=0 && nodeIndex < _myNodes.size())
             {
@@ -48,6 +49,20 @@ namespace FEM
             this->_myFiniteElementConductionCoefficients.append(conductionCoefficients);
             return _myFiniteElements.last();
         }
+
+        public : _ElementType_ & getElement(int elementIndex) const throw (std::out_of_range)
+        {
+            if(elementIndex>=0 && elementIndex < _myFiniteElements.size())
+            {
+                return _myFiniteElements[elementIndex];
+            }
+            else throw std::out_of_range("Grid::getElement(), nodeIndex out of range");
+        }
+
+        public : const QList<_NodeType_> & getNodesList() const noexcept{
+            return _myNodes;}
+        public : const QList<_ElementType_> & getElementsList() const noexcept{
+            return _myFiniteElements;}
 
         public : Domain<_DimType_> constructDomainEllipticEquation() const
         {
@@ -160,15 +175,9 @@ namespace FEM
         public : ~Grid(){}
     };
 
-    /// \todo set default templete parameter for _NodeType_
-    template < typename _NodeType_, typename _DimType_ = MathUtils::Real>
-    using EdgeGrid = Grid <_NodeType_,1,Edge<_NodeType_, _DimType_>, _DimType_>;
-
-    template < typename _NodeType_, typename _DimType_ = MathUtils::Real>
-    using TriangularGrid = Grid <_NodeType_,2,Triangle<_NodeType_, _DimType_>, _DimType_>;
-
-    template < typename _NodeType_, typename _DimType_ = MathUtils::Real>
-    using TetrahedralGrid = Grid <_NodeType_,3, Tetrahedron<_NodeType_,_DimType_>,_DimType_>;
+    typedef Grid <Node1D,1,Edge<Node1D, MathUtils::Real>, MathUtils::Real> EdgeGrid;
+    typedef Grid <Node2D,2,Triangle<Node2D, MathUtils::Real>, MathUtils::Real> TriangularGrid;
+    typedef Grid <Node3D,3,Tetrahedron<Node3D, MathUtils::Real>, MathUtils::Real> TetrahedralGrid;
 }
 
 #endif // GRID_H

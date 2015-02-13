@@ -15,13 +15,13 @@ namespace FEM
     {
         public : enum BOUNDARIES {LEFT, RIGHT};
 
-        private: QMap<int, EdgeGrid<_NodeType_,_DimType_>> _myGrids;
-        public : EdgeGrid<_NodeType_,_DimType_> &createGrid(const int gridId)
+        private: QMap<int, EdgeGrid> _myGrids;
+        public : EdgeGrid &createGrid(const int gridId)
         {
-            _myGrids.insert(gridId, EdgeGrid<_NodeType_,_DimType_>());
+            _myGrids.insert(gridId, EdgeGrid());
             return _myGrids[gridId];
         }
-        public : EdgeGrid<_NodeType_,_DimType_> &getGrid(const int gridId)
+        public : EdgeGrid &getGrid(const int gridId)
                  throw (std::out_of_range)
         {
             if(_myGrids.contains(gridId))

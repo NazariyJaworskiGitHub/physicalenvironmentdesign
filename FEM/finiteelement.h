@@ -46,6 +46,7 @@ namespace FEM
             return (*_ptrToNodesList)[_myNodeIndexes[index]];
         }
 
+        /// \todo which variant is called? const or non-const
         public : _NodeType_ &operator [](const int &index) throw(std::out_of_range)
         {
             if(index >= _nNodes_ || index < 0)
@@ -59,7 +60,7 @@ namespace FEM
             std::memcpy(_myNodeIndexes,target._myNodeIndexes,_nNodes_*sizeof(int));
         }
 
-        private: void _checkNodeIndexes() throw(std::out_of_range)
+        private: void _checkNodeIndexes() const throw(std::out_of_range)
         {
             bool _allCorrect = true;
             for(int i=0; i<_nNodes_; ++i)

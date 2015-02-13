@@ -7,7 +7,9 @@
 class Test_Generator : public QObject
 {
     Q_OBJECT
-    private: Q_SLOT void test();
+    private: Q_SLOT void test_1();
+    private: Q_SLOT void test_2();
+    private: Q_SLOT void test_3();
 };
 
 #endif // TEST_GENERATOR_H

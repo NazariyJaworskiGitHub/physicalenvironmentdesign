@@ -79,31 +79,31 @@ namespace FEM
         //   warning! - volume is depending of determinant sign, so renumber
         //              element's nodes if it is negative
         //
-        public : _DimType_ calculateOrientedVolume() const throw (std::logic_error)
+        /// \todo add tests
+        public : _DimType_ calculateOrientedVolume() const noexcept
         {
-            Eigen::Matrix<_DimType_, _nNodes_, _nNodes_> _C;
-            Eigen::Matrix<_DimType_, _nNodes_, _nNodes_> _invC;
+            Eigen::Matrix<_DimType_, _nDimensions_+1, _nDimensions_+1> _C;
 
-            // Find [C]
-            for(int i=0;i<_nNodes_;++i)
+            // Build [C]
+            for(int i=0;i<_nDimensions_+1;++i)
             {
                 _C(i,0) = 1;
                 for(int j=0; j< _nDimensions_; ++j)
-                   _C(i,j+1) = (*_ptrToNodesList)[_myNodeIndexes[i]][j];
+                   _C(i,j+1) = (*this->_ptrToNodesList)[this->_myNodeIndexes[i]][j];
             }
+            _DimType_ _determinant = _C.determinant();
+            return _determinant/MathUtils::factorial(_nDimensions_);
+        }
 
-            /// \todo
-            bool _isInversible;
-            _DimType_ _determinant;
-            /// \todo it fits only up to 4x4 matrices
-            _C.computeInverseAndDetWithCheck(_invC,_determinant,_isInversible);
-            if(!_isInversible)
-                throw std::logic_error("FiniteElement has zero-volume");
-
-            _DimType_ _factorial = 1;
-            for(int i=2; i<=_nDimensions_;++i)
-                _factorial*=i;
-            return _determinant/_factorial;
+        /// \todo volume is already calculated on element construction, get it from there
+        public: void permuteOnNegativeVolume() noexcept
+        {
+            if(this->calculateOrientedVolume() < _DimType_(0.0))
+            {
+                int _tmp = this->_myNodeIndexes[0];
+                this->_myNodeIndexes[0] = this->_myNodeIndexes[1];
+                this->_myNodeIndexes[1] = _tmp;
+            }
         }*/
 
         // Convert L(u) = d2u/dx2 + d2u/d2y = 0 to [K]{u}={F},
@@ -180,6 +180,25 @@ namespace FEM
 
             // calculate and return [K]
             return _volume * _transposedB * _conductionMatrix * _B;
+        }
+
+        /// \todo volume is already calculated on element construction, get it from there
+        /// \todo try with oriented volume method
+        public: void permuteOnNegativeVolume() noexcept
+        {
+            _DimType_ _determinant =
+                        MathUtils::calculateIsCoplanarStatusWithClippingCheck<
+                            _NodeType_,
+                            _nDimensions_,
+                            SimplexElement,
+                            _DimType_>
+                    ((*this->_ptrToNodesList)[this->_myNodeIndexes[_nDimensions_]],*this);
+            if(std::pow(-1,_nDimensions_)*_determinant > _DimType_(0.0))
+            {
+                int _tmp = this->_myNodeIndexes[0];
+                this->_myNodeIndexes[0] = this->_myNodeIndexes[1];
+                this->_myNodeIndexes[1] = _tmp;
+            }
         }
     };
 

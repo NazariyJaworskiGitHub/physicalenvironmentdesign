@@ -116,7 +116,6 @@ namespace DelaunayGridGenerator
 //        }
         public : ~GridFacet() noexcept
         {
-            unRegisterAtNodes();
         }
     };
 
