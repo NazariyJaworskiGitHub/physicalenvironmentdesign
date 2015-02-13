@@ -44,9 +44,9 @@ class SimpleGLRender : public QGLWidget
         _PlcFacetsColor(R,G,B,A);
     }
 
-    private: const DelaunayGridGenerator::CommonPlc3D *_ptrToRenderingPlc3D = nullptr;
+    private: const DelaunayGridGenerator::Plc3D *_ptrToRenderingPlc3D = nullptr;
     public: void setRenderingPiecewiseLinearComplex(
-            const DelaunayGridGenerator::CommonPlc3D *renderingPlc3D) throw (std::logic_error)
+            const DelaunayGridGenerator::Plc3D *renderingPlc3D) throw (std::logic_error)
     {
         _ptrToRenderingPlc3D = renderingPlc3D;
     }

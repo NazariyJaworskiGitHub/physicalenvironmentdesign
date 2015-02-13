@@ -32,9 +32,6 @@ namespace DelaunayGridGenerator
         typename _DimType_ = MathUtils::Real>
     class Generator
     {
-        /// \todo it is only for tests, remove is later
-        friend class Test_Generator;
-
         private: _DimType_ _DiscretizationStep;
 
         private: QList<_WrappedNodeType_>           _nodesList;
@@ -271,6 +268,7 @@ namespace DelaunayGridGenerator
                                 _DimType_>
                                 (**_curAliveNode,_indexIterator),
                             _DiscretizationStep);
+                /// \todo when det > 0.0 it is actually "Left", fix it, change signs!
                 if(_determinant == _DimType_(0.0) ||            // Node is lineary dependent
                         (_determinant < _DimType_(0.0) &&       // GridFacet::DIRECTION_LEFT
                          curAliveFacet->getFrontConstructionDirection()
@@ -564,11 +562,17 @@ namespace DelaunayGridGenerator
         /// Constructs the grid;
         /// Input - Piecewise Linear Complex;
         /// Output - new FEM::Grid, dont forget to delete later;
-        /// Note, all internal data will be saved until new call of this function or
+        /// Environment characteristics of grid elements will be set to nullptr;
+        /// This function clears all previous data of generator;
+        /// Note, if clearWhenDone == false (default is true),
+        /// all internal data will be saved until new call of this function or
         /// until new clear() call. Data will be copied to new grid object,
         /// so make shure, that you have enough memory to ceep it.
         /// \todo
-        public : _GridType_* constructGrid(const _PlcType_ *ptrToPlc) throw(std::runtime_error)
+        public : _GridType_* constructGrid(
+                const _PlcType_ *ptrToPlc,
+                bool clearWhenDone = true)
+            throw(std::runtime_error)
         {
             if(!ptrToPlc)
                 throw std::runtime_error("constructGrid(), bad pointer to PLC");
@@ -581,6 +585,8 @@ namespace DelaunayGridGenerator
 //                        _ptrToPlc->getMinCoords(),
 //                        _ptrToPlc->getMaxCoords(),
 //                        _ptrToElementsDataManager);
+            if(_ptrToPlc->getNodeList().size()<_nDimensions_+1)
+                throw std::runtime_error("constructGrid(), not enough nodes at input PLC");
             _copyAndWrapPlcNodesToInternalStorage();
 
             // Create first facet
@@ -594,31 +600,65 @@ namespace DelaunayGridGenerator
                 _WrappedElementType_ *_newElement = _constructElement(_aliveFacetsPtrs.first());
                 _updateListsAndStates(_newElement,_aliveFacetsPtrs.first());
             }
+
+            // Create new Grid object
+            // Don't forget to delete!
+            _GridType_ *_newGrid = new _GridType_();
+
+            // Copy nodes to new grid
+            auto _node = _nodesList.begin();
+            while(!_nodesList.empty())
+            {
+                _newGrid->createNode(*_node);
+                if(clearWhenDone)
+                    _node = _nodesList.erase(_node);
+                else ++_node;
+            }
+
+            // Copy elements to new grid
+            /// \todo check volume orientation
+            auto _element = _elementsPtrs.begin();
+            while(_element != _elementsPtrs.end())
+            {
+                // Note, that environment characteristics is set to nullptr
+                auto _newElement = &_newGrid->createFiniteElement(
+                            (*_element)->getNodeIndexes(), nullptr);
+                _newElement->permuteOnNegativeVolume();
+                if(clearWhenDone)
+                {
+                    delete(*_element);  // see destructor
+                    _element = _elementsPtrs.erase(_element);
+                }
+                else ++_element;
+            }
+
+            if(clearWhenDone)
+                clear();
+            return _newGrid;
         }
 
         /// Clear all inner storages and prepare to next calculations
-        /// It delets all created elements and facets.
-        /// Next clear all lists.
+        /// It delets all created elements, facets and clear all lists.
         public : void clear() noexcept
         {
             auto _element = _elementsPtrs.begin();
             while(_element != _elementsPtrs.end())
             {
-                delete(*_element);  // see destructor
+                delete(*_element);
                 _element = _elementsPtrs.erase(_element);
             }
 
             auto _aliveFacet = _aliveFacetsPtrs.begin();
             while(_aliveFacet != _aliveFacetsPtrs.end())
             {
-                delete(*_aliveFacet);  // see destructor
+                delete(*_aliveFacet);
                 _aliveFacet = _aliveFacetsPtrs.erase(_aliveFacet);
             }
 
             auto _deadFacet = _deadFacetsPtrs.begin();
             while(_deadFacet != _deadFacetsPtrs.end())
             {
-                delete(*_deadFacet);  // see destructor
+                delete(*_deadFacet);
                 _deadFacet = _deadFacetsPtrs.erase(_deadFacet);
             }
 
@@ -627,7 +667,10 @@ namespace DelaunayGridGenerator
             _nodesList.clear();
 
             if(_ptrToElementsDataManager)
+            {
                 delete _ptrToElementsDataManager;
+                _ptrToElementsDataManager = nullptr;
+            }
         }
 
         public : Generator() noexcept :
@@ -643,8 +686,8 @@ namespace DelaunayGridGenerator
         Edge,
         Triangle,
         Element2DTreeDataManager,
-        CommonPlc2D,
-        FEM::TriangularGrid<FEM::Node2D>,
+        Plc2D,
+        FEM::TriangularGrid,
         2> DelaunayGridGenerator2D;
 
     typedef Generator<
@@ -652,8 +695,8 @@ namespace DelaunayGridGenerator
         Facet,
         Tetrahedron,
         Element3DTreeDataManager,
-        CommonPlc3D,
-        FEM::TetrahedralGrid<FEM::Node3D>,
+        Plc3D,
+        FEM::TetrahedralGrid,
         3> DelaunayGridGenerator3D;
 }
 

@@ -147,7 +147,7 @@ namespace DelaunayGridGenerator
             FEM::Node2D,
             2,
             2>,
-        2> CommonPlc2D;
+        2> Plc2D;
 
     typedef PiecewiseLinearComplex<
         FEM::Node3D,
@@ -159,7 +159,7 @@ namespace DelaunayGridGenerator
             FEM::Node3D,
             3,
             3>,
-        3> CommonPlc3D;
+        3> Plc3D;
 }
 
 #endif // PIECEWISELINEARCOMPLEX_H

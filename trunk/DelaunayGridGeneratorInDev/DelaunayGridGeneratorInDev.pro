@@ -5,6 +5,9 @@ CONFIG += no_keywords
 QT += testlib
 QT += opengl
 
+# For dr.memory debug
+Debug:QMAKE_CXXFLAGS += -ggdb
+
 #Warning!!! this section is the including of FEM branch,
 #remake project tree to avoid this section!!!
 INCLUDEPATH += E:\Developing\BPSPO\PhysicalEnvironmentDesign\FEM

@@ -6,26 +6,144 @@
 
 using namespace DelaunayGridGenerator;
 
-void Test_Generator::test()
+void Test_Generator::test_1()
 {
-    CommonPlc2D _myCommonPlc2D;
+    Plc2D _myPlc2D;
 
-    _myCommonPlc2D.createNode(FEM::Node2D(0.0,0.0));
-    _myCommonPlc2D.createNode(FEM::Node2D(1.0,0.0));
-    _myCommonPlc2D.createNode(FEM::Node2D(0.0,1.0));
-    _myCommonPlc2D.createNode(FEM::Node2D(1.0,1.0));
+    _myPlc2D.createNode(FEM::Node2D(0.0,0.0));
+    _myPlc2D.createNode(FEM::Node2D(1.0,0.0));
 
-    _myCommonPlc2D.updateMaxAndMinCoordinates();
-
+    _myPlc2D.updateMaxAndMinCoordinates();
     DelaunayGridGenerator2D _myGenerator2D;
 
-    // Note, next lines calls the private functions,
-    // it is only for testing, don't use it as example
-//    {
-//        _myGenerator2D._ptrToPlc = const_cast<CommonPlc2D*>(&_myCommonPlc2D);
-//        _myGenerator2D._copyAndWrapPlcNodesToInternalStorage();
-//        Edge *_firstAliveFacet = _myGenerator2D._constructFirstFacet();
-//        _firstAliveFacet->appendToAliveList(_myGenerator2D._aliveFacetsPtrs);
-//        Triangle *_firstElement = _myGenerator2D._constructElement(_firstAliveFacet);
-//    }
+    try
+    {
+        FEM::TriangularGrid *_myGrid2D =
+                _myGenerator2D.constructGrid(&_myPlc2D, true);
+    }
+    catch(std::exception &e)
+    {
+        QVERIFY(e.what());
+        std::cout << "Expected error: " << e.what() << '\n';
+    }
+
+    Plc3D _myPlc3D;
+
+    _myPlc3D.createNode(FEM::Node3D(0.0,0.0,0.0));
+    _myPlc3D.createNode(FEM::Node3D(1.0,0.0,0.0));
+    _myPlc3D.createNode(FEM::Node3D(0.0,1.0,0.0));
+
+    _myPlc3D.updateMaxAndMinCoordinates();
+    DelaunayGridGenerator3D _myGenerator3D;
+
+    try
+    {
+        FEM::TetrahedralGrid *_myGrid3D =
+                _myGenerator3D.constructGrid(&_myPlc3D, true);
+    }
+    catch(std::exception &e)
+    {
+        QVERIFY(e.what());
+        std::cout << "Expected error: " << e.what() << '\n';
+    }
 }
+
+void Test_Generator::test_2()
+{
+    Plc2D _myPlc2D;
+
+    _myPlc2D.createNode(FEM::Node2D(0.0,0.0));
+    _myPlc2D.createNode(FEM::Node2D(1.0,0.0));
+    _myPlc2D.createNode(FEM::Node2D(0.0,1.0));
+    _myPlc2D.createNode(FEM::Node2D(1.0,1.0));
+
+    _myPlc2D.updateMaxAndMinCoordinates();
+
+    DelaunayGridGenerator2D _myGenerator2D;
+    FEM::TriangularGrid *_myGrid2D =
+            _myGenerator2D.constructGrid(&_myPlc2D, true);
+
+    QVERIFY(_myGrid2D->getNodesList()[0] == _myPlc2D.getNodeList()[0] &&
+            _myGrid2D->getNodesList()[1] == _myPlc2D.getNodeList()[1] &&
+            _myGrid2D->getNodesList()[2] == _myPlc2D.getNodeList()[2] &&
+            _myGrid2D->getNodesList()[3] == _myPlc2D.getNodeList()[3] );
+
+    QVERIFY(_myGrid2D->getElementsList()[0].getNodeIndexes()[0] == 0 &&
+            _myGrid2D->getElementsList()[0].getNodeIndexes()[1] == 1 &&
+            _myGrid2D->getElementsList()[0].getNodeIndexes()[2] == 2 );
+
+    QVERIFY(_myGrid2D->getElementsList()[1].getNodeIndexes()[0] == 2 &&
+            _myGrid2D->getElementsList()[1].getNodeIndexes()[1] == 1 &&
+            _myGrid2D->getElementsList()[1].getNodeIndexes()[2] == 3 );
+
+    delete (_myGrid2D);
+
+    Plc3D _myPlc3D;
+
+    _myPlc3D.createNode(FEM::Node3D(0.0,0.0,0.0));
+    _myPlc3D.createNode(FEM::Node3D(1.0,0.0,0.0));
+    _myPlc3D.createNode(FEM::Node3D(0.0,1.0,0.0));
+    _myPlc3D.createNode(FEM::Node3D(0.0,0.0,1.0));
+    _myPlc3D.createNode(FEM::Node3D(1.0,1.0,1.0));
+
+    _myPlc3D.updateMaxAndMinCoordinates();
+
+    DelaunayGridGenerator3D _myGenerator3D;
+    FEM::TetrahedralGrid *_myGrid3D =
+            _myGenerator3D.constructGrid(&_myPlc3D, true);
+
+    QVERIFY(_myGrid3D->getNodesList()[0] == _myPlc3D.getNodeList()[0] &&
+            _myGrid3D->getNodesList()[1] == _myPlc3D.getNodeList()[1] &&
+            _myGrid3D->getNodesList()[2] == _myPlc3D.getNodeList()[2] &&
+            _myGrid3D->getNodesList()[3] == _myPlc3D.getNodeList()[3] &&
+            _myGrid3D->getNodesList()[4] == _myPlc3D.getNodeList()[4]);
+
+    QVERIFY(_myGrid3D->getElementsList()[0].getNodeIndexes()[0] == 0 &&
+            _myGrid3D->getElementsList()[0].getNodeIndexes()[1] == 1 &&
+            _myGrid3D->getElementsList()[0].getNodeIndexes()[2] == 2 &&
+            _myGrid3D->getElementsList()[0].getNodeIndexes()[3] == 3 );
+
+    QVERIFY(_myGrid3D->getElementsList()[1].getNodeIndexes()[0] == 1 &&
+            _myGrid3D->getElementsList()[1].getNodeIndexes()[1] == 2 &&
+            _myGrid3D->getElementsList()[1].getNodeIndexes()[2] == 3 &&
+            _myGrid3D->getElementsList()[1].getNodeIndexes()[3] == 4 );
+
+    delete (_myGrid3D);
+}
+
+void Test_Generator::test_3()
+{
+    Plc3D _myPlc3D;
+
+    _myPlc3D.createNode(FEM::Node3D(0.0,0.0,0.0));
+    _myPlc3D.createNode(FEM::Node3D(1.0,0.0,0.0));
+    _myPlc3D.createNode(FEM::Node3D(0.75,0.0,0.0));
+    _myPlc3D.createNode(FEM::Node3D(0.0,1.0,0.0));
+    _myPlc3D.createNode(FEM::Node3D(1.0,1.0,0.0));
+    _myPlc3D.createNode(FEM::Node3D(0.5,0.5,0.5));
+
+    _myPlc3D.updateMaxAndMinCoordinates();
+
+    DelaunayGridGenerator3D _myGenerator3D;
+    FEM::TetrahedralGrid *_myGrid3D =
+            _myGenerator3D.constructGrid(&_myPlc3D, true);
+
+    QVERIFY(_myGrid3D->getElementsList()[0].getNodeIndexes()[0] == 2 &&
+            _myGrid3D->getElementsList()[0].getNodeIndexes()[1] == 0 &&
+            _myGrid3D->getElementsList()[0].getNodeIndexes()[2] == 5 &&
+            _myGrid3D->getElementsList()[0].getNodeIndexes()[3] == 3 );
+
+    QVERIFY(_myGrid3D->getElementsList()[1].getNodeIndexes()[0] == 5 &&
+            _myGrid3D->getElementsList()[1].getNodeIndexes()[1] == 2 &&
+            _myGrid3D->getElementsList()[1].getNodeIndexes()[2] == 3 &&
+            _myGrid3D->getElementsList()[1].getNodeIndexes()[3] == 4 );
+
+    QVERIFY(_myGrid3D->getElementsList()[2].getNodeIndexes()[0] == 5 &&
+            _myGrid3D->getElementsList()[2].getNodeIndexes()[1] == 2 &&
+            _myGrid3D->getElementsList()[2].getNodeIndexes()[2] == 4 &&
+            _myGrid3D->getElementsList()[2].getNodeIndexes()[3] == 1 );
+
+    delete (_myGrid3D);
+}
+
+
