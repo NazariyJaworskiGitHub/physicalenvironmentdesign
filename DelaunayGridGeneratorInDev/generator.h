@@ -468,14 +468,14 @@ namespace DelaunayGridGenerator
                     if(_targetFacet->getState() == _FacetType_::STATE_DEAD)
                         continue;
 
-                    // If facet already exist, update it, and it's nodes, if needed
+                    // If facet already exist, update it
                     if(_isSameNodeIndexses(
                                 _targetFacet->getNodeIndexes(),
                                 _newFacetNodesIndexes))
                     {
                         _newFacets[i+1] = _targetFacet;
                         _targetFacet->kill(_aliveFacetsPtrs, _deadFacetsPtrs);
-                        _targetFacet->tryToKillNodes(_aliveNodesPtrs, _deadNodesPtrs);
+                        // Don't kill nodes here, while all facets isn't created!
                         _alreadyExist = true;
                         break;
                     }
@@ -497,8 +497,13 @@ namespace DelaunayGridGenerator
             {
                 // Exclude dead facets
                 if(_newFacets[i]->getState() == _FacetType_::STATE_DEAD)
+                {
+                    // Now nodes can be killed, if need
+                    _newFacets[i]->tryToKillNodes(_aliveNodesPtrs, _deadNodesPtrs);
                     continue;
+                }
 
+                // For just created facets, or for first facet!
                 if(_newFacets[i]->getFrontConstructionDirection()
                         == _FacetType_::DIRECTION_BOUTH)
                 {
@@ -519,6 +524,7 @@ namespace DelaunayGridGenerator
                         _newFacets[i]->setFrontConstructionDirection(
                                     _FacetType_::DIRECTION_RIGHT);
                 }
+                // For base facet, if it isn't first at triangulation
                 else if((_newFacets[i]->getFrontConstructionDirection()
                          == _FacetType_::DIRECTION_LEFT) ||
                         (_newFacets[i]->getFrontConstructionDirection()
@@ -607,7 +613,7 @@ namespace DelaunayGridGenerator
 
             // Copy nodes to new grid
             auto _node = _nodesList.begin();
-            while(!_nodesList.empty())
+            while(_node != _nodesList.end())
             {
                 _newGrid->createNode(*_node);
                 if(clearWhenDone)

@@ -23,7 +23,9 @@ SOURCES += main.cpp \
     TESTS/test_gridelement.cpp \
     datamanager.cpp \
     TESTS/test_datamanager.cpp \
-    TESTS/test_generator.cpp
+    TESTS/test_generator.cpp \
+    simpleglrender3d.cpp \
+    simpleglrender2d.cpp
 
 HEADERS += \
     simpleglrender.h \
@@ -38,4 +40,6 @@ HEADERS += \
     TESTS/test_gridelement.h \
     datamanager.h \
     TESTS/test_datamanager.h \
-    TESTS/test_generator.h
+    TESTS/test_generator.h \
+    simpleglrender3d.h \
+    simpleglrender2d.h

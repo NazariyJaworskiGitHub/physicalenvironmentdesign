@@ -69,21 +69,26 @@ namespace DelaunayGridGenerator
         {
             for(int i=0; i<_nDimensions_; ++i)
             {
-                bool _isDead = true;
-                for(auto _ptr = (*this->_ptrToNodesList)[
-                    this->_myNodeIndexes[i]].getFacets().begin();
-                    _ptr !=(*this->_ptrToNodesList)[
-                    this->_myNodeIndexes[i]].getFacets().end();
-                    ++_ptr)
+                if((*this->_ptrToNodesList)[
+                        this->_myNodeIndexes[i]].getState() == _WrappedNodeType_::STATE_ALIVE)
                 {
-                    if(static_cast<GridFacet*>(*_ptr)->getState() == STATE_ALIVE)
+                    bool _isDead = true;
+                    for(auto _ptr = (*this->_ptrToNodesList)[
+                        this->_myNodeIndexes[i]].getFacets().begin();
+                        _ptr !=(*this->_ptrToNodesList)[
+                        this->_myNodeIndexes[i]].getFacets().end();
+                        ++_ptr)
                     {
-                        _isDead = false;
-                        break;
+                        if(static_cast<GridFacet*>(*_ptr)->getState() == STATE_ALIVE)
+                        {
+                            _isDead = false;
+                            break;
+                        }
                     }
+                    if(_isDead)
+                        (*this->_ptrToNodesList)[this->_myNodeIndexes[i]].kill(
+                                aliveList, killedList);
                 }
-                if(_isDead)
-                    (*this->_ptrToNodesList)[this->_myNodeIndexes[i]].kill(aliveList, killedList);
             }
         }
 
