@@ -10,6 +10,10 @@
 
 class SimpleGLRender : public QGLWidget
 {
+    protected: int _oldMouseX                   = 0;
+    protected: int _oldMouseY                   = 0;
+    protected: bool _isPressed                  = false;
+
     protected: FEM::Vector4D _EnvironmentColor  = FEM::Vector4D(0.25, 0.5, 0.5, 1.0);
     public   : void setEnvironmenColor(double R, double G, double B, double A){
         _EnvironmentColor(R,G,B,A);}
@@ -20,24 +24,33 @@ class SimpleGLRender : public QGLWidget
 
     public   : QString dataString               = "Test string";
 
-    protected: FEM::Vector3D _CameraPosition      = FEM::Vector3D(0.0, 0.0, 2.0);
+    protected: FEM::Vector3D _CameraPosition    = FEM::Vector3D(0.0, 0.0, 2.0);
     public   : void setCameraPosition(const FEM::Vector3D &newPosition) noexcept {
         _CameraPosition = newPosition;}
     public   : FEM::Vector3D getCameraPosition() const noexcept {return _CameraPosition;}
 
-    protected: FEM::Vector3D _ScenePosition       = FEM::Vector3D(0.0, 0.0, 0.0);
+    protected: FEM::Vector3D _ScenePosition     = FEM::Vector3D(0.0, 0.0, 0.0);
     public   : void setScenePosition(const FEM::Vector3D &newPosition) noexcept {
         _ScenePosition = newPosition;}
     public   : FEM::Vector3D getScenePosition() const noexcept {return _ScenePosition;}
 
+    protected: double _Zoom                     = 1.0;
+    public   : void setZoom(const double &newZoom) noexcept {
+        _Zoom = newZoom;}
+    public   : double getZoom() const noexcept {return _Zoom;}
+
+    public   : void mousePressEvent(QMouseEvent *e) override;
+    public   : void mouseReleaseEvent(QMouseEvent *e) override;
+    public   : void wheelEvent(QWheelEvent *e) override;
+
     protected: virtual void _drawOrigin() noexcept          = 0;
     protected: virtual void _RotateAndTranslate() noexcept  = 0;
 
-    protected: FEM::Vector4D _PlcNodesColor       = FEM::Vector4D(1.0, 1.0, 1.0, 1.0);
+    protected: FEM::Vector4D _PlcNodesColor     = FEM::Vector4D(1.0, 1.0, 1.0, 1.0);
     public   : void setRenderingPlcNodesColor(double R, double G, double B, double A){
         _PlcNodesColor(R,G,B,A);}
 
-    protected: FEM::Vector4D _PlcFacetsColor      = FEM::Vector4D(0.8, 0.8, 0.8, 1.0);
+    protected: FEM::Vector4D _PlcFacetsColor    = FEM::Vector4D(0.8, 0.8, 0.8, 1.0);
     public   : void setRenderingPlcFacetsColor(double R, double G, double B, double A){
         _PlcFacetsColor(R,G,B,A);}
 

@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
             new DelaunayGridGenerator::Plc3D();
 
     /// TEST 5
-    for(int i=0; i<20; i++)
+    for(int i=0; i<100; i++)
     {
         _myPlc3D->createNode(
                     FEM::Node3D(
@@ -57,13 +57,23 @@ int main(int argc, char *argv[])
 
     DelaunayGridGenerator::Plc2D _myPlc2D;
 
-    /// TEST 5
-    for(int i=0; i<100; i++)
+//    /// TEST 5
+//    for(int i=0; i<100; i++)
+//    {
+//        _myPlc2D.createNode(FEM::Node2D(
+//                                MathUtils::rand(0.0,1.0),
+//                                MathUtils::rand(0.0,1.0)));
+//    }
+
+    /// TEST 6
+    int N=20;
+    for(int i=0; i<N; i++)
     {
-        _myPlc2D.createNode(FEM::Node2D(
-                                MathUtils::rand(0.0,1.0),
-                                MathUtils::rand(0.0,1.0)));
+        FEM::Node2D _n((1.0 + sin(i*2*M_PI/N))/2.0,
+                    (1.0 + cos(i*2*M_PI/N))/2.0);
+        _myPlc2D.createNode(_n);
     }
+
      _myPlc2D.updateMaxAndMinCoordinates();
 
     DelaunayGridGenerator::DelaunayGridGenerator2D _myGenerator2D;

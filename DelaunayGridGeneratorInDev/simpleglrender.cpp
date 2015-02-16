@@ -5,6 +5,25 @@ SimpleGLRender::SimpleGLRender(QWidget *pwgt) noexcept:
 {
 }
 
+void SimpleGLRender::mousePressEvent(QMouseEvent *e)
+{
+    _isPressed = true;
+    _oldMouseX = e->x();
+    _oldMouseY = e->y();
+    this->updateGL();
+}
+
+void SimpleGLRender::mouseReleaseEvent(QMouseEvent *e)
+{
+    _isPressed = false;
+}
+
+void SimpleGLRender::wheelEvent(QWheelEvent *e)
+{
+    _Zoom += _Zoom * e->delta() / 5000;
+    this->updateGL();
+}
+
 void SimpleGLRender::initializeGL()
 {
     glClearColor(

@@ -12,7 +12,7 @@ void SimpleGLRender3D::_drawOrigin() noexcept
     glPushMatrix();
 
         glLoadIdentity();
-        gluPerspective( 60.0f, 4.0/3.0, 0.1, 1000.0f );
+        gluPerspective( 60.0f, 1.0, 0.1, 1000.0f );
         int _width = this->width();
         int _height = this->height();
         glViewport(0,0,100,100);
@@ -69,42 +69,27 @@ void SimpleGLRender3D::_RotateAndTranslate() noexcept
               0, 1, 0);
     glRotated(angleOY, 0, 1, 0);
     glRotated(angleOX, 1, 0, 0);
+    glScaled(_Zoom, _Zoom, _Zoom);
     glTranslated(-_ScenePosition[0], -_ScenePosition[1], -_ScenePosition[2]);
 }
 
 void SimpleGLRender3D::mouseMoveEvent(QMouseEvent *e)
 {
-    if(isPressed)
+    if(_isPressed)
     {
-        angleOY += e->x()-OldMouseX;
-        angleOX += e->y()-OldMouseY;
-        OldMouseX = e->x();
-        OldMouseY = e->y();
+        angleOY += e->x()-_oldMouseX;
+        angleOX += e->y()-_oldMouseY;
+        _oldMouseX = e->x();
+        _oldMouseY = e->y();
         this->updateGL();
     }
-}
-
-void SimpleGLRender3D::mousePressEvent(QMouseEvent *e)
-{
-    isPressed = true;
-    OldMouseX = e->x();
-    OldMouseY = e->y();
-    dataString =
-            "Click! at(" +
-            QString::number(OldMouseX)+ "," +
-            QString::number(OldMouseY) + ")";
-    this->updateGL();
-}
-
-void SimpleGLRender3D::mouseReleaseEvent(QMouseEvent *e)
-{
-    isPressed = false;
 }
 
 void SimpleGLRender3D::keyPressEvent(QKeyEvent *e)
 {
     if(e->key() == Qt::Key_Space)
     {
+        _ptrToRenderingDelaunayGridGenerator3D->_TEST_iteration(_ptrToRenderingPlc3D);
         dataString = QString(" AN: ") +
                 QString::number(_ptrToRenderingDelaunayGridGenerator3D->getAliveNodeList().size()) +
                 QString(" DN: ") +
@@ -213,18 +198,18 @@ void SimpleGLRender3D::_drawDelaunayGridGeneratorNodes() throw(std::runtime_erro
         glEnd();
         glPointSize(1);
 
-//        glColor4d(
-//                _TextColor[0],
-//                _TextColor[1],
-//                _TextColor[2],
-//                _TextColor[3]);
-//        unsigned _n = 0;
-//        for(auto _i = _ptrToRenderingDelaunayGridGenerator3D->getNodeList().begin();
-//            _i != _ptrToRenderingDelaunayGridGenerator3D->getNodeList().end(); ++_i)
-//        {
-//            this->renderText((*_i)[0], (*_i)[1], (*_i)[2], QString::number(_n));
-//            ++_n;
-//        }
+        glColor4d(
+                _TextColor[0],
+                _TextColor[1],
+                _TextColor[2],
+                _TextColor[3]);
+        unsigned _n = 0;
+        for(auto _i = _ptrToRenderingDelaunayGridGenerator3D->getNodeList().begin();
+            _i != _ptrToRenderingDelaunayGridGenerator3D->getNodeList().end(); ++_i)
+        {
+            this->renderText((*_i)[0], (*_i)[1], (*_i)[2], QString::number(_n));
+            ++_n;
+        }
 
         glEnable(GL_LIGHTING);
     }
