@@ -5,8 +5,6 @@
 
 class SimpleGLRender2D : public SimpleGLRender
 {
-    public : bool isPressed                     = false;
-
     private: void _drawOrigin() noexcept final;
     private: void _RotateAndTranslate() noexcept final;
 
@@ -27,6 +25,7 @@ class SimpleGLRender2D : public SimpleGLRender
         throw (std::logic_error){
         _ptrToRenderingDelaunayGridGenerator2D = renderingDelaunayGridGenerator2D;}
 
+    public : void mouseMoveEvent(QMouseEvent *e) override;
     public : void keyPressEvent(QKeyEvent *e) override;
 
     private: void _drawPlcNodes() throw(std::runtime_error) final;

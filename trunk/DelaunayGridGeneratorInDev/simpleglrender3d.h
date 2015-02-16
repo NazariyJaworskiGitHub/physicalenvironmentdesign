@@ -7,11 +7,8 @@
 
 class SimpleGLRender3D : public SimpleGLRender
 {
-    public : double angleOY                     = 0;
-    public : double angleOX                     = 0;
-    public : int OldMouseX                      = 0;
-    public : int OldMouseY                      = 0;
-    public : bool isPressed                     = false;
+    private: double angleOY                     = 0;
+    private: double angleOX                     = 0;
 
     private: void _drawOrigin() noexcept final;
     private: void _RotateAndTranslate() noexcept final;
@@ -43,8 +40,6 @@ class SimpleGLRender3D : public SimpleGLRender
         _ptrToRenderingDelaunayGridGenerator3D = renderingDelaunayGridGenerator3D;}
 
     public : void mouseMoveEvent(QMouseEvent *e) override;
-    public : void mousePressEvent(QMouseEvent *e) override;
-    public : void mouseReleaseEvent(QMouseEvent *e) override;
     public : void keyPressEvent(QKeyEvent *e) override;
 
     private: void _drawPlcNodes() throw(std::runtime_error) final;

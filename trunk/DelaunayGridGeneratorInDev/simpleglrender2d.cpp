@@ -12,7 +12,7 @@ void SimpleGLRender2D::_drawOrigin() noexcept
     glPushMatrix();
 
         glLoadIdentity();
-        gluPerspective( 60.0f, 4.0/3.0, 0.1, 1000.0f );
+        gluPerspective( 60.0f, 1.0, 0.1, 1000.0f );
         int _width = this->width();
         int _height = this->height();
         glViewport(0,0,100,100);
@@ -56,19 +56,31 @@ void SimpleGLRender2D::_RotateAndTranslate() noexcept
     gluLookAt(_CameraPosition[0], _CameraPosition[1], _CameraPosition[2],
               0, 0, 0,
               0, 1, 0);
-    glScaled(2,2,2);
+    glScaled(_Zoom, _Zoom, _Zoom);
     glTranslated(-_ScenePosition[0], -_ScenePosition[1], -_ScenePosition[2]);
+}
+
+void SimpleGLRender2D::mouseMoveEvent(QMouseEvent *e)
+{
+    if(_isPressed)
+    {
+        _ScenePosition[0] += -double(e->x()-_oldMouseX) / this->width() * 2.0 / _Zoom;
+        _ScenePosition[1] += double(e->y()-_oldMouseY) / this->width()  * 2.0 / _Zoom;
+        _oldMouseX = e->x();
+        _oldMouseY = e->y();
+        this->updateGL();
+    }
 }
 
 void SimpleGLRender2D::keyPressEvent(QKeyEvent *e)
 {
     if(e->key() == Qt::Key_Space)
     {
+        _ptrToRenderingDelaunayGridGenerator2D->_TEST_iteration(_ptrToRenderingPlc2D);
         dataString = QString(" AN: ") +
                 QString::number(_ptrToRenderingDelaunayGridGenerator2D->getAliveNodeList().size()) +
                 QString(" DN: ") +
                 QString::number(_ptrToRenderingDelaunayGridGenerator2D->getDeadNodeList().size());
-        _ptrToRenderingDelaunayGridGenerator2D->_TEST_iteration(_ptrToRenderingPlc2D);
         this->updateGL();
     }
 }
