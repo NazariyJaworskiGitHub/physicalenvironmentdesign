@@ -146,4 +146,35 @@ void Test_Generator::test_3()
     delete (_myGrid3D);
 }
 
+void Test_Generator::test_4()
+{
+    // Test inner lists update correctness, should not be any exceptions
+    DelaunayGridGenerator::Plc2D _myPlc2D;
+    _myPlc2D.createNode(FEM::Node2D(0.00, 0.00));
+    _myPlc2D.createNode(FEM::Node2D(0.25, 0.25));
+    _myPlc2D.createNode(FEM::Node2D(0.00, 0.25));
+    _myPlc2D.createNode(FEM::Node2D(0.25, 0.00));
+    _myPlc2D.createNode(FEM::Node2D(0.50, 0.00));
+    _myPlc2D.createNode(FEM::Node2D(0.00, 0.50));
+    _myPlc2D.createNode(FEM::Node2D(0.50, 0.25));
+    _myPlc2D.createNode(FEM::Node2D(0.25, 0.50));
+    _myPlc2D.createNode(FEM::Node2D(1.00, 0.00));
+    _myPlc2D.createNode(FEM::Node2D(0.00, 1.00));
+    _myPlc2D.createNode(FEM::Node2D(1.00, 0.25));
+    _myPlc2D.createNode(FEM::Node2D(0.25, 1.00));
+    _myPlc2D.createNode(FEM::Node2D(0.75, 0.75));
+    _myPlc2D.createNode(FEM::Node2D(1.00, 0.75));
+    _myPlc2D.createNode(FEM::Node2D(1.00, 1.00));
+    _myPlc2D.createNode(FEM::Node2D(0.50, 0.75));
+    _myPlc2D.createNode(FEM::Node2D(0.75, 0.50));
+    _myPlc2D.updateMaxAndMinCoordinates();
+    DelaunayGridGenerator2D _myGenerator2D;
+    FEM::TriangularGrid *_myGrid2D =
+            _myGenerator2D.constructGrid(&_myPlc2D, false);
+    QVERIFY(_myGenerator2D.getAliveNodeList().size() == 0 &&
+            _myGenerator2D.getAliveFacetsList().size() == 0 &&
+            _myGenerator2D.getDeadNodeList().size() == 17);
+    delete (_myGrid2D);
+}
+
 
