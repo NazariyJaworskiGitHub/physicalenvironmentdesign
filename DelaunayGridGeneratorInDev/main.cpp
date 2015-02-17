@@ -9,18 +9,31 @@ int main(int argc, char *argv[])
 
     QApplication app(argc, argv);
 
-/*    DelaunayGridGenerator::Plc3D *_myPlc3D =
+    DelaunayGridGenerator::Plc3D *_myPlc3D =
             new DelaunayGridGenerator::Plc3D();
 
-    /// TEST 5
-    for(int i=0; i<100; i++)
+//    /// TEST 5
+//    for(int i=0; i<100; i++)
+//    {
+//        _myPlc3D->createNode(
+//                    FEM::Node3D(
+//                        MathUtils::rand(0.0, 1.0),
+//                        MathUtils::rand(0.0, 1.0),
+//                        MathUtils::rand(0.0, 1.0)));
+//    }
+
+    /// TEST 7
+    int N=30;
+    for(int i=0; i<N; i++)
     {
-        _myPlc3D->createNode(
-                    FEM::Node3D(
-                        MathUtils::rand(0.0,1.0),
-                        MathUtils::rand(0.0,1.0),
-                        MathUtils::rand(0.0,1.0)));
+        FEM::Node3D _n((1.0 + sin(i*2*M_PI/N))/2.0,
+                       (1.0 + cos(i*2*M_PI/N))/2.0,
+                       0.5);
+        _myPlc3D->createNode(_n);
     }
+    //_myPlc3D->createNode(FEM::Node3D(0.5, 0.5, 0.5));
+    //_myPlc3D->createNode(FEM::Node3D(0.5, 0.5, 1.0));
+    _myPlc3D->createNode(FEM::Node3D(0.5, 0.5, 0.0));
 
     _myPlc3D->updateMaxAndMinCoordinates();
 
@@ -53,26 +66,44 @@ int main(int argc, char *argv[])
     _render.initializeGL();
     _render.setWindowTitle("Triangulation");
     _render.resize(800,600);
-    _render.show();*/
+    _render.show();
 
-    DelaunayGridGenerator::Plc2D _myPlc2D;
+/*    DelaunayGridGenerator::Plc2D _myPlc2D;
 
 //    /// TEST 5
 //    for(int i=0; i<100; i++)
 //    {
 //        _myPlc2D.createNode(FEM::Node2D(
-//                                MathUtils::rand(0.0,1.0),
-//                                MathUtils::rand(0.0,1.0)));
+//                                MathUtils::rand(0.0, 1.0),
+//                                MathUtils::rand(0.0, 1.0)));
 //    }
 
-    /// TEST 6
-    int N=20;
+//    /// TEST 6 (round/trunc/robustness on orient checking, move it to tests!!!!!)
+//    /// N=10  eps=1e-7
+//    /// N=30  eps=1e-6
+//    /// N=250 eps=1e-6
+//    int N=10;
+//    for(int i=0; i<N; i++)
+//    {
+//        FEM::Node2D _n((1.0 + sin(i*2*M_PI/N))/2.0,
+//                       (1.0 + cos(i*2*M_PI/N))/2.0);
+//        _myPlc2D.createNode(_n);
+//    }
+//    _myPlc2D.createNode(FEM::Node2D(
+//                            MathUtils::rand(0.5, 0.5),
+//                            MathUtils::rand(0.5, 0.5)));
+
+    /// TEST 7
+    int N=250;
     for(int i=0; i<N; i++)
     {
         FEM::Node2D _n((1.0 + sin(i*2*M_PI/N))/2.0,
-                    (1.0 + cos(i*2*M_PI/N))/2.0);
+                       (1.0 + cos(i*2*M_PI/N))/2.0);
         _myPlc2D.createNode(_n);
     }
+    _myPlc2D.createNode(FEM::Node2D(
+                            MathUtils::rand(0.5, 0.5),
+                            MathUtils::rand(0.5, 0.5)));
 
      _myPlc2D.updateMaxAndMinCoordinates();
 
@@ -88,7 +119,7 @@ int main(int argc, char *argv[])
     _render.initializeGL();
     _render.setWindowTitle("Triangulation");
     _render.resize(800,600);
-    _render.show();
+    _render.show();*/
 
     return app.exec();
 }

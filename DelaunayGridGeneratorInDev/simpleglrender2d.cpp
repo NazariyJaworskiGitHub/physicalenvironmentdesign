@@ -1,5 +1,7 @@
 #include "simpleglrender2d.h"
 
+#include "iostream"
+
 SimpleGLRender2D::SimpleGLRender2D(QWidget *pwgt) noexcept :
     SimpleGLRender(pwgt)
 {
@@ -82,6 +84,11 @@ void SimpleGLRender2D::keyPressEvent(QKeyEvent *e)
                 QString(" DN: ") +
                 QString::number(_ptrToRenderingDelaunayGridGenerator2D->getDeadNodeList().size());
         this->updateGL();
+    }
+    /// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    else if(e->key() == Qt::Key_I)
+    {
+        std::cout << *_ptrToRenderingDelaunayGridGenerator2D;
     }
 }
 
@@ -219,15 +226,23 @@ void SimpleGLRender2D::_drawDelaunayGridGeneratorFacets() throw(std::runtime_err
 
     if(_ptrToRenderingDelaunayGridGenerator2D->getDeadFacetsList().size() != 0)
     {
-        glColor4d(
-                _GeneratorDeadFacetsColor[0],
-                _GeneratorDeadFacetsColor[1],
-                _GeneratorDeadFacetsColor[2],
-                _GeneratorDeadFacetsColor[3]);
+
         glBegin(GL_LINES);
         for(auto _i = _ptrToRenderingDelaunayGridGenerator2D->getDeadFacetsList().begin();
             _i != _ptrToRenderingDelaunayGridGenerator2D->getDeadFacetsList().end(); ++_i)
         {
+            if((**_i).isMetastructure())
+                glColor4d(
+                        _GeneratorMetastructureFacetColor[0],
+                        _GeneratorMetastructureFacetColor[1],
+                        _GeneratorMetastructureFacetColor[2],
+                        _GeneratorMetastructureFacetColor[3]);
+            else
+                glColor4d(
+                        _GeneratorDeadFacetsColor[0],
+                        _GeneratorDeadFacetsColor[1],
+                        _GeneratorDeadFacetsColor[2],
+                        _GeneratorDeadFacetsColor[3]);
             glVertex2d((**_i)[0][0], (**_i)[0][1]);
             glVertex2d((**_i)[1][0], (**_i)[1][1]);
         }

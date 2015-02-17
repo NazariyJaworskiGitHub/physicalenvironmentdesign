@@ -82,6 +82,6 @@ void Test_NodeWrapper::test()
     }
 
     WrappedNode3D _wn1(FEM::Node3D(1e-30,1e25,5));
-    _wn1.roundToDiscreteSpace();
+    _wn1.truncToDiscreteSpace();
     QVERIFY(_wn1[0] == 0.0);
 }

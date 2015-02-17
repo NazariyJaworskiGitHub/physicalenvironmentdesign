@@ -220,6 +220,57 @@ void SimpleGLRender3D::_drawDelaunayGridGeneratorFacets() throw(std::runtime_err
     if(!_ptrToRenderingDelaunayGridGenerator3D)
         throw std::runtime_error("_drawDelaunayGridGeneratorFacets(),  bad pointer to Generator");
 
+    if(_ptrToRenderingDelaunayGridGenerator3D->getDeadFacetsList().size() != 0)
+    {
+        glColor4d(
+                _GeneratorMetastructureFacetColor[0],
+                _GeneratorMetastructureFacetColor[1],
+                _GeneratorMetastructureFacetColor[2],
+                _GeneratorMetastructureFacetColor[3]);
+        glEnable(GL_ALPHA_TEST);
+        glEnable(GL_BLEND);
+        glDisable(GL_DEPTH_TEST);
+        glBegin(GL_TRIANGLES);
+        for(auto _i = _ptrToRenderingDelaunayGridGenerator3D->getDeadFacetsList().begin();
+            _i != _ptrToRenderingDelaunayGridGenerator3D->getDeadFacetsList().end(); ++_i)
+        {
+            if((**_i).isMetastructure())
+            {
+                glNormal3fv(((**_i)[1] - (**_i)[0]).crossProduct(
+                            (**_i)[2] - (**_i)[0]).getCoordinates());
+                glVertex3d((**_i)[0][0], (**_i)[0][1], (**_i)[0][2]);
+                glVertex3d((**_i)[1][0], (**_i)[1][1], (**_i)[1][2]);
+                glVertex3d((**_i)[2][0], (**_i)[2][1], (**_i)[2][2]);
+            }
+        }
+        glEnd();
+        glDisable(GL_ALPHA_TEST);
+        glDisable(GL_BLEND);
+        glEnable(GL_DEPTH_TEST);
+
+        glColor4d(
+                _GeneratorDeadFacetsEdgesColor[0],
+                _GeneratorDeadFacetsEdgesColor[1],
+                _GeneratorDeadFacetsEdgesColor[2],
+                _GeneratorDeadFacetsEdgesColor[3]);
+        glDisable(GL_LIGHTING);
+        glBegin(GL_LINES);
+        for(auto _i = _ptrToRenderingDelaunayGridGenerator3D->getDeadFacetsList().begin();
+            _i != _ptrToRenderingDelaunayGridGenerator3D->getDeadFacetsList().end(); ++_i)
+        {
+            glVertex3d((**_i)[0][0], (**_i)[0][1], (**_i)[0][2]);
+            glVertex3d((**_i)[1][0], (**_i)[1][1], (**_i)[1][2]);
+
+            glVertex3d((**_i)[1][0], (**_i)[1][1], (**_i)[1][2]);
+            glVertex3d((**_i)[2][0], (**_i)[2][1], (**_i)[2][2]);
+
+            glVertex3d((**_i)[2][0], (**_i)[2][1], (**_i)[2][2]);
+            glVertex3d((**_i)[0][0], (**_i)[0][1], (**_i)[0][2]);
+        }
+        glEnd();
+        glEnable(GL_LIGHTING);
+    }
+
     if(_ptrToRenderingDelaunayGridGenerator3D->getAliveFacetsList().size() != 0)
     {
         glBegin(GL_TRIANGLES);
@@ -273,43 +324,5 @@ void SimpleGLRender3D::_drawDelaunayGridGeneratorFacets() throw(std::runtime_err
 //        }
 //        glEnd();
 //        glEnable(GL_LIGHTING);
-    }
-
-    if(_ptrToRenderingDelaunayGridGenerator3D->getDeadFacetsList().size() != 0)
-    {
-//        glColor4d(0.5,1.0,0.5,0.25);
-//        glBegin(GL_TRIANGLES);
-//        for(auto _i = _ptrToRenderingDelaunayGridGenerator3D->getDeadFacetsList().begin();
-//            _i != _ptrToRenderingDelaunayGridGenerator3D->getDeadFacetsList().end(); ++_i)
-//        {
-//            glNormal3fv(((**_i)[1] - (**_i)[0]).crossProduct(
-//                        (**_i)[2] - (**_i)[0]).getCoordinates());
-//            glVertex3d((**_i)[0][0], (**_i)[0][1], (**_i)[0][2]);
-//            glVertex3d((**_i)[1][0], (**_i)[1][1], (**_i)[1][2]);
-//            glVertex3d((**_i)[2][0], (**_i)[2][1], (**_i)[2][2]);
-//        }
-//        glEnd();
-
-        glColor4d(
-                _GeneratorDeadFacetsEdgesColor[0],
-                _GeneratorDeadFacetsEdgesColor[1],
-                _GeneratorDeadFacetsEdgesColor[2],
-                _GeneratorDeadFacetsEdgesColor[3]);
-        glDisable(GL_LIGHTING);
-        glBegin(GL_LINES);
-        for(auto _i = _ptrToRenderingDelaunayGridGenerator3D->getDeadFacetsList().begin();
-            _i != _ptrToRenderingDelaunayGridGenerator3D->getDeadFacetsList().end(); ++_i)
-        {
-            glVertex3d((**_i)[0][0], (**_i)[0][1], (**_i)[0][2]);
-            glVertex3d((**_i)[1][0], (**_i)[1][1], (**_i)[1][2]);
-
-            glVertex3d((**_i)[1][0], (**_i)[1][1], (**_i)[1][2]);
-            glVertex3d((**_i)[2][0], (**_i)[2][1], (**_i)[2][2]);
-
-            glVertex3d((**_i)[2][0], (**_i)[2][1], (**_i)[2][2]);
-            glVertex3d((**_i)[0][0], (**_i)[0][1], (**_i)[0][2]);
-        }
-        glEnd();
-        glEnable(GL_LIGHTING);
     }
 }

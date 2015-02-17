@@ -17,8 +17,22 @@ void Test_MathUtils::test_factorial()
 
 void Test_MathUtils::test_round()
 {
-    QVERIFY(MathUtils::round<float>(0.100025,1e-3) == 0.1f);
-    QVERIFY(MathUtils::round<float>(0.107,1e-2) == 0.11f);
+    float _rez = MathUtils::round<float>(0.100025,1e-3);
+    QVERIFY(_rez == 0.1f);
+    _rez = MathUtils::round<float>(0.107,1e-2);
+    QVERIFY(_rez == 0.11f);
+    _rez = MathUtils::round<float>(-8.1e-8,1e-7);
+    QVERIFY(_rez == -1e-7f);
+}
+
+void Test_MathUtils::test_trunc()
+{
+    float _rez = MathUtils::trunc<float>(0.100025,1e-3);
+    QVERIFY(_rez == 0.1f);
+    _rez = MathUtils::trunc<float>(0.107,1e-2);
+    QVERIFY(_rez == 0.099999994f);
+    _rez = MathUtils::trunc<float>(-8.1e-8,1e-7);
+    QVERIFY(_rez == 0.0f);
 }
 
 void Test_MathUtils::test_calculateCircumSphereCenter()
@@ -69,7 +83,33 @@ void Test_MathUtils::test_calculateIsSamePlaneStatus()
     _result = calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(Node2D(0.2,0.4),nodes);
     QVERIFY(_result < 0);
     _result = calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(Node2D(0.4,0.3),nodes);
-    QVERIFY(std::fabs(_result) < 1e-4);
+    QVERIFY(_result < 1e-4);
+    _result = calculateIsCoplanarStatusWithClippingCheckNormalized<Node2D,2>(Node2D(0.4,0.3),nodes);
+    QVERIFY(_result < 1e-4);
+
+    nodes[0]((1.0 + std::sin(0*2*M_PI/100.0))/2.0, (1.0 + std::cos(0*2*M_PI/100.0))/2.0);
+    nodes[1]((1.0 + std::sin(1*2*M_PI/100.0))/2.0, (1.0 + std::cos(1*2*M_PI/100.0))/2.0);
+    Node2D target1((1.0 + std::sin(2*2*M_PI/100.0))/2.0, (1.0 + std::cos(2*2*M_PI/100.0))/2.0);
+    Node2D target2((1.0 + std::sin(3*2*M_PI/100.0))/2.0, (1.0 + std::cos(3*2*M_PI/100.0))/2.0);
+
+    _result = calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(target1,nodes);
+    QVERIFY(_result < 1e-4);
+    _result = calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(target2,nodes);
+    QVERIFY(_result > 1e-4);
+
+    _result = calculateIsCoplanarStatusWithClippingCheckNormalized<Node2D,2>(target1,nodes);
+    QVERIFY(_result > 1e-4);
+    _result = calculateIsCoplanarStatusWithClippingCheckNormalized<Node2D,2>(target2,nodes);
+    QVERIFY(_result > 1e-4);
+
+    nodes[0]((1.0 + std::sin(0*2*M_PI/1e6))/2.0, (std::cos(0*2*M_PI/1e6))/2.0);
+    nodes[1]((1.0 + std::sin(1*2*M_PI/1e6))/2.0, (std::cos(1*2*M_PI/1e6))/2.0);
+    target2 = nodes[0] - nodes[1];
+    target1((1e6 + std::sin(2*2*M_PI/1e6))/2.0, (std::cos(2*2*M_PI/1e6))/2.0);
+    _result = calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(target1,nodes);
+    QVERIFY(-_result < 1e-4);
+    _result = calculateIsCoplanarStatusWithClippingCheckNormalized<Node2D,2>(target1,nodes);
+    QVERIFY((-_result < 1e-4 && target2[0] < 1e-4 && target2[1] < 1e-4) || (-_result > 1e-4));
 }
 
 void Test_MathUtils::test_calculateIsSamePlaneStatusByMatrixRank()
@@ -175,23 +215,32 @@ void Test_MathUtils::test_calculateSegmentSubsimplexBarycenticIntersection()
     QVERIFY(!_result);
 }
 
-void Test_MathUtils::test_calculateSubsimplexSubsimplexIntersectionRound()
+void Test_MathUtils::test_calculateSubsimplexSubsimplexIntersectionTrunc()
 {
     Node2D _nodes2DA1[] = {{1.0,1.0}, {3.0,2.0}};
     Node2D _nodes2DB1[] = {{4.0,1.0}, {3.0,3.0}};
-    bool _result = calculateSubsimplexSubsimplexIntersectionRound<Node2D, 2>(
+    bool _result = calculateSubsimplexSubsimplexIntersectionTrunc<Node2D, 2>(
+                _nodes2DA1, _nodes2DB1);
+    QVERIFY(!_result);
+    _result = calculateSubsimplexSubsimplexIntersectionTruncNormalized<Node2D, 2>(
                 _nodes2DA1, _nodes2DB1);
     QVERIFY(!_result);
 
     Node2D _nodes2DA2[] = {{1.0,1.0}, {3.0,2.0}};
     Node2D _nodes2DB2[] = {{4.0,1.0}, {3.0,2.0}};
-    _result = calculateSubsimplexSubsimplexIntersectionRound<Node2D, 2>(
+    _result = calculateSubsimplexSubsimplexIntersectionTrunc<Node2D, 2>(
+                _nodes2DA2, _nodes2DB2);
+    QVERIFY(!_result);
+    _result = calculateSubsimplexSubsimplexIntersectionTruncNormalized<Node2D, 2>(
                 _nodes2DA2, _nodes2DB2);
     QVERIFY(!_result);
 
     Node2D _nodes2DA3[] = {{1.0,1.0}, {3.0,2.0}};
     Node2D _nodes2DB3[] = {{3.0,1.0}, {2.0,3.0}};
-    _result = calculateSubsimplexSubsimplexIntersectionRound<Node2D, 2>(
+    _result = calculateSubsimplexSubsimplexIntersectionTrunc<Node2D, 2>(
+                _nodes2DA3, _nodes2DB3);
+    QVERIFY(_result);
+    _result = calculateSubsimplexSubsimplexIntersectionTruncNormalized<Node2D, 2>(
                 _nodes2DA3, _nodes2DB3);
     QVERIFY(_result);
 }

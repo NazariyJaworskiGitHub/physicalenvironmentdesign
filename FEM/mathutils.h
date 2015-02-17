@@ -36,6 +36,8 @@ namespace MathUtils
     #endif //DIMENSION_TYPE_PRECISION
 
     typedef DIMENSION_TYPE_PRECISION Real;
+//    /// \todo test whenever it needed
+//    static Real RECOMMENDED_EPS = std::sqrt(std::numeric_limits<Real>::epsilon());
 
 /*********************************************************************************************/
     /// Calculate factorial;
@@ -63,7 +65,14 @@ namespace MathUtils
     {
         return std::floor(x*(1.0/eps) + 0.5)/(1.0/eps);
     }
-
+/*********************************************************************************************/
+    /// Trunc to discretization step
+    /// \todo it tested for FLT_EVAL_METHOD == 2, try tor wrap those constants into _DimType_()
+    template<typename _DimType_ = MathUtils::Real>
+    inline _DimType_ trunc(const _DimType_ x, const _DimType_ eps) noexcept
+    {
+        return std::trunc(x*(1.0/eps))/(1.0/eps);
+    }
 /*********************************************************************************************/
 
     /// Calculates the center of element's circumscribed hypersphere;
@@ -229,12 +238,11 @@ namespace MathUtils
 /*********************************************************************************************/
 
     /// Calculate is the given Nodes are in same hyperplane (2D:line, 3D:plane, and so on);
-    /// returns 0 if thrue;
-    /// return <0 if Node is at the left;
-    /// return >0 if Node is at the right;
+    /// returns ~0 if thrue;
+    /// returns <0 if Node is at the left;
+    /// returns >0 if Node is at the right;
     /// Note that the result is depended on Plane defining Nodes order
     /// (it should be counterclockwise);
-    /// It assumes that simplex has non-zero volume (is correct);
     ///
     /// _NodeIteratorType_ - object which has the overloaded [] operator that returns
     ///   the reference to the Node, default it just the _NodeType_*;
@@ -271,7 +279,57 @@ namespace MathUtils
         }
         return _M.determinant();
     }
+/*********************************************************************************************/
 
+    /// Normalized (higher robustness) version;
+    /// Calculate is the given Nodes are in same hyperplane (2D:line, 3D:plane, and so on);
+    /// returns ~0 if thrue;
+    /// returns <0 if Node is at the left;
+    /// returns >0 if Node is at the right;
+    /// Note that the result is depended on Plane defining Nodes order
+    /// (it should be counterclockwise);
+    ///
+    /// _NodeIteratorType_ - object which has the overloaded [] operator that returns
+    ///   the reference to the Node, default it just the _NodeType_*;
+    ///
+    /// It makes the normalization of given nodes by scaling them into 1 x 1 x 1 x ... spase,
+    /// so result should not drown in roundoff errors;
+    template<typename _NodeType_,
+             int _nDimensions_,
+             typename _NodeIteratorType_ = _NodeType_*,
+             typename _DimType_ = MathUtils::Real>
+    _DimType_ calculateIsCoplanarStatusWithClippingCheckNormalized(
+            const _NodeType_ &target,
+            const _NodeIteratorType_ nodes)
+    {
+        // Find min and max
+        _NodeType_ _maxCoordinates = target;
+        _NodeType_ _minCoordinates = target;
+        for(int i=0; i<_nDimensions_; ++i)
+        {
+            for(int j=0; j<_nDimensions_; ++j)
+            {
+                if(_maxCoordinates[j] < nodes[i][j])
+                    _maxCoordinates[j] = nodes[i][j];
+                if(_minCoordinates[j] > nodes[i][j])
+                    _minCoordinates[j] = nodes[i][j];
+            }
+        }
+        // Find delta
+        _maxCoordinates -=_minCoordinates;
+        if(_maxCoordinates.getMinValue() == _DimType_(0.0))
+            return _DimType_(0.0);
+
+        Eigen::Matrix<_DimType_, _nDimensions_, _nDimensions_> _M;
+        for(int j=0;j<_nDimensions_;++j) // per columns (coordinetes)
+            _M(0,j) = (target[j] - nodes[0][j]) / _maxCoordinates[j];
+        for(int i=1;i<_nDimensions_;++i) // per rows (nodes)
+        {
+            for(int j=0;j<_nDimensions_;++j) // per columns (coordinetes)
+                _M(i,j) = (nodes[i][j] - nodes[0][j]) / _maxCoordinates[j];
+        }
+        return _M.determinant();
+    }
 /*********************************************************************************************/
     /// Calculate is the given Nodes are in same hyperplane;
     /// see http://en.wikipedia.org/wiki/Coplanarity;
@@ -518,78 +576,79 @@ namespace MathUtils
         return true;
     }
 /*********************************************************************************************/
-    /// Calculate if the given segment intersects the given simplex by barycentric test;
-    /// (rounoff version)
-    /// see [(1994) Hanson - Geometry for N-Dimensional Graphics];
-    /// ftp://www.cs.indiana.edu/pub/hanson/Siggraph01QuatCourse/ggndgeom.pdf;
-    /// It assumes that simplex has non-zero volume (is correct);
-    /// returns false if segment is coplanar to simplex's hyperplane;
-    ///
-    /// _NodeIteratorType_ - object which has the overloaded [] operator that returns
-    ///   the reference to the Node, default it just the _NodeType_*;
-    /// \todo make test!!!
-    template<typename _NodeType_,
-             int _nDimensions_,
-             typename _NodeIteratorType_ = _NodeType_*,
-             typename _DimType_ = MathUtils::Real>
-    bool calculateSegmentSubsimplexBarycenticIntersectionRound(
-            const _NodeType_ &segmentBegin,  // C
-            const _NodeType_ &segmentEnd,    // P
-            const _NodeIteratorType_ simplexNodes, // {s}
-            _NodeType_ *intersectionNode = nullptr,
-            const _DimType_ eps = 1e-8)
-    {
-        // Find a ray-subplane intersection point;
-        //   Z(t) = segmentBegin + t*(segmentEnd-segmentBegin);
-        //       n*(s0-C)
-        //   t = --------,   n = cross({s}); - normal of simplex;
-        //       n*(P-C)
-        _NodeType_ _ray = segmentEnd-segmentBegin;
-        _NodeType_ _simplexNormal = calculateGeneralizedCrossProduct<
-                _NodeType_, _nDimensions_, _NodeIteratorType_, _DimType_>(simplexNodes);
-        // if n*(P-C) is near zero, ray is coplanar to simplex hyperplane;
-        _DimType_ _proj = round(_simplexNormal * _ray, eps);
-        if(_proj == _DimType_(0.0))
-            return false;
-        _DimType_ _t = round((_simplexNormal * (simplexNodes[0] - segmentBegin))/_proj, eps);
 
-        // Check if point is in segment;
-        if(_t < _DimType_(0.0) || _t > _DimType_(1.0))
-            return false;
+//    /// Calculate if the given segment intersects the given simplex by barycentric test;
+//    /// (rounoff version)
+//    /// see [(1994) Hanson - Geometry for N-Dimensional Graphics];
+//    /// ftp://www.cs.indiana.edu/pub/hanson/Siggraph01QuatCourse/ggndgeom.pdf;
+//    /// It assumes that simplex has non-zero volume (is correct);
+//    /// returns false if segment is coplanar to simplex's hyperplane;
+//    ///
+//    /// _NodeIteratorType_ - object which has the overloaded [] operator that returns
+//    ///   the reference to the Node, default it just the _NodeType_*;
+//    /// \todo make test!!!
+//    template<typename _NodeType_,
+//             int _nDimensions_,
+//             typename _NodeIteratorType_ = _NodeType_*,
+//             typename _DimType_ = MathUtils::Real>
+//    bool calculateSegmentSubsimplexBarycenticIntersectionRound(
+//            const _NodeType_ &segmentBegin,  // C
+//            const _NodeType_ &segmentEnd,    // P
+//            const _NodeIteratorType_ simplexNodes, // {s}
+//            _NodeType_ *intersectionNode = nullptr,
+//            const _DimType_ eps = 1e-8)
+//    {
+//        // Find a ray-subplane intersection point;
+//        //   Z(t) = segmentBegin + t*(segmentEnd-segmentBegin);
+//        //       n*(s0-C)
+//        //   t = --------,   n = cross({s}); - normal of simplex;
+//        //       n*(P-C)
+//        _NodeType_ _ray = segmentEnd-segmentBegin;
+//        _NodeType_ _simplexNormal = calculateGeneralizedCrossProduct<
+//                _NodeType_, _nDimensions_, _NodeIteratorType_, _DimType_>(simplexNodes);
+//        // if n*(P-C) is near zero, ray is coplanar to simplex hyperplane;
+//        _DimType_ _proj = round(_simplexNormal * _ray, eps);
+//        if(_proj == _DimType_(0.0))
+//            return false;
+//        _DimType_ _t = round((_simplexNormal * (simplexNodes[0] - segmentBegin))/_proj, eps);
 
-        // Check is the point in simplex (barycentric test);
-        _NodeType_ _intersection = segmentBegin + _t*_ray;
-        _DimType_ _simplexVolume = _simplexNormal.length()/factorial(_nDimensions_-1);
-        _DimType_ _sum = _DimType_(0.0);
-        for(int i=0;i<_nDimensions_;++i)
-        {
-            struct _DummyIterator
-            {
-                const _NodeIteratorType_ *ptr;
-                int excludedNodeIndex;
-                const _NodeType_ &replasedNode;
-                const _NodeType_ & operator [](int index) const noexcept
-                {
-                    if(index == excludedNodeIndex)
-                        return replasedNode;
-                    else return (*ptr)[index];
-                }
-            } _dummyIterator = {&simplexNodes, i, _intersection};
-            _DimType_ _barycentricCoordinate =
-                        _simplexNormal * calculateGeneralizedCrossProduct<
-                    _NodeType_, _nDimensions_, _DummyIterator>(_dummyIterator)/_simplexVolume;
-            // there is an intersection if barycentric coordinate is >= 0
-            if(round(_barycentricCoordinate,eps) < _DimType_(0.0))
-                return false;
-            _sum += _barycentricCoordinate;
-        }
-        _sum = round(_sum, eps);
-        if(_sum > _DimType_(1.0))
-            return false;
-        if(intersectionNode)
-            *intersectionNode = _intersection;
-        return true;
-    }
+//        // Check if point is in segment;
+//        if(_t < _DimType_(0.0) || _t > _DimType_(1.0))
+//            return false;
+
+//        // Check is the point in simplex (barycentric test);
+//        _NodeType_ _intersection = segmentBegin + _t*_ray;
+//        _DimType_ _simplexVolume = _simplexNormal.length()/factorial(_nDimensions_-1);
+//        _DimType_ _sum = _DimType_(0.0);
+//        for(int i=0;i<_nDimensions_;++i)
+//        {
+//            struct _DummyIterator
+//            {
+//                const _NodeIteratorType_ *ptr;
+//                int excludedNodeIndex;
+//                const _NodeType_ &replasedNode;
+//                const _NodeType_ & operator [](int index) const noexcept
+//                {
+//                    if(index == excludedNodeIndex)
+//                        return replasedNode;
+//                    else return (*ptr)[index];
+//                }
+//            } _dummyIterator = {&simplexNodes, i, _intersection};
+//            _DimType_ _barycentricCoordinate =
+//                        _simplexNormal * calculateGeneralizedCrossProduct<
+//                    _NodeType_, _nDimensions_, _DummyIterator>(_dummyIterator)/_simplexVolume;
+//            // there is an intersection if barycentric coordinate is >= 0
+//            if(round(_barycentricCoordinate,eps) < _DimType_(0.0))
+//                return false;
+//            _sum += _barycentricCoordinate;
+//        }
+//        _sum = round(_sum, eps);
+//        if(_sum > _DimType_(1.0))
+//            return false;
+//        if(intersectionNode)
+//            *intersectionNode = _intersection;
+//        return true;
+//    }
 /*********************************************************************************************/
     /// Calculate subsimplex-subsimplex intersection by volume orientation
     /// (i.e node position) test;
@@ -607,7 +666,7 @@ namespace MathUtils
              int _nDimensions_,
              typename _NodeIteratorType_ = _NodeType_*,
              typename _DimType_ = MathUtils::Real>
-    bool calculateSubsimplexSubsimplexIntersectionRound(
+    bool calculateSubsimplexSubsimplexIntersectionTrunc(
             const _NodeIteratorType_ subsimplexNodesA,
             const _NodeIteratorType_ subsimplexNodesB,
             const _DimType_ eps = 1e-8)
@@ -625,7 +684,7 @@ namespace MathUtils
                 for(int i=0; i<_nDimensions_; ++i) // rows, i.e. coordinates
                     for(int j=0; j<_nDimensions_; ++j) // cols, i.e. nodes
                         _M(i,j) = (*_target)[j][i] - (*_base)[k][i];
-                _DimType_ _det = round(_M.determinant(), eps);
+                _DimType_ _det = trunc(_M.determinant(), eps);
                 if(_det == _DimType_(0.0))
                     return false;   // node is adjacent or coplanar
                 else if(k == 0)
@@ -649,5 +708,91 @@ namespace MathUtils
         return true;
     }
 /*********************************************************************************************/
+
+    /// Normalized (higher robustness) version;
+    /// Calculate subsimplex-subsimplex intersection by volume orientation
+    /// (i.e node position) test;
+    /// see [(2002) Devillers - Faster Triangle-Triangle Intersection Tests];
+    /// \todo try also Moller or Tropp tests (especially Tropp!);
+    ///
+    /// Note!:
+    ///   if subsimplexes are coplanar - there is no intersection;
+    ///   if subsimplexes have adjacent node or segment - there is no intersection;
+    /// \todo to avoid that, if needed
+    ///
+    /// _NodeIteratorType_ - object which has the overloaded [] operator that returns
+    /// the reference to the Node, default it just the _NodeType_*;
+    ///
+    /// It makes the normalization of given nodes by scaling them into 1 x 1 x 1 x ... spase,
+    /// so result should not drown in roundoff errors;
+    template<typename _NodeType_,
+             int _nDimensions_,
+             typename _NodeIteratorType_ = _NodeType_*,
+             typename _DimType_ = MathUtils::Real>
+    bool calculateSubsimplexSubsimplexIntersectionTruncNormalized(
+            const _NodeIteratorType_ subsimplexNodesA,
+            const _NodeIteratorType_ subsimplexNodesB,
+            const _DimType_ eps = 1e-8)
+    {
+        auto _base = &subsimplexNodesA;
+        auto _target = &subsimplexNodesA;
+
+        // Find min and max
+        _NodeType_ _maxCoordinates = (*_target)[0];
+        _NodeType_ _minCoordinates = (*_target)[0];
+        for(int _phase = 0; _phase<2; ++_phase)
+        {
+            for(int i=0; i<_nDimensions_; ++i)
+            {
+                for(int j=0; j<_nDimensions_; ++j)
+                {
+                    if(_maxCoordinates[j] < (*_target)[i][j])
+                        _maxCoordinates[j] = (*_target)[i][j];
+                    if(_minCoordinates[j] > (*_target)[i][j])
+                        _minCoordinates[j] = (*_target)[i][j];
+                }
+            }
+            _target = &subsimplexNodesB;
+        }
+        // Find delta
+        _maxCoordinates -=_minCoordinates;
+        if(_maxCoordinates.getMinValue() == _DimType_(0.0))
+            return false;   // they are coplanar
+
+        Eigen::Matrix<_DimType_, _nDimensions_, _nDimensions_> _M;
+
+        // Phase 1: check position subsimplexNodesB relative to subsimplexNodesA
+        for(int _phase = 0; _phase<2; ++_phase)
+        {
+            bool _side;
+            for(int k=0; k<_nDimensions_; ++k) // nodes of subsimplexNodesA
+            {
+                for(int i=0; i<_nDimensions_; ++i) // rows, i.e. coordinates
+                    for(int j=0; j<_nDimensions_; ++j) // cols, i.e. nodes
+                        _M(i,j) = ((*_target)[j][i] - (*_base)[k][i]) / _maxCoordinates[i];
+                _DimType_ _det = trunc(_M.determinant(), eps);
+                if(_det == _DimType_(0.0))
+                    return false;   // node is adjacent or coplanar
+                else if(k == 0)
+                {
+                    if(_det > _DimType_(0.0))
+                        _side = true;   // i.e. on the "right"
+                    else
+                        _side = false;  // i.e. on the "left"
+                }
+                else if(
+                        (_det > _DimType_(0.0) && !_side) ||
+                        (_det < _DimType_(0.0) && _side))
+                    break;  // it may be an intersection, swith subsimplexes and try again
+                else if(k == _nDimensions_-1)
+                    return false;   // all nodes are at the same side
+            }
+            // Phase 2: check position subsimplexNodesA relative to subsimplexNodesB
+            _base = &subsimplexNodesB;
+            _target = &subsimplexNodesA;
+        }
+        return true;
+    }
+    /*********************************************************************************************/
 }
 #endif // MATHUTILS_H

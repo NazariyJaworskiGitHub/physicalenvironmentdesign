@@ -74,6 +74,10 @@ class SimpleGLRender : public QGLWidget
     public   : void setGeneratorTopAliveFacetColor(double R, double G, double B, double A){
         _GeneratorTopAliveFacetColor(R,G,B,A);}
 
+    protected: FEM::Vector4D _GeneratorMetastructureFacetColor = FEM::Vector4D(0.5, 1.0, 0.5, 0.25);
+    public   : void setGeneratorMetastructureFacetColor(double R, double G, double B, double A){
+        _GeneratorMetastructureFacetColor(R,G,B,A);}
+
     protected: virtual void _drawDelaunayGridGeneratorNodes() throw(std::runtime_error)  = 0;
     protected: virtual void _drawDelaunayGridGeneratorFacets() throw(std::runtime_error) = 0;
 
