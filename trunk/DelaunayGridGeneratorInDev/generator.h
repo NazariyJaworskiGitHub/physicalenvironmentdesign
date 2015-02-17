@@ -197,14 +197,14 @@ namespace DelaunayGridGenerator
                                 _nDimensions_,
                                 _NodeIndexIterator,
                                 _DimType_>(_indexIterator, i+1, &_sphereRadius);
-                    _sphereRadius = MathUtils::round(_sphereRadius,_DiscretizationStep);
+                    _sphereRadius = MathUtils::trunc(_sphereRadius,_DiscretizationStep);
                     for( ; _curAliveNode!=_nodesList.end(); ++_curAliveNode)
                     {
                         // ignore already used nodes
                         if(_isAlreadyUsedNode(
                                 (*_curAliveNode).getGlobalIndex(),_facetNodesIndexes,i))
                             continue;
-                        _DimType_ _dist = MathUtils::round(
+                        _DimType_ _dist = MathUtils::trunc(
                                     (*_curAliveNode).distance(_sphereCenter),
                                     _DiscretizationStep);
                         if(_dist < _sphereRadius)
@@ -260,8 +260,8 @@ namespace DelaunayGridGenerator
                 // circumscribed sphere, but what about their side?)
                 /// \todo try to make it like classic CDT with node visibility
                 /// (dont check Delaunay criteria for wrong side, i.e invisible nodes)
-                _DimType_ _determinant = MathUtils::round(
-                            MathUtils::calculateIsCoplanarStatusWithClippingCheck<
+                _DimType_ _determinant = MathUtils::trunc(
+                            MathUtils::calculateIsCoplanarStatusWithClippingCheckNormalized<
                                 _WrappedNodeType_,
                                 _nDimensions_,
                                 _NodeIndexIterator,
@@ -281,7 +281,7 @@ namespace DelaunayGridGenerator
                          != _FacetType_::DIRECTION_BOUTH)*/)
                     continue;
 
-                // Ok! one found at least one node
+                // Ok! found at least one node
                 _isMetastructure = false;
 
                 // Check Delaunay criteria
@@ -294,7 +294,7 @@ namespace DelaunayGridGenerator
                         _nDimensions_,
                         _NodeIndexIterator,
                         _DimType_>(_indexIterator, &_sphereRadius);
-                _sphereRadius = MathUtils::round(_sphereRadius,_DiscretizationStep);
+                _sphereRadius = MathUtils::trunc(_sphereRadius,_DiscretizationStep);
                 _sphereLocatedNodes.clear();
                 _sphereLocatedNodes.append(*_curAliveNode);
 
@@ -307,7 +307,7 @@ namespace DelaunayGridGenerator
                                 _nDimensions_ /* +1 */))
                         // It can't be the last node, so don't check it
                         continue;
-                    _DimType_ _dist = MathUtils::round(
+                    _DimType_ _dist = MathUtils::trunc(
                                 (*_curAliveNode)->distance(_sphereCenter),
                                 _DiscretizationStep);
                     if(_dist <= _sphereRadius)
@@ -315,8 +315,8 @@ namespace DelaunayGridGenerator
                         if(_dist == _sphereRadius)
                         {
                             // One should check node's side again
-                            _determinant = MathUtils::round(
-                                        MathUtils::calculateIsCoplanarStatusWithClippingCheck<
+                            _determinant = MathUtils::trunc(
+                                        MathUtils::calculateIsCoplanarStatusWithClippingCheckNormalized<
                                             _WrappedNodeType_,
                                             _nDimensions_,
                                             _NodeIndexIterator,
@@ -379,7 +379,7 @@ namespace DelaunayGridGenerator
                                 {*this,_newFacetNodesIndexes};
 
                             if(
-                                    MathUtils::calculateSubsimplexSubsimplexIntersectionRound<
+                                    MathUtils::calculateSubsimplexSubsimplexIntersectionTruncNormalized<
                                     _WrappedNodeType_,
                                     _nDimensions_,
                                     _NodeIndexIterator,
@@ -507,8 +507,8 @@ namespace DelaunayGridGenerator
                 if(_newFacets[i]->getFrontConstructionDirection()
                         == _FacetType_::DIRECTION_BOUTH)
                 {
-                    _DimType_ _determinant = MathUtils::round(
-                                MathUtils::calculateIsCoplanarStatusWithClippingCheck<
+                    _DimType_ _determinant = MathUtils::trunc(
+                                MathUtils::calculateIsCoplanarStatusWithClippingCheckNormalized<
                                 _WrappedNodeType_,
                                 _nDimensions_,
                                 _FacetType_,
@@ -678,9 +678,24 @@ namespace DelaunayGridGenerator
                 _ptrToElementsDataManager = nullptr;
             }
         }
-
+        public : friend std::ostream & operator << (
+                std::ostream &textStream,
+                const Generator &object) noexcept
+        {
+            textStream << "DelaunayGridGenerator " << &object << ":"          << std::endl;
+            textStream << " Nodes       : " << object._nodesList.size()       << std::endl;
+            textStream << " Alive nodes : " << object._aliveNodesPtrs.size()  << std::endl;
+            textStream << " Dead nodes  : " << object._deadNodesPtrs.size()   << std::endl;
+            textStream << " Alive facets: " << object._aliveFacetsPtrs.size() << std::endl;
+            textStream << " Dead facets : " << object._deadFacetsPtrs.size()  << std::endl;
+            textStream << " Elements    : " << object._elementsPtrs.size()    << std::endl;
+            textStream << " EPS         : " << object._DiscretizationStep     << std::endl;
+            return textStream;
+        }
         public : Generator() noexcept :
-            _DiscretizationStep(std::numeric_limits<_DimType_>::epsilon() * 10){}
+//            _DiscretizationStep(std::sqrt(std::numeric_limits<_DimType_>::epsilon())){}
+//            _DiscretizationStep(std::numeric_limits<_DimType_>::epsilon()){}
+            _DiscretizationStep(1e-6){}
         public : ~Generator() noexcept
         {
             clear();

@@ -67,11 +67,11 @@ namespace DelaunayGridGenerator
         }
 
         /// \todo test this, make shure that you need this
-        void roundToDiscreteSpace(_DimType_ discretizationStep =
+        void truncToDiscreteSpace(_DimType_ discretizationStep =
                 std::numeric_limits<_DimType_>::epsilon()) noexcept
         {
             for(_DimType_ &c : this->_coord)
-                c = MathUtils::round<_DimType_>(c,discretizationStep);
+                c = MathUtils::trunc<_DimType_>(c,discretizationStep);
         }
 
         public : ~NodeWrapper() noexcept {}

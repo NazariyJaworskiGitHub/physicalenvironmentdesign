@@ -9,6 +9,7 @@ class Test_MathUtils : public QObject
     Q_OBJECT
     private: Q_SLOT void test_factorial();
     private: Q_SLOT void test_round();
+    private: Q_SLOT void test_trunc();
     private: Q_SLOT void test_calculateCircumSphereCenter();
     private: Q_SLOT void test_calculateCircumSphereCenterByCayleyMengerDeterminant();
     private: Q_SLOT void test_calculateIsNotDelaunayStatus();
@@ -18,7 +19,7 @@ class Test_MathUtils : public QObject
     private: Q_SLOT void test_calculateSimplexVoulumeByCayleyMengerDeterminant();
     private: Q_SLOT void test_calculateBarycentricCoordinates();
     private: Q_SLOT void test_calculateSegmentSubsimplexBarycenticIntersection();
-    private: Q_SLOT void test_calculateSubsimplexSubsimplexIntersectionRound();
+    private: Q_SLOT void test_calculateSubsimplexSubsimplexIntersectionTrunc();
 };
 
 #endif // TEST_MATHUTILS_H

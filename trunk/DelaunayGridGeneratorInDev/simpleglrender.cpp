@@ -45,7 +45,7 @@ void SimpleGLRender::initializeGL()
 
     //glEnable(GL_ALPHA_TEST);
     //glEnable(GL_BLEND);
-    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     GLfloat light0_diffuse[] = {1.0, 1.0, 1.0};
     GLfloat light0_direction[] = {0.0, 0.0, 1.0, 0.0};
