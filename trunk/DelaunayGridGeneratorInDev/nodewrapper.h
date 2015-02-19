@@ -24,8 +24,13 @@ namespace DelaunayGridGenerator
 
         // I can't define templited cross-referenced forward declaration of facet, because
         // it uses this templated nodes, so i use poiter to void, and then static_cast
+        // see http://www.cplusplus.com/doc/tutorial/typecasting/
+        //   "... Convert from void* to any pointer type. In this case, it guarantees that if
+        //   the void* value was obtained by converting from that same pointer type, the resulting
+        //   pointer value is the same..."
         /// \todo Don't use std::list! (but QLinkedList<void*> still doesn't work :( )
         /// \todo What if sizeof(void*) != sizeof(_FacetType_*) ?
+        /// \todo is static_cast making any additional code in this case?
         private: std::list<void*> _myFacets;
         public : std::list<void*> & getFacets() noexcept {return _myFacets;}
 

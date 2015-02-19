@@ -15,6 +15,8 @@
 
 namespace DelaunayGridGenerator
 {
+    /// Before using this, make shure that
+    /// sizeof(_FacetType_*) == sizeof(void*)) at your platform;
     /// Note, that QList is not the "real" list with O(1) insertion complexyty, when
     /// QLinkedList is. But index-search for QList is O(1) and for QLinkedList is O(N),
     /// that's why one need to use wrapped objects with self-pointers to achieve O(1) in
@@ -695,7 +697,7 @@ namespace DelaunayGridGenerator
         public : Generator() noexcept :
 //            _DiscretizationStep(std::sqrt(std::numeric_limits<_DimType_>::epsilon())){}
 //            _DiscretizationStep(std::numeric_limits<_DimType_>::epsilon()){}
-            _DiscretizationStep(1e-6){}
+            _DiscretizationStep(1e-4){}
         public : ~Generator() noexcept
         {
             clear();

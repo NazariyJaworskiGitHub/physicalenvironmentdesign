@@ -50,7 +50,7 @@ class SimpleGLRender : public QGLWidget
     public   : void setRenderingPlcNodesColor(double R, double G, double B, double A){
         _PlcNodesColor(R,G,B,A);}
 
-    protected: FEM::Vector4D _PlcFacetsColor    = FEM::Vector4D(0.8, 0.8, 0.8, 1.0);
+    protected: FEM::Vector4D _PlcFacetsColor    = FEM::Vector4D(0.1, 0.8, 0.8, 1.0);
     public   : void setRenderingPlcFacetsColor(double R, double G, double B, double A){
         _PlcFacetsColor(R,G,B,A);}
 

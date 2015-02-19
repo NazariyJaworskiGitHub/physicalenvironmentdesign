@@ -110,6 +110,32 @@ void Test_MathUtils::test_calculateIsSamePlaneStatus()
     QVERIFY(-_result < 1e-4);
     _result = calculateIsCoplanarStatusWithClippingCheckNormalized<Node2D,2>(target1,nodes);
     QVERIFY((-_result < 1e-4 && target2[0] < 1e-4 && target2[1] < 1e-4) || (-_result > 1e-4));
+
+    Real eps = std::numeric_limits<Real>::epsilon();
+    nodes[0](MathUtils::rand<Real>(0.0, 1e3), MathUtils::rand<Real>(0.0, 1e3));
+    nodes[1](MathUtils::rand<Real>(1e3, 0.0), MathUtils::rand<Real>(1e3, 0.0));
+    target2 = MathUtils::rand<Real>( 0.0, 1e3) * (nodes[0] - nodes[1]) + nodes[1];
+    target1 = MathUtils::rand<Real>(-1e3, 0.0) * (nodes[0] - nodes[1]) + nodes[1];
+    _result = calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(target1, nodes);
+    QVERIFY(std::abs(_result) > eps);
+    _result = calculateIsCoplanarStatusWithClippingCheckNormalized<Node2D,2>(target1, nodes);
+    QVERIFY(_result < eps);
+    _result = calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(target2, nodes);
+    QVERIFY(std::abs(_result) > eps);
+    _result = calculateIsCoplanarStatusWithClippingCheckNormalized<Node2D,2>(target2, nodes);
+    QVERIFY(_result < eps);
+    target1[0] +=  (nodes[0][0] - nodes[1][0]) * (1.0 + 1 * eps);
+    target1[1] += -(nodes[0][1] - nodes[1][1]) * (1.0 + 1 * eps);
+    target2[0] -=  (nodes[0][0] - nodes[1][0]) * (1.0 + 1 * eps);
+    target2[1] -= -(nodes[0][1] - nodes[1][1]) * (1.0 + 1 * eps);
+    _result = calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(target1, nodes);
+    QVERIFY(std::abs(_result) > eps);
+    _result = calculateIsCoplanarStatusWithClippingCheckNormalized<Node2D,2>(target1, nodes);
+    QVERIFY(std::abs(_result) > eps);
+    _result = calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(target2, nodes);
+    QVERIFY(std::abs(_result) > eps);
+    _result = calculateIsCoplanarStatusWithClippingCheckNormalized<Node2D,2>(target2, nodes);
+    QVERIFY(std::abs(_result) > eps);
 }
 
 void Test_MathUtils::test_calculateIsSamePlaneStatusByMatrixRank()

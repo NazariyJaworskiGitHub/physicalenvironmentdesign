@@ -19,8 +19,8 @@ namespace DelaunayGridGenerator
     class PiecewiseLinearComplex
     {
         private: QList<_NodeType_> _nodeList;
-        private: QList<_SegmentType_> _segmentList;
-        private: QList<_FacetType_> _facetList;
+        private: QList<_SegmentType_> _segmentList; // Note, it is only for dimensions > 2
+        private: QList<_FacetType_> _facetList;     // Note, in 2D any segment is facet
 
         private: _NodeType_ _maxCoordinates;
         private: _NodeType_ _minCoordinates;

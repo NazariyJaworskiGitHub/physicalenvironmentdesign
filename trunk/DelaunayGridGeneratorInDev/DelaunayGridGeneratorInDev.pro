@@ -42,4 +42,5 @@ HEADERS += \
     TESTS/test_datamanager.h \
     TESTS/test_generator.h \
     simpleglrender3d.h \
-    simpleglrender2d.h
+    simpleglrender2d.h \
+    geometricobjects.h

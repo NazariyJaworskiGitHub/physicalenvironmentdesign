@@ -1,5 +1,7 @@
 #include "simpleglrender3d.h"
 
+#include <iostream>
+
 SimpleGLRender3D::SimpleGLRender3D(QWidget *pwgt) noexcept :
     SimpleGLRender(pwgt)
 {
@@ -95,6 +97,11 @@ void SimpleGLRender3D::keyPressEvent(QKeyEvent *e)
                 QString(" DN: ") +
                 QString::number(_ptrToRenderingDelaunayGridGenerator3D->getDeadNodeList().size());
         this->updateGL();
+    }
+    /// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    else if(e->key() == Qt::Key_I)
+    {
+        std::cout << *_ptrToRenderingDelaunayGridGenerator3D;
     }
 }
 
