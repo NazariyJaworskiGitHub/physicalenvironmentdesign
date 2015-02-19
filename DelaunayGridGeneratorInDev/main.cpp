@@ -1,6 +1,8 @@
 #include <simpleglrender2d.h>
 #include <simpleglrender3d.h>
 
+#include "geometricobjects.h"
+
 #include "TESTS/tests_runner.h"
 
 int main(int argc, char *argv[])
@@ -22,18 +24,52 @@ int main(int argc, char *argv[])
 //                        MathUtils::rand(0.0, 1.0)));
 //    }
 
-    /// TEST 7
-    int N=30;
-    for(int i=0; i<N; i++)
-    {
-        FEM::Node3D _n((1.0 + sin(i*2*M_PI/N))/2.0,
-                       (1.0 + cos(i*2*M_PI/N))/2.0,
-                       0.5);
-        _myPlc3D->createNode(_n);
-    }
-    //_myPlc3D->createNode(FEM::Node3D(0.5, 0.5, 0.5));
-    //_myPlc3D->createNode(FEM::Node3D(0.5, 0.5, 1.0));
-    _myPlc3D->createNode(FEM::Node3D(0.5, 0.5, 0.0));
+//    /// TEST 7
+//    int N=30;
+//    for(int i=0; i<N; i++)
+//    {
+//        FEM::Node3D _n((1.0 + sin(i*2*M_PI/N))/2.0,
+//                       (1.0 + cos(i*2*M_PI/N))/2.0,
+//                       0.5);
+//        _myPlc3D->createNode(_n);
+//    }
+//    //_myPlc3D->createNode(FEM::Node3D(0.5, 0.5, 0.5));
+//    //_myPlc3D->createNode(FEM::Node3D(0.5, 0.5, 1.0));
+//    _myPlc3D->createNode(FEM::Node3D(0.5, 0.5, 0.0));
+
+    DelaunayGridGenerator::GeometricObjects::Icosahedron _icosahedron(
+                FEM::Node3D(0.5, 0.5, 0.5), 0.5);
+//    _icosahedron.splitFacets();
+//    _icosahedron.splitFacets();
+//    _icosahedron.splitFacets();
+//    _icosahedron.splitFacets();
+//    _icosahedron.splitFacets();
+
+    _icosahedron.reflectToSphere();
+    for(auto i : _icosahedron.nodes)
+        _myPlc3D->createNode(*i);
+//    {int _n[]={0,2,8}; _myPlc3D->createFacet(_n);}
+//    {int _n[]={0,2,9}; _myPlc3D->createFacet(_n);}
+//    {int _n[]={0,6,9}; _myPlc3D->createFacet(_n);}
+//    {int _n[]={0,6,4}; _myPlc3D->createFacet(_n);}
+//    {int _n[]={0,8,4}; _myPlc3D->createFacet(_n);}
+
+//    {int _n[]={2,8,5}; _myPlc3D->createFacet(_n);}
+//    {int _n[]={10,8,5}; _myPlc3D->createFacet(_n);}
+//    {int _n[]={10,8,4}; _myPlc3D->createFacet(_n);}
+//    {int _n[]={10,1,4}; _myPlc3D->createFacet(_n);}
+//    {int _n[]={6,1,4}; _myPlc3D->createFacet(_n);}
+//    {int _n[]={6,1,11}; _myPlc3D->createFacet(_n);}
+//    {int _n[]={6,9,11}; _myPlc3D->createFacet(_n);}
+//    {int _n[]={7,9,11}; _myPlc3D->createFacet(_n);}
+//    {int _n[]={7,9,2}; _myPlc3D->createFacet(_n);}
+//    {int _n[]={7,5,2}; _myPlc3D->createFacet(_n);}
+
+//    {int _n[]={7,5,3}; _myPlc3D->createFacet(_n);}
+//    {int _n[]={10,5,3}; _myPlc3D->createFacet(_n);}
+//    {int _n[]={10,1,3}; _myPlc3D->createFacet(_n);}
+//    {int _n[]={11,1,3}; _myPlc3D->createFacet(_n);}
+//    {int _n[]={11,7,3}; _myPlc3D->createFacet(_n);}
 
     _myPlc3D->updateMaxAndMinCoordinates();
 
