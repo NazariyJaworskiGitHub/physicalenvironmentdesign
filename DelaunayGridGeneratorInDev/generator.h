@@ -69,6 +69,10 @@ namespace DelaunayGridGenerator
         {
             return _deadFacetsPtrs;
         }
+        public : const QLinkedList<_WrappedElementType_*> & getElementsList() const noexcept
+        {
+            return _elementsPtrs;
+        }
 
         private: void _copyAndWrapPlcNodesToInternalStorage() noexcept
         {
@@ -272,15 +276,15 @@ namespace DelaunayGridGenerator
                             _DiscretizationStep);
                 /// \todo when det > 0.0 it is actually "Left", fix it, change signs!
                 if(_determinant == _DimType_(0.0) ||            // Node is lineary dependent
-                        (_determinant < _DimType_(0.0) &&       // GridFacet::DIRECTION_LEFT
+                        (_determinant < _DimType_(0.0) &&       // DIRECTION_LEFT
                          curAliveFacet->getFrontConstructionDirection()
-                         == _FacetType_::DIRECTION_RIGHT) ||
-                        (_determinant > _DimType_(0.0) &&       // GridFacet::DIRECTION_RIGHT
+                         == DIRECTION_RIGHT) ||
+                        (_determinant > _DimType_(0.0) &&       // DIRECTION_RIGHT
                          curAliveFacet->getFrontConstructionDirection()
-                         == _FacetType_::DIRECTION_LEFT) /*||
+                         == DIRECTION_LEFT) /*||
                         (_determinant != _DimType_(0.0) &&
                          curAliveFacet->getFrontConstructionDirection()
-                         != _FacetType_::DIRECTION_BOUTH)*/)
+                         != DIRECTION_BOUTH)*/)
                     continue;
 
                 // Ok! found at least one node
@@ -328,12 +332,12 @@ namespace DelaunayGridGenerator
                             // It can't be lineary dependent
                             if((_determinant > _DimType_(0.0) &&
                                     curAliveFacet->getFrontConstructionDirection()
-                                    == _FacetType_::DIRECTION_RIGHT) ||
+                                    == DIRECTION_RIGHT) ||
                                     (_determinant < _DimType_(0.0) &&
                                      curAliveFacet->getFrontConstructionDirection()
-                                     == _FacetType_::DIRECTION_LEFT) ||
+                                     == DIRECTION_LEFT) ||
                                     (curAliveFacet->getFrontConstructionDirection()
-                                     == _FacetType_::DIRECTION_BOUTH))
+                                     == DIRECTION_BOUTH))
                                 _sphereLocatedNodes.append(*_curAliveNode);
                         }
                         else break;
@@ -397,11 +401,10 @@ namespace DelaunayGridGenerator
                         if(_isIntersection)
                             break;
                     }
-                    if(!_isIntersection)
+                    if(_isIntersection)
                     {
                         _elementNodesIndexes[_nDimensions_] =
                                 (*_curAliveNode)->getGlobalIndex();
-                        break;
                     }
                 }
             }
@@ -497,6 +500,9 @@ namespace DelaunayGridGenerator
             // Update search directions
             for(int i=0; i<_nDimensions_+1; ++i)  // for all new facets
             {
+                newElement->saveConstructionDirections( // save what was
+                            i,_newFacets[i]->getFrontConstructionDirection());
+
                 // Exclude dead facets
                 if(_newFacets[i]->getState() == _FacetType_::STATE_DEAD)
                 {
@@ -507,7 +513,7 @@ namespace DelaunayGridGenerator
 
                 // For just created facets, or for first facet!
                 if(_newFacets[i]->getFrontConstructionDirection()
-                        == _FacetType_::DIRECTION_BOUTH)
+                        == DIRECTION_BOUTH)
                 {
                     _DimType_ _determinant = MathUtils::trunc(
                                 MathUtils::calculateIsCoplanarStatusWithClippingCheckNormalized<
@@ -520,17 +526,23 @@ namespace DelaunayGridGenerator
                     // It can't be lineary dependent,
                     // it can be only left or right
                     if(_determinant > _DimType_(0.0)) // found at right, so next search at left
-                        _newFacets[i]->setFrontConstructionDirection(
-                                    _FacetType_::DIRECTION_LEFT);
+                    {
+                        // save what you found
+                        newElement->saveConstructionDirections(i, DIRECTION_RIGHT);
+                        // update with opposite
+                        _newFacets[i]->setFrontConstructionDirection(DIRECTION_LEFT);
+                    }
                     else
-                        _newFacets[i]->setFrontConstructionDirection(
-                                    _FacetType_::DIRECTION_RIGHT);
+                    {
+                        // save what you found
+                        newElement->saveConstructionDirections(i, DIRECTION_LEFT);
+                        // update with opposite
+                        _newFacets[i]->setFrontConstructionDirection(DIRECTION_RIGHT);
+                    }
                 }
                 // For base facet, if it isn't first at triangulation
-                else if((_newFacets[i]->getFrontConstructionDirection()
-                         == _FacetType_::DIRECTION_LEFT) ||
-                        (_newFacets[i]->getFrontConstructionDirection()
-                         == _FacetType_::DIRECTION_RIGHT) ||
+                else if((_newFacets[i]->getFrontConstructionDirection() == DIRECTION_LEFT) ||
+                        (_newFacets[i]->getFrontConstructionDirection() == DIRECTION_RIGHT) ||
                         _newFacets[i]->isMetastructure())
                 {
                     _newFacets[i]->kill(_aliveFacetsPtrs, _deadFacetsPtrs);
@@ -543,16 +555,19 @@ namespace DelaunayGridGenerator
         }
 
         /// \todo use just for inDev testing, delete later
+        public : int _iteration;
         public : void _TEST_iteration(const _PlcType_ *ptrToPlc) throw(std::runtime_error)
         {
             if(_aliveNodesPtrs.empty())
             {
+                _iteration = 0;
                 clear();
                 _ptrToPlc = ptrToPlc;
                 _copyAndWrapPlcNodesToInternalStorage();
             }
             else
             {
+                ++_iteration;
                 if(_aliveFacetsPtrs.empty())
                 {
                     _FacetType_ *_firstAliveFacet = _constructFirstFacet();
@@ -564,6 +579,26 @@ namespace DelaunayGridGenerator
                     _WrappedElementType_ *_newElement = _constructElement(_aliveFacetsPtrs.first());
                     _updateListsAndStates(_newElement,_aliveFacetsPtrs.first());
                 }
+            }
+        }
+
+        /// \todo use just for inDev testing, delete later
+        public : void _TEST_undo_iteration() throw(std::runtime_error)
+        {
+            if(!_elementsPtrs.empty())
+            {
+                auto _element = _elementsPtrs.end();
+                --_element;
+                // Unregister last created element (update facets and nodes)
+                (*_element)->unRegister(
+                            _aliveNodesPtrs,
+                            _deadNodesPtrs,
+                            _aliveFacetsPtrs,
+                            _deadFacetsPtrs);
+                // Destroy last created element
+                delete(*_element);
+                _elementsPtrs.erase(_element);
+                --_iteration;
             }
         }
 
@@ -696,8 +731,8 @@ namespace DelaunayGridGenerator
         }
         public : Generator() noexcept :
 //            _DiscretizationStep(std::sqrt(std::numeric_limits<_DimType_>::epsilon())){}
-//            _DiscretizationStep(std::numeric_limits<_DimType_>::epsilon()){}
-            _DiscretizationStep(1e-4){}
+            _DiscretizationStep(std::numeric_limits<_DimType_>::epsilon()){}
+//            _DiscretizationStep(1e-6){}
         public : ~Generator() noexcept
         {
             clear();

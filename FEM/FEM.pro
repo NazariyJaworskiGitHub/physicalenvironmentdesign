@@ -28,7 +28,8 @@ SOURCES += main.cpp \
     TESTS/test_beam.cpp \
     TESTS/test_precision.cpp \
     simplexelement.cpp \
-    TESTS/test_mathutils.cpp
+    TESTS/test_mathutils.cpp \
+    TESTS/test_adreal.cpp
 
 HEADERS += \
     boundarycondition.h \
@@ -47,4 +48,6 @@ HEADERS += \
     TESTS/test_beam.h \
     TESTS/test_precision.h \
     simplexelement.h \
-    TESTS/test_mathutils.h
+    TESTS/test_mathutils.h \
+    adreal.h \
+    TESTS/test_adreal.h

@@ -96,11 +96,11 @@ namespace MathUtils
     //                  [xj yj 1]
     //                  [xk yk 1]
     //
-    // Bx = minor(0,0) = -[(xi^2+yi^2) yi 1]
+    // Bx = minor(0,1) = -[(xi^2+yi^2) yi 1]
     //                    [(xj^2+yj^2) yj 1]
     //                    [(xk^2+yk^2) yk 1]
     //
-    // By = minor(0,0) = +[(xi^2+yi^2) xi 1]
+    // By = minor(0,2) = +[(xi^2+yi^2) xi 1]
     //                    [(xj^2+yj^2) xj 1]
     //                    [(xk^2+yk^2) xk 1]
     //
@@ -151,6 +151,86 @@ namespace MathUtils
 
         return _result;
     }
+/*********************************************************************************************/
+
+//    /// Calculates the center of element's circumscribed hypersphere;
+//    /// (Robust Arbitrary Precision Floating Point Arithmetic version);
+//    /// It assumes that simplex has non-zero volume (is correct);
+//    /// sphereRadius - pointer to the place, where radius should be stored, if need;
+//    ///
+//    /// _NodeIteratorType_ - object which has the overloaded [] operator that returns
+//    ///   the reference to the Node, default it just the _NodeType_*;
+//    //
+//    // Example for 2D:
+//    //
+//    // M = [(x^2+y^2)   x  y  1]
+//    //     [(xi^2+yi^2) xi yi 1]
+//    //     [(xj^2+yj^2) xj yj 1]
+//    //     [(xk^2+yk^2) xk yk 1]
+//    //
+//    // A = minor(0,0) = [xi yi 1] = 2*element's volume = [xj-xi yj-yi]
+//    //                  [xj yj 1]                        [xk-xi yk-yi]
+//    //                  [xk yk 1]
+//    //
+//    // Bx = minor(0,1) = -[(xi^2+yi^2) yi 1] = [(xj-xi)^2+(yj-yi)^2 yj-yi]
+//    //                    [(xj^2+yj^2) yj 1]   [(xk-xi)^2+(yk-yi)^2 yk-yi]
+//    //                    [(xk^2+yk^2) yk 1]
+//    //
+//    // By = minor(0,2) = +[(xi^2+yi^2) xi 1] = [(xj-xi)^2+(yj-yi)^2 xj-xi]
+//    //                    [(xj^2+yj^2) xj 1]   [(xk-xi)^2+(yk-yi)^2 xk-xi]
+//    //                    [(xk^2+yk^2) xk 1]
+//    //
+//    // Sx = -Bx/2A  Sy = -By/2A (2A = 4Vol)
+//    //
+//    /// \todo it uses extended matrix (with those '1'), use compressed matrix;
+//    /// \todo try to use lambda functions;
+//    namespace APFPA
+//    {
+//        template<typename _NodeType_,
+//                 typename _APFPANodeType_,
+//                 int _nDimensions_,
+//                 typename _NodeIteratorType_ = _NodeType_*>
+//        _APFPANodeType_ calculateCircumSphereCenterAPFPA(
+//                const _NodeIteratorType_ &simplexNodes,
+//                AdReal *sphereRadius = nullptr)
+//        {
+//            // build M without first row
+//            Eigen::Matrix<AdReal, _nDimensions_+1, _nDimensions_+2> _M;
+//            for(int i=0;i<_nDimensions_+1;++i) // per rows = per nodes
+//            {
+//                _M(i,0) = 0.0;
+//                for(int c=0;c<_nDimensions_;++c) // per coordinates
+//                    _M(i,0) += simplexNodes[i][c] * simplexNodes[i][c];
+
+//                for(int j=1; j< _nDimensions_+1; ++j) // per columns
+//                    _M(i,j) = simplexNodes[i][j-1];
+
+//                _M(i,_nDimensions_+1) = 1.0;
+//            }
+
+//            // element should has non-zero volume
+//            AdReal _A = _M.template block<_nDimensions_+1, _nDimensions_+1>(0,1).determinant();
+
+//            _APFPANodeType_ _result;
+//            for(int b=0;b<_nDimensions_;++b) //per Bx, By, and so on
+//            {
+//                Eigen::Matrix<AdReal, _nDimensions_+1, _nDimensions_+1> _B;
+//                for(int _locColInd=0, _globColInd=0; _locColInd<_nDimensions_+1; ++_globColInd)
+//                {
+//                    if(b+1==_globColInd) continue;
+//                    _B.col(_locColInd) = _M.col(_globColInd);
+//                    ++_locColInd;
+//                }
+//                _result[b] = std::pow(-1.0,b)*_B.determinant()/(2.0*_A);
+//            }
+
+//            if(sphereRadius)
+//                *sphereRadius = _result.distance(simplexNodes[0]);
+
+//            return _result;
+//        }
+//    }
+
 /*********************************************************************************************/
     /// Calculates the center of element's (or subelement) circumscribed hypersphere by
     /// Cayley-Menger determinant;
@@ -657,8 +737,10 @@ namespace MathUtils
     ///
     /// Note!:
     ///   if subsimplexes are coplanar - there is no intersection;
-    ///   if subsimplexes have adjacent node or segment - there is no intersection;
+    ///   if subsimplexes have adjacent segment - there is no intersection;
     /// \todo to avoid that, if needed
+    /// \todo test it in one dimension
+    /// \todo check is same segment by node indexes
     ///
     /// _NodeIteratorType_ - object which has the overloaded [] operator that returns
     /// the reference to the Node, default it just the _NodeType_*;
@@ -676,8 +758,12 @@ namespace MathUtils
         // Phase 1: check position subsimplexNodesB relative to subsimplexNodesA
         auto _base = &subsimplexNodesA;
         auto _target = &subsimplexNodesB;
+        int _coplanarNodes[2]; // they can't have (_nDimensions_-1) adjacent node (same segment)
+        _coplanarNodes[0] = 0; // In bouth phases it should be the same number
+        _coplanarNodes[1] = 0; // of coplanar nodes, except intersection
         for(int _phase = 0; _phase<2; ++_phase)
         {
+
             bool _side;
             for(int k=0; k<_nDimensions_; ++k) // nodes of subsimplexNodesA
             {
@@ -686,7 +772,12 @@ namespace MathUtils
                         _M(i,j) = (*_target)[j][i] - (*_base)[k][i];
                 _DimType_ _det = trunc(_M.determinant(), eps);
                 if(_det == _DimType_(0.0))
-                    return false;   // node is adjacent or coplanar
+                {
+                    if(_coplanarNodes[_phase] == _nDimensions_)   // all nodes coplanar
+                        return false;
+                    else
+                        ++_coplanarNodes[_phase];
+                }
                 else if(k == 0)
                 {
                     if(_det > _DimType_(0.0))
@@ -705,6 +796,10 @@ namespace MathUtils
             _base = &subsimplexNodesB;
             _target = &subsimplexNodesA;
         }
+        if(_coplanarNodes[0] != _coplanarNodes[1])
+            return true;    // intersection
+        if(_coplanarNodes[0] >= _nDimensions_-1 )
+            return false;   // same segment
         return true;
     }
 /*********************************************************************************************/
@@ -717,8 +812,10 @@ namespace MathUtils
     ///
     /// Note!:
     ///   if subsimplexes are coplanar - there is no intersection;
-    ///   if subsimplexes have adjacent node or segment - there is no intersection;
+    ///   if subsimplexes have adjacent segment - there is no intersection;
     /// \todo to avoid that, if needed
+    /// \todo test it in one dimension
+    /// \todo check is same segment by node indexes
     ///
     /// _NodeIteratorType_ - object which has the overloaded [] operator that returns
     /// the reference to the Node, default it just the _NodeType_*;
@@ -761,6 +858,9 @@ namespace MathUtils
 
         Eigen::Matrix<_DimType_, _nDimensions_, _nDimensions_> _M;
 
+        int _coplanarNodes[2]; // they can't have (_nDimensions_-1) adjacent node (same segment)
+        _coplanarNodes[0] = 0; // In bouth phases it should be the same number
+        _coplanarNodes[1] = 0; // of coplanar nodes, except intersection
         // Phase 1: check position subsimplexNodesB relative to subsimplexNodesA
         for(int _phase = 0; _phase<2; ++_phase)
         {
@@ -772,7 +872,12 @@ namespace MathUtils
                         _M(i,j) = ((*_target)[j][i] - (*_base)[k][i]) / _maxCoordinates[i];
                 _DimType_ _det = trunc(_M.determinant(), eps);
                 if(_det == _DimType_(0.0))
-                    return false;   // node is adjacent or coplanar
+                {
+                    if(_coplanarNodes[_phase] == _nDimensions_)   // all nodes coplanar
+                        return false;
+                    else
+                        ++_coplanarNodes[_phase];
+                }
                 else if(k == 0)
                 {
                     if(_det > _DimType_(0.0))
@@ -791,6 +896,10 @@ namespace MathUtils
             _base = &subsimplexNodesB;
             _target = &subsimplexNodesA;
         }
+        if(_coplanarNodes[0] != _coplanarNodes[1])
+            return true;    // intersection
+        if(_coplanarNodes[0] >= _nDimensions_-1 )
+            return false;   // same segment
         return true;
     }
     /*********************************************************************************************/
