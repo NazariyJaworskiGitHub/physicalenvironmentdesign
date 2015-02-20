@@ -8,6 +8,7 @@ using namespace DelaunayGridGenerator;
 
 void Test_Generator::test_1()
 {
+    // Bad PLC test
     Plc2D _myPlc2D;
 
     _myPlc2D.createNode(FEM::Node2D(0.0,0.0));
@@ -50,6 +51,7 @@ void Test_Generator::test_1()
 
 void Test_Generator::test_2()
 {
+    // Element creation test
     Plc2D _myPlc2D;
 
     _myPlc2D.createNode(FEM::Node2D(0.0,0.0));
@@ -113,6 +115,7 @@ void Test_Generator::test_2()
 
 void Test_Generator::test_3()
 {
+    // Delaunay criteria node order test
     Plc3D _myPlc3D;
 
     _myPlc3D.createNode(FEM::Node3D(0.0,0.0,0.0));
@@ -175,6 +178,33 @@ void Test_Generator::test_4()
             _myGenerator2D.getAliveFacetsList().size() == 0 &&
             _myGenerator2D.getDeadNodeList().size() == 17);
     delete (_myGrid2D);
+}
+
+void Test_Generator::test_5()
+{
+    // Intersections test
+    Plc3D _myPlc3D;
+    int N = 2;
+    for(int i=0; i<=N; ++i)
+        for(int j=0; j<=N; ++j)
+            for(int k=0; k<=N; ++k)
+                _myPlc3D.createNode(
+                            FEM::Node3D(
+                                MathUtils::Real(i)/N,
+                                MathUtils::Real(j)/N,
+                                MathUtils::Real(k)/N));
+    _myPlc3D.updateMaxAndMinCoordinates();
+
+    DelaunayGridGenerator3D _myGenerator3D;
+    FEM::TetrahedralGrid *_myGrid3D =
+            _myGenerator3D.constructGrid(&_myPlc3D, false);
+
+    QVERIFY(_myGenerator3D.getNodeList().size() == 27 &&
+            _myGenerator3D.getDeadNodeList().size() == 27 &&
+            _myGenerator3D.getDeadFacetsList().size() == 120 &&
+            _myGenerator3D.getElementsList().size() == 48 );
+
+    delete (_myGrid3D);
 }
 
 

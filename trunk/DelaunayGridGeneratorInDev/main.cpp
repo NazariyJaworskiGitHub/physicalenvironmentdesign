@@ -37,17 +37,19 @@ int main(int argc, char *argv[])
 //    //_myPlc3D->createNode(FEM::Node3D(0.5, 0.5, 1.0));
 //    _myPlc3D->createNode(FEM::Node3D(0.5, 0.5, 0.0));
 
-    DelaunayGridGenerator::GeometricObjects::Icosahedron _icosahedron(
-                FEM::Node3D(0.5, 0.5, 0.5), 0.5);
+//    /// TEST 8
+//    DelaunayGridGenerator::GeometricObjects::Icosahedron _icosahedron(
+//                FEM::Node3D(0.5, 0.5, 0.5), 0.5);
 //    _icosahedron.splitFacets();
-//    _icosahedron.splitFacets();
-//    _icosahedron.splitFacets();
-//    _icosahedron.splitFacets();
-//    _icosahedron.splitFacets();
+////    _icosahedron.splitFacets();
+////    _icosahedron.splitFacets();
+////    _icosahedron.splitFacets();
+////    _icosahedron.splitFacets();
 
-    _icosahedron.reflectToSphere();
-    for(auto i : _icosahedron.nodes)
-        _myPlc3D->createNode(*i);
+//    _icosahedron.reflectToSphere();
+//    for(auto i : _icosahedron.nodes)
+//        _myPlc3D->createNode(*i);
+
 //    {int _n[]={0,2,8}; _myPlc3D->createFacet(_n);}
 //    {int _n[]={0,2,9}; _myPlc3D->createFacet(_n);}
 //    {int _n[]={0,6,9}; _myPlc3D->createFacet(_n);}
@@ -71,6 +73,16 @@ int main(int argc, char *argv[])
 //    {int _n[]={11,1,3}; _myPlc3D->createFacet(_n);}
 //    {int _n[]={11,7,3}; _myPlc3D->createFacet(_n);}
 
+    /// TEST 9
+    int N = 3;
+    for(int i=0; i<=N; ++i)
+        for(int j=0; j<=N; ++j)
+            for(int k=0; k<=N; ++k)
+                _myPlc3D->createNode(
+                            FEM::Node3D(
+                                MathUtils::Real(i)/N,
+                                MathUtils::Real(j)/N,
+                                MathUtils::Real(k)/N));
     _myPlc3D->updateMaxAndMinCoordinates();
 
 //    _myPlc3D->createSegment(0,1);

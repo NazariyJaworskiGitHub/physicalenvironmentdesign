@@ -82,13 +82,20 @@ void SimpleGLRender2D::keyPressEvent(QKeyEvent *e)
         dataString = QString(" AN: ") +
                 QString::number(_ptrToRenderingDelaunayGridGenerator2D->getAliveNodeList().size()) +
                 QString(" DN: ") +
-                QString::number(_ptrToRenderingDelaunayGridGenerator2D->getDeadNodeList().size());
+                QString::number(_ptrToRenderingDelaunayGridGenerator2D->getDeadNodeList().size()) +
+                QString(" Iteration: ") +
+                QString::number(_ptrToRenderingDelaunayGridGenerator2D->_iteration);
         this->updateGL();
     }
     /// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     else if(e->key() == Qt::Key_I)
     {
         std::cout << *_ptrToRenderingDelaunayGridGenerator2D;
+    }
+    /// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    else if(e->key() == Qt::Key_Z && e->modifiers() == Qt::ControlModifier)
+    {
+        _ptrToRenderingDelaunayGridGenerator2D->_TEST_undo_iteration();
     }
 }
 

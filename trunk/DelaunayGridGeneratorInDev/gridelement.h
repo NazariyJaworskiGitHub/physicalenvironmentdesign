@@ -8,6 +8,12 @@
 
 namespace DelaunayGridGenerator
 {
+    /// It is outside because GridFacet and GridElement need this
+    enum FRONT_CONSTRUCTION_DIRECTION {
+                  DIRECTION_BOUTH,
+                  DIRECTION_LEFT,
+                  DIRECTION_RIGHT};
+
     template <
         typename _WrappedNodeType_,
         int _nDimensions_,
@@ -21,12 +27,6 @@ namespace DelaunayGridGenerator
     {
         LIST_WRAPPED_INTERFACE(GridFacet)
 
-        /// \todo is DIRECTION_NONE really needed?
-        public : enum FRONT_CONSTRUCTION_DIRECTION {
-                          DIRECTION_BOUTH,
-                          DIRECTION_LEFT,
-                          DIRECTION_RIGHT,
-                          DIRECTION_NONE};  //for dead facets
         private: FRONT_CONSTRUCTION_DIRECTION _myFrontConstructionDirection;
         public : FRONT_CONSTRUCTION_DIRECTION getFrontConstructionDirection() const noexcept {
             return _myFrontConstructionDirection;}
@@ -156,6 +156,44 @@ namespace DelaunayGridGenerator
             return _sphereCenter;}
         private: _DimType_  _sphereRadius;
         public : _DimType_ getCircumSphereRadius() const noexcept {return _sphereRadius;}
+
+        // Need this to avoid duplication of construction
+        // directions calculations on killing the element
+        private: FRONT_CONSTRUCTION_DIRECTION _onCreateFacetConstructionDirections[_nDimensions_+1];
+        public : void saveConstructionDirections(
+                int index, FRONT_CONSTRUCTION_DIRECTION direction) noexcept{
+            _onCreateFacetConstructionDirections[index] = direction;}
+        // After this call, element can be destroyed without any references errors
+        // and triangulation process can be continued again
+        public : void unRegister(
+                QLinkedList<_WrappedNodeType_ *> &aliveNodesList,
+                QLinkedList<_WrappedNodeType_ *> &killedNodesList,
+                QLinkedList<_FacetType_ *> &aliveFacetsList,
+                QLinkedList<_FacetType_ *> &killedFacetsList) const noexcept
+        {
+            for(int i=0; i<_nDimensions_+1; ++i)  // for all facets and nodes
+            {
+                if(_myFacets[i]->getState() == _FacetType_::STATE_DEAD)
+                {
+                    // Restore construction directions
+                    _myFacets[i]->setFrontConstructionDirection(
+                                _onCreateFacetConstructionDirections[i]);
+                    // Ressurect
+                    _myFacets[i]->resurrect(aliveFacetsList, killedFacetsList);
+                }
+                else    // or just destroy it
+                {
+                    _myFacets[i]->unRegisterAtNodes();
+                    aliveFacetsList.erase(_myFacets[i]->getPointerToMyself());
+                    delete(_myFacets[i]);
+                }
+                // Ressurect nodes
+                if((*this->_ptrToNodesList)[
+                        this->_myNodeIndexes[i]].getState() == _WrappedNodeType_::STATE_DEAD)
+                    (*this->_ptrToNodesList)[this->_myNodeIndexes[i]].resurrect(
+                            aliveNodesList, killedNodesList);
+            }
+        }
 
         public : GridElement(
                 QList<_WrappedNodeType_> *ptrToNodesList,
