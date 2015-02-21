@@ -7,86 +7,108 @@ namespace MathUtils
     /// Arbitrary Precision Floating Point Arithmetic (APFPA)
     ///
     /// See:
-    ///  (1997) Shewchuk - Delanuay Refinement Mesh Generation;
-    ///  (1997) Shewchuk - Adaptive Precision Floating-Point Arithmetic
+    ///  [1] (2009) Muller   - Handbook of Floating-Point Arithmetic
+    ///  [2] (1997) Shewchuk - Delanuay Refinement Mesh Generation;
+    ///  [3] (1997) Shewchuk - Adaptive Precision Floating-Point Arithmetic
     ///                    and Fast Robust Geometric Predicates;
-    ///  (1991) Priest   - Algorithms For Arbitrary Precision Floating Point Arithmetic;
+    ///  [4] (1991) Priest   - Algorithms For Arbitrary Precision Floating Point Arithmetic;
     ///
     namespace APFPA
     {
+        /// Note, that any arithmetic operation '#' makes error, no greater than a half
+        /// of result`s unit-in-the-last-plase ulp() [2, p162]:
+        ///     |err(A # B)| <= ulp(A # B)/2;
         template <typename _BaseFPType_> class ExtendedReal
         {
+            /// [2, p164];
             /// O(1);
-            /// adds two components, returns component and roundoff error;
-            /// should be |a| >= |b|;
+            /// Adds two components, returns component and roundoff error;
+            /// Use only if |a| >= |b|;
+            /// if |a| >= |b| then |err(a + b)| < |a| < |b|;
+            /// (a + b) = a + b + err(a + b);
             private: inline static void _fastSum(
                     _BaseFPType_ a, _BaseFPType_ b, _BaseFPType_ &res, _BaseFPType_ &err) noexcept
             {
-                res = a + b;
-                _BaseFPType_ bVirtual = res - a;
-                err = b - bVirtual;
+                res = a + b;                            // = a + b - err
+                _BaseFPType_ bVirtual = res - a;        // = b - err
+                err = b - bVirtual;                     // = err
             }
 
+            /// [2, p166];
             /// O(1);
-            /// adds two components, returns component and roundoff error;
+            /// Adds two components, returns component and roundoff error;
+            /// (a + b) = a + b + err(a + b), for any a and b;
             private: inline static void _twoSum(
                     _BaseFPType_ a, _BaseFPType_ b, _BaseFPType_ &res, _BaseFPType_ &err) noexcept
             {
-                res = a + b;
-                _BaseFPType_ bVirtual = res - a;
-                _BaseFPType_ aVirtual = res - bVirtual;
-                _BaseFPType_ bRoundoff = b - bVirtual;
-                _BaseFPType_ aRoundoff = a - aVirtual;
-                err = aRoundoff + bRoundoff;
+                res = a + b;                            // = a + b - err
+                _BaseFPType_ bVirtual = res - a;        // = b - err + err2 (a can be too small)
+                _BaseFPType_ aVirtual = res - bVirtual; // = a - err2
+                _BaseFPType_ bRoundoff = b - bVirtual;  // = err - err2
+                _BaseFPType_ aRoundoff = a - aVirtual;  // = err2
+                err = aRoundoff + bRoundoff;            // = err
             }
 
+            /// [2, p166];
             /// O(1);
-            /// diffs two components, returns component and roundoff error
+            /// Diffs two components, returns component and roundoff error;
             private: inline static void _twoDiff(
                     _BaseFPType_ a, _BaseFPType_ b, _BaseFPType_ &res, _BaseFPType_ &err) noexcept
             {
-                res = a - b;
-                _BaseFPType_ bVirtual = a - res;
-                _BaseFPType_ aVirtual = res + bVirtual;
-                _BaseFPType_ bRoundoff = bVirtual - b;
-                _BaseFPType_ aRoundoff = a - aVirtual;
-                err = aRoundoff + bRoundoff;
+                res = a - b;                            // = a - b - err
+                _BaseFPType_ bVirtual = a - res;        // = b + err - err2 (res can be too small)
+                _BaseFPType_ aVirtual = res + bVirtual; // = a - err2
+                _BaseFPType_ bRoundoff = bVirtual - b;  // = err - err2
+                _BaseFPType_ aRoundoff = a - aVirtual;  // = err2
+                err = aRoundoff + bRoundoff;            // = err
             }
 
-            /// O(2*hLength)->O(N)
-            /// Compesses components array
-            private: inline static void _compress(
-                    unsigned hLength,
-                    const _BaseFPType_ *h,
-                    unsigned &compressedLength,
-                    _BaseFPType_ **hCompressed) noexcept
+            /// \todo make it like [2, p182];
+            /// O(2*hLength)->O(N) or O(1);
+            /// Simple eliminanes zero components
+            private: inline static void _eliminateZeroComponents(
+                    unsigned &hLength,
+                    _BaseFPType_ **h) noexcept
 
             {
-                compressedLength = 0;
+                // If single component
+                if(hLength == 1)
+                    return;
+
+                // Calculate new length
+                unsigned compressedLength = 0;
                 for(unsigned i = 0; i < hLength; ++i)
-                    if(h[i] != 0.0)
+                    if((*h)[i] != _BaseFPType_(0.0))
                         ++compressedLength;
 
-                if(compressedLength == 0)
-                {
-                    compressedLength = 1;
-                    *hCompressed = (_BaseFPType_*)malloc(sizeof(_BaseFPType_));
-                    (*hCompressed)[0] = 0.0;
+                 // If no zero components
+                if(compressedLength == hLength)
                     return;
-                }
-                *hCompressed =  (_BaseFPType_*)malloc(sizeof(_BaseFPType_) * compressedLength);
 
-                unsigned c = 0;
+                // Prepare new memory
+                _BaseFPType_ *hCompressed = (_BaseFPType_*)malloc(
+                            sizeof(_BaseFPType_) * compressedLength);
+
+                // Copy data to new memory
+                compressedLength = 0;
                 for(unsigned i = 0; i < hLength; ++i)
-                    if(h[i] != 0.0)
+                    if((*h)[i] != _BaseFPType_(0.0))
                     {
-                        (*hCompressed)[c] = h[i];
-                        c++;
+                        hCompressed[compressedLength] = (*h)[i];
+                        ++compressedLength;
                     }
+
+                // Release old memory
+                free(*h);
+
+                // Update pointers
+                (*h) = hCompressed;
+                hLength = compressedLength;
             }
 
+            /// [2, pp 168-170, picture 6.8];
             /// O(eLength*fLength + 2*(eLength+fLength))->O(N^2);
-            /// adds two components arrays, returns components array;
+            /// Adds two component arrays, returns zero-eliminated component array;
             private: static _BaseFPType_* _expansionSum(
                     unsigned eLength,
                     const _BaseFPType_ *e,
@@ -94,9 +116,14 @@ namespace MathUtils
                     const _BaseFPType_ *f,
                     unsigned &compressedLength) noexcept
             {
+                // Prepare memory for result
                 _BaseFPType_ *h = (_BaseFPType_*)malloc(sizeof(_BaseFPType_) * (eLength+fLength));
                 memcpy(h, e, eLength*sizeof(_BaseFPType_));
+
+                // Prepare memory for single-step temporary result
                 _BaseFPType_ *q = (_BaseFPType_*)malloc(sizeof(_BaseFPType_) * (eLength+1));
+
+                // Add see [2, p170, picture 6.8]
                 for(unsigned i = 0; i < fLength; ++i)
                 {
                     q[0] = f[i];
@@ -105,14 +132,15 @@ namespace MathUtils
                     h[i + eLength] = q[eLength];
                 }
                 free(q);
-                _BaseFPType_ *hCompressed;
-                _compress(eLength + fLength, h, compressedLength, &hCompressed);
-                free(h);
-                return hCompressed;
+
+                // Eliminate zeros
+                compressedLength = eLength + fLength;
+                _eliminateZeroComponents(compressedLength, &h);
+                return h;
             }
 
             /// O(eLength*fLength + 2*(eLength+fLength))->O(N^2);
-            /// diffs two components arrays, returns components array;
+            /// Diffs two component arrays, returns zero-eliminated component array;
             private: static _BaseFPType_* _expansionDiff(
                     unsigned eLength,
                     const _BaseFPType_ *e,
@@ -121,60 +149,82 @@ namespace MathUtils
                     unsigned &compressedLength) noexcept
 
             {
+                // Prepare memory for result
                 _BaseFPType_ *h = (_BaseFPType_*)malloc(sizeof(_BaseFPType_) * (eLength+fLength));
                 memcpy(h, e, eLength*sizeof(_BaseFPType_));
+
+                // Prepare memory for single-step temporary result
                 _BaseFPType_ *q = (_BaseFPType_*)malloc(sizeof(_BaseFPType_) * (eLength+1));
+
+                // Diff
                 for(unsigned i = 0; i < fLength; ++i)
                 {
                     q[0] = f[i];
-                    _twoDiff(h[i], q[0], q[1], h[i]);
-                    for(unsigned j = 1; j < eLength; ++j)
+                    _twoDiff(h[i], q[0], q[1], h[i]);           // Main difference
+                    for(unsigned j = 1; j < eLength; ++j)       // Errors
                         _twoSum(h[i+j], q[j], q[j+1], h[i+j]);
                     h[i + eLength] = q[eLength];
                 }
                 free(q);
-                _BaseFPType_ *hCompressed;
-                _compress(eLength + fLength, h, compressedLength, &hCompressed);
-                free(h);
-                return hCompressed;
+
+                // Eliminate zeros
+                compressedLength = eLength + fLength;
+                _eliminateZeroComponents(compressedLength, &h);
+                return h;
             }
 
+            /// [2, pp 176];
             /// O(1);
-            /// Splits double in to two halves;
+            /// Splits _BaseFPType_ in to two halves;
             private: inline static void _split(
                     _BaseFPType_ a, unsigned s, _BaseFPType_ &aHi, _BaseFPType_ &aLo) noexcept
             {
-                _BaseFPType_ c = ((2 << s) + 1) * a;
-                _BaseFPType_ aBig = c - a;
-                aHi = c - aBig;
-                aLo = a - aHi;
+                _BaseFPType_ c = ((std::numeric_limits<_BaseFPType_>::radix << s) + 1) * a;
+                _BaseFPType_ aBig = c - a;              // = c - a + err
+                aHi = c - aBig;                         // = a - err        = high_part(a)
+                aLo = a - aHi;                          // = err            = low_part(a)
             }
 
+            /// [2, pp 177];
             /// O(1);
             /// Multiplies two components, returns component and roundoff error;
             private: inline static void _twoProduct(
                     _BaseFPType_ a, _BaseFPType_ b, _BaseFPType_ &res, _BaseFPType_ &err) noexcept
             {
-                res = a * b;
+                res = a * b;                            // = a * b + err
+
+                // Split operands
                 _BaseFPType_ aHi, aLo, bHi, bLo;
                 _split(a, (unsigned)(std::numeric_limits<_BaseFPType_>::digits/2), aHi, aLo);
                 _split(b, (unsigned)(std::numeric_limits<_BaseFPType_>::digits/2), bHi, bLo);
-                err = res - aHi * bHi;
-                err -= aLo * bHi;
-                err -= aHi * bLo;
-                err = aLo * bLo - err;
+
+                // Because each next component has no more than _BaseFPType_::digits/2 bits,
+                // all next operations should be exact, see [2, pp 178]
+                // Note, a * b + err = (aHi * bHi) + (aLo * bHi) + (aHi * bLo) + (aLo * bLo) + err
+                err = res - aHi * bHi;          // = (aLo * bHi) + (aHi * bLo) + (aLo * bLo) + err
+                err -= aLo * bHi;               // = (aHi * bLo) + (aLo * bLo) + err
+                err -= aHi * bLo;               // = (aLo * bLo) + err
+                err = aLo * bLo - err;          // = err
             }
 
+            /// [2, pp 179];
             /// O(eLength + 2* eLength * 2)->O(N);
-            /// myltiplies components array and component, returns components array;
+            /// Multiplies component array and single component,
+            /// returns zero-eliminated component array;
             private: static _BaseFPType_* _scaleExpansion(
                     unsigned eLength,
                     const _BaseFPType_ *e,
                     _BaseFPType_ b,
                     unsigned &compressedLength) noexcept
             {
-                _BaseFPType_ *h = (_BaseFPType_*)malloc(sizeof(_BaseFPType_) * (eLength * 2));
+                // Prepare memory for result
+                compressedLength = eLength * 2;
+                _BaseFPType_ *h = (_BaseFPType_*)malloc(sizeof(_BaseFPType_) * (compressedLength));
+
+                // Base product
                 _twoProduct(e[0], b, h[1], h[0]);
+
+                // Product, see [2, pp 179, picture 6.14]
                 for(unsigned i = 1; i < eLength; ++i)
                 {
                     _BaseFPType_ T,t;
@@ -182,14 +232,14 @@ namespace MathUtils
                     _twoSum(h[2 * i - 1], t, h[2 * i], h[2 * i - 1]);
                     _fastSum(T, h[2 * i], h[2 * i + 1], h[2 * i]);
                 }
-                _BaseFPType_ *hCompressed;
-                _compress(eLength * 2, h, compressedLength, &hCompressed);
-                free(h);
-                return hCompressed;
+
+                // Eliminate zeros
+                _eliminateZeroComponents(compressedLength, &h);
+                return h;
             }
 
             /// O(fLength*(O(N)+O(N^2))->O(N^3);
-            /// myltiplies two components arrays, returns components array;
+            /// Multiplies two components arrays, returns components array;
             private: static _BaseFPType_* _expansionMultiply(
                     unsigned eLength,
                     const _BaseFPType_ *e,
@@ -197,7 +247,10 @@ namespace MathUtils
                     const _BaseFPType_ *f,
                     unsigned &compressedLength) noexcept
             {
+                // Base product
                 _BaseFPType_ *h = _scaleExpansion(eLength, e, f[0], compressedLength);
+
+                // Product
                 for(unsigned i = 1; i < fLength; ++i)
                 {
                     unsigned cTemp;
@@ -218,10 +271,13 @@ namespace MathUtils
 
             }
 
+            /// Private data
             private: unsigned _length;
             public : unsigned length() const noexcept {return _length;}
             /// From smaller to bigger
             private: _BaseFPType_ *_component;
+
+            /// Constructors
             public : const _BaseFPType_ * component() const noexcept {return _component;}
             public : ExtendedReal(const ExtendedReal &a) noexcept :
                 _length(a._length),
@@ -237,16 +293,17 @@ namespace MathUtils
             public : ExtendedReal(unsigned len, _BaseFPType_ *comp) noexcept :
                 _length(len), _component(comp){}
 
+            /// Usage
+            /// \todo check for simple operations, don't use those mallocs at each time
             public : ExtendedReal & operator = (const ExtendedReal &a) noexcept
             {
-                if(this == &a)
-                    return *this;
                 _length = a._length;
                 _component = (_BaseFPType_*)realloc(_component, _length*sizeof(_BaseFPType_));
                 memcpy(_component, a._component, _length*sizeof(_BaseFPType_));
                 return *this;
             }
-            public : friend const ExtendedReal operator + (const ExtendedReal &a, const ExtendedReal &b) noexcept
+            public : friend const ExtendedReal operator + (
+                const ExtendedReal &a, const ExtendedReal &b) noexcept
             {
                 unsigned c;
                 _BaseFPType_ *h = _expansionSum(
@@ -258,10 +315,13 @@ namespace MathUtils
                 unsigned c;
                 _BaseFPType_ *h = _expansionSum(
                             _length, _component, b._length, b._component, c);
-                *this = ExtendedReal(c, h);
+                free(_component);
+                _component = h;
+                _length = c;
                 return *this;
             }
-            public : friend const ExtendedReal operator - (const ExtendedReal &a, const ExtendedReal &b) noexcept
+            public : friend const ExtendedReal operator - (
+                const ExtendedReal &a, const ExtendedReal &b) noexcept
             {
                 unsigned c;
                 _BaseFPType_ *h = _expansionDiff(
@@ -273,10 +333,13 @@ namespace MathUtils
                 unsigned c;
                 _BaseFPType_ *h = _expansionDiff(
                             _length, _component, b._length, b._component, c);
-                *this = ExtendedReal(c, h);
+                free(_component);
+                _component = h;
+                _length = c;
                 return *this;
             }
-            public : friend const ExtendedReal operator * (const ExtendedReal &a, const ExtendedReal &b) noexcept
+            public : friend const ExtendedReal operator * (
+                const ExtendedReal &a, const ExtendedReal &b) noexcept
             {
                 unsigned c;
                 _BaseFPType_ *h = _expansionMultiply(
@@ -288,56 +351,57 @@ namespace MathUtils
                 unsigned c;
                 _BaseFPType_ *h = _expansionMultiply(
                             _length, _component, b._length, b._component, c);
-                *this = ExtendedReal(c, h);
+                free(_component);
+                _component = h;
+                _length = c;
                 return *this;
             }
-            public : friend bool operator == (const ExtendedReal &a, const ExtendedReal &b) noexcept
+            public : friend bool operator == (
+                const ExtendedReal &a, const ExtendedReal &b) noexcept
             {
-                unsigned c;
-                _BaseFPType_ *h = _expansionDiff(
-                            a._length, a._component, b._length, b._component, c);
-                if(h[c - 1] == 0.0)return true;
-                else return false;
+                if(a._length != b._length)
+                    return false;
+                for(unsigned c=0; c<a._length; ++c)
+                    if(a._component[c] != b._component[c])
+                        return false;
+                return true;
             }
-            public : friend bool operator != (const ExtendedReal &a, const ExtendedReal &b) noexcept
+            public : friend bool operator != (
+                const ExtendedReal &a, const ExtendedReal &b) noexcept
             {
-                unsigned c;
-                _BaseFPType_ *h = _expansionDiff(
-                            a._length, a._component, b._length, b._component, c);
-                if(h[c - 1] != 0.0)return true;
-                else return false;
+                return !(a == b);
             }
-            public : friend bool operator > (const ExtendedReal &a, const ExtendedReal &b) noexcept
+            public : friend bool operator > (
+                const ExtendedReal &a, const ExtendedReal &b) noexcept
             {
-                unsigned c;
-                _BaseFPType_ *h = _expansionDiff(
-                            a._length, a._component, b._length, b._component, c);
-                if(h[c - 1] > 0.0)return true;
-                else return false;
+                if(a._component[a._length-1] > b._component[b._length-1])
+                    return true;
+                return false;
             }
-            public : friend bool operator < (const ExtendedReal &a, const ExtendedReal &b) noexcept
+            public : friend bool operator < (
+                const ExtendedReal &a, const ExtendedReal &b) noexcept
             {
-                unsigned c;
-                _BaseFPType_ *h = _expansionDiff(
-                            a._length, a._component, b._length, b._component, c);
-                if(h[c - 1] < 0.0)return true;
-                else return false;
+                if(a._component[a._length-1] < b._component[b._length-1])
+                    return true;
+                return false;
             }
-            public : friend bool operator >= (const ExtendedReal &a, const ExtendedReal &b) noexcept
+            public : friend bool operator >= (
+                const ExtendedReal &a, const ExtendedReal &b) noexcept
             {
-                unsigned c;
-                _BaseFPType_ *h = _expansionDiff(
-                            a._length, a._component, b._length, b._component, c);
-                if(h[c - 1] >= 0.0)return true;
-                else return false;
+                if(a > b)
+                    return true;
+                if(a == b)
+                    return true;
+                return false;
             }
-            public : friend bool operator <= (const ExtendedReal &a, const ExtendedReal &b) noexcept
+            public : friend bool operator <= (
+                const ExtendedReal &a, const ExtendedReal &b) noexcept
             {
-                unsigned c;
-                _BaseFPType_ *h = _expansionDiff(
-                            a._length, a._component, b._length, b._component, c);
-                if(h[c - 1] <= 0.0)return true;
-                else return false;
+                if(a < b)
+                    return true;
+                if(a == b)
+                    return true;
+                return false;
             }
             public :~ExtendedReal()
             {
