@@ -8,7 +8,7 @@
 #include "TESTS/test_mathutils.h"
 #include "TESTS/test_node.h"
 #include "TESTS/test_precision.h"
-#include "TESTS/test_adreal.h"
+#include "TESTS/test_extendedreal.h"
 
 //tip! use "-vs" to see emited signals
 QStringList arguments = {
@@ -27,10 +27,10 @@ void run_tests_Node()
     QTest::qExec(&_myTest_Node, arguments);
 }
 
-void run_tests_AdReal()
+void run_tests_ExtendedReal()
 {
-    Test_AdReal _myTest_AdReal;
-    QTest::qExec(&_myTest_AdReal, arguments);
+    Test_ExtendedReal _myTest_ExtendedReal;
+    QTest::qExec(&_myTest_ExtendedReal, arguments);
 }
 
 void run_tests_MathUtils()
@@ -55,7 +55,7 @@ void run_tests_all()
 {
     run_tests_Precision();
     run_tests_Node();
-    run_tests_AdReal();
+    run_tests_ExtendedReal();
     run_tests_MathUtils();
     run_tests_FiniteElement();
     run_tests_Beam();

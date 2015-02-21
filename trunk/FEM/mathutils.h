@@ -7,6 +7,8 @@
 #include <cmath>
 #include <QList>
 
+#include "extendedreal.h"
+
 namespace MathUtils
 {
     /// Tip! for simple 1D TEST <test_beam.cpp>\n
@@ -21,14 +23,82 @@ namespace MathUtils
     ///     max error   2.77556e-017;\n
     ///
     /// Note:
-    /// \li FLT_RADIX       2
-    /// \li FLT_DIG         6
-    /// \li DBL_DIG         15
-    /// \li LDBL_DIG        18
-    /// \li FLT_EPSILON     1.19209e-007
-    /// \li DBL_EPSILON     2.22045e-016
-    /// \li LDBL_EPSILON    1.0842e-019
-    /// \li FLT_EVAL_METHOD 2
+    /// (Qt 5.1.1, MinGW 4.8.0 x32, release optimization level 3, 17.03.2014)
+    /// +---------------+----------------+---------------+---------------+
+    /// |               |     float      |    double     | long double   |
+    /// +---------------+--------------------------------+---------------+
+    /// | MIN           | 1.17549e-038   | 2.22507e-308  | 3.3621e-4932  |
+    /// +---------------+----------------+---------------+---------------+
+    /// | MAX           | 3.40282e+038   | 1.79769e+308  | 1.18973e+4932 |
+    /// +---------------+----------------+---------------+---------------+
+    /// | LOWEST        | -3.40282e+038  | -1.79769e+308 | -1.18973e+4932|
+    /// +---------------+----------------+---------------+---------------+
+    /// | DIGITS(base 2)| 24             | 53            | 64            |
+    /// +---------------+----------------+---------------+---------------+
+    /// | DIGSTS(base10)| 6              | 15            | 18            |
+    /// +---------------+----------------+---------------+---------------+
+    /// | MAX_DIGITS10  | 9              | 17            | 21            |
+    /// +---------------+----------------+---------------+---------------+
+    /// | RADIX         | 2              | 2             | 2             |
+    /// +---------------+----------------+---------------+---------------+
+    /// | EPSILON       | 1.19209e-007   | 2.22045e-016  | 1.0842e-019   |
+    /// +---------------+----------------+---------------+---------------+
+    /// | ROUND_ERROR   | 0.5            | 0.5           | 0.5           |
+    /// +---------------+----------------+---------------+---------------+
+    /// | MIN_EXPONENT_2| -125           | -1021         | -16381        |
+    /// +---------------+----------------+---------------+---------------+
+    /// | MIN_EXPONENT10| -37            | -307          | -4931         |
+    /// +---------------+----------------+---------------+---------------+
+    /// | MAX_EXPONENT_2| 128            | 1024          | 16384         |
+    /// +---------------+----------------+---------------+---------------+
+    /// | MAX_EXPONENT10| 38             | 308           | 4932          |
+    /// +---------------+----------------+---------------+---------------+
+    /// | HAS_INFINITY  | 1              | 1             | 1             |
+    /// +---------------+----------------+---------------+---------------+
+    /// | HAS_QUIET_NaN | 1              | 1             | 1             |
+    /// +---------------+----------------+---------------+---------------+
+    /// | HAS_SIGNAL_NaN| 1              | 1             | 1             |
+    /// +---------------+----------------+---------------+---------------+
+    /// | HAS_DENORM    | 1              | 1             | 1             |
+    /// +---------------+----------------+---------------+---------------+
+    /// | HAS_DENORM_LOS| 0              | 0             | 0             |
+    /// +---------------+----------------+---------------+---------------+
+    /// | INFINITY      | inf            | inf           | inf           |
+    /// +---------------+----------------+---------------+---------------+
+    /// | QUIET_NaN     | nan            | nan           | nan           |
+    /// +---------------+----------------+---------------+---------------+
+    /// | SIGNALING_NaN | nan            | nan           | nan           |
+    /// +---------------+----------------+---------------+---------------+
+    /// | DENORM_MIN    | 1.4013e-045    | 4.94066e-324  | 3.6452e-4951  |
+    /// +---------------+----------------+---------------+---------------+
+    /// | IS_IEEE_754   | 1              | 1             | 1             |
+    /// +---------------+----------------+---------------+---------------+
+    /// | ROUND_STYLE   | 1              | 1             | 1             |
+    /// +---------------+----------------+---------------+---------------+
+    /// | SIZE_OF       | 4              | 8             | 12            |
+    /// +---------------+----------------+---------------+---------------+
+    ///  FLT_EVAL_METHOD      2
+    ///  sizeof(float_t)      12
+    ///  sizeof(double_t)     12
+    /// ------------------------------------------------------------------
+    ///
+    /// FLT_EVAL_METHOD == 2, means that (all operations and constants evaluate
+    ///   in the range and precision of long double. Additionally, both float_t
+    ///   and double_t are equivalent to long double;
+    ///   see http://en.cppreference.com/w/cpp/types/climits/FLT_EVAL_METHOD
+    ///
+    /// ROUND_STYLE == 1 (round_to_nearest), means that rounding is to the
+    ///   nearest representable value;
+    ///   see <limits>::float_round_style;
+    ///   or http://www.cplusplus.com/reference/limits/float_round_style/
+    ///
+    /// IS_IEEE_754 == 1, means that the type adheres to IEC-559 / IEEE-754 standard.
+    ///   An IEC-559 type always has has_infinity, has_quiet_NaN and has_signaling_NaN
+    ///   set to true; And infinity, quiet_NaN and signaling_NaN return some non-zero value;
+    ///   see http://www.softelectro.ru/ieee754.html
+    ///
+    /// See http://www.cplusplus.com/reference/limits/numeric_limits/ for more info;
+    ///
 
     /// Change it to define Real type
     #ifndef DIMENSION_TYPE_PRECISION
@@ -38,6 +108,7 @@ namespace MathUtils
     typedef DIMENSION_TYPE_PRECISION Real;
 //    /// \todo test whenever it needed
 //    static Real RECOMMENDED_EPS = std::sqrt(std::numeric_limits<Real>::epsilon());
+    typedef APFPA::ExtendedReal<Real> MpReal;
 
 /*********************************************************************************************/
     /// Calculate factorial;
@@ -271,6 +342,8 @@ namespace MathUtils
         }
         Eigen::Matrix<_DimType_, Eigen::Dynamic, Eigen::Dynamic> _u(nNodes,1);
         _u.setOnes();
+        /// \todo it fails on -O3 optimisation level with flag -fipa-cp-clone
+        /// see *.pro file
         _u = _M.lu().solve(_u);
         _DimType_ _sum = _u.sum();
         _NodeType_ _result;

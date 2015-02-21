@@ -2,9 +2,9 @@
 #define TEST_APFPA_H
 
 #include <QTest>
-#include "adreal.h"
+#include "mathutils.h"
 
-class Test_AdReal : public QObject
+class Test_ExtendedReal : public QObject
 {
     Q_OBJECT
     private: Q_SLOT void test();
