@@ -1,19 +1,18 @@
-#include "test_adreal.h"
+#include "test_extendedreal.h"
 
 using namespace MathUtils;
-using namespace MathUtils::APFPA;
 
-void Test_AdReal::test()
+void Test_ExtendedReal::test()
 {
-    AdReal _r1(1.0);
+    MpReal _r1(1.0);
     QVERIFY(_r1 == 1.0);
 
-    AdReal _r2 = _r1;
+    MpReal _r2 = _r1;
     QVERIFY(_r2 == 1.0 && _r1 == _r2);
 
     Real *arr = new Real[5];
     arr[0]=1.0;
-    AdReal _r3(5,arr);
+    MpReal _r3(5,arr);
     QVERIFY(_r3.length() == 5 && _r3.component()[0] == Real(1.0));
 
     _r1 = 5.0;
@@ -47,7 +46,7 @@ void Test_AdReal::test()
     _r2 = -1.0;
     _r2 += -2e-30;
     _r3 = _r1 +_r2;
-    AdReal _r4 = _r2 + _r1;
+    MpReal _r4 = _r2 + _r1;
     QVERIFY(_r3.length() == _r4.length() &&
             _r3.length() == 2 &&
             _r3.component()[0] == _r4.component()[0] &&
