@@ -8,6 +8,7 @@
 #include <QList>
 
 #include "extendedreal.h"
+#include "simplematrix.h"
 
 namespace MathUtils
 {
