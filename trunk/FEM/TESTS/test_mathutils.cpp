@@ -35,6 +35,61 @@ void Test_MathUtils::test_trunc()
     QVERIFY(_rez == 0.0f);
 }
 
+void Test_MathUtils::test_simpleMatrix()
+{
+    SimpleSquareMatrix::SimpleSquareStaticMatrix<Real,3> _MR;
+    _MR(0,0) = 1;
+    _MR(0,1) = 0;
+    _MR(0,2) = 0;
+    _MR(1,0) = 0;
+    _MR(1,1) = 2;
+    _MR(1,2) = 0;
+    _MR(2,0) = 0;
+    _MR(2,1) = 0;
+    _MR(2,2) = 3;
+    Real _detR = _MR.determinant();
+    QVERIFY(_detR == Real(6.0));
+
+    SimpleSquareMatrix::SimpleSquareStaticMatrix<MpReal,3> _MMpR;
+    _MMpR(0,0) = 1;
+    _MMpR(0,1) = 0;
+    _MMpR(0,2) = 0;
+    _MMpR(1,0) = 0;
+    _MMpR(1,1) = 2;
+    _MMpR(1,2) = 0;
+    _MMpR(2,0) = 0;
+    _MMpR(2,1) = 0;
+    _MMpR(2,2) = 3;
+    MpReal _detMpR = _MMpR.determinant();
+    QVERIFY(_detMpR == MpReal(6.0));
+
+    SimpleSquareMatrix::SimpleSquareDynamicMatrix<Real> _MRD(3);
+    _MRD(0,0) = 1;
+    _MRD(0,1) = 0;
+    _MRD(0,2) = 0;
+    _MRD(1,0) = 0;
+    _MRD(1,1) = 2;
+    _MRD(1,2) = 0;
+    _MRD(2,0) = 0;
+    _MRD(2,1) = 0;
+    _MRD(2,2) = 3;
+    Real _detRD = _MRD.determinant();
+    QVERIFY(_detRD == Real(6.0));
+
+    SimpleSquareMatrix::SimpleSquareDynamicMatrix<MpReal> _MMpRD(3);
+    _MMpRD(0,0) = 1;
+    _MMpRD(0,1) = 0;
+    _MMpRD(0,2) = 0;
+    _MMpRD(1,0) = 0;
+    _MMpRD(1,1) = 2;
+    _MMpRD(1,2) = 0;
+    _MMpRD(2,0) = 0;
+    _MMpRD(2,1) = 0;
+    _MMpRD(2,2) = 3;
+    MpReal _detMpRD = _MMpRD.determinant();
+    QVERIFY(_detMpRD == MpReal(6.0));
+}
+
 void Test_MathUtils::test_calculateCircumSphereCenter()
 {
     Node2D _simpleNodes2D[] = {{0,0},{1,0},{0,1}};

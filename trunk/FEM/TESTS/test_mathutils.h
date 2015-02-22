@@ -10,6 +10,7 @@ class Test_MathUtils : public QObject
     private: Q_SLOT void test_factorial();
     private: Q_SLOT void test_round();
     private: Q_SLOT void test_trunc();
+    private: Q_SLOT void test_simpleMatrix();
     private: Q_SLOT void test_calculateCircumSphereCenter();
     private: Q_SLOT void test_calculateCircumSphereCenterByCayleyMengerDeterminant();
     private: Q_SLOT void test_calculateIsNotDelaunayStatus();

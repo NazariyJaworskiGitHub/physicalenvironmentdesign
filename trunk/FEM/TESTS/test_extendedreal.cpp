@@ -53,4 +53,9 @@ void Test_ExtendedReal::test()
             _r3.component()[1] == _r4.component()[1] &&
             _r3.component()[0] == Real(-2e-30) &&
             _r3.component()[1] == Real(1e30) );
+
+    _r1 = -1.0;
+    _r2 = 0.0;
+    _r3 = _r1 * _r2;
+    QVERIFY(_r3 == 0.0);
 }

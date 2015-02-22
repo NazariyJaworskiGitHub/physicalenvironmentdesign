@@ -82,4 +82,5 @@ HEADERS += \
     simplexelement.h \
     TESTS/test_mathutils.h \
     extendedreal.h \
-    TESTS/test_extendedreal.h
+    TESTS/test_extendedreal.h \
+    simplematrix.h

@@ -76,12 +76,13 @@ namespace MathUtils
                     return;
 
                 // Calculate new length
-                unsigned compressedLength = 0;
-                for(unsigned i = 0; i < hLength; ++i)
+                unsigned compressedLength = 1;
+                // Don't check last component, it will be left even if it equal zero
+                for(unsigned i = 0; i < hLength-1; ++i)
                     if((*h)[i] != _BaseFPType_(0.0))
                         ++compressedLength;
 
-                 // If no zero components
+                // If no zero components
                 if(compressedLength == hLength)
                     return;
 
@@ -91,19 +92,20 @@ namespace MathUtils
 
                 // Copy data to new memory
                 compressedLength = 0;
-                for(unsigned i = 0; i < hLength; ++i)
+                for(unsigned i = 0; i < hLength-1; ++i)
                     if((*h)[i] != _BaseFPType_(0.0))
                     {
                         hCompressed[compressedLength] = (*h)[i];
                         ++compressedLength;
                     }
+                hCompressed[compressedLength]=(*h)[hLength-1];
 
                 // Release old memory
                 free(*h);
 
                 // Update pointers
                 (*h) = hCompressed;
-                hLength = compressedLength;
+                hLength = compressedLength+1;
             }
 
             /// [2, pp 168-170, picture 6.8];
