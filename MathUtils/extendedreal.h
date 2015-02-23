@@ -1,5 +1,10 @@
+/// \author Nazariy Jaworski (c)
+/// \date 23.02.2015
+
 #ifndef EXTENDEDREAL_H
 #define EXTENDEDREAL_H
+
+#include "realdeclaration.h"
 
 namespace MathUtils
 {
@@ -411,6 +416,9 @@ namespace MathUtils
             }
         };
     }
+
+    /// "Extended Real" (Arbitrary Precision Floating Point) declaration
+    typedef APFPA::ExtendedReal<Real> MpReal;
 }
 
 #endif // EXTENDEDREAL_H

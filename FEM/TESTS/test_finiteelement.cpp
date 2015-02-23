@@ -1,10 +1,11 @@
 #include "test_finiteelement.h"
 
 #include <iostream>
-#include "mathutils.h"
+#include <MathUtils>
 #include "node.h"
 
 using namespace FEM;
+using namespace MathUtils;
 
 void Test_FiniteElement::test()
 {
@@ -60,7 +61,7 @@ void Test_FiniteElement::test()
     }
 
     // counterclockwise
-    QList<FEM::Node2D> n = {{0.0,0.5}, {0.0,0.0}, {0.5,0.0}};
+    QList<Node2D> n = {{0.0,0.5}, {0.0,0.0}, {0.5,0.0}};
     MathUtils::Real conductionCoefficients[2] = {100,100};
     indexes[1] = 1;
     FEM::Triangle<Node2D> simplex(&n, indexes);

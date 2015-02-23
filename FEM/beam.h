@@ -4,7 +4,7 @@
 #include <QMap>
 
 #include "grid.h"
-#include "mathutils.h"
+#include <MathUtils>
 #include "node.h"
 #include "simulationobject.h"
 
@@ -37,7 +37,7 @@ namespace FEM
         public : ~Beam(){}
     };
 
-    typedef Beam<Node1D,MathUtils::Real> BeamNative;
+    typedef Beam<MathUtils::Node1D,MathUtils::Real> BeamNative;
 }
 
 #endif // BEAM_H

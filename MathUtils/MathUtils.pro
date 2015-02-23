@@ -1,15 +1,8 @@
 CONFIG += console
-CONFIG += qt
 CONFIG += c++11
 CONFIG += no_keywords
 
 QT += testlib
-
-#INCLUDEPATH += E:\ViennaCL-1.4.2\
-
-#Warning!!! this section is the including of FEM branch,
-#remake project tree to avoid this section!!!
-INCLUDEPATH += E:\Developing\BPSPO\PhysicalEnvironmentDesign\MathUtils
 
 # For dr.memory debug
 QMAKE_CXXFLAGS_DEBUG += -ggdb
@@ -47,28 +40,33 @@ QMAKE_CXXFLAGS_RELEASE += -O2 \ #Equivalent to -O3 (MinGW 4.8.0)
 #    -ftree-partial-pre
 
 SOURCES += main.cpp \
-    boundarycondition.cpp \
-    simulationobject.cpp \
-    finiteelement.cpp \
-    domain.cpp \
-    beam.cpp \
-    TESTS/test_finiteelement.cpp \
-    grid.cpp \
-    phase.cpp \
-    cuboid.cpp \
-    TESTS/test_beam.cpp \
-    simplexelement.cpp
+    TESTS/test_precision.cpp \
+    TESTS/test_node.cpp \
+    TESTS/test_mathutils.cpp \
+    TESTS/test_extendedreal.cpp
 
 HEADERS += \
-    boundarycondition.h \
-    simulationobject.h \
-    finiteelement.h \
-    domain.h \
-    beam.h \
-    TESTS/test_finiteelement.h \
+    simplematrix.h \
+    node.h \
+    extendedreal.h \
     TESTS/tests_runner.h \
-    grid.h \
-    phase.h \
-    cuboid.h \
-    TESTS/test_beam.h \
-    simplexelement.h
+    TESTS/test_precision.h \
+    TESTS/test_node.h \
+    TESTS/test_mathutils.h \
+    TESTS/test_extendedreal.h \
+    MathUtils \
+    functions.h \
+    FUNCTIONS/factorial.h \
+    FUNCTIONS/rand.h \
+    FUNCTIONS/round.h \
+    FUNCTIONS/trunc.h \
+    FUNCTIONS/calculatecircumspherecenter.h \
+    realdeclaration.h \
+    FUNCTIONS/calculateiscoplanarstatus.h \
+    FUNCTIONS/calculategeneralizedcrossproduct.h \
+    FUNCTIONS/calculatesimplexvoulumebycayleymengerdeterminant.h \
+    FUNCTIONS/calculatebarycentriccoordinates.h \
+    FUNCTIONS/calculatesegmentsubsimplexbarycenticintersection.h \
+    FUNCTIONS/calculatesubsimplexsubsimplexintersection.h \
+    printmachineinfo.h
+

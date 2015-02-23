@@ -2,7 +2,7 @@
 #define TEST_MATHUTILS_H
 
 #include <QTest>
-#include "mathutils.h"
+#include "MathUtils"
 
 class Test_MathUtils : public QObject
 {

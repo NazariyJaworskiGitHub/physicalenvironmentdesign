@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
 //    for(int i=0; i<100; i++)
 //    {
 //        _myPlc3D->createNode(
-//                    FEM::Node3D(
+//                    MathUtils::Node3D(
 //                        MathUtils::rand(0.0, 1.0),
 //                        MathUtils::rand(0.0, 1.0),
 //                        MathUtils::rand(0.0, 1.0)));
@@ -28,18 +28,18 @@ int main(int argc, char *argv[])
 //    int N=30;
 //    for(int i=0; i<N; i++)
 //    {
-//        FEM::Node3D _n((1.0 + sin(i*2*M_PI/N))/2.0,
+//        MathUtils::Node3D _n((1.0 + sin(i*2*M_PI/N))/2.0,
 //                       (1.0 + cos(i*2*M_PI/N))/2.0,
 //                       0.5);
 //        _myPlc3D->createNode(_n);
 //    }
-//    //_myPlc3D->createNode(FEM::Node3D(0.5, 0.5, 0.5));
-//    //_myPlc3D->createNode(FEM::Node3D(0.5, 0.5, 1.0));
-//    _myPlc3D->createNode(FEM::Node3D(0.5, 0.5, 0.0));
+//    //_myPlc3D->createNode(MathUtils::Node3D(0.5, 0.5, 0.5));
+//    //_myPlc3D->createNode(MathUtils::Node3D(0.5, 0.5, 1.0));
+//    _myPlc3D->createNode(MathUtils::Node3D(0.5, 0.5, 0.0));
 
 //    /// TEST 8
 //    DelaunayGridGenerator::GeometricObjects::Icosahedron _icosahedron(
-//                FEM::Node3D(0.5, 0.5, 0.5), 0.5);
+//                MathUtils::Node3D(0.5, 0.5, 0.5), 0.5);
 //    _icosahedron.splitFacets();
 ////    _icosahedron.splitFacets();
 ////    _icosahedron.splitFacets();
@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
         for(int j=0; j<=N; ++j)
             for(int k=0; k<=N; ++k)
                 _myPlc3D->createNode(
-                            FEM::Node3D(
+                            MathUtils::Node3D(
                                 MathUtils::Real(i)/N,
                                 MathUtils::Real(j)/N,
                                 MathUtils::Real(k)/N));
@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
     SimpleGLRender3D _render(NULL);
     _render.setRenderingPiecewiseLinearComplex(_myPlc3D);
     _render.setRenderingDelaunayGridGenerator3D(_myGenerator3D);
-    _render.setScenePosition(FEM::Node3D(
+    _render.setScenePosition(MathUtils::Node3D(
                 (_myPlc3D->getMaxCoord(0)-_myPlc3D->getMinCoord(0))/2,
                 (_myPlc3D->getMaxCoord(1)-_myPlc3D->getMinCoord(1))/2,
                 (_myPlc3D->getMaxCoord(2)-_myPlc3D->getMinCoord(2))/2));
@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
 //    /// TEST 5
 //    for(int i=0; i<100; i++)
 //    {
-//        _myPlc2D.createNode(FEM::Node2D(
+//        _myPlc2D.createNode(MathUtils::Node2D(
 //                                MathUtils::rand(0.0, 1.0),
 //                                MathUtils::rand(0.0, 1.0)));
 //    }
@@ -133,11 +133,11 @@ int main(int argc, char *argv[])
 //    int N=10;
 //    for(int i=0; i<N; i++)
 //    {
-//        FEM::Node2D _n((1.0 + sin(i*2*M_PI/N))/2.0,
+//        MathUtils::Node2D _n((1.0 + sin(i*2*M_PI/N))/2.0,
 //                       (1.0 + cos(i*2*M_PI/N))/2.0);
 //        _myPlc2D.createNode(_n);
 //    }
-//    _myPlc2D.createNode(FEM::Node2D(
+//    _myPlc2D.createNode(MathUtils::Node2D(
 //                            MathUtils::rand(0.5, 0.5),
 //                            MathUtils::rand(0.5, 0.5)));
 
@@ -145,11 +145,11 @@ int main(int argc, char *argv[])
     int N=250;
     for(int i=0; i<N; i++)
     {
-        FEM::Node2D _n((1.0 + sin(i*2*M_PI/N))/2.0,
+        MathUtils::Node2D _n((1.0 + sin(i*2*M_PI/N))/2.0,
                        (1.0 + cos(i*2*M_PI/N))/2.0);
         _myPlc2D.createNode(_n);
     }
-    _myPlc2D.createNode(FEM::Node2D(
+    _myPlc2D.createNode(MathUtils::Node2D(
                             MathUtils::rand(0.5, 0.5),
                             MathUtils::rand(0.5, 0.5)));
 
@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
     SimpleGLRender2D _render(NULL);
     _render.setRenderingPiecewiseLinearComplex(&_myPlc2D);
     _render.setRenderingDelaunayGridGenerator2D(&_myGenerator2D);
-    _render.setScenePosition(FEM::Node3D(
+    _render.setScenePosition(MathUtils::Node3D(
                 (_myPlc2D.getMaxCoord(0)-_myPlc2D.getMinCoord(0))/2,
                 (_myPlc2D.getMaxCoord(1)-_myPlc2D.getMinCoord(1))/2,
                 0.0));

@@ -7,7 +7,7 @@
 #include "boundarycondition.h"
 #include "domain.h"
 #include "simplexelement.h"
-#include "mathutils.h"
+#include <MathUtils>
 #include "node.h"
 
 namespace FEM
@@ -175,9 +175,21 @@ namespace FEM
         public : ~Grid(){}
     };
 
-    typedef Grid <Node1D,1,Edge<Node1D, MathUtils::Real>, MathUtils::Real> EdgeGrid;
-    typedef Grid <Node2D,2,Triangle<Node2D, MathUtils::Real>, MathUtils::Real> TriangularGrid;
-    typedef Grid <Node3D,3,Tetrahedron<Node3D, MathUtils::Real>, MathUtils::Real> TetrahedralGrid;
+    typedef Grid <
+        MathUtils::Node1D,
+        1,
+        Edge<MathUtils::Node1D, MathUtils::Real>,
+        MathUtils::Real> EdgeGrid;
+    typedef Grid <
+        MathUtils::Node2D,
+        2,
+        Triangle<MathUtils::Node2D, MathUtils::Real>,
+        MathUtils::Real> TriangularGrid;
+    typedef Grid <
+        MathUtils::Node3D,
+        3,
+        Tetrahedron<MathUtils::Node3D, MathUtils::Real>,
+        MathUtils::Real> TetrahedralGrid;
 }
 
 #endif // GRID_H

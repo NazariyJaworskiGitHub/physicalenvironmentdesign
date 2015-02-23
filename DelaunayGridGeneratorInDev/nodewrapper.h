@@ -4,8 +4,7 @@
 #include <limits>
 
 #include "listwrapperinterface.h"
-#include "mathutils.h"
-#include "node.h"
+#include <MathUtils>
 
 namespace DelaunayGridGenerator
 {
@@ -81,9 +80,9 @@ namespace DelaunayGridGenerator
 
         public : ~NodeWrapper() noexcept {}
     };
-    typedef NodeWrapper<FEM::Node2D> WrappedNode2D;
-    typedef NodeWrapper<FEM::Node3D> WrappedNode3D;
-    typedef NodeWrapper<FEM::Node4D> WrappedNode4D;
+    typedef NodeWrapper<MathUtils::Node2D> WrappedNode2D;
+    typedef NodeWrapper<MathUtils::Node3D> WrappedNode3D;
+    typedef NodeWrapper<MathUtils::Node4D> WrappedNode4D;
 }
 
 #endif // NODEWRAPPER_H

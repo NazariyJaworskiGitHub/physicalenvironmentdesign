@@ -1,7 +1,7 @@
 #ifndef BOUNDARYCONDITION_H
 #define BOUNDARYCONDITION_H
 
-#include "mathutils.h"
+#include <MathUtils>
 
 namespace FEM
 {

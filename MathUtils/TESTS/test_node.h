@@ -2,7 +2,7 @@
 #define TEST_NODE_H
 
 #include <QTest>
-#include "node.h"
+#include "MathUtils"
 
 class Test_Node : public QObject
 {

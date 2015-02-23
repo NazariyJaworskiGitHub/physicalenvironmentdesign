@@ -11,7 +11,7 @@
 #include "gridelement.h"
 #include "nodewrapper.h"
 #include "piecewiselinearcomplex.h"
-#include "mathutils.h"
+#include <MathUtils>
 
 namespace DelaunayGridGenerator
 {

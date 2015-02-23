@@ -1,8 +1,7 @@
 #ifndef GEOMETRICOBJECTS_H
 #define GEOMETRICOBJECTS_H
 
-#include "node.h"
-#include "mathutils.h"
+#include <MathUtils>
 
 namespace DelaunayGridGenerator
 {
@@ -15,16 +14,16 @@ namespace DelaunayGridGenerator
             /// For inner usage only
             private: class _Triangle
             {
-                public : FEM::Node3D *a = nullptr;
-                public : FEM::Node3D *b = nullptr;
-                public : FEM::Node3D *c = nullptr;
+                public : MathUtils::Node3D *a = nullptr;
+                public : MathUtils::Node3D *b = nullptr;
+                public : MathUtils::Node3D *c = nullptr;
                 private: int _curIndex = 0;
                 public : _Triangle *neighbors[3];
                 public : bool isSplitted = false;
                 public : _Triangle *children[4];
-                public : FEM::Node3D *ab = nullptr;
-                public : FEM::Node3D *ac = nullptr;
-                public : FEM::Node3D *bc = nullptr;
+                public : MathUtils::Node3D *ab = nullptr;
+                public : MathUtils::Node3D *ac = nullptr;
+                public : MathUtils::Node3D *bc = nullptr;
                 public : void setNeighbor(_Triangle * newNeighbor) noexcept
                 {
                     neighbors[_curIndex] = newNeighbor;
@@ -32,7 +31,7 @@ namespace DelaunayGridGenerator
                     ++_curIndex;
                     ++(newNeighbor->_curIndex);
                 }
-                public : bool contains(FEM::Node3D *target) const noexcept
+                public : bool contains(MathUtils::Node3D *target) const noexcept
                 {
                     if(a == target)
                         return true;
@@ -42,7 +41,7 @@ namespace DelaunayGridGenerator
                         return true;
                     return false;
                 }
-                public : _Triangle * getNeighbor(FEM::Node3D *f, FEM::Node3D *s) noexcept
+                public : _Triangle * getNeighbor(MathUtils::Node3D *f, MathUtils::Node3D *s) noexcept
                 {
                     if(neighbors[0]->contains(f) && neighbors[0]->contains(s))
                         return neighbors[0];
@@ -52,7 +51,7 @@ namespace DelaunayGridGenerator
                         return neighbors[2];
                     return nullptr;
                 }
-                public : FEM::Node3D* getMidNode(FEM::Node3D *f, FEM::Node3D *s)
+                public : MathUtils::Node3D* getMidNode(MathUtils::Node3D *f, MathUtils::Node3D *s)
                 {
                     if((a == f && b ==s) || (a == s && b ==f))
                         return ab;
@@ -64,9 +63,9 @@ namespace DelaunayGridGenerator
                 }
 
                 public : _Triangle(
-                        FEM::Node3D *a,
-                        FEM::Node3D *b,
-                        FEM::Node3D *c) noexcept :
+                        MathUtils::Node3D *a,
+                        MathUtils::Node3D *b,
+                        MathUtils::Node3D *c) noexcept :
                     a(a), b(b), c(c)
                 {
                     neighbors[0] = nullptr;
@@ -75,10 +74,10 @@ namespace DelaunayGridGenerator
                 }
             };
 
-            public : std::vector<FEM::Node3D*>   nodes;
+            public : std::vector<MathUtils::Node3D*>   nodes;
             private: std::vector<_Triangle*>     *_triangles = nullptr;
-            private: FEM::Node3D _center = FEM::Node3D(0.0, 0.0, 0.0);
-            public : FEM::Node3D getCenter() const noexcept {return _center;}
+            private: MathUtils::Node3D _center = MathUtils::Node3D(0.0, 0.0, 0.0);
+            public : MathUtils::Node3D getCenter() const noexcept {return _center;}
             private: MathUtils::Real _radius = 1.0;
             public : MathUtils::Real getRadius() const noexcept {return _radius;}
             private: bool _isReflectedToSphere = false;
@@ -101,9 +100,9 @@ namespace DelaunayGridGenerator
                     _Triangle *_tr = *tr;
                     if(!_tr->isSplitted)
                     {
-                        FEM::Node3D *_ab;
-                        FEM::Node3D *_ac;
-                        FEM::Node3D *_bc;
+                        MathUtils::Node3D *_ab;
+                        MathUtils::Node3D *_ac;
+                        MathUtils::Node3D *_bc;
 
                         // Find existing nodes or create new
                         _Triangle *_neighbor = _tr->getNeighbor(_tr->a, _tr->b);
@@ -111,7 +110,7 @@ namespace DelaunayGridGenerator
                             _ab = _neighbor->getMidNode(_tr->a, _tr->b);
                         else
                         {
-                            _ab = new FEM::Node3D((*_tr->a + *_tr->b)/2.0);
+                            _ab = new MathUtils::Node3D((*_tr->a + *_tr->b)/2.0);
                             nodes.push_back(_ab);
                         }
 
@@ -120,7 +119,7 @@ namespace DelaunayGridGenerator
                             _ac = _neighbor->getMidNode(_tr->a, _tr->c);
                         else
                         {
-                            _ac = new FEM::Node3D((*_tr->a + *_tr->c)/2.0);
+                            _ac = new MathUtils::Node3D((*_tr->a + *_tr->c)/2.0);
                             nodes.push_back(_ac);
                         }
 
@@ -129,7 +128,7 @@ namespace DelaunayGridGenerator
                             _bc = _neighbor->getMidNode(_tr->b, _tr->c);
                         else
                         {
-                            _bc = new FEM::Node3D((*_tr->b + *_tr->c)/2.0);
+                            _bc = new MathUtils::Node3D((*_tr->b + *_tr->c)/2.0);
                             nodes.push_back(_bc);
                         }
 
@@ -216,20 +215,20 @@ namespace DelaunayGridGenerator
                 // (+/-_fi,    0.0, +/-1.0)
                 MathUtils::Real _fi = (1+std::sqrt(5.0))/2;
 
-                nodes.push_back(new FEM::Node3D( 0.0, -1.0, -_fi));
-                nodes.push_back(new FEM::Node3D( 0.0, -1.0,  _fi));
-                nodes.push_back(new FEM::Node3D( 0.0,  1.0, -_fi));
-                nodes.push_back(new FEM::Node3D( 0.0,  1.0,  _fi));
+                nodes.push_back(new MathUtils::Node3D( 0.0, -1.0, -_fi));
+                nodes.push_back(new MathUtils::Node3D( 0.0, -1.0,  _fi));
+                nodes.push_back(new MathUtils::Node3D( 0.0,  1.0, -_fi));
+                nodes.push_back(new MathUtils::Node3D( 0.0,  1.0,  _fi));
 
-                nodes.push_back(new FEM::Node3D( -1.0, -_fi, 0.0));
-                nodes.push_back(new FEM::Node3D( -1.0,  _fi, 0.0));
-                nodes.push_back(new FEM::Node3D(  1.0, -_fi, 0.0));
-                nodes.push_back(new FEM::Node3D(  1.0,  _fi, 0.0));
+                nodes.push_back(new MathUtils::Node3D( -1.0, -_fi, 0.0));
+                nodes.push_back(new MathUtils::Node3D( -1.0,  _fi, 0.0));
+                nodes.push_back(new MathUtils::Node3D(  1.0, -_fi, 0.0));
+                nodes.push_back(new MathUtils::Node3D(  1.0,  _fi, 0.0));
 
-                nodes.push_back(new FEM::Node3D( -_fi, 0.0, -1.0));
-                nodes.push_back(new FEM::Node3D(  _fi, 0.0, -1.0));
-                nodes.push_back(new FEM::Node3D( -_fi, 0.0,  1.0));
-                nodes.push_back(new FEM::Node3D(  _fi, 0.0,  1.0));
+                nodes.push_back(new MathUtils::Node3D( -_fi, 0.0, -1.0));
+                nodes.push_back(new MathUtils::Node3D(  _fi, 0.0, -1.0));
+                nodes.push_back(new MathUtils::Node3D( -_fi, 0.0,  1.0));
+                nodes.push_back(new MathUtils::Node3D(  _fi, 0.0,  1.0));
 
                 // Construct icosahedron facets (20 facets)
                 // each facet is neighbor of second except last one
@@ -294,7 +293,7 @@ namespace DelaunayGridGenerator
 
             /// newRadius should be > 0.0
             public : void scaleAndMove(
-                    const FEM::Node3D &newCenter,
+                    const MathUtils::Node3D &newCenter,
                     MathUtils::Real newRadius) noexcept
             {
                 for(auto i : nodes)
@@ -327,7 +326,7 @@ namespace DelaunayGridGenerator
             }
 
             /// radius should be > 0.0
-            public : Icosahedron(const FEM::Node3D &center, MathUtils::Real radius) noexcept :
+            public : Icosahedron(const MathUtils::Node3D &center, MathUtils::Real radius) noexcept :
                 _center(center), _radius(radius)
             {
                 _init();
