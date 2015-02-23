@@ -11,8 +11,8 @@ void Test_Generator::test_1()
     // Bad PLC test
     Plc2D _myPlc2D;
 
-    _myPlc2D.createNode(FEM::Node2D(0.0,0.0));
-    _myPlc2D.createNode(FEM::Node2D(1.0,0.0));
+    _myPlc2D.createNode(MathUtils::Node2D(0.0,0.0));
+    _myPlc2D.createNode(MathUtils::Node2D(1.0,0.0));
 
     _myPlc2D.updateMaxAndMinCoordinates();
     DelaunayGridGenerator2D _myGenerator2D;
@@ -30,9 +30,9 @@ void Test_Generator::test_1()
 
     Plc3D _myPlc3D;
 
-    _myPlc3D.createNode(FEM::Node3D(0.0,0.0,0.0));
-    _myPlc3D.createNode(FEM::Node3D(1.0,0.0,0.0));
-    _myPlc3D.createNode(FEM::Node3D(0.0,1.0,0.0));
+    _myPlc3D.createNode(MathUtils::Node3D(0.0,0.0,0.0));
+    _myPlc3D.createNode(MathUtils::Node3D(1.0,0.0,0.0));
+    _myPlc3D.createNode(MathUtils::Node3D(0.0,1.0,0.0));
 
     _myPlc3D.updateMaxAndMinCoordinates();
     DelaunayGridGenerator3D _myGenerator3D;
@@ -54,10 +54,10 @@ void Test_Generator::test_2()
     // Element creation test
     Plc2D _myPlc2D;
 
-    _myPlc2D.createNode(FEM::Node2D(0.0,0.0));
-    _myPlc2D.createNode(FEM::Node2D(1.0,0.0));
-    _myPlc2D.createNode(FEM::Node2D(0.0,1.0));
-    _myPlc2D.createNode(FEM::Node2D(1.0,1.0));
+    _myPlc2D.createNode(MathUtils::Node2D(0.0,0.0));
+    _myPlc2D.createNode(MathUtils::Node2D(1.0,0.0));
+    _myPlc2D.createNode(MathUtils::Node2D(0.0,1.0));
+    _myPlc2D.createNode(MathUtils::Node2D(1.0,1.0));
 
     _myPlc2D.updateMaxAndMinCoordinates();
 
@@ -82,11 +82,11 @@ void Test_Generator::test_2()
 
     Plc3D _myPlc3D;
 
-    _myPlc3D.createNode(FEM::Node3D(0.0,0.0,0.0));
-    _myPlc3D.createNode(FEM::Node3D(1.0,0.0,0.0));
-    _myPlc3D.createNode(FEM::Node3D(0.0,1.0,0.0));
-    _myPlc3D.createNode(FEM::Node3D(0.0,0.0,1.0));
-    _myPlc3D.createNode(FEM::Node3D(1.0,1.0,1.0));
+    _myPlc3D.createNode(MathUtils::Node3D(0.0,0.0,0.0));
+    _myPlc3D.createNode(MathUtils::Node3D(1.0,0.0,0.0));
+    _myPlc3D.createNode(MathUtils::Node3D(0.0,1.0,0.0));
+    _myPlc3D.createNode(MathUtils::Node3D(0.0,0.0,1.0));
+    _myPlc3D.createNode(MathUtils::Node3D(1.0,1.0,1.0));
 
     _myPlc3D.updateMaxAndMinCoordinates();
 
@@ -118,12 +118,12 @@ void Test_Generator::test_3()
     // Delaunay criteria node order test
     Plc3D _myPlc3D;
 
-    _myPlc3D.createNode(FEM::Node3D(0.0,0.0,0.0));
-    _myPlc3D.createNode(FEM::Node3D(1.0,0.0,0.0));
-    _myPlc3D.createNode(FEM::Node3D(0.75,0.0,0.0));
-    _myPlc3D.createNode(FEM::Node3D(0.0,1.0,0.0));
-    _myPlc3D.createNode(FEM::Node3D(1.0,1.0,0.0));
-    _myPlc3D.createNode(FEM::Node3D(0.5,0.5,0.5));
+    _myPlc3D.createNode(MathUtils::Node3D(0.0,0.0,0.0));
+    _myPlc3D.createNode(MathUtils::Node3D(1.0,0.0,0.0));
+    _myPlc3D.createNode(MathUtils::Node3D(0.75,0.0,0.0));
+    _myPlc3D.createNode(MathUtils::Node3D(0.0,1.0,0.0));
+    _myPlc3D.createNode(MathUtils::Node3D(1.0,1.0,0.0));
+    _myPlc3D.createNode(MathUtils::Node3D(0.5,0.5,0.5));
 
     _myPlc3D.updateMaxAndMinCoordinates();
 
@@ -153,23 +153,23 @@ void Test_Generator::test_4()
 {
     // Test inner lists update correctness, should not be any exceptions
     DelaunayGridGenerator::Plc2D _myPlc2D;
-    _myPlc2D.createNode(FEM::Node2D(0.00, 0.00));
-    _myPlc2D.createNode(FEM::Node2D(0.25, 0.25));
-    _myPlc2D.createNode(FEM::Node2D(0.00, 0.25));
-    _myPlc2D.createNode(FEM::Node2D(0.25, 0.00));
-    _myPlc2D.createNode(FEM::Node2D(0.50, 0.00));
-    _myPlc2D.createNode(FEM::Node2D(0.00, 0.50));
-    _myPlc2D.createNode(FEM::Node2D(0.50, 0.25));
-    _myPlc2D.createNode(FEM::Node2D(0.25, 0.50));
-    _myPlc2D.createNode(FEM::Node2D(1.00, 0.00));
-    _myPlc2D.createNode(FEM::Node2D(0.00, 1.00));
-    _myPlc2D.createNode(FEM::Node2D(1.00, 0.25));
-    _myPlc2D.createNode(FEM::Node2D(0.25, 1.00));
-    _myPlc2D.createNode(FEM::Node2D(0.75, 0.75));
-    _myPlc2D.createNode(FEM::Node2D(1.00, 0.75));
-    _myPlc2D.createNode(FEM::Node2D(1.00, 1.00));
-    _myPlc2D.createNode(FEM::Node2D(0.50, 0.75));
-    _myPlc2D.createNode(FEM::Node2D(0.75, 0.50));
+    _myPlc2D.createNode(MathUtils::Node2D(0.00, 0.00));
+    _myPlc2D.createNode(MathUtils::Node2D(0.25, 0.25));
+    _myPlc2D.createNode(MathUtils::Node2D(0.00, 0.25));
+    _myPlc2D.createNode(MathUtils::Node2D(0.25, 0.00));
+    _myPlc2D.createNode(MathUtils::Node2D(0.50, 0.00));
+    _myPlc2D.createNode(MathUtils::Node2D(0.00, 0.50));
+    _myPlc2D.createNode(MathUtils::Node2D(0.50, 0.25));
+    _myPlc2D.createNode(MathUtils::Node2D(0.25, 0.50));
+    _myPlc2D.createNode(MathUtils::Node2D(1.00, 0.00));
+    _myPlc2D.createNode(MathUtils::Node2D(0.00, 1.00));
+    _myPlc2D.createNode(MathUtils::Node2D(1.00, 0.25));
+    _myPlc2D.createNode(MathUtils::Node2D(0.25, 1.00));
+    _myPlc2D.createNode(MathUtils::Node2D(0.75, 0.75));
+    _myPlc2D.createNode(MathUtils::Node2D(1.00, 0.75));
+    _myPlc2D.createNode(MathUtils::Node2D(1.00, 1.00));
+    _myPlc2D.createNode(MathUtils::Node2D(0.50, 0.75));
+    _myPlc2D.createNode(MathUtils::Node2D(0.75, 0.50));
     _myPlc2D.updateMaxAndMinCoordinates();
     DelaunayGridGenerator2D _myGenerator2D;
     FEM::TriangularGrid *_myGrid2D =
@@ -189,7 +189,7 @@ void Test_Generator::test_5()
         for(int j=0; j<=N; ++j)
             for(int k=0; k<=N; ++k)
                 _myPlc3D.createNode(
-                            FEM::Node3D(
+                            MathUtils::Node3D(
                                 MathUtils::Real(i)/N,
                                 MathUtils::Real(j)/N,
                                 MathUtils::Real(k)/N));

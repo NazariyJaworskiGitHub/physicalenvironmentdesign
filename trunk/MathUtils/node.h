@@ -1,5 +1,7 @@
 /// \author Nazariy Jaworski (c)
 /// \date 01.08.2013
+/// \todo Make move constructors
+/// \todo Remove exceptions
 
 #ifndef NODE_H
 #define NODE_H
@@ -8,26 +10,26 @@
 #include <cmath>
 #include <stdexcept>
 
-#include "mathutils.h"
+#include "realdeclaration.h"
 
-namespace FEM
+namespace MathUtils
 {
-    template <int _nDimensions_, typename _DimType_ = MathUtils::Real> class Node;
-    template <int _nDimensions_, typename _DimType_ = MathUtils::Real> using Vector =
+    template <int _nDimensions_, typename _DimType_ = Real> class Node;
+    template <int _nDimensions_, typename _DimType_ = Real> using Vector =
         Node<_nDimensions_, _DimType_>;
 
-    typedef Node<1> Node1D;
-    typedef Vector<1> Vector1D;
-    typedef Node<2> Node2D ;
-    typedef Vector<2> Vector2D;
-    typedef Node<3> Node3D ;
-    typedef Vector<3> Vector3D;
-    typedef Node<4> Node4D ;
-    typedef Vector<4> Vector4D;
-
+    typedef Node<1, Real> Node1D;
+    typedef Vector<1, Real> Vector1D;
+    typedef Node<2, Real> Node2D ;
+    typedef Vector<2, Real> Vector2D;
+    typedef Node<3, Real> Node3D ;
+    typedef Vector<3, Real> Vector3D;
+    typedef Node<4, Real> Node4D ;
+    typedef Vector<4, Real> Vector4D;
 
     /// \brief The Node class provides simple support of Nodes and Vectors \n
-    /// Node \f$ u\in DimType^n \f$, where \c _nDimensions_ is the size of coordinates array, i.e. \f$ n \f$. \n
+    /// Node \f$ u\in DimType^n \f$, where \c _nDimensions_ is the size of coordinates array,
+    ///i.e. \f$ n \f$. \n
     /// Another name for this class is Vector.
     template <int _nDimensions_, typename _DimType_> class Node
     {
@@ -44,7 +46,8 @@ namespace FEM
         Node(const _DimType_ x = 0,
              const typename std::conditional<_nDimensions_>=2, _DimType_, void*>::type y = 0,
              const typename std::conditional<_nDimensions_>=3, _DimType_, void*>::type z = 0,
-             const typename std::conditional<_nDimensions_>=4, _DimType_, void*>::type w = 0) noexcept
+             const typename std::conditional<_nDimensions_>=4, _DimType_, void*>::type w = 0)
+        noexcept
         {
             switch (_nDimensions_)
             {
@@ -75,7 +78,8 @@ namespace FEM
 
         /// \brief Square distance to target Node
         /// \li \f$ \parallel u-v \parallel^2 = \sum_{i=1}^n(u_i-v_i)^2,u\in\Re^n,v\in\Re^n \f$.
-        /// \li See <a href="http://en.wikipedia.org/wiki/Euclidean_distance">Euclidean distance</a>.
+        /// \li See <a href="http://en.wikipedia.org/wiki/Euclidean_distance">
+        ///Euclidean distance</a>.
         /// \param[in] target Node, distance to which should be calculated, i.e. \f$ v \f$.
         /// \return Square distance.
         /// \warning Bouth nodes shoulde be at the same dimension.
@@ -117,7 +121,8 @@ namespace FEM
         }
 
         /// \brief Makes the Vector normalized
-        /// \li \f$ \widehat{u}=\frac{u}{\parallel u\parallel}, u\in\Re^n,\parallel u\parallel\neq0 \f$.
+        /// \li \f$ \widehat{u}=\frac{u}{\parallel u\parallel}, u\in\Re^n,\parallel
+        ///u\parallel\neq0 \f$.
         /// \li See <a href="http://en.wikipedia.org/wiki/Normalized_vector">Unit vector</a>.
         void normalize() noexcept
         {
@@ -334,7 +339,8 @@ namespace FEM
         /// \end{bmatrix}i-\begin{bmatrix}u_x & u_z \\v_x & v_z \end{bmatrix}j+
         /// \begin{bmatrix}u_x & u_y \\v_x & v_y \end{bmatrix}k \f$.
         /// \li See <a href="http://en.wikipedia.org/wiki/Cross_product">Cross product</a>.
-        /// \param[in] target Vector3D, cross product with which should be calculated, i.e. \f$ v \f$.
+        /// \param[in] target Vector3D, cross product with which should be calculated,
+        ///i.e. \f$ v \f$.
         /// \return Pointer to new Vector3D, which equal to cross product.
         Vector3D crossProduct( const Vector3D &target ) const throw(std::runtime_error)
         {
@@ -371,7 +377,8 @@ namespace FEM
         Node &operator ()(const _DimType_ x = 0,
              const typename std::conditional<_nDimensions_>=2, _DimType_, void*>::type y = 0,
              const typename std::conditional<_nDimensions_>=3, _DimType_, void*>::type z = 0,
-             const typename std::conditional<_nDimensions_>=4, _DimType_, void*>::type w = 0) noexcept
+             const typename std::conditional<_nDimensions_>=4, _DimType_, void*>::type w = 0)
+        noexcept
         {
             switch (_nDimensions_)
             {

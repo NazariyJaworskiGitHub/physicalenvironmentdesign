@@ -4,7 +4,7 @@
 #include <cstring>
 #include <QList>
 
-#include "mathutils.h"
+#include <MathUtils>
 
 //#include "viennacl/matrix.hpp"
 //#include "viennacl/linalg/prod.hpp"

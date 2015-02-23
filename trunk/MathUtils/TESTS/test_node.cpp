@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-using namespace FEM;
+using namespace MathUtils;
 
 void Test_Node::test()
 {

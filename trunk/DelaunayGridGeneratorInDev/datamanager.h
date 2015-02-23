@@ -7,7 +7,6 @@
 #include <stdexcept>
 
 #include "gridelement.h"
-#include "node.h"
 #include "nodewrapper.h"
 
 namespace DelaunayGridGenerator
@@ -213,8 +212,8 @@ namespace DelaunayGridGenerator
     };
 
     /// \todo make analysis of how many elements should be optimally stored at the child
-    typedef TreeDataManager<5, Triangle, FEM::Node2D, 2> Element2DTreeDataManager;
-    typedef TreeDataManager<5, Tetrahedron, FEM::Node3D, 3> Element3DTreeDataManager;
+    typedef TreeDataManager<5, Triangle, MathUtils::Node2D, 2> Element2DTreeDataManager;
+    typedef TreeDataManager<5, Tetrahedron, MathUtils::Node3D, 3> Element3DTreeDataManager;
 }
 
 #endif // DATAMANAGER_H

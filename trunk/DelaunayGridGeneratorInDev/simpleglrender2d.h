@@ -3,6 +3,8 @@
 
 #include "simpleglrender.h"
 
+using namespace MathUtils;
+
 class SimpleGLRender2D : public SimpleGLRender
 {
     private: void _drawOrigin() noexcept final;
@@ -12,7 +14,7 @@ class SimpleGLRender2D : public SimpleGLRender
     public: void setRenderingPiecewiseLinearComplex(
             const DelaunayGridGenerator::Plc2D *renderingPlc2D) throw (std::logic_error){
         _ptrToRenderingPlc2D = renderingPlc2D;}
-    private: FEM::Vector4D _GeneratorDeadFacetsColor = FEM::Vector4D(0.0, 1.0, 1.0, 1.0);
+    private: Vector4D _GeneratorDeadFacetsColor = Vector4D(0.0, 1.0, 1.0, 1.0);
     public : void setGeneratorDeadFacetsColor(double R, double G, double B, double A){
         _GeneratorDeadFacetsColor(R,G,B,A);}
 

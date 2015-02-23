@@ -2,10 +2,7 @@
 
 #include <iostream>
 
-#include "node.h"
-
 using namespace MathUtils;
-using namespace FEM;
 
 void Test_MathUtils::test_factorial()
 {

@@ -5,7 +5,7 @@
 
 #include "boundarycondition.h"
 #include "domain.h"
-#include "mathutils.h"
+#include <MathUtils>
 #include "phase.h"
 
 namespace FEM

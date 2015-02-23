@@ -4,7 +4,7 @@
 #include <QVector>
 #include <Eigen/Sparse>
 
-#include "mathutils.h"
+#include <MathUtils>
 
 namespace FEM
 {

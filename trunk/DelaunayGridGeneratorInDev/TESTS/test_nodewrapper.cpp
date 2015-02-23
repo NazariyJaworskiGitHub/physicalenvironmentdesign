@@ -22,7 +22,7 @@ void Test_NodeWrapper::test()
     _n1[1]=1e-30;
     QVERIFY(!_n1.isZero());
 
-    WrappedNode3D _n2(FEM::Node3D(1.0,2.0,3.0));
+    WrappedNode3D _n2(MathUtils::Node3D(1.0,2.0,3.0));
     QVERIFY(_n2[0] == 1.0 && _n2[1] == 2.0 && _n2[2] == 3.0);
 
     WrappedNode3D _n3 = _n2;
@@ -56,7 +56,7 @@ void Test_NodeWrapper::test()
 
     _n1(1.0,-6.0,5.0);
     _n2(2.0,-6.0,5.0);
-    QVERIFY(std::fabs(FEM::Node3D::distance(_n1,_n2)-1.0)<1e-8);
+    QVERIFY(std::fabs(MathUtils::Node3D::distance(_n1,_n2)-1.0)<1e-8);
     QVERIFY(_n1.getMaxValue() == 5.0);
     QVERIFY(_n1.getMinValue() == -6.0);
 
@@ -67,7 +67,7 @@ void Test_NodeWrapper::test()
 
     WrappedNode3D _v1 = _n1;
     QVERIFY(_v1[0] == 2.0 && _v1[1] == 0.0 && _v1[2] == -10.0);
-    QVERIFY(_n1.crossProduct(_n2) == FEM::Node3D(0.0,-20.0,0.0));
+    QVERIFY(_n1.crossProduct(_n2) == MathUtils::Node3D(0.0,-20.0,0.0));
 
     try
     {
@@ -81,7 +81,7 @@ void Test_NodeWrapper::test()
         std::cout << "Expected error: " << e.what() << '\n';
     }
 
-    WrappedNode3D _wn1(FEM::Node3D(1e-30,1e25,5));
+    WrappedNode3D _wn1(MathUtils::Node3D(1e-30,1e25,5));
     _wn1.truncToDiscreteSpace();
     QVERIFY(_wn1[0] == 0.0);
 }

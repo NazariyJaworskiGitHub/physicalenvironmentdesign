@@ -2,7 +2,7 @@
 #define TEST_APFPA_H
 
 #include <QTest>
-#include "mathutils.h"
+#include "MathUtils"
 
 class Test_ExtendedReal : public QObject
 {

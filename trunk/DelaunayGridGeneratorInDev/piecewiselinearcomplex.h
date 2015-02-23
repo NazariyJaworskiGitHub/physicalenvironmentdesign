@@ -3,8 +3,7 @@
 
 /// \warning this includes FEM branch, remake project tree to avoid this
 #include "finiteelement.h"
-#include "node.h"
-#include "mathutils.h"
+#include <MathUtils>
 
 namespace DelaunayGridGenerator
 {
@@ -138,25 +137,25 @@ namespace DelaunayGridGenerator
     };
 
     typedef PiecewiseLinearComplex<
-        FEM::Node2D,
+        MathUtils::Node2D,
         FEM::FiniteElement<
-            FEM::Node2D,
+            MathUtils::Node2D,
             2,
             2>,
         FEM::FiniteElement<
-            FEM::Node2D,
+            MathUtils::Node2D,
             2,
             2>,
         2> Plc2D;
 
     typedef PiecewiseLinearComplex<
-        FEM::Node3D,
+        MathUtils::Node3D,
         FEM::FiniteElement<
-            FEM::Node3D,
+            MathUtils::Node3D,
             2,
             3>,
         FEM::FiniteElement<
-            FEM::Node3D,
+            MathUtils::Node3D,
             3,
             3>,
         3> Plc3D;

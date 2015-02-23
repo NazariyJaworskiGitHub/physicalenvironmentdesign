@@ -4,7 +4,7 @@
 #include <Eigen/IterativeLinearSolvers>
 #include "iostream"
 #include <ctime>
-#include "mathutils.h"
+#include <MathUtils>
 
 #define BEAM_LENGTH         100
 #define TEMPERATURE         25
@@ -15,22 +15,25 @@
 
 #define MINIMAL_DISCRETIZATION_STEP 1e-10
 
+using namespace FEM;
+using namespace MathUtils;
+
 void Test_Beam::test()
 {
     //auto _ticks = std::clock();
 
     // Simulation object
-    FEM::BeamNative myBeam(BEAM_LENGTH);
+    BeamNative myBeam(BEAM_LENGTH);
     myBeam.setPhase(0,
-                FEM::Phase<>("test phase",CONDUCTION,CONDUCTION,CONDUCTION));
+                Phase<>("test phase",CONDUCTION,CONDUCTION,CONDUCTION));
 
     // Boundary conditions
     myBeam.setBoundaryCondition(
-                FEM::BeamNative::LEFT,
-                FEM::BoundaryCondition<>(TEMPERATURE,0));
+                BeamNative::LEFT,
+                BoundaryCondition<>(TEMPERATURE,0));
     myBeam.setBoundaryCondition(
-                FEM::BeamNative::RIGHT,
-                FEM::BoundaryCondition<>(0,FLUX));
+                BeamNative::RIGHT,
+                BoundaryCondition<>(0,FLUX));
 
     // Grid generation
     /// \todo use generator
@@ -38,9 +41,9 @@ void Test_Beam::test()
     for(int i=0; i<NUMBER_OF_ELEMENTS; ++i)
     {
         myBeam.getGrid(0).createNode(
-                    FEM::Node1D(0+i*myBeam.getLength()/NUMBER_OF_ELEMENTS));
+                    Node1D(0+i*myBeam.getLength()/NUMBER_OF_ELEMENTS));
     }
-    myBeam.getGrid(0).createNode(FEM::Node1D(myBeam.getLength()));
+    myBeam.getGrid(0).createNode(Node1D(myBeam.getLength()));
     for(int i=0; i<NUMBER_OF_ELEMENTS; ++i)
     {
         int n[] = {i, i+1};
@@ -52,11 +55,11 @@ void Test_Beam::test()
     // Apply boundary conditions to grid
     myBeam.getGrid(0).bindBoundaryConditionToNode(
                 0,
-                &myBeam.getBoundaryCondition(FEM::BeamNative::LEFT));
+                &myBeam.getBoundaryCondition(BeamNative::LEFT));
     myBeam.getGrid(0).bindBoundaryConditionToElement(
                 NUMBER_OF_ELEMENTS - 1,
                 0,  // local index of opposite to the boundary node
-                &myBeam.getBoundaryCondition(FEM::BeamNative::RIGHT));
+                &myBeam.getBoundaryCondition(BeamNative::RIGHT));
 
     // Matrix assembling
     myBeam.setDomain(0,myBeam.getGrid(0).constructDomainEllipticEquation());

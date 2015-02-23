@@ -1,7 +1,8 @@
+/// \author Nazariy Jaworski (c)
+/// \date 23.02.2015
+
 #ifndef SIMPLEMATRIX_H
 #define SIMPLEMATRIX_H
-
-#include <stdexcept>
 
 namespace MathUtils
 {

@@ -4,7 +4,7 @@
 #include <cstring>
 #include <QString>
 
-#include "mathutils.h"
+#include <MathUtils>
 
 /// \todo is this correct namespace, or it should be more common?
 namespace FEM

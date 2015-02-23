@@ -5,6 +5,8 @@
 
 #include "simpleglrender.h"
 
+using namespace MathUtils;
+
 class SimpleGLRender3D : public SimpleGLRender
 {
     private: double angleOY                     = 0;
@@ -13,7 +15,7 @@ class SimpleGLRender3D : public SimpleGLRender
     private: void _drawOrigin() noexcept final;
     private: void _RotateAndTranslate() noexcept final;
 
-    private: FEM::Vector4D _PlcSegmentsColor    = FEM::Vector4D(0.0, 1.0, 0.0, 1.0);
+    private: Vector4D _PlcSegmentsColor    = Vector4D(0.0, 1.0, 0.0, 1.0);
     public   : void setRenderingPlcSegmentsColor(double R, double G, double B, double A){
         _PlcSegmentsColor(R,G,B,A);}
 
@@ -22,11 +24,11 @@ class SimpleGLRender3D : public SimpleGLRender
             const DelaunayGridGenerator::Plc3D *renderingPlc3D) throw (std::logic_error){
         _ptrToRenderingPlc3D = renderingPlc3D;}
 
-    private: FEM::Vector4D _GeneratorAliveFacetsEdgesColor = FEM::Vector4D(1.0, 0.0, 0.0, 1.0);
+    private: Vector4D _GeneratorAliveFacetsEdgesColor = Vector4D(1.0, 0.0, 0.0, 1.0);
     public : void setGeneratorAliveFacetsEdgesColor(double R, double G, double B, double A){
         _GeneratorAliveFacetsEdgesColor(R,G,B,A);}
 
-    private: FEM::Vector4D _GeneratorDeadFacetsEdgesColor = FEM::Vector4D(0.0, 1.0, 1.0, 1.0);
+    private: Vector4D _GeneratorDeadFacetsEdgesColor = Vector4D(0.0, 1.0, 1.0, 1.0);
     public : void setGeneratorDeadFacetsEdgesColor(double R, double G, double B, double A){
         _GeneratorDeadFacetsEdgesColor(R,G,B,A);}
 

@@ -3,7 +3,7 @@
 
 #include "finiteelement.h"
 #include "listwrapperinterface.h"
-#include "mathutils.h"
+#include <MathUtils>
 #include "nodewrapper.h"
 
 namespace DelaunayGridGenerator
