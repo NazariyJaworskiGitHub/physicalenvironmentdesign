@@ -46,27 +46,26 @@ SOURCES += main.cpp \
     TESTS/test_extendedreal.cpp
 
 HEADERS += \
+    MathUtils \
+    realdeclaration.h \
     simplematrix.h \
     node.h \
     extendedreal.h \
-    TESTS/tests_runner.h \
-    TESTS/test_precision.h \
-    TESTS/test_node.h \
-    TESTS/test_mathutils.h \
-    TESTS/test_extendedreal.h \
-    MathUtils \
-    functions.h \
     FUNCTIONS/factorial.h \
     FUNCTIONS/rand.h \
     FUNCTIONS/round.h \
     FUNCTIONS/trunc.h \
     FUNCTIONS/calculatecircumspherecenter.h \
-    realdeclaration.h \
     FUNCTIONS/calculateiscoplanarstatus.h \
     FUNCTIONS/calculategeneralizedcrossproduct.h \
     FUNCTIONS/calculatesimplexvoulumebycayleymengerdeterminant.h \
     FUNCTIONS/calculatebarycentriccoordinates.h \
     FUNCTIONS/calculatesegmentsubsimplexbarycenticintersection.h \
     FUNCTIONS/calculatesubsimplexsubsimplexintersection.h \
-    printmachineinfo.h
+    printmachineinfo.h \
+    TESTS/tests_runner.h \
+    TESTS/test_precision.h \
+    TESTS/test_node.h \
+    TESTS/test_mathutils.h \
+    TESTS/test_extendedreal.h
 

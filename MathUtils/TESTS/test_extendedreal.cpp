@@ -58,4 +58,20 @@ void Test_ExtendedReal::test()
     _r2 = 0.0;
     _r3 = _r1 * _r2;
     QVERIFY(_r3 == 0.0);
+
+    _r1 = 2e20;
+    _r1 += 6;
+    _r1 *= 0.5;
+    QVERIFY(_r1.length() == 2 &&
+            _r1.component()[0] == Real(6 * 0.5) &&
+            _r1.component()[1] == Real(2e20 * 0.5));
+
+    _r1  = 100;
+    _r1 *= 0.5;
+    _r2  = 100;
+    _r2 /= 2;
+    QVERIFY(_r1.length() == _r2.length() &&
+            _r1.length() == 1 &&
+            _r1.component()[0] == _r2.component()[0] &&
+            _r1.component()[0] == Real(50));
 }

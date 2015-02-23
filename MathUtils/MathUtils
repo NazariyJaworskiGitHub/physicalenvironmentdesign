@@ -10,18 +10,24 @@
 #include <Eigen/Dense>
 #include <Eigen/LU>
 
-/// \todo remove
-
-//#include <cmath>
-//#include <QList>
-
 #include "realdeclaration.h"
 
 #include "extendedreal.h"
 #include "simplematrix.h"
 #include "node.h"
-#include "functions.h"
 
 #include "printmachineinfo.h"
+
+#include "FUNCTIONS/factorial.h"
+#include "FUNCTIONS/rand.h"
+#include "FUNCTIONS/round.h"
+#include "FUNCTIONS/trunc.h"
+#include "FUNCTIONS/calculatebarycentriccoordinates.h"
+#include "FUNCTIONS/calculatecircumspherecenter.h"
+#include "FUNCTIONS/calculategeneralizedcrossproduct.h"
+#include "FUNCTIONS/calculateiscoplanarstatus.h"
+#include "FUNCTIONS/calculatesegmentsubsimplexbarycenticintersection.h"
+#include "FUNCTIONS/calculatesimplexvoulumebycayleymengerdeterminant.h"
+#include "FUNCTIONS/calculatesubsimplexsubsimplexintersection.h"
 
 #endif // MATHUTILS_H
