@@ -21,11 +21,11 @@ namespace MathUtils
     namespace APFPA
     {
         /// Note, that any arithmetic operation '#' makes error, no greater than a half
-        /// of result`s unit-in-the-last-plase ulp() [2, p162]:
+        /// of result`s unit-in-the-last-plase ulp() [2, p 162]:
         ///     |err(A # B)| <= ulp(A # B)/2;
         template <typename _BaseFPType_> class ExtendedReal
         {
-            /// [2, p164];
+            /// [2, p 164];
             /// O(1);
             /// Adds two components, returns component and roundoff error;
             /// Use only if |a| >= |b|;
@@ -39,7 +39,7 @@ namespace MathUtils
                 err = b - bVirtual;                     // = err
             }
 
-            /// [2, p166];
+            /// [2, p 166];
             /// O(1);
             /// Adds two components, returns component and roundoff error;
             /// (a + b) = a + b + err(a + b), for any a and b;
@@ -54,7 +54,7 @@ namespace MathUtils
                 err = aRoundoff + bRoundoff;            // = err
             }
 
-            /// [2, p166];
+            /// [2, p 166];
             /// O(1);
             /// Diffs two components, returns component and roundoff error;
             private: inline static void _twoDiff(
@@ -68,7 +68,7 @@ namespace MathUtils
                 err = aRoundoff + bRoundoff;            // = err
             }
 
-            /// \todo make it like [2, p182];
+            /// \todo make it like [2, p 182];
             /// O(2*hLength)->O(N) or O(1);
             /// Simple eliminanes zero components
             private: inline static void _eliminateZeroComponents(
@@ -180,7 +180,7 @@ namespace MathUtils
                 return h;
             }
 
-            /// [2, pp 176];
+            /// [2, p 176];
             /// O(1);
             /// Splits _BaseFPType_ in to two halves;
             private: inline static void _split(
@@ -192,7 +192,7 @@ namespace MathUtils
                 aLo = a - aHi;                          // = err            = low_part(a)
             }
 
-            /// [2, pp 177];
+            /// [2, p 177];
             /// O(1);
             /// Multiplies two components, returns component and roundoff error;
             private: inline static void _twoProduct(
@@ -214,7 +214,7 @@ namespace MathUtils
                 err = aLo * bLo - err;          // = err
             }
 
-            /// [2, pp 179];
+            /// [2, p 179];
             /// O(eLength + 2* eLength * 2)->O(N);
             /// Multiplies component array and single component,
             /// returns zero-eliminated component array;
@@ -262,20 +262,52 @@ namespace MathUtils
                 {
                     unsigned cTemp;
                     _BaseFPType_ *hTemp = _scaleExpansion(eLength, e, f[i], cTemp);
-                    h = _expansionSum(compressedLength, h, cTemp, hTemp, compressedLength);
+                    _BaseFPType_ *hTemp2 =
+                            _expansionSum(compressedLength, h, cTemp, hTemp, compressedLength);
+                    free(hTemp);
+                    free(h);
+                    h = hTemp2;
                 }
                 return h;
             }
 
             /// \todo
+            /// [4, p 17];
+            /// Divides two components arrays, returns components array;
             private: static _BaseFPType_* _expansionDivide(
-                    unsigned eLength,
-                    const _BaseFPType_ *e,
-                    unsigned fLength,
-                    const _BaseFPType_ *f,
+                    unsigned xLength,
+                    const _BaseFPType_ *x,
+                    unsigned yLength,
+                    const _BaseFPType_ *y,
                     unsigned &compressedLength) noexcept
             {
+                _BaseFPType_ *e = (_BaseFPType_*)malloc(sizeof(_BaseFPType_) * (xLength));
+                memcpy(e, x, xLength * sizeof(_BaseFPType_));
 
+                compressedLength = ((xLength > yLength) ? xLength : yLength) + 1;
+                _BaseFPType_ *q = (_BaseFPType_*)malloc(sizeof(_BaseFPType_) * (compressedLength));
+
+                unsigned j = xLength;
+
+                for(unsigned i=0; i<compressedLength ; ++i)
+                {
+                    q[compressedLength-i-1] = e[j-1] / y[yLength-1];
+                    if(i < compressedLength-1)
+                    {
+                        unsigned k;
+                        _BaseFPType_ *f = _scaleExpansion(yLength, y, q[compressedLength-i-1], k);
+                        //for(unsigned l=0; l<k ; ++l)
+                        /// \todo do it like Priest!
+                        _BaseFPType_ *tmp = _expansionDiff(j, e, k, f, j);
+                        _eliminateZeroComponents(j, &tmp);
+                        free(f);
+                        free(e);
+                        e = tmp;
+                    }
+                }
+                free(e);
+                _eliminateZeroComponents(compressedLength, &q);
+                return q;
             }
 
             /// Private data
@@ -357,6 +389,24 @@ namespace MathUtils
             {
                 unsigned c;
                 _BaseFPType_ *h = _expansionMultiply(
+                            _length, _component, b._length, b._component, c);
+                free(_component);
+                _component = h;
+                _length = c;
+                return *this;
+            }
+            public : friend const ExtendedReal operator / (
+                const ExtendedReal &a, const ExtendedReal &b) noexcept
+            {
+                unsigned c;
+                _BaseFPType_ *h = _expansionDivide(
+                            a._length, a._component, b._length, b._component, c);
+                return ExtendedReal(c, h);
+            }
+            public : ExtendedReal & operator /= (const ExtendedReal &b) noexcept
+            {
+                unsigned c;
+                _BaseFPType_ *h = _expansionDivide(
                             _length, _component, b._length, b._component, c);
                 free(_component);
                 _component = h;
