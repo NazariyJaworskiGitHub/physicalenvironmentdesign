@@ -16,6 +16,7 @@ namespace MathUtils
     /// \todo to avoid that, if needed
     /// \todo test it in one dimension
     /// \todo check is same segment by node indexes
+    /// \todo test in 4D
     ///
     /// _NodeIteratorType_ - object which has the overloaded [] operator that returns
     /// the reference to the Node, default it just the _NodeType_*;
@@ -36,10 +37,13 @@ namespace MathUtils
         int _coplanarNodes[2]; // they can't have (_nDimensions_-1) adjacent node (same segment)
         _coplanarNodes[0] = 0; // In bouth phases it should be the same number
         _coplanarNodes[1] = 0; // of coplanar nodes, except intersection
+        bool _intersection[2];
+        _intersection[0] = false;
+        _intersection[1] = false;
         for(int _phase = 0; _phase<2; ++_phase)
         {
 
-            bool _side;
+            int _side = 0;
             for(int k=0; k<_nDimensions_; ++k) // nodes of subsimplexNodesA
             {
                 for(int i=0; i<_nDimensions_; ++i) // rows, i.e. coordinates
@@ -53,17 +57,20 @@ namespace MathUtils
                     else
                         ++_coplanarNodes[_phase];
                 }
-                else if(k == 0)
+                else if(_side == 0)
                 {
                     if(_det > _DimType_(0.0))
-                        _side = true;   // i.e. on the "right"
+                        _side = 1;   // i.e. on the "right"
                     else
-                        _side = false;  // i.e. on the "left"
+                        _side = -1;  // i.e. on the "left"
                 }
                 else if(
-                        (_det > _DimType_(0.0) && !_side) ||
-                        (_det < _DimType_(0.0) && _side))
+                        (_det > _DimType_(0.0) && _side == -1) ||
+                        (_det < _DimType_(0.0) && _side == 1))
+                {
+                    _intersection[_phase] = true;
                     break;  // it may be an intersection, swith subsimplexes and try again
+                }
                 else if(k == _nDimensions_-1)
                     return false;   // all nodes are at the same side
             }
@@ -71,10 +78,10 @@ namespace MathUtils
             _base = &subsimplexNodesB;
             _target = &subsimplexNodesA;
         }
-        if(_coplanarNodes[0] != _coplanarNodes[1])
+        if(_coplanarNodes[0] != _coplanarNodes[1] && (_intersection[0] || _intersection[1]))
             return true;    // intersection
-        if(_coplanarNodes[0] >= _nDimensions_-1 )
-            return false;   // same segment
+        if(_coplanarNodes[0] != 0 && !_intersection[0] && !_intersection[1])
+            return false;   // same segment or node
         return true;
     }
 
@@ -120,10 +127,13 @@ namespace MathUtils
         int _coplanarNodes[2]; // they can't have (_nDimensions_-1) adjacent node (same segment)
         _coplanarNodes[0] = 0; // In bouth phases it should be the same number
         _coplanarNodes[1] = 0; // of coplanar nodes, except intersection
+        bool _intersection[2];
+        _intersection[0] = false;
+        _intersection[1] = false;
         // Phase 1: check position subsimplexNodesB relative to subsimplexNodesA
         for(int _phase = 0; _phase<2; ++_phase)
         {
-            bool _side;
+            int _side = 0;
             for(int k=0; k<_nDimensions_; ++k) // nodes of subsimplexNodesA
             {
                 for(int i=0; i<_nDimensions_; ++i) // rows, i.e. coordinates
@@ -137,17 +147,20 @@ namespace MathUtils
                     else
                         ++_coplanarNodes[_phase];
                 }
-                else if(k == 0)
+                else if(_side == 0)
                 {
                     if(_det > _DimType_(0.0))
-                        _side = true;   // i.e. on the "right"
+                        _side = 1;   // i.e. on the "right"
                     else
-                        _side = false;  // i.e. on the "left"
+                        _side = -1;  // i.e. on the "left"
                 }
                 else if(
-                        (_det > _DimType_(0.0) && !_side) ||
-                        (_det < _DimType_(0.0) && _side))
+                        (_det > _DimType_(0.0) && _side == -1) ||
+                        (_det < _DimType_(0.0) && _side == 1))
+                {
+                    _intersection[_phase] = true;
                     break;  // it may be an intersection, swith subsimplexes and try again
+                }
                 else if(k == _nDimensions_-1)
                     return false;   // all nodes are at the same side
             }
@@ -155,10 +168,10 @@ namespace MathUtils
             _base = &subsimplexNodesB;
             _target = &subsimplexNodesA;
         }
-        if(_coplanarNodes[0] != _coplanarNodes[1])
+        if(_coplanarNodes[0] != _coplanarNodes[1] && (_intersection[0] || _intersection[1]))
             return true;    // intersection
-        if(_coplanarNodes[0] >= _nDimensions_-1 )
-            return false;   // same segment
+        if(_coplanarNodes[0] != 0 && !_intersection[0] && !_intersection[1])
+            return false;   // same segment or node
         return true;
     }
 }

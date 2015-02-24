@@ -109,6 +109,7 @@ void SimpleGLRender3D::keyPressEvent(QKeyEvent *e)
     else if(e->key() == Qt::Key_Z && e->modifiers() == Qt::ControlModifier)
     {
         _ptrToRenderingDelaunayGridGenerator3D->_TEST_undo_iteration();
+        this->updateGL();
     }
 }
 

@@ -355,57 +355,62 @@ namespace DelaunayGridGenerator
             // Check intersections on sphere located nodes
             if(_sphereLocatedNodes.size() > 1)
             {
-                for(auto _curAliveNode = _sphereLocatedNodes.begin();
-                    _curAliveNode != _sphereLocatedNodes.end(); ++_curAliveNode)
+                for(auto _curCheckedNode = _sphereLocatedNodes.begin();
+                    _curCheckedNode != _sphereLocatedNodes.end(); ++_curCheckedNode)
                 {
+                    _elementNodesIndexes[_nDimensions_] =(*_curCheckedNode)->getGlobalIndex();
                     bool _isIntersection = false;
-                    for(auto _f = (*_curAliveNode)->getFacets().begin();
-                        _f != (*_curAliveNode)->getFacets().end(); ++_f)
+                    /// \todo test
+                    for(auto _curAliveNode = _curCheckedNode; //_sphereLocatedNodes.begin();
+                        _curAliveNode != _sphereLocatedNodes.end(); ++_curAliveNode)
                     {
-                        _FacetType_* _targetFacet = static_cast<_FacetType_*>(*_f);
-                        // Exclude dead facets, if there is an intersection, then
-                        // there exist at least one alive facet, which intersects
-                        if(_targetFacet->getState() == _FacetType_::STATE_DEAD)
-                            continue;
-
-                        _NodeIndexIterator _indexIteratorTargetAliveFacet =
-                            {*this, _targetFacet->getNodeIndexes()};
-
-                        for(int i=0; i<_nDimensions_; ++i)
+                        for(auto _f = (*_curAliveNode)->getFacets().begin();
+                            _f != (*_curAliveNode)->getFacets().end(); ++_f)
                         {
-                            int _newFacetNodesIndexes[_nDimensions_];
-                            // Need this to skip one by one base nodes and construct new facets
-                            for(int j=0, k=0; j<_nDimensions_; ++j, ++k)
-                            {
-                                if(k == _nDimensions_-1-i)
-                                    ++k;
-                                _newFacetNodesIndexes[j] = _elementNodesIndexes[k];
-                            }
-                            _NodeIndexIterator _indexIteratorCurrentNewFacet =
-                                {*this,_newFacetNodesIndexes};
+                            _FacetType_* _targetFacet = static_cast<_FacetType_*>(*_f);
+                            // Exclude dead facets, if there is an intersection, then
+                            // there exist at least one alive facet, which intersects
+                            if(_targetFacet->getState() == _FacetType_::STATE_DEAD)
+                                continue;
 
-                            if(
-                                    MathUtils::calculateSubsimplexSubsimplexIntersectionTruncNormalized<
-                                    _WrappedNodeType_,
-                                    _nDimensions_,
-                                    _NodeIndexIterator,
-                                    _DimType_>(
-                                        _indexIteratorCurrentNewFacet,
-                                        _indexIteratorTargetAliveFacet,
-                                        _DiscretizationStep))
+                            _NodeIndexIterator _indexIteratorTargetAliveFacet =
+                                {*this, _targetFacet->getNodeIndexes()};
+
+                            for(int i=0; i<_nDimensions_; ++i)
                             {
-                                _isIntersection = true;
-                                break;
+                                int _newFacetNodesIndexes[_nDimensions_];
+                                // Need this to skip one by one base nodes and construct new facets
+                                for(int j=0, k=0; j<_nDimensions_; ++j, ++k)
+                                {
+                                    if(k == _nDimensions_-1-i)
+                                        ++k;
+                                    _newFacetNodesIndexes[j] = _elementNodesIndexes[k];
+                                }
+                                _NodeIndexIterator _indexIteratorCurrentNewFacet =
+                                    {*this,_newFacetNodesIndexes};
+
+                                if(
+                                        MathUtils::calculateSubsimplexSubsimplexIntersectionTruncNormalized<
+                                        _WrappedNodeType_,
+                                        _nDimensions_,
+                                        _NodeIndexIterator,
+                                        _DimType_>(
+                                            _indexIteratorCurrentNewFacet,
+                                            _indexIteratorTargetAliveFacet,
+                                            _DiscretizationStep))
+                                {
+                                    _isIntersection = true;
+                                    break;
+                                }
                             }
+                            if(_isIntersection)
+                                break;
                         }
                         if(_isIntersection)
                             break;
                     }
-                    if(_isIntersection)
-                    {
-                        _elementNodesIndexes[_nDimensions_] =
-                                (*_curAliveNode)->getGlobalIndex();
-                    }
+                    if(!_isIntersection)
+                        break;
                 }
             }
 
@@ -730,8 +735,8 @@ namespace DelaunayGridGenerator
             return textStream;
         }
         public : Generator() noexcept :
-//            _DiscretizationStep(std::sqrt(std::numeric_limits<_DimType_>::epsilon())){}
-            _DiscretizationStep(std::numeric_limits<_DimType_>::epsilon()){}
+            _DiscretizationStep(std::sqrt(std::numeric_limits<_DimType_>::epsilon())){}
+//            _DiscretizationStep(std::numeric_limits<_DimType_>::epsilon()){}
 //            _DiscretizationStep(1e-6){}
         public : ~Generator() noexcept
         {
