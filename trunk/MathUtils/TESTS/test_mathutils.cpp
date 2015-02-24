@@ -428,4 +428,13 @@ void Test_MathUtils::test_calculateSubsimplexSubsimplexIntersectionTrunc()
     _result = calculateSubsimplexSubsimplexIntersectionTruncNormalized<Node3D, 3>(
                 _nodes3DA3, _nodes3DB3);
     QVERIFY(!_result);
+
+    Node3D _nodes3DA4[] = {{0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {1.0, 1.0, 1.0}};
+    Node3D _nodes3DB4[] = {{0.0, 1.0, 0.0}, {0.0, 1.0, 1.0}, {1.0, 1.0, 1.0}};
+    _result = calculateSubsimplexSubsimplexIntersectionTrunc<Node3D, 3>(
+                _nodes3DA4, _nodes3DB4);
+    QVERIFY(!_result);
+    _result = calculateSubsimplexSubsimplexIntersectionTruncNormalized<Node3D, 3>(
+                _nodes3DA4, _nodes3DB4);
+    QVERIFY(!_result);
 }

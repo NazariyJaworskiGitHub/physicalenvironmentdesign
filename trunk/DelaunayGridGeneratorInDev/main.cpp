@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
 //    {int _n[]={11,7,3}; _myPlc3D->createFacet(_n);}
 
     /// TEST 9
-    int N = 3;
+    int N = 4;
     for(int i=0; i<=N; ++i)
         for(int j=0; j<=N; ++j)
             for(int k=0; k<=N; ++k)
