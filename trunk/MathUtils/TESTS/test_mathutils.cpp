@@ -96,6 +96,51 @@ void Test_MathUtils::test_calculateCircumSphereCenter()
                 _simpleNodes2D,&_circumRadius1);
     QVERIFY((_c1-Node2D(0.5,0.5))[0] < 1e-4);
     QVERIFY(std::fabs(_circumRadius1 - std::sqrt(2)/2) < 1e-4);
+
+    MpReal _circumRadiusMp1;
+    Node<2,MpReal> _c2 = APFPA::calculateCircumSphereCenter<Node2D, Node<2,MpReal>, 2>(
+                _simpleNodes2D, &_circumRadiusMp1);
+    QVERIFY((_c2-Node<2,MpReal>(0.5,0.5))[0] < std::numeric_limits<Real>::epsilon());
+    QVERIFY(std::fabs(_circumRadius1 - std::sqrt(_circumRadiusMp1.head())) < std::numeric_limits<Real>::epsilon());
+
+
+    Node3D _simpleNodes3D[] = {{0,0,0},{1,0,0},{0,1,0},{0,0,1}};
+
+    Node3D _c3 = calculateCircumSphereCenter<Node3D,3>(
+                _simpleNodes3D,&_circumRadius1);
+    QVERIFY((_c3-Node3D(0.5,0.5,0.5))[0] < 1e-4);
+
+    Node<3,MpReal> _c4 = APFPA::calculateCircumSphereCenter<Node3D, Node<3,MpReal>, 3>(
+                _simpleNodes3D, &_circumRadiusMp1);
+    QVERIFY((_c4-Node<3,MpReal>(0.5,0.5,0.5))[0] < std::numeric_limits<Real>::epsilon());
+    QVERIFY(std::fabs(_circumRadius1 - std::sqrt(_circumRadiusMp1.head())) < std::numeric_limits<Real>::epsilon());
+
+    Node3D _simpleNodes4D[] = {
+        {rand<Real>(1e-5,1e5), rand<Real>(1e-5,1e5), rand<Real>(1e-5,1e5)},
+        {rand<Real>(1e-5,1e5), rand<Real>(1e-5,1e5), rand<Real>(1e-5,1e5)},
+        {rand<Real>(1e-5,1e5), rand<Real>(1e-5,1e5), rand<Real>(1e-5,1e5)},
+        {rand<Real>(1e-5,1e5), rand<Real>(1e-5,1e5), rand<Real>(1e-5,1e5)}};
+
+    Node3D _c5 = calculateCircumSphereCenter<Node3D,3>(
+                _simpleNodes4D,&_circumRadius1);
+    Node<3,MpReal> _c6 = APFPA::calculateCircumSphereCenter<Node3D, Node<3,MpReal>, 3>(
+                _simpleNodes4D, &_circumRadiusMp1);
+//    std::cout << _c5[0] << std::endl;
+//    std::cout << _c5[1] << std::endl;
+//    std::cout << _c5[2] << std::endl;
+//    std::cout << _c6[0].max() << std::endl;
+//    std::cout << _c6[1].max() << std::endl;
+//    std::cout << _c6[2].max() << std::endl;
+//    std::cout << _circumRadius1 << std::endl;
+//    std::cout << std::sqrt(_circumRadiusMp1.max()) << std::endl;
+//    std::cout << std::fabs (_c5[0] - _c6[0].max()) / _c5[0] << std::endl;
+//    std::cout << std::fabs (_c5[1] - _c6[1].max()) / _c5[1] << std::endl;
+//    std::cout << std::fabs (_c5[2] - _c6[2].max()) / _c5[2] << std::endl;
+//    std::cout << std::fabs (_circumRadius1 - std::sqrt(_circumRadiusMp1.max())) / _circumRadius1 << std::endl;
+    QVERIFY(std::fabs (_c5[0] - _c6[0].head()) / _c5[0] < 1e-4);
+    QVERIFY(std::fabs (_c5[1] - _c6[1].head()) / _c5[1] < 1e-4);
+    QVERIFY(std::fabs (_c5[2] - _c6[2].head()) / _c5[2] < 1e-4);
+    QVERIFY(std::fabs (_circumRadius1 - std::sqrt(_circumRadiusMp1.head())) / _circumRadius1 < 1e-4);
 }
 
 void Test_MathUtils::test_calculateCircumSphereCenterByCayleyMengerDeterminant()
@@ -122,23 +167,36 @@ void Test_MathUtils::test_calculateCircumSphereCenterByCayleyMengerDeterminant()
     /// \todo 3D
 }
 
-void Test_MathUtils::test_calculateIsNotDelaunayStatus()
+void Test_MathUtils::test_calculateIsCoplanarStatusWithClippingCheck()
 {
     /// \todo
-}
-
-void Test_MathUtils::test_calculateIsSamePlaneStatus()
-{
+    // Test1
     Node2D nodes[] = {{0.2,0.2}, {0.8,0.5}};
-    Real _result = calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(Node2D(0.6,0.2),nodes);
+    Real _result;
+    MpReal _resultMp;
+
+    _result = calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(Node2D(0.6,0.2),nodes);
     QVERIFY(_result > 0);
     _result = calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(Node2D(0.2,0.4),nodes);
     QVERIFY(_result < 0);
     _result = calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(Node2D(0.4,0.3),nodes);
     QVERIFY(_result < 1e-4);
+
+    _result = calculateIsCoplanarStatusWithClippingCheckNormalized<Node2D,2>(Node2D(0.6,0.2),nodes);
+    QVERIFY(_result > 0);
+    _result = calculateIsCoplanarStatusWithClippingCheckNormalized<Node2D,2>(Node2D(0.2,0.4),nodes);
+    QVERIFY(_result < 0);
     _result = calculateIsCoplanarStatusWithClippingCheckNormalized<Node2D,2>(Node2D(0.4,0.3),nodes);
     QVERIFY(_result < 1e-4);
 
+    _resultMp = APFPA::calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(Node2D(0.6,0.2),nodes);
+    QVERIFY(_resultMp > 0);
+    _resultMp = APFPA::calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(Node2D(0.2,0.4),nodes);
+    QVERIFY(_resultMp < 0);
+    _resultMp = APFPA::calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(Node2D(0.4,0.3),nodes);
+    QVERIFY(_resultMp < 1e-4);
+
+    // Test2
     nodes[0]((1.0 + std::sin(0*2*M_PI/100.0))/2.0, (1.0 + std::cos(0*2*M_PI/100.0))/2.0);
     nodes[1]((1.0 + std::sin(1*2*M_PI/100.0))/2.0, (1.0 + std::cos(1*2*M_PI/100.0))/2.0);
     Node2D target1((1.0 + std::sin(2*2*M_PI/100.0))/2.0, (1.0 + std::cos(2*2*M_PI/100.0))/2.0);
@@ -154,40 +212,62 @@ void Test_MathUtils::test_calculateIsSamePlaneStatus()
     _result = calculateIsCoplanarStatusWithClippingCheckNormalized<Node2D,2>(target2,nodes);
     QVERIFY(_result > 1e-4);
 
+    _resultMp = APFPA::calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(target1,nodes);
+    QVERIFY(_resultMp < 1e-4);
+    _resultMp = APFPA::calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(target2,nodes);
+    QVERIFY(_resultMp > 1e-4);
+
+    // Test3
     nodes[0]((1.0 + std::sin(0*2*M_PI/1e6))/2.0, (std::cos(0*2*M_PI/1e6))/2.0);
     nodes[1]((1.0 + std::sin(1*2*M_PI/1e6))/2.0, (std::cos(1*2*M_PI/1e6))/2.0);
     target2 = nodes[0] - nodes[1];
     target1((1e6 + std::sin(2*2*M_PI/1e6))/2.0, (std::cos(2*2*M_PI/1e6))/2.0);
+
     _result = calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(target1,nodes);
     QVERIFY(-_result < 1e-4);
     _result = calculateIsCoplanarStatusWithClippingCheckNormalized<Node2D,2>(target1,nodes);
     QVERIFY((-_result < 1e-4 && target2[0] < 1e-4 && target2[1] < 1e-4) || (-_result > 1e-4));
+    _resultMp = APFPA::calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(target1,nodes);
+    QVERIFY(-_resultMp < 1e-4);
 
+    // Test4
     Real eps = std::numeric_limits<Real>::epsilon();
-    nodes[0](MathUtils::rand<Real>(0.0, 1e3), MathUtils::rand<Real>(0.0, 1e3));
-    nodes[1](MathUtils::rand<Real>(1e3, 0.0), MathUtils::rand<Real>(1e3, 0.0));
+    nodes[0](MathUtils::rand<Real>(0.0, 1e4), MathUtils::rand<Real>(0.0, 1e4));
+    nodes[1](MathUtils::rand<Real>(1e4, 0.0), MathUtils::rand<Real>(1e4, 0.0));
     target2 = MathUtils::rand<Real>( 0.0, 1e3) * (nodes[0] - nodes[1]) + nodes[1];
     target1 = MathUtils::rand<Real>(-1e3, 0.0) * (nodes[0] - nodes[1]) + nodes[1];
+
     _result = calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(target1, nodes);
     QVERIFY(std::abs(_result) > eps);
     _result = calculateIsCoplanarStatusWithClippingCheckNormalized<Node2D,2>(target1, nodes);
     QVERIFY(_result < eps);
+    _resultMp = APFPA::calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(target1,nodes);
+    QVERIFY(std::abs(_resultMp.head()) > eps);
     _result = calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(target2, nodes);
     QVERIFY(std::abs(_result) > eps);
     _result = calculateIsCoplanarStatusWithClippingCheckNormalized<Node2D,2>(target2, nodes);
     QVERIFY(_result < eps);
+    _resultMp = APFPA::calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(target2,nodes);
+    QVERIFY(std::abs(_resultMp.head()) > eps);
+
+    // Test5
     target1[0] +=  (nodes[0][0] - nodes[1][0]) * (1.0 + 1 * eps);
     target1[1] += -(nodes[0][1] - nodes[1][1]) * (1.0 + 1 * eps);
     target2[0] -=  (nodes[0][0] - nodes[1][0]) * (1.0 + 1 * eps);
     target2[1] -= -(nodes[0][1] - nodes[1][1]) * (1.0 + 1 * eps);
+
     _result = calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(target1, nodes);
     QVERIFY(std::abs(_result) > eps);
     _result = calculateIsCoplanarStatusWithClippingCheckNormalized<Node2D,2>(target1, nodes);
     QVERIFY(std::abs(_result) > eps);
+    _resultMp = APFPA::calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(target1,nodes);
+    QVERIFY(std::abs(_resultMp.head()) > eps);
     _result = calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(target2, nodes);
     QVERIFY(std::abs(_result) > eps);
     _result = calculateIsCoplanarStatusWithClippingCheckNormalized<Node2D,2>(target2, nodes);
     QVERIFY(std::abs(_result) > eps);
+    _resultMp = APFPA::calculateIsCoplanarStatusWithClippingCheck<Node2D,2>(target2,nodes);
+    QVERIFY(std::abs(_resultMp.head()) > eps);
 }
 
 void Test_MathUtils::test_calculateIsSamePlaneStatusByMatrixRank()

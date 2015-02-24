@@ -83,6 +83,61 @@ namespace MathUtils
         return _result;
     }
 
+    namespace APFPA
+    {
+        /// Robust Arbitrary Precision Floating Point Arithmetic version
+        /// Note, sphereRadius will be in square
+        template<typename _NodeType_,
+                 typename _MpNodeType_,
+                 int _nDimensions_,
+                 typename _NodeIteratorType_ = _NodeType_*,
+                 typename _MpType_ = MathUtils::MpReal>
+        _MpNodeType_ calculateCircumSphereCenter(
+                const _NodeIteratorType_ &simplexNodes,
+                _MpType_ *sphereRadiusSq = nullptr)
+        {
+            // build A
+            SimpleSquareMatrix::SimpleSquareStaticMatrix<_MpType_, _nDimensions_+1> _A;
+            for(int i=0; i<_nDimensions_+1; ++i) // per rows = per nodes
+            {
+                for(int j=0; j<_nDimensions_; ++j) // per coordinates
+                    _A(i,j) = _MpType_(simplexNodes[i][j]);
+                _A(i,_nDimensions_) = _MpType_(1.0);
+            }
+            _MpType_ _2detA = _A.determinant() * _MpType_(2.0);
+
+            // fill first col
+            SimpleSquareMatrix::SimpleSquareStaticMatrix<_MpType_, _nDimensions_+1> _B = _A;
+            for(int i=0; i<_nDimensions_+1; ++i)
+            {
+                _B(i,0) = _MpType_(0.0);
+                for(int c=0; c<_nDimensions_; ++c) // per coordinates
+                    _B(i,0) += _MpType_(simplexNodes[i][c]) * _MpType_(simplexNodes[i][c]);
+            }
+            // calculate first coord
+            _MpNodeType_ _result;
+            _result[0] = _B.determinant() / _2detA;
+
+            // fill next cols and calculate next coordinate
+            for(int b=1; b<_nDimensions_; ++b) //per Bx, By, and so on
+            {
+                for(int i=0; i<_nDimensions_+1; ++i) // per rows = per nodes
+                    _B(i,b) = _MpType_(simplexNodes[i][b-1]);
+                _result[b] = (((b+1)%2)*2 - 1) * _B.determinant() / _2detA;
+            }
+
+            if(sphereRadiusSq)
+            {
+                *sphereRadiusSq = _MpType_(0.0);
+                for(int i=0; i<_nDimensions_; ++i)
+                    *sphereRadiusSq += (_result[i]-simplexNodes[0][i]) *
+                        (_result[i]-simplexNodes[0][i]);
+            }
+
+            return _result;
+        }
+    }
+
     /// Calculates the center of element's (or subelement) circumscribed hypersphere by
     /// Cayley-Menger determinant;
     /// see http://mathworld.wolfram.com/Cayley-MengerDeterminant.html;

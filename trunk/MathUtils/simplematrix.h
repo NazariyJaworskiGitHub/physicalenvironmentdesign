@@ -51,7 +51,7 @@ namespace MathUtils
                         M[(j-1)+(i-1)*(size-1)] = A[j+i*size];
                 for(int i=0; i<size; ++i)
                 {
-                    S += (2%(i+1) - 1) * A[i] * _minorByCopy(M,size-1);
+                    S += (((i+1)%2)*2 - 1) * A[i] * _minorByCopy(M,size-1);
                     if(i<size-1)
                         for(int j=1; j<size; ++j)
                             M[i+(j-1)*(size-1)]=A[i+j*size];
@@ -72,8 +72,12 @@ namespace MathUtils
                 AbstractSquareMatrix<_DimType_>(size, new _DimType_[size * size]){}
 
             public : SimpleSquareDynamicMatrix(const SimpleSquareDynamicMatrix &m) noexcept :
-                AbstractSquareMatrix<_DimType_>(m._size, new _DimType_[m._size * m._size]){
-                memcpy(this->_data, m._data, this->_size * this->_size * sizeof(_DimType_));}
+                AbstractSquareMatrix<_DimType_>(m._size, new _DimType_[m._size * m._size])
+            {
+                // Can't use memcpy, because _DimType_ can be complex object type
+                for(int i=0; i<this->_size * this->_size; ++i)
+                    this->_data[i] = m._data[i];
+            }
 
             private: void _deleteData() noexcept
             {
@@ -89,7 +93,9 @@ namespace MathUtils
             {
                 _deleteData();
                 this->_data = new _DimType_* [this->_size * this->_size];
-                memcpy(this->_data, m._data, this->_size * this->_size * sizeof(_DimType_));
+                // Can't use memcpy, because _DimType_ can be complex object type
+                for(int i=0; i<this->_size * this->_size; ++i)
+                    this->_data[i] = m._data[i];
                 return *this;
             }
 
@@ -106,14 +112,20 @@ namespace MathUtils
                 AbstractSquareMatrix<_DimType_>(_size_, _staticData){}
 
             public : SimpleSquareStaticMatrix(const SimpleSquareStaticMatrix &m) noexcept :
-                AbstractSquareMatrix<_DimType_>(_size_, _staticData){
-                memcpy(this->_data, m._data, this->_size * this->_size * sizeof(_DimType_));}
+                AbstractSquareMatrix<_DimType_>(_size_, _staticData)
+            {
+                // Can't use memcpy, because _DimType_ can be complex object type
+                for(int i=0; i<this->_size * this->_size; ++i)
+                    this->_data[i] = m._data[i];
+            }
 
             /// They should have same size
             public : SimpleSquareStaticMatrix & operator = (
                     const SimpleSquareStaticMatrix &m) noexcept
             {
-                memcpy(this->_data, m._data, this->_size * this->_size * sizeof(_DimType_));
+                // Can't use memcpy, because _DimType_ can be complex object type
+                for(int i=0; i<this->_size * this->_size; ++i)
+                    this->_data[i] = m._data[i];
                 return *this;
             }
 

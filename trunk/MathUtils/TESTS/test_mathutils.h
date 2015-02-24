@@ -13,8 +13,7 @@ class Test_MathUtils : public QObject
     private: Q_SLOT void test_simpleMatrix();
     private: Q_SLOT void test_calculateCircumSphereCenter();
     private: Q_SLOT void test_calculateCircumSphereCenterByCayleyMengerDeterminant();
-    private: Q_SLOT void test_calculateIsNotDelaunayStatus();
-    private: Q_SLOT void test_calculateIsSamePlaneStatus();
+    private: Q_SLOT void test_calculateIsCoplanarStatusWithClippingCheck();
     private: Q_SLOT void test_calculateIsSamePlaneStatusByMatrixRank();
     private: Q_SLOT void test_calculateGeneralizedCrossProduct();
     private: Q_SLOT void test_calculateSimplexVoulumeByCayleyMengerDeterminant();
