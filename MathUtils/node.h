@@ -95,7 +95,6 @@ namespace MathUtils
             _DimType_ _dist = _DimType_(0.0);
             for(int i=0;i<_nDimensions_;++i)
                 _dist+=(n1._coord[i]-n2._coord[i])*(n1._coord[i]-n2._coord[i]);
-            /// \todo it may be not double, but float or long double
             return _dist;
         }
         _DimType_ distance( const Node &target ) const noexcept

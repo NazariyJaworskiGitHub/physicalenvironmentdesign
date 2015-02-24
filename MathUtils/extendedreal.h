@@ -68,7 +68,6 @@ namespace MathUtils
                 err = aRoundoff + bRoundoff;            // = err
             }
 
-            /// \todo make it like [2, p 182];
             /// O(2*hLength)->O(N) or O(1);
             /// Simple eliminanes zero components
             private: inline static void _eliminateZeroComponents(
@@ -113,6 +112,53 @@ namespace MathUtils
                 hLength = compressedLength+1;
             }
 
+            /// [2, p 183, picture 6.16];
+            /// O(3*hLength)->O(N) or O(1);
+            /// Eliminates zeros and makes non-overlapping components
+            private: inline static void _compress(
+                    unsigned &hLength,
+                    _BaseFPType_ **h) noexcept
+
+            {
+                // If single component
+                if(hLength == 1)
+                    return;
+
+                // Prepare memory temporary result
+                _BaseFPType_ *g = (_BaseFPType_*)malloc(sizeof(_BaseFPType_) * hLength);
+
+                // Phase 1
+                g[hLength-1] = (*h)[hLength-1];
+                for(unsigned i = hLength-1; i > 0; --i)
+                   _fastSum(g[i], (*h)[i-1], g[i], g[i-1]);
+
+                // Phase 2
+                unsigned compressedLength = 1;
+                (*h)[0] = g[0];
+                for(unsigned i = 0; i < hLength-1; ++i)
+                {
+                   _fastSum(g[i+1], (*h)[i], (*h)[i+1], (*h)[i]);
+                   if((*h)[i] != _BaseFPType_(0.0))
+                       ++compressedLength;
+                }
+                free(g);
+
+                // Eliminate zeros
+                if(compressedLength != hLength)
+                {
+                    g = (_BaseFPType_*)malloc(sizeof(_BaseFPType_) * compressedLength);
+                    for(unsigned i = 0; i <compressedLength; ++i)
+                        g[i] = (*h)[i + hLength - compressedLength];
+
+                    // Release old memory
+                    free(*h);
+
+                    // Update pointers
+                    (*h) = g;
+                    hLength = compressedLength;
+                }
+            }
+
             /// [2, pp 168-170, picture 6.8];
             /// O(eLength*fLength + 2*(eLength+fLength))->O(N^2);
             /// Adds two component arrays, returns zero-eliminated component array;
@@ -142,7 +188,7 @@ namespace MathUtils
 
                 // Eliminate zeros
                 compressedLength = eLength + fLength;
-                _eliminateZeroComponents(compressedLength, &h);
+                _compress(compressedLength, &h);
                 return h;
             }
 
@@ -176,7 +222,7 @@ namespace MathUtils
 
                 // Eliminate zeros
                 compressedLength = eLength + fLength;
-                _eliminateZeroComponents(compressedLength, &h);
+                _compress(compressedLength, &h);
                 return h;
             }
 
@@ -241,7 +287,7 @@ namespace MathUtils
                 }
 
                 // Eliminate zeros
-                _eliminateZeroComponents(compressedLength, &h);
+                _compress(compressedLength, &h);
                 return h;
             }
 
@@ -299,14 +345,14 @@ namespace MathUtils
                         //for(unsigned l=0; l<k ; ++l)
                         /// \todo do it like Priest!
                         _BaseFPType_ *tmp = _expansionDiff(j, e, k, f, j);
-                        _eliminateZeroComponents(j, &tmp);
+                        _compress(j, &tmp);
                         free(f);
                         free(e);
                         e = tmp;
                     }
                 }
                 free(e);
-                _eliminateZeroComponents(compressedLength, &q);
+                _compress(compressedLength, &q);
                 return q;
             }
 
@@ -315,6 +361,8 @@ namespace MathUtils
             public : unsigned length() const noexcept {return _length;}
             /// From smaller to bigger
             private: _BaseFPType_ *_component;
+            public : _BaseFPType_ head() const noexcept {return _component[_length-1];}
+            public : _BaseFPType_ tail() const noexcept {return _component[0];}
 
             /// Constructors
             public : const _BaseFPType_ * component() const noexcept {return _component;}
@@ -377,6 +425,13 @@ namespace MathUtils
                 _length = c;
                 return *this;
             }
+            public : friend const ExtendedReal operator - (const ExtendedReal &a) noexcept
+            {
+                _BaseFPType_ *h = (_BaseFPType_*)malloc(sizeof(_BaseFPType_) * a._length);
+                for (unsigned c=0; c<a._length; ++c)
+                    h[c] = -a._component[c];
+                return ExtendedReal(a._length, h);
+            }
             public : friend const ExtendedReal operator * (
                 const ExtendedReal &a, const ExtendedReal &b) noexcept
             {
@@ -431,17 +486,30 @@ namespace MathUtils
             public : friend bool operator > (
                 const ExtendedReal &a, const ExtendedReal &b) noexcept
             {
-                if(a._component[a._length-1] > b._component[b._length-1])
+                unsigned min = a._length > b._length ? a._length : b._length;
+                for(unsigned c=0; c<min; ++c)
+                    if(a._component[a._length-1-c] > b._component[b._length-1-c])
+                        return true;
+                if(a._length > b._length && a._component[a._length-1-min] > 0.0)
+                    return true;
+                if(a._length < b._length && a._component[a._length-1-min] < 0.0)
                     return true;
                 return false;
             }
             public : friend bool operator < (
                 const ExtendedReal &a, const ExtendedReal &b) noexcept
             {
-                if(a._component[a._length-1] < b._component[b._length-1])
+                unsigned min = a._length > b._length ? a._length : b._length;
+                for(unsigned c=0; c<min; ++c)
+                    if(a._component[a._length-1-c] < b._component[b._length-1-c])
+                        return true;
+                if(a._length > b._length && a._component[a._length-1-min] < 0.0)
+                    return true;
+                if(a._length < b._length && a._component[a._length-1-min] > 0.0)
                     return true;
                 return false;
             }
+            /// \todo optimize
             public : friend bool operator >= (
                 const ExtendedReal &a, const ExtendedReal &b) noexcept
             {

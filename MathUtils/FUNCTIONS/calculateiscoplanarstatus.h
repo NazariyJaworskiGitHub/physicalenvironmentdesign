@@ -98,6 +98,30 @@ namespace MathUtils
         return _M.determinant();
     }
 
+    namespace APFPA
+    {
+        /// Robust Arbitrary Precision Floating Point Arithmetic version
+        template<typename _NodeType_,
+                 int _nDimensions_,
+                 typename _NodeIteratorType_ = _NodeType_*,
+                 typename _DimType_ = MathUtils::Real,
+                 typename _MpType_ = MathUtils::MpReal>
+        _MpType_ calculateIsCoplanarStatusWithClippingCheck(
+                const _NodeType_ &target,
+                const _NodeIteratorType_ nodes)
+        {
+            SimpleSquareMatrix::SimpleSquareStaticMatrix<_MpType_, _nDimensions_> _M;
+            for(int j=0;j<_nDimensions_;++j) // per columns (coordinetes)
+                _M(0,j) = _MpType_(target[j]) - _MpType_(nodes[0][j]);
+            for(int i=1;i<_nDimensions_;++i) // per rows (nodes)
+            {
+                for(int j=0;j<_nDimensions_;++j) // per columns (coordinetes)
+                    _M(i,j) = _MpType_(nodes[i][j]) - _MpType_(nodes[0][j]);
+            }
+            return _M.determinant();
+        }
+    }
+
     /// Calculate is the given Nodes are in same hyperplane;
     /// see http://en.wikipedia.org/wiki/Coplanarity;
     ///
