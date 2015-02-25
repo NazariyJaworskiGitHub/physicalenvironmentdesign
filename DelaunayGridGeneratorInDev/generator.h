@@ -96,12 +96,28 @@ namespace DelaunayGridGenerator
             }
         };
 
+        private: bool _isInSphereFacet(
+                const _FacetType_ *targetFacet,
+                const _WrappedNodeType_ &sphereCenter,
+                const _DimType_ &sphereRadius ) const noexcept
+        {
+            for(int j=0, k=0; j<_nDimensions_; ++j, ++k)
+            {
+                _DimType_ _dist = MathUtils::trunc(
+                            _nodesList[targetFacet->getNodeIndexes()[j]].distance(sphereCenter),
+                            _DiscretizationStep);
+                if(_dist > sphereRadius)
+                    return false;
+            }
+            return true;
+        }
+
         private: bool _isAlreadyUsedNode(
                 int targetIndex,
                 const int *usedIdexes,
                 int usedNodesCout) const noexcept
         {
-            for(int j=0; j<usedNodesCout; j++)
+            for(int j=0; j<usedNodesCout; ++j)
                 if(targetIndex == usedIdexes[j])
                     return true;
             return false;
@@ -353,6 +369,7 @@ namespace DelaunayGridGenerator
                 return nullptr;
 
             // Check intersections on sphere located nodes
+            /// \todo refactor, move in separated method
             if(_sphereLocatedNodes.size() > 1)
             {
                 for(auto _curCheckedNode = _sphereLocatedNodes.begin();
@@ -360,7 +377,6 @@ namespace DelaunayGridGenerator
                 {
                     _elementNodesIndexes[_nDimensions_] =(*_curCheckedNode)->getGlobalIndex();
                     bool _isIntersection = false;
-                    /// \todo test
                     for(auto _curAliveNode = _curCheckedNode; //_sphereLocatedNodes.begin();
                         _curAliveNode != _sphereLocatedNodes.end(); ++_curAliveNode)
                     {
@@ -371,6 +387,11 @@ namespace DelaunayGridGenerator
                             // Exclude dead facets, if there is an intersection, then
                             // there exist at least one alive facet, which intersects
                             if(_targetFacet->getState() == _FacetType_::STATE_DEAD)
+                                continue;
+
+                            // Exclude facets, which are outside sphere, there can be
+                            // an intersection only with insphere facets
+                            if(!_isInSphereFacet(_targetFacet, _sphereCenter, _sphereRadius))
                                 continue;
 
                             _NodeIndexIterator _indexIteratorTargetAliveFacet =
@@ -390,7 +411,7 @@ namespace DelaunayGridGenerator
                                     {*this,_newFacetNodesIndexes};
 
                                 if(
-                                        MathUtils::calculateSubsimplexSubsimplexIntersectionTruncNormalized<
+                                        MathUtils::calculateSubsimplexSubsimplexIntersectionBarycentric<
                                         _WrappedNodeType_,
                                         _nDimensions_,
                                         _NodeIndexIterator,
@@ -594,6 +615,8 @@ namespace DelaunayGridGenerator
             {
                 auto _element = _elementsPtrs.end();
                 --_element;
+                // Get base facet
+                _FacetType_ *_baseFacet = (*_element)->getFacets()[0];
                 // Unregister last created element (update facets and nodes)
                 (*_element)->unRegister(
                             _aliveNodesPtrs,
@@ -604,6 +627,12 @@ namespace DelaunayGridGenerator
                 delete(*_element);
                 _elementsPtrs.erase(_element);
                 --_iteration;
+                if(!_aliveFacetsPtrs.empty())
+                {
+                    // Move base facet to top of alive facets
+                    _aliveFacetsPtrs.erase(_baseFacet->getPointerToMyself());
+                    _baseFacet->prependToAliveList(_aliveFacetsPtrs);
+                }
             }
         }
 

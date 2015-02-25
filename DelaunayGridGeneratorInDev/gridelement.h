@@ -144,7 +144,7 @@ namespace DelaunayGridGenerator
         DATA_MANAGER_WRAPPED_INTERFACE(GridElement)
 
         private: _FacetType_ *_myFacets[_nDimensions_+1];
-        public : _FacetType_ ** getFacets() const noexcept {return _myFacets;}
+        public : _FacetType_ ** getFacets() noexcept {return _myFacets;}
         /// \todo argument shoulde be const
         public : void setFacets(_FacetType_ **ptrToFacets) noexcept
         {

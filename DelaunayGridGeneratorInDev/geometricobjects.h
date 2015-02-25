@@ -8,22 +8,23 @@ namespace DelaunayGridGenerator
     /// Utility for making FEM:Node3D set, located on a sphere at PLC
     namespace GeometricObjects
     {
-        /// See http://en.wikipedia.org/wiki/Regular_icosahedron
-        class Icosahedron
+        /// See http://en.wikipedia.org/wiki/Regular_Icosahedron_t
+        template <typename _NodeType_, typename _DimType_>
+        class Icosahedron_t
         {
             /// For inner usage only
             private: class _Triangle
             {
-                public : MathUtils::Node3D *a = nullptr;
-                public : MathUtils::Node3D *b = nullptr;
-                public : MathUtils::Node3D *c = nullptr;
+                public : _NodeType_ *a = nullptr;
+                public : _NodeType_ *b = nullptr;
+                public : _NodeType_ *c = nullptr;
                 private: int _curIndex = 0;
                 public : _Triangle *neighbors[3];
                 public : bool isSplitted = false;
                 public : _Triangle *children[4];
-                public : MathUtils::Node3D *ab = nullptr;
-                public : MathUtils::Node3D *ac = nullptr;
-                public : MathUtils::Node3D *bc = nullptr;
+                public : _NodeType_ *ab = nullptr;
+                public : _NodeType_ *ac = nullptr;
+                public : _NodeType_ *bc = nullptr;
                 public : void setNeighbor(_Triangle * newNeighbor) noexcept
                 {
                     neighbors[_curIndex] = newNeighbor;
@@ -31,7 +32,7 @@ namespace DelaunayGridGenerator
                     ++_curIndex;
                     ++(newNeighbor->_curIndex);
                 }
-                public : bool contains(MathUtils::Node3D *target) const noexcept
+                public : bool contains(_NodeType_ *target) const noexcept
                 {
                     if(a == target)
                         return true;
@@ -41,7 +42,7 @@ namespace DelaunayGridGenerator
                         return true;
                     return false;
                 }
-                public : _Triangle * getNeighbor(MathUtils::Node3D *f, MathUtils::Node3D *s) noexcept
+                public : _Triangle * getNeighbor(_NodeType_ *f, _NodeType_ *s) noexcept
                 {
                     if(neighbors[0]->contains(f) && neighbors[0]->contains(s))
                         return neighbors[0];
@@ -51,7 +52,7 @@ namespace DelaunayGridGenerator
                         return neighbors[2];
                     return nullptr;
                 }
-                public : MathUtils::Node3D* getMidNode(MathUtils::Node3D *f, MathUtils::Node3D *s)
+                public : _NodeType_* getMidNode(_NodeType_ *f, _NodeType_ *s)
                 {
                     if((a == f && b ==s) || (a == s && b ==f))
                         return ab;
@@ -63,9 +64,9 @@ namespace DelaunayGridGenerator
                 }
 
                 public : _Triangle(
-                        MathUtils::Node3D *a,
-                        MathUtils::Node3D *b,
-                        MathUtils::Node3D *c) noexcept :
+                        _NodeType_ *a,
+                        _NodeType_ *b,
+                        _NodeType_ *c) noexcept :
                     a(a), b(b), c(c)
                 {
                     neighbors[0] = nullptr;
@@ -74,12 +75,13 @@ namespace DelaunayGridGenerator
                 }
             };
 
-            public : std::vector<MathUtils::Node3D*>   nodes;
+            private: std::vector<_NodeType_*> _nodes;
+            public : const std::vector<_NodeType_*> & getNodes() const noexcept {return _nodes;}
             private: std::vector<_Triangle*>     *_triangles = nullptr;
-            private: MathUtils::Node3D _center = MathUtils::Node3D(0.0, 0.0, 0.0);
-            public : MathUtils::Node3D getCenter() const noexcept {return _center;}
-            private: MathUtils::Real _radius = 1.0;
-            public : MathUtils::Real getRadius() const noexcept {return _radius;}
+            private: _NodeType_ _center = _NodeType_(0.0, 0.0, 0.0);
+            public : _NodeType_ getCenter() const noexcept {return _center;}
+            private: _DimType_ _radius = 1.0;
+            public : _DimType_ getRadius() const noexcept {return _radius;}
             private: bool _isReflectedToSphere = false;
             public : bool isReflectedToSphere() const noexcept {return _isReflectedToSphere;}
             /// Split each facet into 4;
@@ -100,9 +102,9 @@ namespace DelaunayGridGenerator
                     _Triangle *_tr = *tr;
                     if(!_tr->isSplitted)
                     {
-                        MathUtils::Node3D *_ab;
-                        MathUtils::Node3D *_ac;
-                        MathUtils::Node3D *_bc;
+                        _NodeType_ *_ab;
+                        _NodeType_ *_ac;
+                        _NodeType_ *_bc;
 
                         // Find existing nodes or create new
                         _Triangle *_neighbor = _tr->getNeighbor(_tr->a, _tr->b);
@@ -110,8 +112,8 @@ namespace DelaunayGridGenerator
                             _ab = _neighbor->getMidNode(_tr->a, _tr->b);
                         else
                         {
-                            _ab = new MathUtils::Node3D((*_tr->a + *_tr->b)/2.0);
-                            nodes.push_back(_ab);
+                            _ab = new _NodeType_((*_tr->a + *_tr->b)/2.0);
+                            _nodes.push_back(_ab);
                         }
 
                         _neighbor = _tr->getNeighbor(_tr->a, _tr->c);
@@ -119,8 +121,8 @@ namespace DelaunayGridGenerator
                             _ac = _neighbor->getMidNode(_tr->a, _tr->c);
                         else
                         {
-                            _ac = new MathUtils::Node3D((*_tr->a + *_tr->c)/2.0);
-                            nodes.push_back(_ac);
+                            _ac = new _NodeType_((*_tr->a + *_tr->c)/2.0);
+                            _nodes.push_back(_ac);
                         }
 
                         _neighbor = _tr->getNeighbor(_tr->b, _tr->c);
@@ -128,8 +130,8 @@ namespace DelaunayGridGenerator
                             _bc = _neighbor->getMidNode(_tr->b, _tr->c);
                         else
                         {
-                            _bc = new MathUtils::Node3D((*_tr->b + *_tr->c)/2.0);
-                            nodes.push_back(_bc);
+                            _bc = new _NodeType_((*_tr->b + *_tr->c)/2.0);
+                            _nodes.push_back(_bc);
                         }
 
                         // Create new triangles
@@ -208,53 +210,53 @@ namespace DelaunayGridGenerator
             }
             private: void _init() noexcept
             {
-                // Construct icosahedron nodes (12 nodes)
+                // Construct Icosahedron_t nodes (12 nodes)
                 // Note, nodes can be found as:
                 // (   0.0, +/-1.0, +/-_fi)
                 // (+/-1.0, +/-_fi,    0.0)
                 // (+/-_fi,    0.0, +/-1.0)
-                MathUtils::Real _fi = (1+std::sqrt(5.0))/2;
+                _DimType_ _fi = (1+std::sqrt(5.0))/2;
 
-                nodes.push_back(new MathUtils::Node3D( 0.0, -1.0, -_fi));
-                nodes.push_back(new MathUtils::Node3D( 0.0, -1.0,  _fi));
-                nodes.push_back(new MathUtils::Node3D( 0.0,  1.0, -_fi));
-                nodes.push_back(new MathUtils::Node3D( 0.0,  1.0,  _fi));
+                _nodes.push_back(new _NodeType_( 0.0, -1.0, -_fi));
+                _nodes.push_back(new _NodeType_( 0.0, -1.0,  _fi));
+                _nodes.push_back(new _NodeType_( 0.0,  1.0, -_fi));
+                _nodes.push_back(new _NodeType_( 0.0,  1.0,  _fi));
 
-                nodes.push_back(new MathUtils::Node3D( -1.0, -_fi, 0.0));
-                nodes.push_back(new MathUtils::Node3D( -1.0,  _fi, 0.0));
-                nodes.push_back(new MathUtils::Node3D(  1.0, -_fi, 0.0));
-                nodes.push_back(new MathUtils::Node3D(  1.0,  _fi, 0.0));
+                _nodes.push_back(new _NodeType_( -1.0, -_fi, 0.0));
+                _nodes.push_back(new _NodeType_( -1.0,  _fi, 0.0));
+                _nodes.push_back(new _NodeType_(  1.0, -_fi, 0.0));
+                _nodes.push_back(new _NodeType_(  1.0,  _fi, 0.0));
 
-                nodes.push_back(new MathUtils::Node3D( -_fi, 0.0, -1.0));
-                nodes.push_back(new MathUtils::Node3D(  _fi, 0.0, -1.0));
-                nodes.push_back(new MathUtils::Node3D( -_fi, 0.0,  1.0));
-                nodes.push_back(new MathUtils::Node3D(  _fi, 0.0,  1.0));
+                _nodes.push_back(new _NodeType_( -_fi, 0.0, -1.0));
+                _nodes.push_back(new _NodeType_(  _fi, 0.0, -1.0));
+                _nodes.push_back(new _NodeType_( -_fi, 0.0,  1.0));
+                _nodes.push_back(new _NodeType_(  _fi, 0.0,  1.0));
 
-                // Construct icosahedron facets (20 facets)
+                // Construct Icosahedron_t facets (20 facets)
                 // each facet is neighbor of second except last one
                 _triangles = new std::vector<_Triangle*>;
-                _triangles->push_back(new _Triangle( nodes[ 0], nodes[ 4], nodes[ 8])); // 0
-                _triangles->push_back(new _Triangle( nodes[ 0], nodes[ 4], nodes[ 6])); // 1
-                _triangles->push_back(new _Triangle( nodes[ 0], nodes[ 9], nodes[ 6])); // 2
-                _triangles->push_back(new _Triangle( nodes[ 0], nodes[ 9], nodes[ 2])); // 3
-                _triangles->push_back(new _Triangle( nodes[ 0], nodes[ 8], nodes[ 2])); // 4
+                _triangles->push_back(new _Triangle( _nodes[ 0], _nodes[ 4], _nodes[ 8])); // 0
+                _triangles->push_back(new _Triangle( _nodes[ 0], _nodes[ 4], _nodes[ 6])); // 1
+                _triangles->push_back(new _Triangle( _nodes[ 0], _nodes[ 9], _nodes[ 6])); // 2
+                _triangles->push_back(new _Triangle( _nodes[ 0], _nodes[ 9], _nodes[ 2])); // 3
+                _triangles->push_back(new _Triangle( _nodes[ 0], _nodes[ 8], _nodes[ 2])); // 4
 
-                _triangles->push_back(new _Triangle( nodes[ 2], nodes[ 8], nodes[ 5])); // 5
-                _triangles->push_back(new _Triangle( nodes[10], nodes[ 8], nodes[ 5])); // 6
-                _triangles->push_back(new _Triangle( nodes[10], nodes[ 8], nodes[ 4])); // 7
-                _triangles->push_back(new _Triangle( nodes[10], nodes[ 1], nodes[ 4])); // 8
-                _triangles->push_back(new _Triangle( nodes[ 6], nodes[ 1], nodes[ 4])); // 9
-                _triangles->push_back(new _Triangle( nodes[ 6], nodes[ 1], nodes[11])); //10
-                _triangles->push_back(new _Triangle( nodes[ 6], nodes[ 9], nodes[11])); //11
-                _triangles->push_back(new _Triangle( nodes[ 7], nodes[ 9], nodes[11])); //12
-                _triangles->push_back(new _Triangle( nodes[ 7], nodes[ 9], nodes[ 2])); //13
-                _triangles->push_back(new _Triangle( nodes[ 7], nodes[ 5], nodes[ 2])); //14
+                _triangles->push_back(new _Triangle( _nodes[ 2], _nodes[ 8], _nodes[ 5])); // 5
+                _triangles->push_back(new _Triangle( _nodes[10], _nodes[ 8], _nodes[ 5])); // 6
+                _triangles->push_back(new _Triangle( _nodes[10], _nodes[ 8], _nodes[ 4])); // 7
+                _triangles->push_back(new _Triangle( _nodes[10], _nodes[ 1], _nodes[ 4])); // 8
+                _triangles->push_back(new _Triangle( _nodes[ 6], _nodes[ 1], _nodes[ 4])); // 9
+                _triangles->push_back(new _Triangle( _nodes[ 6], _nodes[ 1], _nodes[11])); //10
+                _triangles->push_back(new _Triangle( _nodes[ 6], _nodes[ 9], _nodes[11])); //11
+                _triangles->push_back(new _Triangle( _nodes[ 7], _nodes[ 9], _nodes[11])); //12
+                _triangles->push_back(new _Triangle( _nodes[ 7], _nodes[ 9], _nodes[ 2])); //13
+                _triangles->push_back(new _Triangle( _nodes[ 7], _nodes[ 5], _nodes[ 2])); //14
 
-                _triangles->push_back(new _Triangle( nodes[ 7], nodes[ 5], nodes[ 3])); //15
-                _triangles->push_back(new _Triangle( nodes[10], nodes[ 5], nodes[ 3])); //16
-                _triangles->push_back(new _Triangle( nodes[10], nodes[ 1], nodes[ 3])); //17
-                _triangles->push_back(new _Triangle( nodes[11], nodes[ 1], nodes[ 3])); //18
-                _triangles->push_back(new _Triangle( nodes[11], nodes[ 7], nodes[ 3])); //19
+                _triangles->push_back(new _Triangle( _nodes[ 7], _nodes[ 5], _nodes[ 3])); //15
+                _triangles->push_back(new _Triangle( _nodes[10], _nodes[ 5], _nodes[ 3])); //16
+                _triangles->push_back(new _Triangle( _nodes[10], _nodes[ 1], _nodes[ 3])); //17
+                _triangles->push_back(new _Triangle( _nodes[11], _nodes[ 1], _nodes[ 3])); //18
+                _triangles->push_back(new _Triangle( _nodes[11], _nodes[ 7], _nodes[ 3])); //19
 
                 // Construct neighbor relations
                 (*_triangles)[ 0]->setNeighbor((*_triangles)[ 1]);
@@ -293,10 +295,10 @@ namespace DelaunayGridGenerator
 
             /// newRadius should be > 0.0
             public : void scaleAndMove(
-                    const MathUtils::Node3D &newCenter,
-                    MathUtils::Real newRadius) noexcept
+                    const _NodeType_ &newCenter,
+                    _DimType_ newRadius) noexcept
             {
-                for(auto i : nodes)
+                for(auto i : _nodes)
                 {
                     *i -= _center;
                     *i *= newRadius/_radius;
@@ -314,7 +316,7 @@ namespace DelaunayGridGenerator
             {
                 if(!_isReflectedToSphere)
                 {
-                    for(auto i : nodes)
+                    for(auto i : _nodes)
                     {
                         *i -= _center;
                         i->normalize();
@@ -326,12 +328,15 @@ namespace DelaunayGridGenerator
             }
 
             /// radius should be > 0.0
-            public : Icosahedron(const MathUtils::Node3D &center, MathUtils::Real radius) noexcept :
+            public : Icosahedron_t(const _NodeType_ &center, _DimType_ radius)
+            throw(std::logic_error) :
                 _center(center), _radius(radius)
             {
+                if(radius <= _DimType_(0.0))
+                    throw std::logic_error("Icosahedron(): radius <= 0.0");
                 _init();
 
-                for(auto i : nodes)
+                for(auto i : _nodes)
                 {
                     i->normalize();
                     *i *= radius;
@@ -339,14 +344,16 @@ namespace DelaunayGridGenerator
                 }
             }
 
-            public: ~Icosahedron() noexcept
+            public: ~Icosahedron_t() noexcept
             {
                 for(auto tr : *_triangles)
                     delete tr;
-                for(auto nod : nodes)
+                for(auto nod : _nodes)
                     delete nod;
             }
         };
+
+        typedef Icosahedron_t<MathUtils::Node3D, MathUtils::Real> Icosahedron;
     }
 }
 #endif // GEOMETRICOBJECTS_H

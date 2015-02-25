@@ -371,70 +371,174 @@ void Test_MathUtils::test_calculateSegmentSubsimplexBarycenticIntersection()
     _result = calculateSegmentSubsimplexBarycenticIntersection<Node2D, 2>(
                 Node2D(0.7,0.2), Node2D(0.8,0.0), _nodes, &_intersection);
     QVERIFY(!_result);
+
+    Node2D _nodes2DA3[] = {{1.0,1.0}, {3.0,2.0}};
+    Node2D _nodes2DB3[] = {{3.0,1.0}, {2.0,3.0}};
+    _result = calculateSegmentSubsimplexBarycenticIntersection<Node2D, 2>(
+                _nodes2DA3[1], _nodes2DA3[0], _nodes2DB3, &_intersection);
+    QVERIFY(_result);
+
+    Node3D _nodes3d[] = {{0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}};
+    Node3D _segment3d[] = {{0.25, 0.25, -1.0}, {0.25, 0.25, 1.0}};
+    Node3D _intersection3d;
+    _result = calculateSegmentSubsimplexBarycenticIntersection<Node3D, 3>(
+                _segment3d[0], _segment3d[1], _nodes3d, &_intersection3d);
+    QVERIFY(_result);
+
+    Node3D _nodes3d2[] = {{0.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {1.0, 0.0, 0.0}};
+    _result = calculateSegmentSubsimplexBarycenticIntersection<Node3D, 3>(
+                _segment3d[0], _segment3d[1], _nodes3d2, &_intersection3d);
+    QVERIFY(_result);
+
+    _result = calculateSegmentSubsimplexBarycenticIntersection<Node3D, 3>(
+                _segment3d[0], _nodes3d2[0], _nodes3d2, &_intersection3d);
+    QVERIFY(!_result);
 }
 
-void Test_MathUtils::test_calculateSubsimplexSubsimplexIntersectionTrunc()
+void Test_MathUtils::test_calculateSubsimplexSubsimplexIntersection()
 {
     Node2D _nodes2DA1[] = {{1.0,1.0}, {3.0,2.0}};
     Node2D _nodes2DB1[] = {{4.0,1.0}, {3.0,3.0}};
-    bool _result = calculateSubsimplexSubsimplexIntersectionTrunc<Node2D, 2>(
+    bool _result = calculateSubsimplexSubsimplexIntersection<Node2D, 2>(
                 _nodes2DA1, _nodes2DB1);
     QVERIFY(!_result);
-    _result = calculateSubsimplexSubsimplexIntersectionTruncNormalized<Node2D, 2>(
+    _result = calculateSubsimplexSubsimplexIntersectionNormalized<Node2D, 2>(
+                _nodes2DA1, _nodes2DB1);
+    QVERIFY(!_result);
+    _result = calculateSubsimplexSubsimplexIntersectionBarycentric<Node2D, 2>(
                 _nodes2DA1, _nodes2DB1);
     QVERIFY(!_result);
 
     Node2D _nodes2DA2[] = {{1.0,1.0}, {3.0,2.0}};
     Node2D _nodes2DB2[] = {{4.0,1.0}, {3.0,2.0}};
-    _result = calculateSubsimplexSubsimplexIntersectionTrunc<Node2D, 2>(
+    _result = calculateSubsimplexSubsimplexIntersection<Node2D, 2>(
                 _nodes2DA2, _nodes2DB2);
     QVERIFY(!_result);
-    _result = calculateSubsimplexSubsimplexIntersectionTruncNormalized<Node2D, 2>(
+    _result = calculateSubsimplexSubsimplexIntersectionNormalized<Node2D, 2>(
+                _nodes2DA2, _nodes2DB2);
+    QVERIFY(!_result);
+    _result = calculateSubsimplexSubsimplexIntersectionBarycentric<Node2D, 2>(
                 _nodes2DA2, _nodes2DB2);
     QVERIFY(!_result);
 
     Node2D _nodes2DA3[] = {{1.0,1.0}, {3.0,2.0}};
     Node2D _nodes2DB3[] = {{3.0,1.0}, {2.0,3.0}};
-    _result = calculateSubsimplexSubsimplexIntersectionTrunc<Node2D, 2>(
+    _result = calculateSubsimplexSubsimplexIntersection<Node2D, 2>(
                 _nodes2DA3, _nodes2DB3);
     QVERIFY(_result);
-    _result = calculateSubsimplexSubsimplexIntersectionTruncNormalized<Node2D, 2>(
+    _result = calculateSubsimplexSubsimplexIntersectionNormalized<Node2D, 2>(
+                _nodes2DA3, _nodes2DB3);
+    QVERIFY(_result);
+    _result = calculateSubsimplexSubsimplexIntersectionBarycentric<Node2D, 2>(
                 _nodes2DA3, _nodes2DB3);
     QVERIFY(_result);
 
     Node3D _nodes3DA1[] = {{0.0, 0.0, 0.0}, {1.0, 0.0, 1.0}, {0.0, 1.0, 0.0}};
     Node3D _nodes3DB1[] = {{0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {0.0, 1.0, 1.0}};
-    _result = calculateSubsimplexSubsimplexIntersectionTrunc<Node3D, 3>(
+    _result = calculateSubsimplexSubsimplexIntersection<Node3D, 3>(
                 _nodes3DA1, _nodes3DB1);
     QVERIFY(_result);
-    _result = calculateSubsimplexSubsimplexIntersectionTruncNormalized<Node3D, 3>(
+    _result = calculateSubsimplexSubsimplexIntersectionNormalized<Node3D, 3>(
+                _nodes3DA1, _nodes3DB1);
+    QVERIFY(_result);
+    _result = calculateSubsimplexSubsimplexIntersectionBarycentric<Node3D, 3>(
                 _nodes3DA1, _nodes3DB1);
     QVERIFY(_result);
 
     Node3D _nodes3DA2[] = {{0.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {1.0, 1.0, 1.0}};
     Node3D _nodes3DB2[] = {{0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {0.0, 1.0, 1.0}};
-    _result = calculateSubsimplexSubsimplexIntersectionTrunc<Node3D, 3>(
+    _result = calculateSubsimplexSubsimplexIntersection<Node3D, 3>(
                 _nodes3DA2, _nodes3DB2);
     QVERIFY(_result);
-    _result = calculateSubsimplexSubsimplexIntersectionTruncNormalized<Node3D, 3>(
+    _result = calculateSubsimplexSubsimplexIntersectionNormalized<Node3D, 3>(
+                _nodes3DA2, _nodes3DB2);
+    QVERIFY(_result);
+    _result = calculateSubsimplexSubsimplexIntersectionBarycentric<Node3D, 3>(
                 _nodes3DA2, _nodes3DB2);
     QVERIFY(_result);
 
     Node3D _nodes3DA3[] = {{0.0, 0.0, 0.0}, {0.0, 1.0, 1.0}, {1.0, 1.0, 1.0}};
     Node3D _nodes3DB3[] = {{0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {0.0, 1.0, 1.0}};
-    _result = calculateSubsimplexSubsimplexIntersectionTrunc<Node3D, 3>(
+    _result = calculateSubsimplexSubsimplexIntersection<Node3D, 3>(
                 _nodes3DA3, _nodes3DB3);
     QVERIFY(!_result);
-    _result = calculateSubsimplexSubsimplexIntersectionTruncNormalized<Node3D, 3>(
+    _result = calculateSubsimplexSubsimplexIntersectionNormalized<Node3D, 3>(
+                _nodes3DA3, _nodes3DB3);
+    QVERIFY(!_result);
+    _result = calculateSubsimplexSubsimplexIntersectionBarycentric<Node3D, 3>(
                 _nodes3DA3, _nodes3DB3);
     QVERIFY(!_result);
 
     Node3D _nodes3DA4[] = {{0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {1.0, 1.0, 1.0}};
     Node3D _nodes3DB4[] = {{0.0, 1.0, 0.0}, {0.0, 1.0, 1.0}, {1.0, 1.0, 1.0}};
-    _result = calculateSubsimplexSubsimplexIntersectionTrunc<Node3D, 3>(
+    _result = calculateSubsimplexSubsimplexIntersection<Node3D, 3>(
                 _nodes3DA4, _nodes3DB4);
     QVERIFY(!_result);
-    _result = calculateSubsimplexSubsimplexIntersectionTruncNormalized<Node3D, 3>(
+    _result = calculateSubsimplexSubsimplexIntersectionNormalized<Node3D, 3>(
                 _nodes3DA4, _nodes3DB4);
+    QVERIFY(!_result);
+    _result = calculateSubsimplexSubsimplexIntersectionBarycentric<Node3D, 3>(
+                _nodes3DA4, _nodes3DB4);
+    QVERIFY(!_result);
+
+    Node3D _nodes3DA5[] = {{-1.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}};
+    Node3D _nodes3DB5[] = {{0.0, 0.0, 1.0}, {0.0, 1.0, 1.0}, {0.0, 1.0, 0.0}};
+    _result = calculateSubsimplexSubsimplexIntersection<Node3D, 3>(
+                _nodes3DA5, _nodes3DB5);
+    QVERIFY(!_result);
+    _result = calculateSubsimplexSubsimplexIntersectionNormalized<Node3D, 3>(
+                _nodes3DA5, _nodes3DB5);
+    QVERIFY(!_result);
+    _result = calculateSubsimplexSubsimplexIntersectionBarycentric<Node3D, 3>(
+                _nodes3DA5, _nodes3DB5);
+    QVERIFY(!_result);
+
+    Node3D _nodes3DA6[] = {
+        {0.844095, 0.287337, 0.368567},
+        {0.712663, 0.631433, 0.155905},
+        {0.368567, 0.844095, 0.287337}};
+    Node3D _nodes3DB6[] = {
+        {0.5, 0.0746746, 0.5},
+        {0.368567, 0.155905, 0.712663},
+        {0.287337, 0.368567, 0.844095}};
+    _result = calculateSubsimplexSubsimplexIntersection<Node3D, 3>(
+                _nodes3DA6, _nodes3DB6);
+    QVERIFY(!_result);
+    _result = calculateSubsimplexSubsimplexIntersectionNormalized<Node3D, 3>(
+                _nodes3DA6, _nodes3DB6);
+    QVERIFY(!_result);
+    _result = calculateSubsimplexSubsimplexIntersectionBarycentric<Node3D, 3>(
+                _nodes3DA6, _nodes3DB6);
+    QVERIFY(!_result);
+
+    Node3D _nodes3DA7[] = {{-1.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}};
+    Node3D _nodes3DB7[] = {{0.0, 0.0, 2.0}, {0.0, 1.0, 2.0}, {0.0, 1.0, 1.0}};
+    _result = calculateSubsimplexSubsimplexIntersection<Node3D, 3>(
+                _nodes3DA7, _nodes3DB7);
+    QVERIFY(!_result);
+    _result = calculateSubsimplexSubsimplexIntersectionNormalized<Node3D, 3>(
+                _nodes3DA7, _nodes3DB7);
+    QVERIFY(!_result);
+    _result = calculateSubsimplexSubsimplexIntersectionBarycentric<Node3D, 3>(
+                _nodes3DA7, _nodes3DB7);
+    QVERIFY(!_result);
+
+    /// \todo fix!
+    Node3D _nodes3DA8[] = {
+        {0.155905, 0.287337, 0.368567},
+        {0.287337, 0.631433, 0.155905},
+        {0.368567, 0.844095, 0.287337}};
+    Node3D _nodes3DB8[] = {
+        {0.5, 0.0746746, 0.5},
+        {0.368567, 0.155905, 0.712663},
+        {0.155905, 0.712663, 0.631433}};
+    _result = calculateSubsimplexSubsimplexIntersection<Node3D, 3>(
+                _nodes3DA8, _nodes3DB8);
+//    QVERIFY(!_result);
+    _result = calculateSubsimplexSubsimplexIntersectionNormalized<Node3D, 3>(
+                _nodes3DA8, _nodes3DB8);
+//    QVERIFY(!_result);
+    _result = calculateSubsimplexSubsimplexIntersectionBarycentric<Node3D, 3>(
+                _nodes3DA8, _nodes3DB8);
     QVERIFY(!_result);
 }
