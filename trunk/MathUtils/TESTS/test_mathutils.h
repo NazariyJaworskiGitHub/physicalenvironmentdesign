@@ -19,7 +19,7 @@ class Test_MathUtils : public QObject
     private: Q_SLOT void test_calculateSimplexVoulumeByCayleyMengerDeterminant();
     private: Q_SLOT void test_calculateBarycentricCoordinates();
     private: Q_SLOT void test_calculateSegmentSubsimplexBarycenticIntersection();
-    private: Q_SLOT void test_calculateSubsimplexSubsimplexIntersectionTrunc();
+    private: Q_SLOT void test_calculateSubsimplexSubsimplexIntersection();
 };
 
 #endif // TEST_MATHUTILS_H

@@ -37,18 +37,25 @@ int main(int argc, char *argv[])
 //    //_myPlc3D->createNode(MathUtils::Node3D(0.5, 0.5, 1.0));
 //    _myPlc3D->createNode(MathUtils::Node3D(0.5, 0.5, 0.0));
 
-//    /// TEST 8
-//    DelaunayGridGenerator::GeometricObjects::Icosahedron _icosahedron(
-//                MathUtils::Node3D(0.5, 0.5, 0.5), 0.5);
-//    _icosahedron.splitFacets();
-////    _icosahedron.splitFacets();
-////    _icosahedron.splitFacets();
-////    _icosahedron.splitFacets();
-////    _icosahedron.splitFacets();
+//    _myPlc3D->updateMaxAndMinCoordinates();
 
-//    _icosahedron.reflectToSphere();
-//    for(auto i : _icosahedron.nodes)
-//        _myPlc3D->createNode(*i);
+    /// TEST 8
+    DelaunayGridGenerator::GeometricObjects::Icosahedron _icosahedron(
+                MathUtils::Node3D(0.5, 0.5, 0.5), 0.5);
+    _icosahedron.splitFacets();
+//    _icosahedron.splitFacets();
+//    _icosahedron.splitFacets();
+//    _icosahedron.splitFacets();
+//    _icosahedron.splitFacets();
+
+    _icosahedron.reflectToSphere();
+    for(auto i : _icosahedron.getNodes())
+        _myPlc3D->createNode(*i);
+
+    _myPlc3D->createNode(MathUtils::Node3D(0.5, 0.5, 0.5));
+
+    _myPlc3D->setMaxCoords(MathUtils::Node3D(1.0, 1.0, 1.0));
+    _myPlc3D->setMinCoords(MathUtils::Node3D(0.0, 0.0, 0.0));
 
 //    {int _n[]={0,2,8}; _myPlc3D->createFacet(_n);}
 //    {int _n[]={0,2,9}; _myPlc3D->createFacet(_n);}
@@ -73,18 +80,6 @@ int main(int argc, char *argv[])
 //    {int _n[]={11,1,3}; _myPlc3D->createFacet(_n);}
 //    {int _n[]={11,7,3}; _myPlc3D->createFacet(_n);}
 
-    /// TEST 9
-    int N = 4;
-    for(int i=0; i<=N; ++i)
-        for(int j=0; j<=N; ++j)
-            for(int k=0; k<=N; ++k)
-                _myPlc3D->createNode(
-                            MathUtils::Node3D(
-                                MathUtils::Real(i)/N,
-                                MathUtils::Real(j)/N,
-                                MathUtils::Real(k)/N));
-    _myPlc3D->updateMaxAndMinCoordinates();
-
 //    _myPlc3D->createSegment(0,1);
 //    _myPlc3D->createSegment(0,2);
 //    _myPlc3D->createSegment(1,3);
@@ -100,6 +95,19 @@ int main(int argc, char *argv[])
 
 //    {int _n[]={0,1,2}; _myPlc3D->createFacet(_n);}
 //    {int _n[]={5,6,7}; _myPlc3D->createFacet(_n);}
+
+//    _myPlc3D->createNode(MathUtils::Node3D(0.155905, 0.287337, 0.368567));
+//    _myPlc3D->createNode(MathUtils::Node3D(0.287337, 0.631433, 0.155905));
+//    _myPlc3D->createNode(MathUtils::Node3D(0.368567, 0.844095, 0.287337));
+
+//    _myPlc3D->createNode(MathUtils::Node3D(0.5, 0.0746746, 0.5));
+//    _myPlc3D->createNode(MathUtils::Node3D(0.368567, 0.155905, 0.712663));
+//    _myPlc3D->createNode(MathUtils::Node3D(0.155905, 0.712663, 0.631433));
+
+//    {int _n[]={0,1,2}; _myPlc3D->createFacet(_n);}
+//    {int _n[]={3,4,5}; _myPlc3D->createFacet(_n);}
+
+//    _myPlc3D->updateMaxAndMinCoordinates();
 
     DelaunayGridGenerator::DelaunayGridGenerator3D *_myGenerator3D =
             new DelaunayGridGenerator::DelaunayGridGenerator3D();

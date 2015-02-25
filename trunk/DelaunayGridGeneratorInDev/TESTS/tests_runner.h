@@ -7,6 +7,7 @@
 #include "test_gridelement.h"
 #include "test_nodewrapper.h"
 #include "test_piecewiselinearcomplex.h"
+#include "test_geometricobjects.h"
 #include "test_generator.h"
 
 //tip! use "-vs" to see emited signals
@@ -44,12 +45,19 @@ void run_tests_PiecewiseLinearComplex()
     QTest::qExec(&_myTest_PiecewiseLinearComplex, arguments);
 }
 
+void run_tests_GeometricObjects()
+{
+    Test_GeometricObjects _myTest_GeometricObjects;
+    QTest::qExec(&_myTest_GeometricObjects, arguments);
+}
+
 void run_tests_all()
 {
     run_tests_NodeWrapper();
     run_tests_GridElement();
     run_tests_DataManager();
     run_tests_PiecewiseLinearComplex();
+    run_tests_GeometricObjects();
     run_tests_Generator();
 }
 #endif // TESTS_RUNNER_H

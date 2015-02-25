@@ -10,6 +10,8 @@
     private: typename QLinkedList< TYPE *>::Iterator _ptrToMyself; \
     public : typename QLinkedList< TYPE *>::Iterator & getPointerToMyself() noexcept { \
             return _ptrToMyself;} \
+    public : void setPointerToMyself(const typename QLinkedList< TYPE *>::Iterator _newPtr) noexcept { \
+            _ptrToMyself = _newPtr;} \
     private: STATE _myState; \
     public : STATE getState() const noexcept {return _myState;} \
     private: void _appendToList(QLinkedList< TYPE *> &list, STATE newState) noexcept \
@@ -19,9 +21,19 @@
         _ptrToMyself = list.end(); \
         --_ptrToMyself; \
     } \
+    private: void _prependToList(QLinkedList< TYPE *> &list, STATE newState) noexcept \
+    { \
+        _myState = newState; \
+        list.prepend(this); \
+        _ptrToMyself = list.begin(); \
+    } \
     public : void appendToAliveList(QLinkedList< TYPE *> &aliveList) noexcept \
     { \
         _appendToList(aliveList, STATE_ALIVE);\
+    } \
+    public : void prependToAliveList(QLinkedList< TYPE *> &aliveList) noexcept \
+    { \
+        _prependToList(aliveList, STATE_ALIVE);\
     } \
     public : void kill(QLinkedList< TYPE *> &aliveList, \
                        QLinkedList< TYPE *> &killedList) noexcept \

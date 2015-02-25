@@ -3,10 +3,11 @@
 #include <iostream>
 
 #include "piecewiselinearcomplex.h"
+#include "geometricobjects.h"
 
 using namespace DelaunayGridGenerator;
 
-void Test_Generator::test_1()
+void Test_Generator::test_BadPlc()
 {
     // Bad PLC test
     Plc2D _myPlc2D;
@@ -49,7 +50,7 @@ void Test_Generator::test_1()
     }
 }
 
-void Test_Generator::test_2()
+void Test_Generator::test_ElementCreation()
 {
     // Element creation test
     Plc2D _myPlc2D;
@@ -113,7 +114,7 @@ void Test_Generator::test_2()
     delete (_myGrid3D);
 }
 
-void Test_Generator::test_3()
+void Test_Generator::test_DelaunayCriteriaNodeOrder()
 {
     // Delaunay criteria node order test
     Plc3D _myPlc3D;
@@ -149,7 +150,7 @@ void Test_Generator::test_3()
     delete (_myGrid3D);
 }
 
-void Test_Generator::test_4()
+void Test_Generator::test_InnerListsUpdate()
 {
     // Test inner lists update correctness, should not be any exceptions
     DelaunayGridGenerator::Plc2D _myPlc2D;
@@ -180,7 +181,7 @@ void Test_Generator::test_4()
     delete (_myGrid2D);
 }
 
-void Test_Generator::test_5()
+void Test_Generator::test_OnSphereIntersections_1()
 {
     // Intersections test
     Plc3D _myPlc3D;
@@ -203,6 +204,106 @@ void Test_Generator::test_5()
             _myGenerator3D.getDeadNodeList().size() == 27 &&
             _myGenerator3D.getDeadFacetsList().size() == 120 &&
             _myGenerator3D.getElementsList().size() == 48 );
+
+    delete (_myGrid3D);
+}
+
+void Test_Generator::test_OnSphereIntersections_2()
+{
+    // Intersections test
+    Plc3D _myPlc3D;
+    int N = 5;
+    for(int i=0; i<=N; ++i)
+        for(int j=0; j<=N; ++j)
+            for(int k=0; k<=N; ++k)
+                _myPlc3D.createNode(
+                            MathUtils::Node3D(
+                                MathUtils::Real(i)/N,
+                                MathUtils::Real(j)/N,
+                                MathUtils::Real(k)/N));
+    _myPlc3D.updateMaxAndMinCoordinates();
+
+    DelaunayGridGenerator3D _myGenerator3D;
+    FEM::TetrahedralGrid *_myGrid3D =
+            _myGenerator3D.constructGrid(&_myPlc3D, false);
+
+    QVERIFY(_myGenerator3D.getNodeList().size() == 216 &&
+            _myGenerator3D.getDeadNodeList().size() == 216 &&
+            _myGenerator3D.getDeadFacetsList().size() == 1650 &&
+            _myGenerator3D.getElementsList().size() == 750 );
+
+    delete (_myGrid3D);
+}
+
+void Test_Generator::test_OnSphereIntersections_3()
+{
+    Plc3D _myPlc3D;
+
+    _myPlc3D.createNode(MathUtils::Node3D(0.844095, 0.287337, 0.368567));
+    _myPlc3D.createNode(MathUtils::Node3D(0.712663, 0.631433, 0.155905));
+    _myPlc3D.createNode(MathUtils::Node3D(0.368567, 0.844095, 0.287337));
+
+    _myPlc3D.createNode(MathUtils::Node3D(0.5, 0.0746746, 0.5));
+    _myPlc3D.createNode(MathUtils::Node3D(0.368567, 0.155905, 0.712663));
+    _myPlc3D.createNode(MathUtils::Node3D(0.287337, 0.368567, 0.844095));
+
+    _myPlc3D.updateMaxAndMinCoordinates();
+    DelaunayGridGenerator3D _myGenerator3D;
+    FEM::TetrahedralGrid *_myGrid3D =
+            _myGenerator3D.constructGrid(&_myPlc3D, false);
+
+    QVERIFY(_myGenerator3D.getNodeList().size() == 6 &&
+            _myGenerator3D.getDeadNodeList().size() == 6 &&
+            _myGenerator3D.getDeadFacetsList().size() == 10 &&
+            _myGenerator3D.getElementsList().size() == 3 );
+
+    delete (_myGrid3D);
+}
+
+void Test_Generator::test_IcosahedronLv0()
+{
+    Plc3D _myPlc3D;
+    GeometricObjects::Icosahedron _icosahedron(
+                MathUtils::Node3D(0.0, 0.0, 0.0), 1.0);
+
+    for(auto i : _icosahedron.getNodes())
+        _myPlc3D.createNode(*i);
+
+    _myPlc3D.setMaxCoords(MathUtils::Node3D(1.0, 1.0, 1.0));
+    _myPlc3D.setMinCoords(MathUtils::Node3D(0.0, 0.0, 0.0));
+
+    DelaunayGridGenerator3D _myGenerator3D;
+    FEM::TetrahedralGrid *_myGrid3D =
+            _myGenerator3D.constructGrid(&_myPlc3D, false);
+
+    QVERIFY(_myGenerator3D.getNodeList().size() == 12 &&
+            _myGenerator3D.getDeadNodeList().size() == 12 &&
+            _myGenerator3D.getDeadFacetsList().size() == 46 &&
+            _myGenerator3D.getElementsList().size() == 18 );
+
+    delete (_myGrid3D);
+}
+
+void Test_Generator::test_IcosahedronLv1()
+{
+    Plc3D _myPlc3D;
+    GeometricObjects::Icosahedron _icosahedron(
+                MathUtils::Node3D(0.0, 0.0, 0.0), 1.0);
+    _icosahedron.splitFacets();
+    for(auto i : _icosahedron.getNodes())
+        _myPlc3D.createNode(*i);
+
+    _myPlc3D.setMaxCoords(MathUtils::Node3D(1.0, 1.0, 1.0));
+    _myPlc3D.setMinCoords(MathUtils::Node3D(0.0, 0.0, 0.0));
+
+    DelaunayGridGenerator3D _myGenerator3D;
+    FEM::TetrahedralGrid *_myGrid3D =
+            _myGenerator3D.constructGrid(&_myPlc3D, false);
+
+    QVERIFY(_myGenerator3D.getNodeList().size() == 42 &&
+            _myGenerator3D.getDeadNodeList().size() == 42 &&
+            _myGenerator3D.getDeadFacetsList().size() == 234 &&
+            _myGenerator3D.getElementsList().size() == 97 );
 
     delete (_myGrid3D);
 }

@@ -58,7 +58,8 @@ SOURCES += main.cpp \
     TESTS/test_datamanager.cpp \
     TESTS/test_generator.cpp \
     simpleglrender3d.cpp \
-    simpleglrender2d.cpp
+    simpleglrender2d.cpp \
+    TESTS/test_geometricobjects.cpp
 
 HEADERS += \
     simpleglrender.h \
@@ -76,4 +77,5 @@ HEADERS += \
     TESTS/test_generator.h \
     simpleglrender3d.h \
     simpleglrender2d.h \
-    geometricobjects.h
+    geometricobjects.h \
+    TESTS/test_geometricobjects.h

@@ -52,5 +52,30 @@ namespace MathUtils
         _result[_nDimensions_] = 1 - _u.sum();
         return _result;
     }
+
+    template<typename _NodeType_,
+             int _nDimensions_,
+             typename _NodeIteratorType_ = _NodeType_*,
+             typename _DimType_ = MathUtils::Real>
+    _DimType_* calculateBarycentricCoordinates(
+            const _NodeType_ &target,
+            const _NodeIteratorType_ simplexNodes)
+    {
+        Eigen::Matrix<_DimType_, _nDimensions_, _nDimensions_> _M;
+        Eigen::Matrix<_DimType_, _nDimensions_, 1> _u;
+        for(int i=0;i<_nDimensions_;++i) // per rows (per coordinates)
+        {
+            _u(i,0) = target[i] - simplexNodes[_nDimensions_][i];
+            for(int j=0;j<_nDimensions_;++j) // per columns (per nodes)
+                // Note, that i subtract the last-one, not the first-one node
+                _M(i,j) = simplexNodes[j][i] - simplexNodes[_nDimensions_][i];
+        }
+        _u = _M.lu().solve(_u);
+        _DimType_* _result = new _DimType_[_nDimensions_+1];
+        for(int i=0;i<_nDimensions_;++i)
+            _result[i] = _u(i,0);
+        _result[_nDimensions_] = 1 - _u.sum();
+        return _result;
+    }
 }
 #endif // CALCULATEBARYCENTRICCOORDINATES_H
