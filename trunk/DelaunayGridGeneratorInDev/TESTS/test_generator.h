@@ -16,6 +16,9 @@ class Test_Generator : public QObject
     private: Q_SLOT void test_OnSphereIntersections_3();
     private: Q_SLOT void test_IcosahedronLv0();
     private: Q_SLOT void test_IcosahedronLv1();
+    private: Q_SLOT void test_IcosahedronLv1reflectedToSphere();
+    private: Q_SLOT void test_IcosahedronLv2();
+    private: Q_SLOT void test_IcosahedronLv2reflectedToSphere();
 };
 
 #endif // TEST_GENERATOR_H

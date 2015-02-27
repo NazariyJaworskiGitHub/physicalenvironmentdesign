@@ -86,6 +86,16 @@ void SimpleGLRender2D::keyPressEvent(QKeyEvent *e)
                 QString(" Iteration: ") +
                 QString::number(_ptrToRenderingDelaunayGridGenerator2D->_iteration);
         this->updateGL();
+
+        /// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        if(!_ptrToRenderingDelaunayGridGenerator2D->getElementsList().empty())
+        {
+        std::cout
+                << _ptrToRenderingDelaunayGridGenerator2D->_iteration << ": "
+                << _ptrToRenderingDelaunayGridGenerator2D->getElementsList().last()->getNodeIndexes()[0] << " "
+                << _ptrToRenderingDelaunayGridGenerator2D->getElementsList().last()->getNodeIndexes()[1] << " "
+                << _ptrToRenderingDelaunayGridGenerator2D->getElementsList().last()->getNodeIndexes()[2] << "\n";
+        }
     }
     /// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     else if(e->key() == Qt::Key_I)

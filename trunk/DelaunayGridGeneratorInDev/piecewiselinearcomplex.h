@@ -24,21 +24,11 @@ namespace DelaunayGridGenerator
         private: _NodeType_ _maxCoordinates;
         private: _NodeType_ _minCoordinates;
 
-        public : _DimType_ getMaxCoord(int coordIndex) const
-        {
-            return _maxCoordinates[coordIndex];
-        }
-        public : _DimType_ getMinCoord(int coordIndex) const
-        {
-            return _minCoordinates[coordIndex];
-        }
-        /// \todo return reference
-        public : _NodeType_ getMaxCoords() const
+        public : _NodeType_ getMaxCoords() const noexcept
         {
             return _maxCoordinates;
         }
-        /// \todo return reference
-        public : _NodeType_ getMinCoords() const
+        public : _NodeType_ getMinCoords() const noexcept
         {
             return _minCoordinates;
         }
@@ -50,25 +40,31 @@ namespace DelaunayGridGenerator
         {
             _minCoordinates = target;
         }
+        private: void _updateMaxAndMinCoordinates(const _NodeType_ &target)
+        {
+            for(int j=0; j<_nDimensions_; ++j)
+            {
+                if(_maxCoordinates[j] < target[j])
+                    _maxCoordinates[j] = target[j];
+                if(_minCoordinates[j] > target[j])
+                    _minCoordinates[j] = target[j];
+            }
+        }
         public : void updateMaxAndMinCoordinates()
         {
             _maxCoordinates = _nodeList[0];
             _minCoordinates = _nodeList[0];
             for(_NodeType_ i : _nodeList)
-                for(int j=0; j<_nDimensions_; ++j)
-                {
-                    if(_maxCoordinates[j] < i[j])
-                        _maxCoordinates[j] = i[j];
-                    if(_minCoordinates[j] > i[j])
-                        _minCoordinates[j] = i[j];
-                }
+                _updateMaxAndMinCoordinates(i);
         }
 
+        /// Note, it updates min and max coordinates
         /// \todo code dublicate with FEM:Grid, need merege
         public : _NodeType_ &createNode(const _NodeType_ &target)
         {
-            /// \todo it makes new copy and deletes old data, avoid that!
+            /// \todo it makes, avoid that!
             _nodeList.append(_NodeType_(target));
+            _updateMaxAndMinCoordinates(target);
             return _nodeList.last();
         }
         public : const QList<_NodeType_> & getNodeList() const noexcept
