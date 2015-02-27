@@ -15,7 +15,6 @@ void Test_Generator::test_BadPlc()
     _myPlc2D.createNode(MathUtils::Node2D(0.0,0.0));
     _myPlc2D.createNode(MathUtils::Node2D(1.0,0.0));
 
-    _myPlc2D.updateMaxAndMinCoordinates();
     DelaunayGridGenerator2D _myGenerator2D;
 
     try
@@ -35,7 +34,6 @@ void Test_Generator::test_BadPlc()
     _myPlc3D.createNode(MathUtils::Node3D(1.0,0.0,0.0));
     _myPlc3D.createNode(MathUtils::Node3D(0.0,1.0,0.0));
 
-    _myPlc3D.updateMaxAndMinCoordinates();
     DelaunayGridGenerator3D _myGenerator3D;
 
     try
@@ -59,8 +57,6 @@ void Test_Generator::test_ElementCreation()
     _myPlc2D.createNode(MathUtils::Node2D(1.0,0.0));
     _myPlc2D.createNode(MathUtils::Node2D(0.0,1.0));
     _myPlc2D.createNode(MathUtils::Node2D(1.0,1.0));
-
-    _myPlc2D.updateMaxAndMinCoordinates();
 
     DelaunayGridGenerator2D _myGenerator2D;
     FEM::TriangularGrid *_myGrid2D =
@@ -88,8 +84,6 @@ void Test_Generator::test_ElementCreation()
     _myPlc3D.createNode(MathUtils::Node3D(0.0,1.0,0.0));
     _myPlc3D.createNode(MathUtils::Node3D(0.0,0.0,1.0));
     _myPlc3D.createNode(MathUtils::Node3D(1.0,1.0,1.0));
-
-    _myPlc3D.updateMaxAndMinCoordinates();
 
     DelaunayGridGenerator3D _myGenerator3D;
     FEM::TetrahedralGrid *_myGrid3D =
@@ -125,8 +119,6 @@ void Test_Generator::test_DelaunayCriteriaNodeOrder()
     _myPlc3D.createNode(MathUtils::Node3D(0.0,1.0,0.0));
     _myPlc3D.createNode(MathUtils::Node3D(1.0,1.0,0.0));
     _myPlc3D.createNode(MathUtils::Node3D(0.5,0.5,0.5));
-
-    _myPlc3D.updateMaxAndMinCoordinates();
 
     DelaunayGridGenerator3D _myGenerator3D;
     FEM::TetrahedralGrid *_myGrid3D =
@@ -171,7 +163,7 @@ void Test_Generator::test_InnerListsUpdate()
     _myPlc2D.createNode(MathUtils::Node2D(1.00, 1.00));
     _myPlc2D.createNode(MathUtils::Node2D(0.50, 0.75));
     _myPlc2D.createNode(MathUtils::Node2D(0.75, 0.50));
-    _myPlc2D.updateMaxAndMinCoordinates();
+
     DelaunayGridGenerator2D _myGenerator2D;
     FEM::TriangularGrid *_myGrid2D =
             _myGenerator2D.constructGrid(&_myPlc2D, false);
@@ -194,7 +186,6 @@ void Test_Generator::test_OnSphereIntersections_1()
                                 MathUtils::Real(i)/N,
                                 MathUtils::Real(j)/N,
                                 MathUtils::Real(k)/N));
-    _myPlc3D.updateMaxAndMinCoordinates();
 
     DelaunayGridGenerator3D _myGenerator3D;
     FEM::TetrahedralGrid *_myGrid3D =
@@ -221,7 +212,6 @@ void Test_Generator::test_OnSphereIntersections_2()
                                 MathUtils::Real(i)/N,
                                 MathUtils::Real(j)/N,
                                 MathUtils::Real(k)/N));
-    _myPlc3D.updateMaxAndMinCoordinates();
 
     DelaunayGridGenerator3D _myGenerator3D;
     FEM::TetrahedralGrid *_myGrid3D =
@@ -247,7 +237,6 @@ void Test_Generator::test_OnSphereIntersections_3()
     _myPlc3D.createNode(MathUtils::Node3D(0.368567, 0.155905, 0.712663));
     _myPlc3D.createNode(MathUtils::Node3D(0.287337, 0.368567, 0.844095));
 
-    _myPlc3D.updateMaxAndMinCoordinates();
     DelaunayGridGenerator3D _myGenerator3D;
     FEM::TetrahedralGrid *_myGrid3D =
             _myGenerator3D.constructGrid(&_myPlc3D, false);
@@ -264,13 +253,10 @@ void Test_Generator::test_IcosahedronLv0()
 {
     Plc3D _myPlc3D;
     GeometricObjects::Icosahedron _icosahedron(
-                MathUtils::Node3D(0.0, 0.0, 0.0), 1.0);
+                MathUtils::Node3D(0.5, 0.5, 0.5), 5.0);
 
     for(auto i : _icosahedron.getNodes())
         _myPlc3D.createNode(*i);
-
-    _myPlc3D.setMaxCoords(MathUtils::Node3D(1.0, 1.0, 1.0));
-    _myPlc3D.setMinCoords(MathUtils::Node3D(0.0, 0.0, 0.0));
 
     DelaunayGridGenerator3D _myGenerator3D;
     FEM::TetrahedralGrid *_myGrid3D =
@@ -288,13 +274,10 @@ void Test_Generator::test_IcosahedronLv1()
 {
     Plc3D _myPlc3D;
     GeometricObjects::Icosahedron _icosahedron(
-                MathUtils::Node3D(0.0, 0.0, 0.0), 1.0);
+                MathUtils::Node3D(0.5, 0.5, 0.5), 0.5);
     _icosahedron.splitFacets();
     for(auto i : _icosahedron.getNodes())
         _myPlc3D.createNode(*i);
-
-    _myPlc3D.setMaxCoords(MathUtils::Node3D(1.0, 1.0, 1.0));
-    _myPlc3D.setMinCoords(MathUtils::Node3D(0.0, 0.0, 0.0));
 
     DelaunayGridGenerator3D _myGenerator3D;
     FEM::TetrahedralGrid *_myGrid3D =
@@ -304,6 +287,73 @@ void Test_Generator::test_IcosahedronLv1()
             _myGenerator3D.getDeadNodeList().size() == 42 &&
             _myGenerator3D.getDeadFacetsList().size() == 234 &&
             _myGenerator3D.getElementsList().size() == 97 );
+
+    delete (_myGrid3D);
+}
+
+void Test_Generator::test_IcosahedronLv1reflectedToSphere()
+{
+    Plc3D _myPlc3D;
+    GeometricObjects::Icosahedron _icosahedron(
+                MathUtils::Node3D(0.5, 0.5, 0.5), 0.5);
+    _icosahedron.splitFacets();
+    _icosahedron.reflectToSphere();
+    for(auto i : _icosahedron.getNodes())
+        _myPlc3D.createNode(*i);
+
+    DelaunayGridGenerator3D _myGenerator3D;
+    FEM::TetrahedralGrid *_myGrid3D =
+            _myGenerator3D.constructGrid(&_myPlc3D, false);
+
+    QVERIFY(_myGenerator3D.getNodeList().size() == 42 &&
+            _myGenerator3D.getDeadNodeList().size() == 42 &&
+            _myGenerator3D.getDeadFacetsList().size() == 240 &&
+            _myGenerator3D.getElementsList().size() == 100 );
+
+    delete (_myGrid3D);
+}
+
+void Test_Generator::test_IcosahedronLv2()
+{
+    Plc3D _myPlc3D;
+    GeometricObjects::Icosahedron _icosahedron(
+                MathUtils::Node3D(0.5, 0.5, 0.5), 0.5);
+    _icosahedron.splitFacets();
+    _icosahedron.splitFacets();
+    for(auto i : _icosahedron.getNodes())
+        _myPlc3D.createNode(*i);
+
+    DelaunayGridGenerator3D _myGenerator3D;
+    FEM::TetrahedralGrid *_myGrid3D =
+            _myGenerator3D.constructGrid(&_myPlc3D, false);
+
+    QVERIFY(_myGenerator3D.getNodeList().size() == 162 &&
+            _myGenerator3D.getDeadNodeList().size() == 162 &&
+            _myGenerator3D.getDeadFacetsList().size() == 1096 &&
+            _myGenerator3D.getElementsList().size() == 468 );
+
+    delete (_myGrid3D);
+}
+
+void Test_Generator::test_IcosahedronLv2reflectedToSphere()
+{
+    Plc3D _myPlc3D;
+    GeometricObjects::Icosahedron _icosahedron(
+                MathUtils::Node3D(0.5, 0.5, 0.5), 0.5);
+    _icosahedron.splitFacets();
+    _icosahedron.splitFacets();
+    _icosahedron.reflectToSphere();
+    for(auto i : _icosahedron.getNodes())
+        _myPlc3D.createNode(*i);
+
+    DelaunayGridGenerator3D _myGenerator3D;
+    FEM::TetrahedralGrid *_myGrid3D =
+            _myGenerator3D.constructGrid(&_myPlc3D, false);
+
+    QVERIFY(_myGenerator3D.getNodeList().size() == 162 &&
+            _myGenerator3D.getDeadNodeList().size() == 162 &&
+            _myGenerator3D.getDeadFacetsList().size() == 1006 &&
+            _myGenerator3D.getElementsList().size() == 423 );
 
     delete (_myGrid3D);
 }

@@ -283,7 +283,8 @@ namespace DelaunayGridGenerator
                 /// \todo try to make it like classic CDT with node visibility
                 /// (dont check Delaunay criteria for wrong side, i.e invisible nodes)
                 _DimType_ _determinant = MathUtils::trunc(
-                            MathUtils::calculateIsCoplanarStatusWithClippingCheckNormalized<
+                            MathUtils::calculateIsCoplanarStatusWithClippingCheck<
+//                            MathUtils::calculateIsCoplanarStatusWithClippingCheckNormalized<
                                 _WrappedNodeType_,
                                 _nDimensions_,
                                 _NodeIndexIterator,
@@ -338,7 +339,8 @@ namespace DelaunayGridGenerator
                         {
                             // One should check node's side again
                             _determinant = MathUtils::trunc(
-                                        MathUtils::calculateIsCoplanarStatusWithClippingCheckNormalized<
+                                        MathUtils::calculateIsCoplanarStatusWithClippingCheck<
+//                                      MathUtils::calculateIsCoplanarStatusWithClippingCheckNormalized<
                                             _WrappedNodeType_,
                                             _nDimensions_,
                                             _NodeIndexIterator,
@@ -542,7 +544,8 @@ namespace DelaunayGridGenerator
                         == DIRECTION_BOUTH)
                 {
                     _DimType_ _determinant = MathUtils::trunc(
-                                MathUtils::calculateIsCoplanarStatusWithClippingCheckNormalized<
+                                MathUtils::calculateIsCoplanarStatusWithClippingCheck<
+//                              MathUtils::calculateIsCoplanarStatusWithClippingCheckNormalized<
                                 _WrappedNodeType_,
                                 _nDimensions_,
                                 _FacetType_,

@@ -100,9 +100,11 @@ void SimpleGLRender3D::keyPressEvent(QKeyEvent *e)
                 QString::number(_ptrToRenderingDelaunayGridGenerator3D->_iteration);
         this->updateGL();
 
+        /// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         if(!_ptrToRenderingDelaunayGridGenerator3D->getElementsList().empty())
         {
         std::cout
+                << _ptrToRenderingDelaunayGridGenerator3D->_iteration << ": "
                 << _ptrToRenderingDelaunayGridGenerator3D->getElementsList().last()->getNodeIndexes()[0] << " "
                 << _ptrToRenderingDelaunayGridGenerator3D->getElementsList().last()->getNodeIndexes()[1] << " "
                 << _ptrToRenderingDelaunayGridGenerator3D->getElementsList().last()->getNodeIndexes()[2] << " "

@@ -87,11 +87,11 @@ namespace DelaunayGridGenerator
             /// Split each facet into 4;
             /// Level 0 -    12 Nodes;
             /// Level 1 -    42 Nodes;
-            /// Level 3 -   162 Nodes;
-            /// Level 4 -   642 Nodes;
-            /// Level 5 -  2562 Nodes;
-            /// Level 6 - 10242 Nodes;
-            /// Level 7 - 40962 Nodes;
+            /// Level 2 -   162 Nodes;
+            /// Level 3 -   642 Nodes;
+            /// Level 4 -  2562 Nodes;
+            /// Level 5 - 10242 Nodes;
+            /// Level 6 - 40962 Nodes;
             /// see http://en.wikipedia.org/wiki/Geodesic_grid
             /// see http://kiwi.atmos.colostate.edu/BUGS/geodesic/
             public : void splitFacets() noexcept
