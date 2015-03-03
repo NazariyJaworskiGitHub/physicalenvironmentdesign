@@ -9,13 +9,14 @@
 #include <cstring>
 #include <cmath>
 #include <stdexcept>
+#include <climits>
 
 #include "realdeclaration.h"
 
 namespace MathUtils
 {
-    template <int _nDimensions_, typename _DimType_ = Real> class Node;
-    template <int _nDimensions_, typename _DimType_ = Real> using Vector =
+    template <int _nDimensions_, typename _DimType_> class Node;
+    template <int _nDimensions_, typename _DimType_> using Vector =
         Node<_nDimensions_, _DimType_>;
 
     typedef Node<1, Real> Node1D;
@@ -67,12 +68,16 @@ namespace MathUtils
         /// \warning Bouth nodes shoulde be at the same dimension.
         Node( const Node &n ) noexcept
         {
-            std::memcpy(_coord,n._coord,_nDimensions_*sizeof(_DimType_));
+            // Can't use memcpy - _DimType_ can be non trivial
+            for(int i=0;i<_nDimensions_;++i)
+                _coord[i] = n._coord[i];
         }
 
         Node &operator =(const Node &target) noexcept
         {
-            std::memcpy(_coord,target._coord,_nDimensions_*sizeof(_DimType_));
+            // Can't use memcpy - _DimType_ can be non trivial
+            for(int i=0;i<_nDimensions_;++i)
+                _coord[i] = target._coord[i];
             return *this;
         }
 
@@ -308,7 +313,8 @@ namespace MathUtils
         /// \param eps Checking precision, default value is \c 1e-8
         /// \return \c true if equal.
         /// \warning Bouth nodes shoulde be at the same dimension.
-        bool fuzzyCompare(const Node &target, _DimType_ const &eps = 1e-8) const noexcept
+        bool fuzzyCompare(const Node &target, _DimType_ const &eps =
+                std::sqrt(std::numeric_limits<_DimType_>::epsilon())) const noexcept
         {
             for(int i=0;i<_nDimensions_;++i)
                 if(std::fabs(_coord[i]-target._coord[i])>eps)
@@ -316,7 +322,7 @@ namespace MathUtils
             return true;
         }
 
-        /// \brief operator == \n See Node::equal(const Node &target, _DimType_ const &eps = 1e-8).
+        /// \brief operator == \n See Node::equal(const Node &target, _DimType_ const &eps).
         /// \param target .
         /// \return \c true if equal.
         bool operator == (const Node &target) const noexcept
@@ -341,7 +347,9 @@ namespace MathUtils
         /// \param[in] target Vector3D, cross product with which should be calculated,
         ///i.e. \f$ v \f$.
         /// \return Pointer to new Vector3D, which equal to cross product.
-        Vector3D crossProduct( const Vector3D &target ) const throw(std::runtime_error)
+        Vector3D crossProduct( const Vector3D &target )
+#ifdef _DEBUG_MODE
+        const throw(std::runtime_error)
         {
             if(_nDimensions_!=3)
                 throw std::runtime_error("Can't compute the cross product not in 3D");
@@ -350,25 +358,44 @@ namespace MathUtils
                     _coord[2]*target.getCoordinates()[0] - _coord[0]*target.getCoordinates()[2],
                     _coord[0]*target.getCoordinates()[1] - _coord[1]*target.getCoordinates()[0]);
         }
+#else
+        const noexcept
+        {
+            return Vector3D(
+                    _coord[1]*target.getCoordinates()[2] - _coord[2]*target.getCoordinates()[1],
+                    _coord[2]*target.getCoordinates()[0] - _coord[0]*target.getCoordinates()[2],
+                    _coord[0]*target.getCoordinates()[1] - _coord[1]*target.getCoordinates()[0]);
+        }
+#endif
 
-        const _DimType_ & operator [](int index) const throw(std::out_of_range)
+        const _DimType_ & operator [](int index)
+#ifdef _DEBUG_MODE
+        const throw(std::out_of_range)
         {
             if(index<0 || index>=_nDimensions_)
                 throw std::out_of_range("Node[i], i out of range");
             else return _coord[index];
         }
+#else
+        const noexcept{return _coord[index];}
+#endif
 
-        _DimType_ & operator [](int index) throw(std::out_of_range)
+        _DimType_ & operator [](int index)
+#ifdef _DEBUG_MODE
+        throw(std::out_of_range)
         {
             if(index<0 || index>=_nDimensions_)
                 throw std::out_of_range("Node[i], i out of range");
             else return _coord[index];
         }
+#else
+        noexcept{return _coord[index];}
+#endif
 
         bool isZero() const noexcept
         {
             for(int i=0; i<_nDimensions_; ++i)
-                if(std::fpclassify(_coord[i])!= FP_ZERO) return false;
+                if(_coord[i] != _DimType_(0.0)) return false;
             return true;
         }
 

@@ -9,8 +9,8 @@
 namespace DelaunayGridGenerator
 {
     /// Wraps Node class adding the self-pointrer storage for O(1) deletion from lists;
-    /// Note, that QList is not the "real" list with O(1) insertion complexyty, when
-    /// QLinkedList is. But index-search for QList is O(1) and for QLinkedList is O(N),
+    /// Note, that DefinedVectorType is not the "real" list with O(1) insertion complexyty, when
+    /// DefinedListType is. But index-search for DefinedVectorType is O(1) and for DefinedListType is O(N),
     /// that's why one need to use wrapped objects with self-pointers to achieve O(1) in
     /// both cases. See help references or
     /// http://qt-project.org/doc/qt-5.1/qtcore/containers.html#algorithmic-complexity
@@ -27,7 +27,7 @@ namespace DelaunayGridGenerator
         //   "... Convert from void* to any pointer type. In this case, it guarantees that if
         //   the void* value was obtained by converting from that same pointer type, the resulting
         //   pointer value is the same..."
-        /// \todo Don't use std::list! (but QLinkedList<void*> still doesn't work :( )
+        /// \todo Don't use std::list! (but DefinedListType<void*> still doesn't work :( )
         /// \todo What if sizeof(void*) != sizeof(_FacetType_*) ?
         /// \todo is static_cast making any additional code in this case?
         private: std::list<void*> _myFacets;
@@ -70,13 +70,13 @@ namespace DelaunayGridGenerator
         {
         }
 
-        /// \todo test this, make shure that you need this
-        void truncToDiscreteSpace(_DimType_ discretizationStep =
-                std::numeric_limits<_DimType_>::epsilon()) noexcept
-        {
-            for(_DimType_ &c : this->_coord)
-                c = MathUtils::trunc<_DimType_>(c,discretizationStep);
-        }
+//        /// \todo test this, make shure that you need this
+//        void truncToDiscreteSpace(_DimType_ discretizationStep =
+//                std::numeric_limits<_DimType_>::epsilon()) noexcept
+//        {
+//            for(_DimType_ &c : this->_coord)
+//                c = MathUtils::trunc<_DimType_>(c,discretizationStep);
+//        }
 
         public : ~NodeWrapper() noexcept {}
     };

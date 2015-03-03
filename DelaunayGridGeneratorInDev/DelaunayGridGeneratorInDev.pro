@@ -5,6 +5,12 @@ CONFIG += no_keywords
 QT += testlib
 QT += opengl
 
+#For Qt containers usage
+#DEFINES += _USE_QT_CONTAINERS
+
+#For debugging
+CONFIG(debug, release|debug):DEFINES += _DEBUG_MODE
+
 #Warning!!! this section is the including of FEM branch,
 #remake project tree to avoid this section!!!
 INCLUDEPATH += E:\Developing\BPSPO\PhysicalEnvironmentDesign\MathUtils

@@ -7,6 +7,7 @@ using namespace MathUtils;
 void Test_Node::test()
 {
     Node3D _n1;
+#ifdef _DEBUG_MODE
     try
     {
         _n1[100] = 5.0;
@@ -16,6 +17,7 @@ void Test_Node::test()
         QVERIFY(e.what());
         std::cout << "Expected error: " << e.what() << '\n';
     }
+#endif
     QVERIFY(_n1[0] == 0.0 && _n1[1] == 0.0 && _n1[2] == 0.0);
     QVERIFY(_n1.isZero());
     _n1[1]=1e-30;
@@ -58,6 +60,7 @@ void Test_Node::test()
     QVERIFY(_n4[0] == 5.0 && _n4[1] == 6.0 && _n4[2] == 7.0);
     _n4 = {3.0,2.0,1.0};
     QVERIFY(_n4[0] == 3.0 && _n4[1] == 2.0 && _n4[2] == 1.0);
+#ifdef _DEBUG_MODE
     try
     {
         Vector4D _v2;
@@ -69,4 +72,5 @@ void Test_Node::test()
         QVERIFY(e.what());
         std::cout << "Expected error: " << e.what() << '\n';
     }
+#endif
 }

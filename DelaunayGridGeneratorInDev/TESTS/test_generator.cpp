@@ -62,18 +62,18 @@ void Test_Generator::test_ElementCreation()
     FEM::TriangularGrid *_myGrid2D =
             _myGenerator2D.constructGrid(&_myPlc2D, true);
 
-    QVERIFY(_myGrid2D->getNodesList()[0] == _myPlc2D.getNodeList()[0] &&
-            _myGrid2D->getNodesList()[1] == _myPlc2D.getNodeList()[1] &&
-            _myGrid2D->getNodesList()[2] == _myPlc2D.getNodeList()[2] &&
-            _myGrid2D->getNodesList()[3] == _myPlc2D.getNodeList()[3] );
+    QVERIFY(*_myGrid2D->getNodesList()[0] == *_myPlc2D.getNodeList()[0] &&
+            *_myGrid2D->getNodesList()[1] == *_myPlc2D.getNodeList()[1] &&
+            *_myGrid2D->getNodesList()[2] == *_myPlc2D.getNodeList()[2] &&
+            *_myGrid2D->getNodesList()[3] == *_myPlc2D.getNodeList()[3] );
 
-    QVERIFY(_myGrid2D->getElementsList()[0].getNodeIndexes()[0] == 0 &&
-            _myGrid2D->getElementsList()[0].getNodeIndexes()[1] == 1 &&
-            _myGrid2D->getElementsList()[0].getNodeIndexes()[2] == 2 );
+    QVERIFY(_myGrid2D->getElementsList()[0]->getNodeIndexes()[0] == 0 &&
+            _myGrid2D->getElementsList()[0]->getNodeIndexes()[1] == 1 &&
+            _myGrid2D->getElementsList()[0]->getNodeIndexes()[2] == 2 );
 
-    QVERIFY(_myGrid2D->getElementsList()[1].getNodeIndexes()[0] == 2 &&
-            _myGrid2D->getElementsList()[1].getNodeIndexes()[1] == 1 &&
-            _myGrid2D->getElementsList()[1].getNodeIndexes()[2] == 3 );
+    QVERIFY(_myGrid2D->getElementsList()[1]->getNodeIndexes()[0] == 2 &&
+            _myGrid2D->getElementsList()[1]->getNodeIndexes()[1] == 1 &&
+            _myGrid2D->getElementsList()[1]->getNodeIndexes()[2] == 3 );
 
     delete (_myGrid2D);
 
@@ -89,21 +89,21 @@ void Test_Generator::test_ElementCreation()
     FEM::TetrahedralGrid *_myGrid3D =
             _myGenerator3D.constructGrid(&_myPlc3D, true);
 
-    QVERIFY(_myGrid3D->getNodesList()[0] == _myPlc3D.getNodeList()[0] &&
-            _myGrid3D->getNodesList()[1] == _myPlc3D.getNodeList()[1] &&
-            _myGrid3D->getNodesList()[2] == _myPlc3D.getNodeList()[2] &&
-            _myGrid3D->getNodesList()[3] == _myPlc3D.getNodeList()[3] &&
-            _myGrid3D->getNodesList()[4] == _myPlc3D.getNodeList()[4]);
+    QVERIFY(*_myGrid3D->getNodesList()[0] == *_myPlc3D.getNodeList()[0] &&
+            *_myGrid3D->getNodesList()[1] == *_myPlc3D.getNodeList()[1] &&
+            *_myGrid3D->getNodesList()[2] == *_myPlc3D.getNodeList()[2] &&
+            *_myGrid3D->getNodesList()[3] == *_myPlc3D.getNodeList()[3] &&
+            *_myGrid3D->getNodesList()[4] == *_myPlc3D.getNodeList()[4]);
 
-    QVERIFY(_myGrid3D->getElementsList()[0].getNodeIndexes()[0] == 0 &&
-            _myGrid3D->getElementsList()[0].getNodeIndexes()[1] == 1 &&
-            _myGrid3D->getElementsList()[0].getNodeIndexes()[2] == 2 &&
-            _myGrid3D->getElementsList()[0].getNodeIndexes()[3] == 3 );
+    QVERIFY(_myGrid3D->getElementsList()[0]->getNodeIndexes()[0] == 0 &&
+            _myGrid3D->getElementsList()[0]->getNodeIndexes()[1] == 1 &&
+            _myGrid3D->getElementsList()[0]->getNodeIndexes()[2] == 2 &&
+            _myGrid3D->getElementsList()[0]->getNodeIndexes()[3] == 3 );
 
-    QVERIFY(_myGrid3D->getElementsList()[1].getNodeIndexes()[0] == 1 &&
-            _myGrid3D->getElementsList()[1].getNodeIndexes()[1] == 2 &&
-            _myGrid3D->getElementsList()[1].getNodeIndexes()[2] == 3 &&
-            _myGrid3D->getElementsList()[1].getNodeIndexes()[3] == 4 );
+    QVERIFY(_myGrid3D->getElementsList()[1]->getNodeIndexes()[0] == 1 &&
+            _myGrid3D->getElementsList()[1]->getNodeIndexes()[1] == 2 &&
+            _myGrid3D->getElementsList()[1]->getNodeIndexes()[2] == 3 &&
+            _myGrid3D->getElementsList()[1]->getNodeIndexes()[3] == 4 );
 
     delete (_myGrid3D);
 }
@@ -124,20 +124,20 @@ void Test_Generator::test_DelaunayCriteriaNodeOrder()
     FEM::TetrahedralGrid *_myGrid3D =
             _myGenerator3D.constructGrid(&_myPlc3D, true);
 
-    QVERIFY(_myGrid3D->getElementsList()[0].getNodeIndexes()[0] == 2 &&
-            _myGrid3D->getElementsList()[0].getNodeIndexes()[1] == 0 &&
-            _myGrid3D->getElementsList()[0].getNodeIndexes()[2] == 5 &&
-            _myGrid3D->getElementsList()[0].getNodeIndexes()[3] == 3 );
+    QVERIFY(_myGrid3D->getElementsList()[0]->getNodeIndexes()[0] == 2 &&
+            _myGrid3D->getElementsList()[0]->getNodeIndexes()[1] == 0 &&
+            _myGrid3D->getElementsList()[0]->getNodeIndexes()[2] == 5 &&
+            _myGrid3D->getElementsList()[0]->getNodeIndexes()[3] == 3 );
 
-    QVERIFY(_myGrid3D->getElementsList()[1].getNodeIndexes()[0] == 5 &&
-            _myGrid3D->getElementsList()[1].getNodeIndexes()[1] == 2 &&
-            _myGrid3D->getElementsList()[1].getNodeIndexes()[2] == 3 &&
-            _myGrid3D->getElementsList()[1].getNodeIndexes()[3] == 4 );
+    QVERIFY(_myGrid3D->getElementsList()[1]->getNodeIndexes()[0] == 5 &&
+            _myGrid3D->getElementsList()[1]->getNodeIndexes()[1] == 2 &&
+            _myGrid3D->getElementsList()[1]->getNodeIndexes()[2] == 3 &&
+            _myGrid3D->getElementsList()[1]->getNodeIndexes()[3] == 4 );
 
-    QVERIFY(_myGrid3D->getElementsList()[2].getNodeIndexes()[0] == 5 &&
-            _myGrid3D->getElementsList()[2].getNodeIndexes()[1] == 2 &&
-            _myGrid3D->getElementsList()[2].getNodeIndexes()[2] == 4 &&
-            _myGrid3D->getElementsList()[2].getNodeIndexes()[3] == 1 );
+    QVERIFY(_myGrid3D->getElementsList()[2]->getNodeIndexes()[0] == 5 &&
+            _myGrid3D->getElementsList()[2]->getNodeIndexes()[1] == 2 &&
+            _myGrid3D->getElementsList()[2]->getNodeIndexes()[2] == 4 &&
+            _myGrid3D->getElementsList()[2]->getNodeIndexes()[3] == 1 );
 
     delete (_myGrid3D);
 }
