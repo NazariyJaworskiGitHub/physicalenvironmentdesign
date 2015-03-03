@@ -275,6 +275,7 @@ void Test_MathUtils::test_calculateIsSamePlaneStatusByMatrixRank()
     Node3D _simpleNodes3D[] = {{0,0,0}, {1,0,0}, {0,2,0}, {0,0,3}};
     bool _result;
 
+#ifdef _DEBUG_MODE
     try
     {
         _result = calculateIsCoplanarStatusByMatrixRank<Node3D,3>(_simpleNodes3D,1);
@@ -284,6 +285,7 @@ void Test_MathUtils::test_calculateIsSamePlaneStatusByMatrixRank()
         QVERIFY(e.what());
         std::cout << "Expected error: " << e.what() << '\n';
     }
+#endif
     _result = calculateIsCoplanarStatusByMatrixRank<Node3D,3>(_simpleNodes3D,2);
     QVERIFY(!_result);
     _result = calculateIsCoplanarStatusByMatrixRank<Node3D,3>(_simpleNodes3D,3);
@@ -291,6 +293,7 @@ void Test_MathUtils::test_calculateIsSamePlaneStatusByMatrixRank()
     _result = calculateIsCoplanarStatusByMatrixRank<Node3D,3>(_simpleNodes3D,4);
     QVERIFY(!_result);
     Node3D _simpleNodes3D_2[] = {{1,2,3}, {1,2,3}, {2,4,6}, {4,8,12}};
+#ifdef _DEBUG_MODE
     try
     {
         _result = calculateIsCoplanarStatusByMatrixRank<Node3D,3>(_simpleNodes3D_2,0);
@@ -300,6 +303,7 @@ void Test_MathUtils::test_calculateIsSamePlaneStatusByMatrixRank()
         QVERIFY(e.what());
         std::cout << "Expected error: " << e.what() << '\n';
     }
+#endif
     _result = calculateIsCoplanarStatusByMatrixRank<Node3D,3>(_simpleNodes3D_2,2);
     QVERIFY(_result);
     _result = calculateIsCoplanarStatusByMatrixRank<Node3D,3>(_simpleNodes3D_2,3);
@@ -532,6 +536,7 @@ void Test_MathUtils::test_calculateSubsimplexSubsimplexIntersection()
         {0.5, 0.0746746, 0.5},
         {0.368567, 0.155905, 0.712663},
         {0.155905, 0.712663, 0.631433}};
+/// \todo
     _result = calculateSubsimplexSubsimplexIntersection<Node3D, 3>(
                 _nodes3DA8, _nodes3DB8);
 //    QVERIFY(!_result);

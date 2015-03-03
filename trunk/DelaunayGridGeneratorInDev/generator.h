@@ -3,8 +3,8 @@
 
 #include <stdexcept>
 #include <limits>
-#include <QList>
-#include <QLinkedList>
+
+#include "containerdeclaration.h"
 
 #include "datamanager.h"
 #include "grid.h"
@@ -18,7 +18,7 @@ namespace DelaunayGridGenerator
     /// Before using this, make shure that
     /// sizeof(_FacetType_*) == sizeof(void*)) at your platform;
     /// Note, that QList is not the "real" list with O(1) insertion complexyty, when
-    /// QLinkedList is. But index-search for QList is O(1) and for QLinkedList is O(N),
+    /// QLinkedList is. But index-search for QList is O(1) and for DefinedListType is O(N),
     /// that's why one need to use wrapped objects with self-pointers to achieve O(1) in
     /// both cases. See help references or
     /// http://qt-project.org/doc/qt-5.1/qtcore/containers.html#algorithmic-complexity
@@ -36,40 +36,40 @@ namespace DelaunayGridGenerator
     {
         private: _DimType_ _DiscretizationStep;
 
-        private: QList<_WrappedNodeType_>           _nodesList;
+        private: DefinedVectorType<_WrappedNodeType_*>  _nodesList;
 
         // "real" lists of manipulated object
-        private: QLinkedList<_WrappedNodeType_*>    _aliveNodesPtrs;
-        private: QLinkedList<_WrappedNodeType_*>    _deadNodesPtrs;
-        private: QLinkedList<_FacetType_*>          _aliveFacetsPtrs;
-        private: QLinkedList<_FacetType_*>          _deadFacetsPtrs;
-        private: QLinkedList<_WrappedElementType_*> _elementsPtrs;
+        private: DefinedListType<_WrappedNodeType_*>    _aliveNodesPtrs;
+        private: DefinedListType<_WrappedNodeType_*>    _deadNodesPtrs;
+        private: DefinedListType<_FacetType_*>          _aliveFacetsPtrs;
+        private: DefinedListType<_FacetType_*>          _deadFacetsPtrs;
+        private: DefinedListType<_WrappedElementType_*> _elementsPtrs;
 
         private: _ElementsTreeDataManagerType_ *_ptrToElementsDataManager = nullptr;
 
         private: const _PlcType_ *_ptrToPlc = nullptr;
 
-        public : const QList<_WrappedNodeType_> & getNodeList() const noexcept
+        public : const DefinedVectorType<_WrappedNodeType_*> & getNodeList() const noexcept
         {
             return _nodesList;
         }
-        public : const QLinkedList<_WrappedNodeType_*> & getAliveNodeList() const noexcept
+        public : const DefinedListType<_WrappedNodeType_*> & getAliveNodeList() const noexcept
         {
             return _aliveNodesPtrs;
         }
-        public : const QLinkedList<_WrappedNodeType_*> & getDeadNodeList() const noexcept
+        public : const DefinedListType<_WrappedNodeType_*> & getDeadNodeList() const noexcept
         {
             return _deadNodesPtrs;
         }
-        public : const QLinkedList<_FacetType_*> & getAliveFacetsList() const noexcept
+        public : const DefinedListType<_FacetType_*> & getAliveFacetsList() const noexcept
         {
             return _aliveFacetsPtrs;
         }
-        public : const QLinkedList<_FacetType_*> & getDeadFacetsList() const noexcept
+        public : const DefinedListType<_FacetType_*> & getDeadFacetsList() const noexcept
         {
             return _deadFacetsPtrs;
         }
-        public : const QLinkedList<_WrappedElementType_*> & getElementsList() const noexcept
+        public : const DefinedListType<_WrappedElementType_*> & getElementsList() const noexcept
         {
             return _elementsPtrs;
         }
@@ -79,8 +79,9 @@ namespace DelaunayGridGenerator
             int _index = 0;
             for(auto i:_ptrToPlc->getNodeList())
             {
-                _nodesList.append(_WrappedNodeType_(i, _index));
-                _nodesList.back().appendToAliveList(_aliveNodesPtrs);
+                // Don't forget to delete
+                _nodesList.push_back(new _WrappedNodeType_(*i, _index));
+                _nodesList.back()->appendToAliveList(_aliveNodesPtrs);
                 ++_index;
             }
 
@@ -92,7 +93,7 @@ namespace DelaunayGridGenerator
             const int *ptrToIndexses;
             const _WrappedNodeType_ &operator [] (int index) const noexcept
             {
-                return _ref._nodesList[ptrToIndexses[index]];
+                return *_ref._nodesList[ptrToIndexses[index]];
             }
         };
 
@@ -104,7 +105,7 @@ namespace DelaunayGridGenerator
             for(int j=0, k=0; j<_nDimensions_; ++j, ++k)
             {
                 _DimType_ _dist = MathUtils::trunc(
-                            _nodesList[targetFacet->getNodeIndexes()[j]].distance(sphereCenter),
+                            _nodesList[targetFacet->getNodeIndexes()[j]]->distance(sphereCenter),
                             _DiscretizationStep);
                 if(_dist > sphereRadius)
                     return false;
@@ -165,7 +166,7 @@ namespace DelaunayGridGenerator
 
             // Get first alive node;
             /// \todo don't use indexes, remake all to pointers;
-            _facetNodesIndexes[0] = _nodesList.first().getGlobalIndex();
+            _facetNodesIndexes[0] = _nodesList.front()->getGlobalIndex();
 
             // Get next correct alive nodes;
             for(int i=1; i<_nDimensions_; ++i)
@@ -182,10 +183,10 @@ namespace DelaunayGridGenerator
                         ++_curAliveNode;
                         // ignore already used nodes
                         if(_isAlreadyUsedNode(
-                                  (*_curAliveNode).getGlobalIndex(),_facetNodesIndexes,i))
+                                  (*_curAliveNode)->getGlobalIndex(),_facetNodesIndexes,i))
                             continue;
 
-                        _facetNodesIndexes[i] = (*_curAliveNode).getGlobalIndex();
+                        _facetNodesIndexes[i] = (*_curAliveNode)->getGlobalIndex();
                         _isDependent = MathUtils::calculateIsCoplanarStatusByMatrixRank<
                                 _WrappedNodeType_,
                                 _nDimensions_,
@@ -197,7 +198,7 @@ namespace DelaunayGridGenerator
                 else // They can't be equal by default!
                 {
                     ++_curAliveNode;    // It should be second node
-                    _facetNodesIndexes[i] = (*_curAliveNode).getGlobalIndex();
+                    _facetNodesIndexes[i] = (*_curAliveNode)->getGlobalIndex();
                 }
 
                 // Test Delaunay criteria for rest of the nodes
@@ -224,14 +225,14 @@ namespace DelaunayGridGenerator
                     {
                         // ignore already used nodes
                         if(_isAlreadyUsedNode(
-                                (*_curAliveNode).getGlobalIndex(),_facetNodesIndexes,i))
+                                (*_curAliveNode)->getGlobalIndex(),_facetNodesIndexes,i))
                             continue;
                         _DimType_ _dist = MathUtils::trunc(
-                                    (*_curAliveNode).distance(_sphereCenter),
+                                    (*_curAliveNode)->distance(_sphereCenter),
                                     _DiscretizationStep);
                         if(_dist < _sphereRadius)
                         {
-                            _facetNodesIndexes[i] = (*_curAliveNode).getGlobalIndex();
+                            _facetNodesIndexes[i] = (*_curAliveNode)->getGlobalIndex();
                             ++_curAliveNode;
                             break;
                         }
@@ -260,7 +261,7 @@ namespace DelaunayGridGenerator
             int _elementNodesIndexes[_nDimensions_+1];
             memcpy(_elementNodesIndexes,curAliveFacet->getNodeIndexes(),_nDimensions_*sizeof(int));
             _NodeIndexIterator _indexIterator = {*this,_elementNodesIndexes};
-            QLinkedList<_WrappedNodeType_*> _sphereLocatedNodes;
+            DefinedListType<_WrappedNodeType_*> _sphereLocatedNodes;
             _WrappedNodeType_ _sphereCenter;
             _DimType_ _sphereRadius;
             bool _isMetastructure = true;
@@ -319,7 +320,7 @@ namespace DelaunayGridGenerator
                         _DimType_>(_indexIterator, &_sphereRadius);
                 _sphereRadius = MathUtils::trunc(_sphereRadius,_DiscretizationStep);
                 _sphereLocatedNodes.clear();
-                _sphereLocatedNodes.append(*_curAliveNode);
+                _sphereLocatedNodes.push_back(*_curAliveNode);
 
                 for( ++_curAliveNode; _curAliveNode != _aliveNodesPtrs.end(); ++_curAliveNode)
                 {
@@ -356,7 +357,7 @@ namespace DelaunayGridGenerator
                                      == DIRECTION_LEFT) ||
                                     (curAliveFacet->getFrontConstructionDirection()
                                      == DIRECTION_BOUTH))
-                                _sphereLocatedNodes.append(*_curAliveNode);
+                                _sphereLocatedNodes.push_back(*_curAliveNode);
                         }
                         else break;
                     }
@@ -580,7 +581,7 @@ namespace DelaunayGridGenerator
             }
 
             newElement->setFacets(_newFacets);
-            _elementsPtrs.append(newElement);
+            _elementsPtrs.push_back(newElement);
         }
 
         /// \todo use just for inDev testing, delete later
@@ -605,8 +606,8 @@ namespace DelaunayGridGenerator
                 }
                 else
                 {
-                    _WrappedElementType_ *_newElement = _constructElement(_aliveFacetsPtrs.first());
-                    _updateListsAndStates(_newElement,_aliveFacetsPtrs.first());
+                    _WrappedElementType_ *_newElement = _constructElement(_aliveFacetsPtrs.front());
+                    _updateListsAndStates(_newElement,_aliveFacetsPtrs.front());
                 }
             }
         }
@@ -677,8 +678,8 @@ namespace DelaunayGridGenerator
             // while exist alive facets, create new elements
             while(!_aliveFacetsPtrs.empty())
             {
-                _WrappedElementType_ *_newElement = _constructElement(_aliveFacetsPtrs.first());
-                _updateListsAndStates(_newElement,_aliveFacetsPtrs.first());
+                _WrappedElementType_ *_newElement = _constructElement(_aliveFacetsPtrs.front());
+                _updateListsAndStates(_newElement,_aliveFacetsPtrs.front());
             }
 
             // Create new Grid object
@@ -689,9 +690,12 @@ namespace DelaunayGridGenerator
             auto _node = _nodesList.begin();
             while(_node != _nodesList.end())
             {
-                _newGrid->createNode(*_node);
+                _newGrid->createNode(**_node);
                 if(clearWhenDone)
+                {
+                    delete (*_node);
                     _node = _nodesList.erase(_node);
+                }
                 else ++_node;
             }
 
@@ -744,6 +748,9 @@ namespace DelaunayGridGenerator
 
             _aliveNodesPtrs.clear();
             _deadNodesPtrs.clear();
+
+            for(auto _node : _nodesList)
+                delete(_node);
             _nodesList.clear();
 
             if(_ptrToElementsDataManager)

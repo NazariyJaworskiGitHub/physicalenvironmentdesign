@@ -2,7 +2,7 @@
 #define SIMPLEXELEMENT_H
 
 #include <Eigen/Dense>
-#include "finiteelement.h"
+#include <MathUtils>
 
 namespace FEM
 {
@@ -11,17 +11,17 @@ namespace FEM
               int _nDimensions_,
               typename _DimType_ = MathUtils::Real>
     class SimplexElement :
-            public FiniteElement<_NodeType_, _nDimensions_+1, _nDimensions_, _DimType_>
+            public MathUtils::FiniteElement<_NodeType_, _nDimensions_+1, _nDimensions_, _DimType_>
     {
         public : SimplexElement(const SimplexElement &target) noexcept:
-            FiniteElement<_NodeType_, _nDimensions_+1, _nDimensions_, _DimType_>(target)
+            MathUtils::FiniteElement<_NodeType_, _nDimensions_+1, _nDimensions_, _DimType_>(target)
         {
         }
 
         public : SimplexElement(
-            QList<_NodeType_> *ptrToNodesList,
+            DefinedVectorType<_NodeType_*> *ptrToNodesList,
             const int *_nodeIndexesPtr) throw(std::out_of_range):
-            FiniteElement<_NodeType_, _nDimensions_+1, _nDimensions_, _DimType_>(
+            MathUtils::FiniteElement<_NodeType_, _nDimensions_+1, _nDimensions_, _DimType_>(
                 ptrToNodesList,_nodeIndexesPtr)
         {
         }
@@ -33,8 +33,8 @@ namespace FEM
             const _NodeType_ & operator [](int index) const noexcept
             {
                 if(index >= excludedNodeIndex)
-                    return (*ref._ptrToNodesList)[ref._myNodeIndexes[index+1]];
-                else return (*ref._ptrToNodesList)[ref._myNodeIndexes[index]];
+                    return ref[index+1];
+                else return ref[index];
             }
         };
 
@@ -157,7 +157,7 @@ namespace FEM
             {
                 _C(i,0) = _DimType_(1.0);
                 for(int j=0; j< _nDimensions_; ++j)
-                   _C(i,j+1) = (*(this->_ptrToNodesList))[this->_myNodeIndexes[i]][j];
+                   _C(i,j+1) = (*this)[i][j];
             }
 
             // calculate determinant of [C]
@@ -192,7 +192,7 @@ namespace FEM
                             _nDimensions_,
                             SimplexElement,
                             _DimType_>
-                    ((*this->_ptrToNodesList)[this->_myNodeIndexes[_nDimensions_]],*this);
+                    ((*this)[_nDimensions_],*this);
             if(std::pow(-1,_nDimensions_)*_determinant > _DimType_(0.0))
             {
                 int _tmp = this->_myNodeIndexes[0];

@@ -5,6 +5,12 @@ CONFIG += no_keywords
 
 QT += testlib
 
+#For Qt containers usage
+#DEFINES += _USE_QT_CONTAINERS
+
+#For debugging
+CONFIG(debug, release|debug):DEFINES += _DEBUG_MODE
+
 #INCLUDEPATH += E:\ViennaCL-1.4.2\
 
 #Warning!!! this section is the including of FEM branch,
@@ -49,26 +55,24 @@ QMAKE_CXXFLAGS_RELEASE += -O2 \ #Equivalent to -O3 (MinGW 4.8.0)
 SOURCES += main.cpp \
     boundarycondition.cpp \
     simulationobject.cpp \
-    finiteelement.cpp \
     domain.cpp \
     beam.cpp \
-    TESTS/test_finiteelement.cpp \
     grid.cpp \
     phase.cpp \
     cuboid.cpp \
     TESTS/test_beam.cpp \
-    simplexelement.cpp
+    simplexelement.cpp \
+    TESTS/test_simplexelement.cpp
 
 HEADERS += \
     boundarycondition.h \
     simulationobject.h \
-    finiteelement.h \
     domain.h \
     beam.h \
-    TESTS/test_finiteelement.h \
     TESTS/tests_runner.h \
     grid.h \
     phase.h \
     cuboid.h \
     TESTS/test_beam.h \
-    simplexelement.h
+    simplexelement.h \
+    TESTS/test_simplexelement.h

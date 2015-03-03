@@ -92,9 +92,9 @@ void SimpleGLRender2D::keyPressEvent(QKeyEvent *e)
         {
         std::cout
                 << _ptrToRenderingDelaunayGridGenerator2D->_iteration << ": "
-                << _ptrToRenderingDelaunayGridGenerator2D->getElementsList().last()->getNodeIndexes()[0] << " "
-                << _ptrToRenderingDelaunayGridGenerator2D->getElementsList().last()->getNodeIndexes()[1] << " "
-                << _ptrToRenderingDelaunayGridGenerator2D->getElementsList().last()->getNodeIndexes()[2] << "\n";
+                << _ptrToRenderingDelaunayGridGenerator2D->getElementsList().back()->getNodeIndexes()[0] << " "
+                << _ptrToRenderingDelaunayGridGenerator2D->getElementsList().back()->getNodeIndexes()[1] << " "
+                << _ptrToRenderingDelaunayGridGenerator2D->getElementsList().back()->getNodeIndexes()[2] << "\n";
         }
     }
     /// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -121,8 +121,7 @@ void SimpleGLRender2D::_drawPlcNodes() throw(std::runtime_error)
         glPointSize(2);
         glColor4d(_PlcNodesColor[0], _PlcNodesColor[1], _PlcNodesColor[2], _PlcNodesColor[3]);
         glBegin(GL_POINTS);
-        for(auto _i = _ptrToRenderingPlc2D->getNodeList().begin();
-            _i != _ptrToRenderingPlc2D->getNodeList().end(); ++_i)
+        for(auto _i : _ptrToRenderingPlc2D->getNodeList())
             glVertex2d((*_i)[0], (*_i)[1]);
         glEnd();
         glPointSize(1);
@@ -148,8 +147,7 @@ void SimpleGLRender2D::_drawPlcFacets() throw(std::runtime_error)
                 _PlcFacetsColor[3]);
         glDisable(GL_LIGHTING);
         glBegin(GL_LINES);
-        for(auto _i = _ptrToRenderingPlc2D->getFacetList().begin();
-            _i != _ptrToRenderingPlc2D->getFacetList().end(); ++_i)
+        for(auto _i : _ptrToRenderingPlc2D->getFacetList())
         {
             glVertex2d((*_i)[0][0], (*_i)[0][1]);
             glVertex2d((*_i)[1][0], (*_i)[1][1]);
@@ -169,8 +167,7 @@ void SimpleGLRender2D::_drawDelaunayGridGeneratorNodes() throw(std::runtime_erro
         glDisable(GL_LIGHTING);
         glPointSize(3);
         glBegin(GL_POINTS);
-        for(auto _i = _ptrToRenderingDelaunayGridGenerator2D->getNodeList().begin();
-            _i != _ptrToRenderingDelaunayGridGenerator2D->getNodeList().end(); ++_i)
+        for(auto _i : _ptrToRenderingDelaunayGridGenerator2D->getNodeList())
         {
             if((*_i).getState() == DelaunayGridGenerator::WrappedNode2D::STATE_ALIVE)
                 glColor4d(
@@ -195,8 +192,7 @@ void SimpleGLRender2D::_drawDelaunayGridGeneratorNodes() throw(std::runtime_erro
                 _TextColor[2],
                 _TextColor[3]);
         unsigned _n = 0;
-        for(auto _i = _ptrToRenderingDelaunayGridGenerator2D->getNodeList().begin();
-            _i != _ptrToRenderingDelaunayGridGenerator2D->getNodeList().end(); ++_i)
+        for(auto _i : _ptrToRenderingDelaunayGridGenerator2D->getNodeList())
         {
             this->renderText((*_i)[0], (*_i)[1], 0.0, QString::number(_n));
             ++_n;
@@ -246,10 +242,9 @@ void SimpleGLRender2D::_drawDelaunayGridGeneratorFacets() throw(std::runtime_err
     {
 
         glBegin(GL_LINES);
-        for(auto _i = _ptrToRenderingDelaunayGridGenerator2D->getDeadFacetsList().begin();
-            _i != _ptrToRenderingDelaunayGridGenerator2D->getDeadFacetsList().end(); ++_i)
+        for(auto _i : _ptrToRenderingDelaunayGridGenerator2D->getDeadFacetsList())
         {
-            if((**_i).isMetastructure())
+            if((*_i).isMetastructure())
                 glColor4d(
                         _GeneratorMetastructureFacetColor[0],
                         _GeneratorMetastructureFacetColor[1],
@@ -261,8 +256,8 @@ void SimpleGLRender2D::_drawDelaunayGridGeneratorFacets() throw(std::runtime_err
                         _GeneratorDeadFacetsColor[1],
                         _GeneratorDeadFacetsColor[2],
                         _GeneratorDeadFacetsColor[3]);
-            glVertex2d((**_i)[0][0], (**_i)[0][1]);
-            glVertex2d((**_i)[1][0], (**_i)[1][1]);
+            glVertex2d((*_i)[0][0], (*_i)[0][1]);
+            glVertex2d((*_i)[1][0], (*_i)[1][1]);
         }
         glEnd();
     }

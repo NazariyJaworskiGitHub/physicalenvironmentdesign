@@ -2,8 +2,8 @@
 #define PIECEWISELINEARCOMPLEX_H
 
 /// \warning this includes FEM branch, remake project tree to avoid this
-#include "finiteelement.h"
 #include <MathUtils>
+#include "geometricobjects.h"
 
 namespace DelaunayGridGenerator
 {
@@ -17,10 +17,20 @@ namespace DelaunayGridGenerator
         typename _DimType_ = MathUtils::Real>
     class PiecewiseLinearComplex
     {
-        private: QList<_NodeType_> _nodeList;
-        private: QList<_SegmentType_> _segmentList; // Note, it is only for dimensions > 2
-        private: QList<_FacetType_> _facetList;     // Note, in 2D any segment is facet
+        /// Piecewise objects
+        private: DefinedVectorType<_NodeType_*> _nodeList;
+        // Each segment is a finite element with two nodes
+        private: DefinedVectorType<_SegmentType_*> _segmentList; // Note, it is only for dimensions > 2
+        // Each facet is a finite element with _nDimensions_ nodes
+        private: DefinedVectorType<_FacetType_*> _facetList;     // Note, in 2D any segment is facet
 
+        /// Not piecewise objects
+        private: DefinedVectorType<GeometricObjects::Sphere_t<_NodeType_, _DimType_>*> _sphereList;
+        public : const DefinedVectorType<GeometricObjects::Sphere_t<_NodeType_, _DimType_>*> &
+            getSphereList() const noexcept{
+            return _sphereList;}
+
+        // Bounding box
         private: _NodeType_ _maxCoordinates;
         private: _NodeType_ _minCoordinates;
 
@@ -54,91 +64,111 @@ namespace DelaunayGridGenerator
         {
             _maxCoordinates = _nodeList[0];
             _minCoordinates = _nodeList[0];
-            for(_NodeType_ i : _nodeList)
-                _updateMaxAndMinCoordinates(i);
+            for(auto i : _nodeList)
+                _updateMaxAndMinCoordinates(*i);
         }
 
         /// Note, it updates min and max coordinates
         /// \todo code dublicate with FEM:Grid, need merege
         public : _NodeType_ &createNode(const _NodeType_ &target)
         {
-            /// \todo it makes, avoid that!
-            _nodeList.append(_NodeType_(target));
+            _nodeList.push_back(new _NodeType_(target));
             _updateMaxAndMinCoordinates(target);
-            return _nodeList.last();
+            return *_nodeList.back();
         }
-        public : const QList<_NodeType_> & getNodeList() const noexcept
-        {
-            return _nodeList;
-        }
-        public : _NodeType_ & getNode(int nodeIndex) throw (std::out_of_range)
+        public : _NodeType_ & getNode(int nodeIndex)
+#ifdef _DEBUG_MODE
+        throw (std::out_of_range)
         {
             if(nodeIndex>=0 && nodeIndex < _nodeList.size())
             {
-                return _nodeList[nodeIndex];
+                return *_nodeList[nodeIndex];
             }
             else throw std::out_of_range("PiecewiseLinearComplex::getNode(), "
                                          "nodeIndex out of range");
         }
+#else
+        noexcept{return *_nodeList[nodeIndex];}
+#endif
+        public : const DefinedVectorType<_NodeType_*> & getNodeList() const noexcept{
+            return _nodeList;}
 
         public : _SegmentType_ &createSegment(int indexA, int indexB)
             throw(std::out_of_range)
         {
             int _nodeIndexes[] = {indexA, indexB};
-            _segmentList.append(_SegmentType_(&_nodeList,_nodeIndexes));
-            return _segmentList.last();
+            _segmentList.push_back(new _SegmentType_(&_nodeList,_nodeIndexes));
+            return *_segmentList.back();
         }
         public : _SegmentType_ &createSegment(const int *nodeIndexesPtr)
             throw(std::out_of_range)
         {
-            _segmentList.append(_SegmentType_(&_nodeList,nodeIndexesPtr));
-            return _segmentList.last();
+            _segmentList.push_back(new _SegmentType_(&_nodeList,nodeIndexesPtr));
+            return *_segmentList.back();
         }
-        public : const QList<_SegmentType_> & getSegmentList() const noexcept
-        {
-            return _segmentList;
-        }
-        public : _SegmentType_ & getSegment(int segmentIndex) throw (std::out_of_range)
+        public : const DefinedVectorType<_SegmentType_*> & getSegmentList() const noexcept{
+            return _segmentList;}
+        public : _SegmentType_ & getSegment(int segmentIndex)
+#ifdef _DEBUG_MODE
+        throw (std::out_of_range)
         {
             if(segmentIndex>=0 && segmentIndex < _segmentList.size())
             {
-                return _segmentList[segmentIndex];
+                return *_segmentList[segmentIndex];
             }
             else throw std::out_of_range("PiecewiseLinearComplex::getSegment(), "
                                          "nodeIndex out of range");
         }
-
+#else
+        noexcept{return *_segmentList[segmentIndex];}
+#endif
         public : _FacetType_ &createFacet(const int *nodeIndexesPtr)
             throw(std::out_of_range)
         {
-            _facetList.append(_FacetType_(&_nodeList,nodeIndexesPtr));
-            return _facetList.last();
+            _facetList.push_back(new _FacetType_(&_nodeList,nodeIndexesPtr));
+            return *_facetList.back();
         }
-        public : const QList<_FacetType_> & getFacetList() const noexcept
-        {
-            return _facetList;
-        }
-        public : _FacetType_ & getFacet(int facetIndex) throw (std::out_of_range)
+        public : const DefinedVectorType<_FacetType_*> & getFacetList() const noexcept{
+            return _facetList;}
+        public : _FacetType_ & getFacet(int facetIndex)
+#ifdef _DEBUG_MODE
+        throw (std::out_of_range)
         {
             if(facetIndex>=0 && facetIndex < _facetList.size())
             {
-                return _facetList[facetIndex];
+                return *_facetList[facetIndex];
             }
             else throw std::out_of_range("PiecewiseLinearComplex::getFacet(), "
                                          "nodeIndex out of range");
         }
+#else
+        noexcept{return *_facetList[facetIndex];}
+#endif
 
         public: PiecewiseLinearComplex(){}
-        public: ~PiecewiseLinearComplex(){}
+        public: ~PiecewiseLinearComplex()
+        {
+            for(auto _i : _nodeList)
+                delete(_i);
+            _nodeList.clear();
+
+            for(auto _i : _segmentList)
+                delete(_i);
+            _segmentList.clear();
+
+            for(auto _i : _facetList)
+                delete(_i);
+            _facetList.clear();
+        }
     };
 
     typedef PiecewiseLinearComplex<
         MathUtils::Node2D,
-        FEM::FiniteElement<
+        MathUtils::FiniteElement<
             MathUtils::Node2D,
             2,
             2>,
-        FEM::FiniteElement<
+        MathUtils::FiniteElement<
             MathUtils::Node2D,
             2,
             2>,
@@ -146,11 +176,11 @@ namespace DelaunayGridGenerator
 
     typedef PiecewiseLinearComplex<
         MathUtils::Node3D,
-        FEM::FiniteElement<
+        MathUtils::FiniteElement<
             MathUtils::Node3D,
             2,
             3>,
-        FEM::FiniteElement<
+        MathUtils::FiniteElement<
             MathUtils::Node3D,
             3,
             3>,

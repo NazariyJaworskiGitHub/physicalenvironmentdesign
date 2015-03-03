@@ -4,7 +4,13 @@ CONFIG += no_keywords
 
 QT += testlib
 
-# For dr.memory debug
+#For Qt containers usage
+#DEFINES += _USE_QT_CONTAINERS
+
+#For debugging
+CONFIG(debug, release|debug):DEFINES += _DEBUG_MODE
+
+#For dr.memory debug
 QMAKE_CXXFLAGS_DEBUG += -ggdb
 
 #Optimisation flags
@@ -43,7 +49,8 @@ SOURCES += main.cpp \
     TESTS/test_precision.cpp \
     TESTS/test_node.cpp \
     TESTS/test_mathutils.cpp \
-    TESTS/test_extendedreal.cpp
+    TESTS/test_extendedreal.cpp \
+    TESTS/test_finiteelement.cpp
 
 HEADERS += \
     MathUtils \
@@ -67,5 +74,8 @@ HEADERS += \
     TESTS/test_precision.h \
     TESTS/test_node.h \
     TESTS/test_mathutils.h \
-    TESTS/test_extendedreal.h
+    TESTS/test_extendedreal.h \
+    finiteelement.h \
+    TESTS/test_finiteelement.h \
+    containerdeclaration.h
 

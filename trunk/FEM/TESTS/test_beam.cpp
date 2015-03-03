@@ -64,7 +64,7 @@ void Test_Beam::test()
     // Matrix assembling
     myBeam.setDomain(0,myBeam.getGrid(0).constructDomainEllipticEquation());
 
-    QList<QList<MathUtils::Real>> _coorectMatrix = {
+    DefinedVectorType<DefinedVectorType<MathUtils::Real>> _coorectMatrix = {
             { 1.0,  0.0,  0.0,  0.0,  0.0},
             { 0.0, 20.0,-10.0,  0.0,  0.0},
             { 0.0,-10.0, 20.0,-10.0,  0.0},
@@ -84,7 +84,7 @@ void Test_Beam::test()
     std::cout << "Max relative error: " << _maxError <<"%\n";
     QVERIFY (_maxError < 1e-8);
 
-    QList<MathUtils::Real> _correctVector = {25.0, 250.0, 0.0, 0.0, 500.0};
+    DefinedVectorType<MathUtils::Real> _correctVector = {25.0, 250.0, 0.0, 0.0, 500.0};
     _maxError = 0.0;
     for(int i=0; i<NUMBER_OF_ELEMENTS+1;++i)
     {

@@ -1,14 +1,12 @@
 #ifndef GRID_H
 #define GRID_H
 
-#include <QList>
 #include <QMap>
 
 #include "boundarycondition.h"
 #include "domain.h"
 #include "simplexelement.h"
 #include <MathUtils>
-#include "node.h"
 
 namespace FEM
 {
@@ -20,48 +18,56 @@ namespace FEM
     // Tip! For now, grid can hold only the same type of elements
     class Grid
     {
-        protected: QList<_NodeType_> _myNodes;
-        protected: QList<_ElementType_> _myFiniteElements;
-        protected: QList<const _DimType_*> _myFiniteElementConductionCoefficients;
+        protected: DefinedVectorType<_NodeType_*> _myNodes;
+        protected: DefinedVectorType<_ElementType_*> _myFiniteElements;
+        protected: DefinedVectorType<const _DimType_*> _myFiniteElementConductionCoefficients;
         protected: QMap<int, const BoundaryCondition<_DimType_>*> _myNodeBindedBoundaryConditions;
         protected: QMap<int, QPair<int, const BoundaryCondition<_DimType_>*>> _myElementBindedBoundaryConditions;
 
         public : _NodeType_ &createNode(const _NodeType_ &target)
         {
-            /// \todo it makes new copy and deletes old data, avoid that!
-            _myNodes.append(_NodeType_(target));
-            return _myNodes.last();
+            _myNodes.push_back(new _NodeType_(target));
+            return *_myNodes.back();
         }
 
-        public : _NodeType_ & getNode(int nodeIndex) const throw (std::out_of_range)
+        public : _NodeType_ & getNode(int nodeIndex)
+#ifdef _DEBUG_MODE
+        const throw (std::out_of_range)
         {
             if(nodeIndex>=0 && nodeIndex < _myNodes.size())
             {
-                return _myNodes[nodeIndex];
+                return *_myNodes[nodeIndex];
             }
             else throw std::out_of_range("Grid::getNode(), nodeIndex out of range");
         }
-
+#else
+        const noexcept{return *_myNodes[nodeIndex];}
+#endif
         public : _ElementType_ & createFiniteElement(const int *nodeIndexes,
-                const _DimType_* conductionCoefficients)
+                const _DimType_* conductionCoefficients = nullptr)
         {
-            _myFiniteElements.append(_ElementType_(&(this->_myNodes),nodeIndexes));
-            this->_myFiniteElementConductionCoefficients.append(conductionCoefficients);
-            return _myFiniteElements.last();
+            _myFiniteElements.push_back(new _ElementType_(&(this->_myNodes),nodeIndexes));
+            this->_myFiniteElementConductionCoefficients.push_back(conductionCoefficients);
+            return *_myFiniteElements.back();
         }
 
-        public : _ElementType_ & getElement(int elementIndex) const throw (std::out_of_range)
+        public : _ElementType_ & getElement(int elementIndex)
+#ifdef _DEBUG_MODE
+        const throw (std::out_of_range)
         {
             if(elementIndex>=0 && elementIndex < _myFiniteElements.size())
             {
-                return _myFiniteElements[elementIndex];
+                return *_myFiniteElements[elementIndex];
             }
             else throw std::out_of_range("Grid::getElement(), nodeIndex out of range");
         }
+#else
+        const noexcept{return *_myFiniteElements[elementIndex];}
+#endif
 
-        public : const QList<_NodeType_> & getNodesList() const noexcept{
+        public : const DefinedVectorType<_NodeType_*> & getNodesList() const noexcept{
             return _myNodes;}
-        public : const QList<_ElementType_> & getElementsList() const noexcept{
+        public : const DefinedVectorType<_ElementType_*> & getElementsList() const noexcept{
             return _myFiniteElements;}
 
         public : Domain<_DimType_> constructDomainEllipticEquation() const
@@ -75,7 +81,7 @@ namespace FEM
             {
                 // [ K11 K12 ]
                 // [ K21 K22 ]
-                auto _localStiffnessMatrix = _myFiniteElements[_elementIndex].calculateStiffnessMatrixEllipticEquation(
+                auto _localStiffnessMatrix = _myFiniteElements[_elementIndex]->calculateStiffnessMatrixEllipticEquation(
                             _myFiniteElementConductionCoefficients[_elementIndex]);
 
                 // Apply Neumann boundary conditions
@@ -87,13 +93,13 @@ namespace FEM
 
                 for(int _nodeIndex1=0;_nodeIndex1<_ElementType_::getNodesNumber();++_nodeIndex1)    // Go through all nodes
                 {
-                    int _globalNodeIndex = _myFiniteElements[_elementIndex].getNodeIndexes()[_nodeIndex1];
+                    int _globalNodeIndex = _myFiniteElements[_elementIndex]->getNodeIndexes()[_nodeIndex1];
                     if(_myNodeBindedBoundaryConditions.contains(_globalNodeIndex))
                     {
                         for(int _nodeIndex2=0;_nodeIndex2<_ElementType_::getNodesNumber();++_nodeIndex2)
                         {
                             // F -= cond * K.column(k)
-                            _d.getForceVector().coeffRef(_myFiniteElements[_elementIndex].getNodeIndexes()[_nodeIndex2],0) -=
+                            _d.getForceVector().coeffRef(_myFiniteElements[_elementIndex]->getNodeIndexes()[_nodeIndex2],0) -=
                                     _myNodeBindedBoundaryConditions[_globalNodeIndex]->getPotential() *
                                     _localStiffnessMatrix(_nodeIndex2,_nodeIndex1);
 
@@ -121,7 +127,7 @@ namespace FEM
                 if(_myElementBindedBoundaryConditions.contains(_elementIndex))
                 {
                     _DimType_ _fluxValue =
-                            _myFiniteElements[_elementIndex].calculateSubElementVolume(
+                            _myFiniteElements[_elementIndex]->calculateSubElementVolume(
                                 _myElementBindedBoundaryConditions[_elementIndex].first) *
 
                             _myElementBindedBoundaryConditions[_elementIndex].second->getFlux() /
@@ -135,7 +141,7 @@ namespace FEM
                             continue;
 
                         _d.getForceVector().coeffRef(
-                                    _myFiniteElements[_elementIndex].getNodeIndexes()[_nodeIndex],  //globalNodeIndex
+                                    _myFiniteElements[_elementIndex]->getNodeIndexes()[_nodeIndex],  //globalNodeIndex
                                     0) =                                                            //column
                                 _fluxValue;
                     }
@@ -146,8 +152,8 @@ namespace FEM
                     for(int _nodeIndex2=0;_nodeIndex2<_ElementType_::getNodesNumber();++_nodeIndex2)
                         /// \todo use Triplets!!!
                     _d.getStiffnessMatrix().coeffRef(
-                                _myFiniteElements[_elementIndex].getNodeIndexes()[_nodeIndex1],
-                                _myFiniteElements[_elementIndex].getNodeIndexes()[_nodeIndex2]) +=
+                                _myFiniteElements[_elementIndex]->getNodeIndexes()[_nodeIndex1],
+                                _myFiniteElements[_elementIndex]->getNodeIndexes()[_nodeIndex2]) +=
                             _localStiffnessMatrix(_nodeIndex1,_nodeIndex2);
             }
             return _d;
@@ -172,7 +178,16 @@ namespace FEM
             else throw std::out_of_range("Grid::bindBoundaryConditionToElement(), nodeIndex out of range");
         }
         public : Grid(){}
-        public : ~Grid(){}
+        public : ~Grid()
+        {
+            for(auto _i: _myNodes)
+                delete(_i);
+            _myNodes.clear();
+
+            for(auto _i: _myFiniteElements)
+                delete(_i);
+            _myFiniteElements.clear();
+        }
     };
 
     typedef Grid <

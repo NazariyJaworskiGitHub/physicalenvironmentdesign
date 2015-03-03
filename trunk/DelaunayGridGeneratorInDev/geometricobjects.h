@@ -5,12 +5,34 @@
 
 namespace DelaunayGridGenerator
 {
-    /// Utility for making FEM:Node3D set, located on a sphere at PLC
+    /// Utility for making Node3D set, located on a sphere at PLC
     namespace GeometricObjects
     {
+        /// Simple sphere - just holds center and radius
+        template <typename _NodeType_, typename _DimType_>
+        class Sphere_t
+        {
+            protected: _NodeType_ _center = _NodeType_(0.0, 0.0, 0.0);
+            public   : _NodeType_ getCenter() const noexcept {return _center;}
+            protected: _DimType_ _radius = 1.0;
+            public   : _DimType_ getRadius() const noexcept {return _radius;}
+
+            /// radius should be > 0.0
+            public   : Sphere_t(const _NodeType_ &center, _DimType_ radius)
+            throw(std::logic_error) :
+                _center(center), _radius(radius)
+            {
+                if(radius <= _DimType_(0.0))
+                    throw std::logic_error("Icosahedron(): radius <= 0.0");
+            }
+            public: ~Sphere_t() noexcept {}
+        };
+        typedef Sphere_t<MathUtils::Node3D, MathUtils::Real> Sphere3D;
+        typedef Sphere_t<MathUtils::Node2D, MathUtils::Real> Sphere2D;
+
         /// See http://en.wikipedia.org/wiki/Regular_Icosahedron_t
         template <typename _NodeType_, typename _DimType_>
-        class Icosahedron_t
+        class Icosahedron_t : public Sphere_t<_NodeType_, _DimType_>
         {
             /// For inner usage only
             private: class _Triangle
@@ -77,11 +99,8 @@ namespace DelaunayGridGenerator
 
             private: std::vector<_NodeType_*> _nodes;
             public : const std::vector<_NodeType_*> & getNodes() const noexcept {return _nodes;}
-            private: std::vector<_Triangle*>     *_triangles = nullptr;
-            private: _NodeType_ _center = _NodeType_(0.0, 0.0, 0.0);
-            public : _NodeType_ getCenter() const noexcept {return _center;}
-            private: _DimType_ _radius = 1.0;
-            public : _DimType_ getRadius() const noexcept {return _radius;}
+            private: std::vector<_Triangle*> *_triangles = nullptr;
+
             private: bool _isReflectedToSphere = false;
             public : bool isReflectedToSphere() const noexcept {return _isReflectedToSphere;}
             /// Split each facet into 4;
@@ -300,12 +319,12 @@ namespace DelaunayGridGenerator
             {
                 for(auto i : _nodes)
                 {
-                    *i -= _center;
-                    *i *= newRadius/_radius;
+                    *i -= this->_center;
+                    *i *= newRadius/this->_radius;
                     *i += newCenter;
                 }
-                _center = newCenter;
-                _radius = newRadius;
+                this->_center = newCenter;
+                this->_radius = newRadius;
             }
 
             /// Can be done only once
@@ -318,10 +337,10 @@ namespace DelaunayGridGenerator
                 {
                     for(auto i : _nodes)
                     {
-                        *i -= _center;
+                        *i -= this->_center;
                         i->normalize();
-                        *i *= _radius;
-                        *i += _center;
+                        *i *= this->_radius;
+                        *i += this->_center;
                     }
                     _isReflectedToSphere = true;
                 }
@@ -330,7 +349,7 @@ namespace DelaunayGridGenerator
             /// radius should be > 0.0
             public : Icosahedron_t(const _NodeType_ &center, _DimType_ radius)
             throw(std::logic_error) :
-                _center(center), _radius(radius)
+                Sphere_t<_NodeType_, _DimType_>(center, radius)
             {
                 if(radius <= _DimType_(0.0))
                     throw std::logic_error("Icosahedron(): radius <= 0.0");

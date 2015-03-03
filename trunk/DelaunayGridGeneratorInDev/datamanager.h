@@ -3,7 +3,6 @@
 
 #include <cmath>
 #include <cstring>
-#include <QLinkedList>
 #include <stdexcept>
 
 #include "gridelement.h"
@@ -27,7 +26,7 @@ namespace DelaunayGridGenerator
         public : static int getChildMaxDataObjectsNumber() {return _nChildDataObjects_;}
 
         protected: TreeDataManager *_child[_nChildren];
-        protected: QLinkedList<_DataObject_*> _dataObjectsPtrList;
+        protected: DefinedListType<_DataObject_*> _dataObjectsPtrList;
 
         protected: TreeDataManager const *_ptrToRoot = nullptr;
 
@@ -143,7 +142,7 @@ namespace DelaunayGridGenerator
             else
             {
 
-                this->_dataObjectsPtrList.append(target);
+                this->_dataObjectsPtrList.push_back(target);
                 target->getPointerToMyselfDM() = this->_dataObjectsPtrList.end();
                 target->getPointerToMyselfDM()--;
 
@@ -152,7 +151,7 @@ namespace DelaunayGridGenerator
                 {
                     _makeChildren();
 
-                    for(typename QLinkedList<_DataObject_*>::iterator _dObjPtr =
+                    for(typename DefinedListType<_DataObject_*>::iterator _dObjPtr =
                         _dataObjectsPtrList.begin();
                         _dObjPtr != _dataObjectsPtrList.end(); )
                     {
@@ -183,13 +182,17 @@ namespace DelaunayGridGenerator
 
         /// Get all data objects that are stored at the tree
         /// nodes that can store the given target
-        public: QLinkedList<_DataObject_*> getDataObjects(const _NodeType_ &target) const
+        public: DefinedListType<_DataObject_*> getDataObjects(const _NodeType_ &target) const
         {
-            QLinkedList<_DataObject_*> _curList;
-            _curList += _dataObjectsPtrList;
+            DefinedListType<_DataObject_*> _curList;
+            //_curList += _dataObjectsPtrList;
+            for(auto _i : _dataObjectsPtrList)
+                _curList.push_back(_i);
             int _index = _getIndex(target);
             if(_index != -1)
-                _curList += _child[_index]->getDataObjects(target);
+                //_curList += _child[_index]->getDataObjects(target);
+                for(auto _i : _child[_index]->getDataObjects(target))
+                    _curList.push_back(_i);
             return _curList;
         }
 

@@ -2,10 +2,10 @@
 #define TEST_FINITEELEMENT_H
 
 #include <QTest>
-#include "finiteelement.h"
+#include <MathUtils>
 #include "simplexelement.h"
 
-class Test_FiniteElement : public QObject
+class Test_SimplexElement : public QObject
 {
     Q_OBJECT
     private: Q_SLOT void test();
