@@ -1,8 +1,8 @@
 #include "TESTS/tests_runner.h"
-
+#include <iostream>
 int main()
 {
-    MathUtils::printMachineInfo();
+    std::cout << MathUtils::printMachineInfo();
     run_tests_all();
     return 0;
 }

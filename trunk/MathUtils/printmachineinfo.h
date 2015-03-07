@@ -3,7 +3,7 @@
 
 /// \warning Don't include directly, use only through MathUtils
 
-#include <iostream>
+#include <sstream>
 #include <cstdlib>
 #include <climits>
 #include <cfloat>
@@ -90,9 +90,10 @@ namespace MathUtils
     /// For platform and compile detection see
     ///   http://nadeausoftware.com/articles/2012/01/c_c_tip_how_use_compiler_predefined_macros_detect_operating_system
     ///   http://nadeausoftware.com/articles/2012/10/c_c_tip_how_detect_compiler_name_and_version_using_compiler_predefined_macros
-    inline void printMachineInfo()
+    inline std::string printMachineInfo()
     {
-        std::cout
+        std::stringstream _str;
+        _str
                 << " " << __DATE__ << " " << __TIME__ << "\n"
                 << " Platform        "
                 #ifdef _AIX
@@ -259,6 +260,7 @@ namespace MathUtils
                 << " sizeof(float_t)      " << sizeof(float_t) << "\n"
                 << " sizeof(double_t)     " << sizeof(double_t)<< "\n"
                 << "------------------------------------------------------------------\n";
+        return _str.str();
     }
 }
 #endif // PRINTMACHINEINFO_H
