@@ -54,7 +54,10 @@ QMAKE_CXXFLAGS_RELEASE += -O2 \ #Equivalent to -O3 (MinGW 4.8.0)
 #    -ftree-partial-pre
 
 SOURCES += main.cpp \
-    CLMANAGER/clmanager.cpp
+    CLMANAGER/clmanager.cpp \
+    CLMANAGER/TESTS/test_clmanager.cpp
 
 HEADERS += \
-    CLMANAGER/clmanager.h
+    CLMANAGER/clmanager.h \
+    CLMANAGER/TESTS/tests_runner.h \
+    CLMANAGER/TESTS/test_clmanager.h
