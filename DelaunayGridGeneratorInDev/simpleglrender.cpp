@@ -1,5 +1,7 @@
 #include "simpleglrender.h"
 
+#include <sstream>
+
 SimpleGLRender::SimpleGLRender(QWidget *pwgt) noexcept:
     QGLWidget(QGLFormat(QGL::SampleBuffers),pwgt)
 {
@@ -22,6 +24,18 @@ void SimpleGLRender::wheelEvent(QWheelEvent *e)
 {
     _Zoom += _Zoom * e->delta() / 5000;
     this->updateGL();
+}
+
+std::string SimpleGLRender::printOpenGLInfo() const noexcept
+{
+    std::stringstream _str;
+    _str
+            << "OpenGL vendor  " << glGetString(GL_VENDOR) << std::endl
+            << "       render  " << glGetString(GL_RENDERER) << std::endl
+            << "       version " << glGetString(GL_VERSION) << std::endl
+            << "       shaders " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl
+            << "       ext.    " << glGetString(GL_EXTENSIONS) << std::endl;
+    return _str.str();
 }
 
 void SimpleGLRender::initializeGL()

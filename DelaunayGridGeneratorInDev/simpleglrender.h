@@ -83,6 +83,8 @@ class SimpleGLRender : public QGLWidget
     protected: virtual void _drawDelaunayGridGeneratorNodes() throw(std::runtime_error)  = 0;
     protected: virtual void _drawDelaunayGridGeneratorFacets() throw(std::runtime_error) = 0;
 
+    public   : std::string printOpenGLInfo() const noexcept;
+
     public   : SimpleGLRender(QWidget *pwgt) noexcept;
 
     public   : void initializeGL() override;
