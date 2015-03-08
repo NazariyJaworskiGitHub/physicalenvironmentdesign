@@ -2,12 +2,14 @@
 
 #include <sstream>
 
+using namespace OpenCL;
+
 template<typename T>
 void CLManager::_appendBitfield(
         const T info,
         const T value,
         const cl::STRING_CLASS name,
-        cl::STRING_CLASS &str) noexcept
+        cl::STRING_CLASS &str)
 {
     if (info & value)
     {
@@ -19,7 +21,7 @@ void CLManager::_appendBitfield(
     }
 }
 
-std::string CLManager::getPlatformsInfo() const noexcept
+std::string CLManager::printPlatformsInfo() const
 {
     std::stringstream _str;
     if(!_platforms.empty())
@@ -47,16 +49,16 @@ std::string CLManager::getPlatformsInfo() const noexcept
     return _str.str();
 }
 
-std::string CLManager::getDevicesInfo() const noexcept
+std::string CLManager::printDevicesInfo() const
 {
     std::stringstream _str;
-    if(!_platforms.empty() && _devices!= nullptr)
+    if(!_platforms.empty() && !_devices.empty())
     {
         for(unsigned i=0; i<_platforms.size();++i)
         {
-            _str << "platform[" << i << "]:";
             for(unsigned j=0; j<_devices[i].size();++j)
             {
+                _str << "platform[" << i << "]:";
                 _str << "device[" << j << "]:" << std::endl;
                 cl::STRING_CLASS _data;
 
@@ -143,7 +145,23 @@ std::string CLManager::getDevicesInfo() const noexcept
     return _str.str();
 }
 
-CLManager::CLManager() noexcept
+cl::Program & CLManager::createProgram(
+        const std::string &sourceCode,
+        const cl::Context &targetContext,
+        const std::vector<cl::Device> &targetDevices)
+{
+    _programs.push_back(cl::Program(targetContext, sourceCode, false, &_lastErrorCode));
+    _programs.back().build(targetDevices);
+    return _programs.back();
+}
+
+cl::Kernel &CLManager::createKernel(const cl::Program &program, const std::string &programName)
+{
+    _kernels.push_back(cl::Kernel(program, programName.c_str(), &_lastErrorCode));
+    return _kernels.back();
+}
+
+CLManager::CLManager()
 {
     // Get all avaliable platforms (Intel, AMD, NVidia, etc.)
     _lastErrorCode = cl::Platform::get(&_platforms);
@@ -151,7 +169,7 @@ CLManager::CLManager() noexcept
 
     // Get all avaliable devices per platform
     /// \todo put it after creating the context - get devices from context!
-    _devices = new std::vector<cl::Device> [_platforms.size()];
+    _devices.resize(_platforms.size());
     for(unsigned i=0; i<_platforms.size();++i)
     {
         _lastErrorCode = _platforms[i].getDevices(CL_DEVICE_TYPE_ALL, &_devices[i]);
@@ -169,22 +187,17 @@ CLManager::CLManager() noexcept
     }
 
     // Create command queues for each device
-    _commandQueues = new std::vector<cl::CommandQueue> [_platforms.size()];
+    _commandQueues.resize(_platforms.size());
     for(unsigned i=0; i<_platforms.size();++i)
         for(unsigned j=0; j<_devices[i].size();++j)
             _commandQueues[i].push_back(cl::CommandQueue(_contexts[i],_devices[i][j]));
 }
 
-CLManager::~CLManager() noexcept
+CLManager::~CLManager()
 {
-    if(_commandQueues != nullptr)
-        delete [] _commandQueues;
-
-    if(_devices != nullptr)
-        delete [] _devices;
 }
 
-CLManager &CLManager::instance() noexcept
+CLManager &CLManager::instance()
 {
     static CLManager _instanceOfCLManager;
     return _instanceOfCLManager;
