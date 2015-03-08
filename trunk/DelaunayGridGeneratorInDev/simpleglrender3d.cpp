@@ -7,6 +7,9 @@ SimpleGLRender3D::SimpleGLRender3D(QWidget *pwgt) noexcept :
 {
 }
 
+/// \warning Intel old video driver bug, when using glColor3ub(255, 0, 0);
+/// see https://bugreports.qt.io/browse/QTBUG-6217
+/// keep your video driver up to date!
 void SimpleGLRender3D::_drawOrigin() noexcept
 {
     glDisable(GL_LIGHTING);
@@ -32,21 +35,21 @@ void SimpleGLRender3D::_drawOrigin() noexcept
             glLineWidth(3);
 
             glBegin(GL_LINES);
-            glColor3ub(255, 0, 0);
+            glColor3d(1, 0, 0);
             glVertex3d(0, 0, 0);
             glVertex3d(1, 0, 0);
             glEnd();
             this->renderText(1, 0, 0, "x");
 
             glBegin(GL_LINES);
-            glColor3ub(0, 255, 0);
+            glColor3d(0, 1, 0);
             glVertex3d(0, 0, 0);
             glVertex3d(0, 1, 0);
             glEnd();
             this->renderText(0, 1, 0, "y");
 
             glBegin(GL_LINES);
-            glColor3ub(0, 0, 255);
+            glColor3d(0, 0, 1);
             glVertex3d(0, 0, 0);
             glVertex3d(0, 0, 1);
             glEnd();
@@ -116,7 +119,10 @@ void SimpleGLRender3D::keyPressEvent(QKeyEvent *e)
     {
         std::cout << *_ptrToRenderingDelaunayGridGenerator3D;
     }
-    /// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    else if(e->key() == Qt::Key_G)
+    {
+        std::cout << this->printOpenGLInfo();
+    }
     else if(e->key() == Qt::Key_Z && e->modifiers() == Qt::ControlModifier)
     {
         _ptrToRenderingDelaunayGridGenerator3D->_TEST_undo_iteration();
@@ -306,14 +312,13 @@ void SimpleGLRender3D::_drawDelaunayGridGeneratorFacets() throw(std::runtime_err
         glVertex3d((**_i)[1][0], (**_i)[1][1], (**_i)[1][2]);
         glVertex3d((**_i)[2][0], (**_i)[2][1], (**_i)[2][2]);
         ++_i;
-        // Resr facets
+        // Rest facets
         glColor4d(
                 _GeneratorAliveFacetsColor[0],
                 _GeneratorAliveFacetsColor[1],
                 _GeneratorAliveFacetsColor[2],
                 _GeneratorAliveFacetsColor[3]);
-        for(;
-            _i != _ptrToRenderingDelaunayGridGenerator3D->getAliveFacetsList().end(); ++_i)
+        for(;_i != _ptrToRenderingDelaunayGridGenerator3D->getAliveFacetsList().end(); ++_i)
         {
             glNormal3fv(((**_i)[1] - (**_i)[0]).crossProduct(
                         (**_i)[2] - (**_i)[0]).getCoordinates());
@@ -322,6 +327,5 @@ void SimpleGLRender3D::_drawDelaunayGridGeneratorFacets() throw(std::runtime_err
             glVertex3d((**_i)[2][0], (**_i)[2][1], (**_i)[2][2]);
         }
         glEnd();
-        glDisable(GL_LIGHTING);
     }
 }

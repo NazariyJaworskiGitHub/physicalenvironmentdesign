@@ -7,6 +7,9 @@ SimpleGLRender2D::SimpleGLRender2D(QWidget *pwgt) noexcept :
 {
 }
 
+/// \warning Intel old video driver bug, when using glColor3ub(255, 0, 0);
+/// see https://bugreports.qt.io/browse/QTBUG-6217
+/// keep your video driver up to date!
 void SimpleGLRender2D::_drawOrigin() noexcept
 {
     glDisable(GL_LIGHTING);
@@ -29,14 +32,14 @@ void SimpleGLRender2D::_drawOrigin() noexcept
             glLineWidth(3);
 
             glBegin(GL_LINES);
-            glColor3ub(255, 0, 0);
+            glColor3d(1, 0, 0);
             glVertex3d(0, 0, 0);
             glVertex3d(1, 0, 0);
             glEnd();
             this->renderText(1, 0, 0, "x");
 
             glBegin(GL_LINES);
-            glColor3ub(0, 255, 0);
+            glColor3d(0, 1, 0);
             glVertex3d(0, 0, 0);
             glVertex3d(0, 1, 0);
             glEnd();
@@ -102,7 +105,10 @@ void SimpleGLRender2D::keyPressEvent(QKeyEvent *e)
     {
         std::cout << *_ptrToRenderingDelaunayGridGenerator2D;
     }
-    /// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    else if(e->key() == Qt::Key_G)
+    {
+        std::cout << this->printOpenGLInfo();
+    }
     else if(e->key() == Qt::Key_Z && e->modifiers() == Qt::ControlModifier)
     {
         _ptrToRenderingDelaunayGridGenerator2D->_TEST_undo_iteration();
