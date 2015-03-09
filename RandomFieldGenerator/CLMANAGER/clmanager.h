@@ -3,14 +3,14 @@
 
 #include <iostream>
 
+#ifndef __CL_ENABLE_EXCEPTIONS
+#define __CL_ENABLE_EXCEPTIONS
+#endif //__CL_ENABLE_EXCEPTIONS
+
 #include "CL/cl.hpp"
 
 namespace OpenCL
 {
-    #ifndef __CL_ENABLE_EXCEPTIONS
-    #define __CL_ENABLE_EXCEPTIONS
-    #endif //__CL_ENABLE_EXCEPTIONS
-
     /// Manages OpenCL
     /// Platform -> Device -> Context -> Queue -> Program ->Kernel -> Memory buffer
     class CLManager
