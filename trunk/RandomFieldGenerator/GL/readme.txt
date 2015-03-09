@@ -1,0 +1,1 @@
+AMD SDK 2.9 OpenGL
