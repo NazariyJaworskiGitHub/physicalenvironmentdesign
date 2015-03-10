@@ -2,38 +2,82 @@
 #define REPRESENTATIVEVOLUMEELEMENT_H
 
 #include <cmath>
+#include <limits>
 #include <stdexcept>
 #include <cstring>
 #include <FUNCTIONS/rand.h>
 
 #include <iostream>
 
+#include "CLMANAGER/clmanager.h"
+
 /// It is discretized RVE
-template< unsigned long _size>
+template< int _size>
 class RepresentativeVolumeElement
 {
-    public : static  unsigned long getSize() noexcept {return _size;}
+    public : static int getSize() noexcept {return _size;}
 
-    private: unsigned char * _data = nullptr;
-    public : unsigned char * getData() noexcept {return _data;}
-    public : const unsigned char * getData() const noexcept {return _data;}
+    private: float * _data = nullptr;
+    private: float * _cuttedData = nullptr;
+    private: int _discreteRadius = 1;
+    public : float * getData() noexcept {return _data;}
+    public : const float * getData() const noexcept {return _data;}
+    public : float * getCuttedData() noexcept {return _cuttedData;}
+    public : const float * getCuttedData() const noexcept {return _cuttedData;}
+    public : int getDiscreteRadius() const noexcept {return _discreteRadius;}
 
+    /// Constructor
     public : RepresentativeVolumeElement() throw (std::runtime_error)
     {
-        _data = new unsigned char[_size * _size * _size];
-        if(!_data)
-            throw(std::runtime_error("FATAL: RepresentativeVolumeElement(): can't allocate memory for RVE"));
-        memset(_data, 0, sizeof(unsigned char) * _size * _size * _size);
+        _data = new float[_size * _size * _size];
+        _cuttedData = new float[_size * _size * _size];
+        if(!_data || !_cuttedData)
+            throw(std::runtime_error("FATAL: RepresentativeVolumeElement(): \
+                                     can't allocate memory for RVE"));
+    }
+
+    /// Generate normalized random field
+    public : void generateRandomField() noexcept
+    {
+        memset(_data, 0, sizeof(float) * _size * _size * _size);
         for( unsigned long i = 0; i<_size; ++i)
             for( unsigned long j = 0; j<_size; ++j)
                 for( unsigned long k = 0; k<_size; ++k)
-                {
-//                    auto _rez = MathUtils::rand<float>(0.0, 1.0);
-//                    if(_rez > 0.95)
-//                        _data[(i * _size * _size) + (j * _size) + k] = 255;
                     _data[(i * _size * _size) + (j * _size) + k] =
-                            MathUtils::rand<float>(0.0, 255.0);
+                            MathUtils::rand<float>(0.0, 1.0);
+        memcpy(_cuttedData, _data, sizeof(float) * _size * _size * _size);
+    }
+
+    /// Normalize data
+    public : void normalizeField() noexcept
+    {
+        std::cout << "  Updating min and max values... ";
+        float _min = _data[_discreteRadius * _size * _size +
+                _discreteRadius * _size + _discreteRadius];
+        float _max = _data[_discreteRadius * _size * _size +
+                _discreteRadius * _size + _discreteRadius];
+
+        for( unsigned long i = _discreteRadius; i < _size-_discreteRadius-1; ++i)
+            for( unsigned long j = _discreteRadius; j < _size-_discreteRadius-1; ++j)
+                for( unsigned long k = _discreteRadius; k < _size-_discreteRadius-1; ++k)
+                {
+                    if(_data[(i * _size * _size) + (j * _size) + k] < _min)
+                        _min = _data[(i * _size * _size) + (j * _size) + k];
+                    if(_data[(i * _size * _size) + (j * _size) + k] > _max)
+                        _max = _data[(i * _size * _size) + (j * _size) + k];
                 }
+        std::cout << "Done" << std::endl;
+        std::cout << "  min = " << _min << std::endl;
+        std::cout << "  max = " << _max << std::endl;
+
+        std::cout << "  Scaling... ";
+        for( unsigned long i = _discreteRadius; i < _size-_discreteRadius-1; ++i)
+            for( unsigned long j = _discreteRadius; j < _size-_discreteRadius-1; ++j)
+                for( unsigned long k = _discreteRadius; k < _size-_discreteRadius-1; ++k)
+                    _data[(i * _size * _size) + (j * _size) + k] =
+                            (_data[(i * _size * _size) + (j * _size) + k] - _min) /
+                                                        (_max - _min);
+        std::cout << "Done" << std::endl;
     }
 
     // Note, r should be > 0;
@@ -45,93 +89,209 @@ class RepresentativeVolumeElement
         return std::exp(-(x*x/fx/fx + y*y/fy/fy + z*z/fz/fz) / ((r/2.0) * (r/2.0)));
     }
 
-    /// see (2002) Torguato - Random Heterogeneous Materials Microstructure and Macroscopic Properties
+    /// Apply Gaussian filter to previously generated random filed
+    /// see (2002) Torguato - Random Heterogeneous Materials Microstructure
+    ///                       and Macroscopic Properties
+    /// data will hold normalized GRF after this call
     /// \todo it simple CPU usage for now, use GPU!
     /// \todo add ellipsoid rotation
     /// \todo fix borders calculations
-    public : void applyGaussianFiler(
+    public : void applyGaussianFilter(
             int discreteRadius,
-            float cutLevel,
             float ellipsoidScaleFactorX = 1.0,
             float ellipsoidScaleFactorY = 1.0,
             float ellipsoidScaleFactorZ = 1.0) throw (std::logic_error)
     {
-        std::cout << "applyGaussianFiler() call:" << std::endl;
+        std::cout << "applyGaussianFilter() call:" << std::endl;
         if(discreteRadius <= 0)
-            throw(std::runtime_error("applyGaussianFiler(): radius <= 0"));
+            throw(std::runtime_error("applyGaussianFilter(): radius <= 0"));
         if(ellipsoidScaleFactorX <= 0)
-            throw(std::runtime_error("applyGaussianFiler(): ellipsoidScaleFactorX <= 0"));
+            throw(std::runtime_error("applyGaussianFilter(): ellipsoidScaleFactorX <= 0"));
         if(ellipsoidScaleFactorY <= 0)
-            throw(std::runtime_error("applyGaussianFiler(): ellipsoidScaleFactorY <= 0"));
+            throw(std::runtime_error("applyGaussianFilter(): ellipsoidScaleFactorY <= 0"));
         if(ellipsoidScaleFactorZ <= 0)
-            throw(std::runtime_error("applyGaussianFiler(): ellipsoidScaleFactorZ <= 0"));
-        if(cutLevel <= 0 && cutLevel >= 1)
-            throw(std::runtime_error("applyGaussianFiler(): cutLevel <= 0 && cutLevel >= 1"));
+            throw(std::runtime_error("applyGaussianFilter(): ellipsoidScaleFactorZ <= 0"));
 
-        std::cout << "  Creating bufer... ";
-        float *_tmpBuff = new float[_size * _size * _size];
-        if(!_tmpBuff)
-            throw(std::runtime_error("FATAL: applyGaussianFiler(): can't allocate memory for RVE"));
-        memset(_tmpBuff, 0.0f, sizeof(float) * _size * _size * _size);
-        std::cout << "Done" << std::endl;
+        _discreteRadius = discreteRadius;
 
-        std::cout << "  Applying filter... ";
-        for( unsigned long i = discreteRadius; i<_size-discreteRadius-1; ++i)
-            for( unsigned long j = discreteRadius; j<_size-discreteRadius-1; ++j)
-                for( unsigned long k = discreteRadius; k<_size-discreteRadius-1; ++k)
-                    for( int p = -discreteRadius; p<=discreteRadius; ++p)
-                        for( int q = -discreteRadius; q<=discreteRadius; ++q)
-                            for( int r = -discreteRadius; r<=discreteRadius; ++r)
-                                _tmpBuff[(i * _size * _size) + (j * _size) + k] +=
-                                        (float)_data[
-                                            ((i+p) * _size * _size) +
+        std::cout << "  Applying filter..." << std::endl;
+        memset(_cuttedData, 0, sizeof(float) * _size * _size * _size);
+        for( unsigned long i = _discreteRadius; i<_size-_discreteRadius-1; ++i)
+        {
+            std::cout
+                    << "\b\b\b\b"
+                    << (int)((i - _discreteRadius + 2) * 100.0 / (_size - 2.0 * _discreteRadius))
+                    << "%";
+            for( unsigned long j = _discreteRadius; j < _size-_discreteRadius-1; ++j)
+                for( unsigned long k = _discreteRadius; k < _size-_discreteRadius-1; ++k)
+                    for( int p = -_discreteRadius; p <= _discreteRadius; ++p)
+                        for( int q = -_discreteRadius; q <= _discreteRadius; ++q)
+                            for( int r = -_discreteRadius; r <= _discreteRadius; ++r)
+                                _cuttedData[(i * _size * _size) + (j * _size) + k] +=
+                                        _data[((i+p) * _size * _size) +
                                             ((j+q) * _size) +
                                             (k+r)] *
                                         _GaussianFilter(
-                                            discreteRadius,
+                                            _discreteRadius,
                                             p, q, r,
                                             ellipsoidScaleFactorX,
                                             ellipsoidScaleFactorY,
                                             ellipsoidScaleFactorZ);
-        std::cout << "Done" << std::endl;
+        }
+        std::cout << " Done" << std::endl;
 
-        std::cout << "  Updating min and max values... ";
-        float _min = _tmpBuff[discreteRadius * _size * _size + discreteRadius * _size + discreteRadius];
-        float _max = _tmpBuff[discreteRadius * _size * _size + discreteRadius * _size + discreteRadius];
+        memcpy(_data, _cuttedData, sizeof(float) * _size * _size * _size);
+        normalizeField();
 
-        for( unsigned long i = discreteRadius; i<_size-discreteRadius-1; ++i)
-            for( unsigned long j = discreteRadius; j<_size-discreteRadius-1; ++j)
-                for( unsigned long k = discreteRadius; k<_size-discreteRadius-1; ++k)
-                {
-                    if(_tmpBuff[(i * _size * _size) + (j * _size) + k] < _min)
-                        _min = _tmpBuff[(i * _size * _size) + (j * _size) + k];
-                    if(_tmpBuff[(i * _size * _size) + (j * _size) + k] > _max)
-                        _max = _tmpBuff[(i * _size * _size) + (j * _size) + k];
-                }
-        std::cout << "Done" << std::endl;
-        std::cout << "  min = " << _min << std::endl;
-        std::cout << "  min = " << _max << std::endl;
+        std::cout << " applyGaussianFilter() Done" << std::endl;
+    }
 
-        std::cout << "  Applying cutting plane... ";
-        memset(_data, 0, sizeof(unsigned char) * _size * _size * _size);
-        for( unsigned long i = discreteRadius; i<_size-discreteRadius-1; ++i)
-            for( unsigned long j = discreteRadius; j<_size-discreteRadius-1; ++j)
-                for( unsigned long k = discreteRadius; k<_size-discreteRadius-1; ++k)
-                    if(
-                            (_tmpBuff[(i * _size * _size) + (j * _size) + k] - _min) /
-                            (_max - _min) > cutLevel
-                            )
-                        _data[(i * _size * _size) + (j * _size) + k] = 255;
+    public : void applyGaussianFilterCL(
+            int discreteRadius,
+            float ellipsoidScaleFactorX = 1.0,
+            float ellipsoidScaleFactorY = 1.0,
+            float ellipsoidScaleFactorZ = 1.0) throw (std::logic_error)
+    {
+        std::cout << "applyGaussianFilterCL() call:" << std::endl;
+        if(discreteRadius <= 0)
+            throw(std::runtime_error("applyGaussianFilterCL(): radius <= 0"));
+        if(ellipsoidScaleFactorX <= 0)
+            throw(std::runtime_error("applyGaussianFilterCL(): ellipsoidScaleFactorX <= 0"));
+        if(ellipsoidScaleFactorY <= 0)
+            throw(std::runtime_error("applyGaussianFilterCL(): ellipsoidScaleFactorY <= 0"));
+        if(ellipsoidScaleFactorZ <= 0)
+            throw(std::runtime_error("applyGaussianFilterCL(): ellipsoidScaleFactorZ <= 0"));
+
+        _discreteRadius = discreteRadius;
+
+        std::string _CLSource_applyGaussianFilter = "\
+                float _GaussianFilter(\
+                    float r,\
+                    float x, float y, float z,\
+                    float fx, float fy, float fz)\
+                {\
+                return exp(-(x*x/fx/fx + y*y/fy/fy + z*z/fz/fz) / ((r/2.0) * (r/2.0)));\
+                }\
+                \
+                // Note, calculated GRF is stored at _cuttedData and is non-normalized\n\
+                __kernel void applyGaussianFilter(\
+                    int discreteRadius,\
+                    float ellipsoidScaleFactorX,\
+                    float ellipsoidScaleFactorY,\
+                    float ellipsoidScaleFactorZ,\
+                    __global float *_data,\
+                    __global float *_cuttedData,\
+                    int _size)\
+                {\
+                    unsigned long i = get_global_id(0);\
+                    unsigned long j = get_global_id(1);\
+                    unsigned long k = get_global_id(2);\
+                \
+                    if((i < discreteRadius) || (i >= _size-discreteRadius-1) ||\
+                        (j < discreteRadius) || (j >= _size-discreteRadius-1) ||\
+                        (k < discreteRadius) || (k >= _size-discreteRadius-1))\
+                        return;\
+                \
+                    for( int p = -discreteRadius; p <= discreteRadius; ++p)\
+                        for( int q = -discreteRadius; q <= discreteRadius; ++q)\
+                            for( int r = -discreteRadius; r <= discreteRadius; ++r)\
+                                _cuttedData[(i * _size * _size) + (j * _size) + k] +=\
+                                    _data[((i+p) * _size * _size) +\
+                                        ((j+q) * _size) +\
+                                        (k+r)] *\
+                                    _GaussianFilter(\
+                                        discreteRadius,\
+                                        p, q, r,\
+                                        ellipsoidScaleFactorX,\
+                                        ellipsoidScaleFactorY,\
+                                        ellipsoidScaleFactorZ);\
+                }";
+
+
+        std::cout << "  Applying filter..." << std::endl;
+        memset(_cuttedData, 0, sizeof(float) * _size * _size * _size);
+
+        cl::Buffer _dataBuffer(
+                OpenCL::CLManager::instance().getContexts().front(),
+                CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+                sizeof(float) * _size * _size * _size,
+                _data);
+        cl::Buffer _cuttedDataBuffer(
+                OpenCL::CLManager::instance().getContexts().front(),
+                CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
+                sizeof(float) * _size * _size * _size,
+                _cuttedData);
+
+        cl::Program &_program = OpenCL::CLManager::instance().createProgram(
+                    _CLSource_applyGaussianFilter,
+                    OpenCL::CLManager::instance().getContexts().front(),
+                    OpenCL::CLManager::instance().getDevices().front());
+
+        cl::Kernel &_kernel = OpenCL::CLManager::instance().createKernel(
+                    _program, "applyGaussianFilter");
+        _kernel.setArg(0, _discreteRadius);
+        _kernel.setArg(1, ellipsoidScaleFactorX);
+        _kernel.setArg(2, ellipsoidScaleFactorY);
+        _kernel.setArg(3, ellipsoidScaleFactorZ);
+        _kernel.setArg(4, _dataBuffer);
+        _kernel.setArg(5, _cuttedDataBuffer);
+        _kernel.setArg(6, _size);
+
+        cl::Event _event;
+
+        cl::CommandQueue _queue(
+                OpenCL::CLManager::instance().getContexts().front(),
+                OpenCL::CLManager::instance().getDevices()[0].front());
+
+        _queue.enqueueNDRangeKernel(
+                _kernel,
+                cl::NullRange,
+                cl::NDRange(_size, _size, _size),
+                cl::NullRange,
+                NULL,
+                &_event);
+        _event.wait();
+
+        _queue.enqueueReadBuffer(
+                _cuttedDataBuffer,
+                CL_FALSE,
+                0,
+                sizeof(float) * _size * _size * _size,
+                _cuttedData,
+                NULL,
+                &_event);
+        _event.wait();
+
+        std::cout << " Done" << std::endl;
+
+        memcpy(_data, _cuttedData, sizeof(float) * _size * _size * _size);
+        normalizeField();
+
+        std::cout << " applyGaussianFilterCL() Done" << std::endl;
+    }
+
+    /// Apply cutting plane
+    /// Note, cuttedData will be defined only after this call
+    public : void applyCuttingLevel(
+            float cutLevel) throw (std::logic_error)
+    {
+        if(cutLevel <= 0 && cutLevel >= 1)
+            throw(std::runtime_error("applyGaussianFilter(): cutLevel <= 0 && cutLevel >= 1"));
+
+        memset(_cuttedData, 0, sizeof(float) * _size * _size * _size);
+        for( unsigned long i = 0; i < _size; ++i)
+            for( unsigned long j = 0; j < _size; ++j)
+                for( unsigned long k = 0; k < _size; ++k)
+                    if(_data[(i * _size * _size) + (j * _size) + k] > cutLevel)
+                        _cuttedData[(i * _size * _size) + (j * _size) + k] = 1.0f;
                     else
-                        _data[(i * _size * _size) + (j * _size) + k] = 0;
-        delete [] _tmpBuff;
-        std::cout << "Done" << std::endl;
-        std::cout << " applyGaussianFiler() Done" << std::endl;
+                        _cuttedData[(i * _size * _size) + (j * _size) + k] = 0.0f;
     }
 
     public : ~RepresentativeVolumeElement()
     {
         delete [] _data;
+        delete [] _cuttedData;
     }
 };
 

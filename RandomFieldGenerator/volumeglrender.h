@@ -15,8 +15,12 @@ using namespace MathUtils;
 class VolumeGLRender : public QGLWidget
 {
     // set on construction, can't be changed
-    private: const unsigned long _RVEDiscretesize;
-    private: const unsigned char * const _ptrToRVEdata = nullptr;
+    private: const int _RVEDiscretesize;
+    private: const float * const _ptrToRVEdata = nullptr;
+
+    private: float _innerCutLevel = 0.5f;
+    public : float getInnerCutLevel() const noexcept {return _innerCutLevel;}
+    public : void setInnerCutLevel(float newCutLevel) noexcept {_innerCutLevel = newCutLevel;}
 
     private: int _oldMouseX = 0;
     private: int _oldMouseY = 0;
@@ -65,8 +69,8 @@ class VolumeGLRender : public QGLWidget
     public : std::string printOpenGLInfo() const noexcept;
 
     public : VolumeGLRender(
-            const unsigned long RVEDiscreteSize,
-            const unsigned char * ptrToRVEData,
+            const int RVEDiscreteSize,
+            const float * ptrToRVEData,
             QWidget *pwgt) noexcept;
 
     public : void initializeGL() override;
