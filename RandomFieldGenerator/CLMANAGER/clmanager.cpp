@@ -80,12 +80,16 @@ std::string CLManager::printDevicesInfo() const
                 _devices[i][j].getInfo(CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, &_number);
                 _str << "\tCL_DEVICE_MAX_WORK_ITEM_DIMENSIONS: " << _number << std::endl;
 
-                /// \todo
-                //devices[i][j].getInfo(CL_DEVICE_MAX_WORK_ITEM_SIZES, &data);
-                //_str << "\tCL_DEVICE_MAX_WORK_ITEM_SIZES:      " << data.c_str() << std::endl;
+                std::vector<size_t> _d;
+                _devices[i][j].getInfo(CL_DEVICE_MAX_WORK_ITEM_SIZES, &_d);
+                std::cout << "\tCL_DEVICE_MAX_WORK_ITEM_SIZES: ( ";
+                for (size_t &_st : _d)
+                    std::cout << _st << " ";
+                std::cout << "\x08)" << std::endl;
 
-                _devices[i][j].getInfo(CL_DEVICE_MAX_WORK_GROUP_SIZE, &_number);
-                _str << "\tCL_DEVICE_MAX_WORK_GROUP_SIZE:      " << _number << std::endl;
+                size_t _size;
+                _devices[i][j].getInfo(CL_DEVICE_MAX_WORK_GROUP_SIZE, &_size);
+                _str << "\tCL_DEVICE_MAX_WORK_GROUP_SIZE:      " << _size << std::endl;
 
                 _devices[i][j].getInfo(CL_DEVICE_MAX_CLOCK_FREQUENCY, &_number);
                 _str << "\tCL_DEVICE_MAX_CLOCK_FREQUENCY:      " << _number << std::endl;
@@ -97,8 +101,8 @@ std::string CLManager::printDevicesInfo() const
                 _devices[i][j].getInfo(CL_DEVICE_MAX_MEM_ALLOC_SIZE, &_longNumber);
                 _str << "\tCL_DEVICE_MAX_MEM_ALLOC_SIZE:       " << _longNumber << std::endl;
 
-                _devices[i][j].getInfo(CL_DEVICE_MAX_PARAMETER_SIZE, &_number);
-                _str << "\tCL_DEVICE_MAX_PARAMETER_SIZE:       " << _number << std::endl;
+                _devices[i][j].getInfo(CL_DEVICE_MAX_PARAMETER_SIZE, &_size);
+                _str << "\tCL_DEVICE_MAX_PARAMETER_SIZE:       " << _size << std::endl;
 
                 _devices[i][j].getInfo(CL_DEVICE_MEM_BASE_ADDR_ALIGN, &_number);
                 _str << "\tCL_DEVICE_MEM_BASE_ADDR_ALIGN:      " << _number << std::endl;

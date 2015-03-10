@@ -1,11 +1,7 @@
 #ifndef REPRESENTATIVEVOLUMEELEMENT_H
 #define REPRESENTATIVEVOLUMEELEMENT_H
 
-#include <cmath>
-#include <limits>
-#include <stdexcept>
-#include <cstring>
-#include <FUNCTIONS/rand.h>
+#include <MathUtils>
 
 #include <iostream>
 

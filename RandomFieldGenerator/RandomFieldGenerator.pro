@@ -6,7 +6,13 @@ QT += testlib
 QT += opengl
 
 #For GLEW
-LIBS += "C:\Program Files (x86)\AMD APP SDK\2.9-1\lib\x86\libglew32.dll.a"
+win32{
+    win32-g++:contains(QMAKE_HOST.arch, x86_64):{
+        LIBS += "C:\Program Files (x86)\AMD APP SDK\2.9-1\lib\x86_64\libglew64.dll.a"
+    } else {
+        LIBS += "C:\Program Files (x86)\AMD APP SDK\2.9-1\lib\x86\libglew32.dll.a"
+    }
+}
 
 #For Qt containers usage
 #DEFINES += _USE_QT_CONTAINERS
@@ -24,13 +30,19 @@ INCLUDEPATH += E:\Developing\BPSPO\PhysicalEnvironmentDesign\MathUtils
 
 #AMD OpenCL
 INCLUDEPATH += E:\OpenCL\AMD\include
-LIBS += E:\OpenCL\AMD\lib\x86\libOpenCL.a
+win32{
+    win32-g++:contains(QMAKE_HOST.arch, x86_64):{
+        LIBS += "C:\Program Files (x86)\AMD APP SDK\2.9-1\lib\x86_64\libOpenCL.a"
+    } else {
+        LIBS += "C:\Program Files (x86)\AMD APP SDK\2.9-1\lib\x86\libOpenCL.a"
+    }
+}
 
 #For debugging
 CONFIG(debug, release|debug):DEFINES += _DEBUG_MODE
 
 #For dr.memory debug
-#QMAKE_CXXFLAGS_DEBUG += -ggdb
+QMAKE_CXXFLAGS_DEBUG += -ggdb
 
 #Optimisation flags
 #see https://gcc.gnu.org/onlinedocs/gcc-4.9.2/gcc/Optimize-Options.html#Optimize-Options
