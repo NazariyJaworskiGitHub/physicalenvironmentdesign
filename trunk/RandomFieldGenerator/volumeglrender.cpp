@@ -4,8 +4,8 @@
 #include <sstream>
 
 VolumeGLRender::VolumeGLRender(
-        const unsigned long RVEDiscreteSize,
-        const unsigned char *ptrToRVEData,
+        const int RVEDiscreteSize,
+        const float *ptrToRVEData,
         QWidget *pwgt) noexcept:
     QGLWidget(QGLFormat(QGL::SampleBuffers),pwgt),
     _RVEDiscretesize(RVEDiscreteSize),
@@ -61,6 +61,26 @@ void VolumeGLRender::keyPressEvent(QKeyEvent *e)
     else if(e->key() == Qt::Key_Z && e->modifiers() == Qt::ControlModifier)
     {
         //
+    }
+    else if(e->key() == Qt::Key_Up)
+    {
+        if(_innerCutLevel < 1.0f)
+        {
+            _innerCutLevel += 0.01f;
+            _loadFieldIntoTexture();
+            dataString = "Cut level: " + QString::number(_innerCutLevel);
+            this->updateGL();
+        }
+    }
+    else if(e->key() == Qt::Key_Down)
+    {
+        if(_innerCutLevel > 0.0f)
+        {
+            _innerCutLevel -= 0.01f;
+            _loadFieldIntoTexture();
+            dataString = "Cut level: " + QString::number(_innerCutLevel);
+            this->updateGL();
+        }
     }
 }
 
@@ -128,13 +148,22 @@ void VolumeGLRender::_loadFieldIntoTexture() throw(std::runtime_error)
 
     for( unsigned long i = 0; i<_RVEDiscretesize * _RVEDiscretesize * _RVEDiscretesize; ++i)
     {
-        _RGBABuff[i * 4 + 0] = _ptrToRVEdata[i];
-        _RGBABuff[i * 4 + 1] = _ptrToRVEdata[i];
-        _RGBABuff[i * 4 + 2] = _ptrToRVEdata[i];
-        _RGBABuff[i * 4 + 3] = _ptrToRVEdata[i];
+        if(_ptrToRVEdata[i] > _innerCutLevel)
+        {
+            _RGBABuff[i * 4 + 0] = 255;
+            _RGBABuff[i * 4 + 1] = 255;
+            _RGBABuff[i * 4 + 2] = 255;
+            _RGBABuff[i * 4 + 3] = 255;
+        }
+        else
+        {
+            _RGBABuff[i * 4 + 0] = 0;
+            _RGBABuff[i * 4 + 1] = 0;
+            _RGBABuff[i * 4 + 2] = 0;
+            _RGBABuff[i * 4 + 3] = 0;
+        }
     }
 
-    glGenTextures(1, &_fieldTextureID);
     glBindTexture(GL_TEXTURE_3D, _fieldTextureID);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -238,6 +267,7 @@ void VolumeGLRender::initializeGLEW()
     auto _rez = glewInit();
     std::cout << "GLEW: "<< glewGetErrorString(_rez) << std::endl;
 
+    glGenTextures(1, &_fieldTextureID);
     _loadFieldIntoTexture();
     _prepareTextureDisplayList();
 }
