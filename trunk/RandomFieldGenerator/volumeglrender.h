@@ -1,6 +1,7 @@
 #ifndef VOLUMEGLRENDER_H
 #define VOLUMEGLRENDER_H
 
+#include <_mingw.h> // __int64
 #include <GL/glew.h>
 
 #include <QtEvents>
