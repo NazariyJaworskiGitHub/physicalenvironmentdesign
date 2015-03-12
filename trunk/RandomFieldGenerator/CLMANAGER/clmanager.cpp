@@ -60,9 +60,18 @@ std::string CLManager::printDevicesInfo() const
             {
                 _str << "platform[" << i << "]:";
                 _str << "device[" << j << "]:" << std::endl;
-                cl::STRING_CLASS _data;
 
+                cl::STRING_CLASS _data;
                 cl_device_type _type;
+                cl_uint _number;
+                std::vector<size_t> _d;
+                size_t _size;
+                cl_ulong _longNumber;
+                cl_bool _b;
+                cl_device_exec_capabilities _cap;
+                cl_command_queue_properties _qCap;
+                cl_device_fp_config _fConf;
+
                 _devices[i][j].getInfo(CL_DEVICE_TYPE, &_type);
                 _appendBitfield<cl_device_type>(_type, CL_DEVICE_TYPE_CPU, "CL_DEVICE_TYPE_CPU", _data);
                 _appendBitfield<cl_device_type>(_type, CL_DEVICE_TYPE_GPU, "CL_DEVICE_TYPE_GPU", _data);
@@ -70,7 +79,6 @@ std::string CLManager::printDevicesInfo() const
                 _appendBitfield<cl_device_type>(_type, CL_DEVICE_TYPE_DEFAULT, "CL_DEVICE_TYPE_DEFAULT", _data);
                 _str << "\tCL_DEVICE_TYPE:                     " << _data.c_str() << "\n";
 
-                cl_uint _number;
                 _devices[i][j].getInfo(CL_DEVICE_VENDOR_ID, &_number);
                 _str << "\tCL_DEVICE_VENDOR_ID:                " << _number << std::endl;
 
@@ -80,14 +88,9 @@ std::string CLManager::printDevicesInfo() const
                 _devices[i][j].getInfo(CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, &_number);
                 _str << "\tCL_DEVICE_MAX_WORK_ITEM_DIMENSIONS: " << _number << std::endl;
 
-                std::vector<size_t> _d;
                 _devices[i][j].getInfo(CL_DEVICE_MAX_WORK_ITEM_SIZES, &_d);
-                std::cout << "\tCL_DEVICE_MAX_WORK_ITEM_SIZES: ( ";
-                for (size_t &_st : _d)
-                    std::cout << _st << " ";
-                std::cout << "\x08)" << std::endl;
+                _str << "\tCL_DEVICE_MAX_WORK_ITEM_SIZES:      " << _d[j] << std::endl;
 
-                size_t _size;
                 _devices[i][j].getInfo(CL_DEVICE_MAX_WORK_GROUP_SIZE, &_size);
                 _str << "\tCL_DEVICE_MAX_WORK_GROUP_SIZE:      " << _size << std::endl;
 
@@ -97,7 +100,6 @@ std::string CLManager::printDevicesInfo() const
                 _devices[i][j].getInfo(CL_DEVICE_ADDRESS_BITS, &_number);
                 _str << "\tCL_DEVICE_ADDRESS_BITS:             " << _number << std::endl;
 
-                cl_ulong _longNumber;
                 _devices[i][j].getInfo(CL_DEVICE_MAX_MEM_ALLOC_SIZE, &_longNumber);
                 _str << "\tCL_DEVICE_MAX_MEM_ALLOC_SIZE:       " << _longNumber << std::endl;
 
@@ -111,32 +113,62 @@ std::string CLManager::printDevicesInfo() const
                 _str << "\tCL_DEVICE_MIN_DATA_TYPE_ALIGN_SIZE: " << _number << std::endl;
 
                 _devices[i][j].getInfo(CL_DEVICE_GLOBAL_MEM_SIZE, &_longNumber);
-                _str << "\tCL_DEVICE_GLOBAL_MEM_SIZE:          " << _number << std::endl;
+                _str << "\tCL_DEVICE_GLOBAL_MEM_SIZE:          " << _longNumber << std::endl;
 
                 _devices[i][j].getInfo(CL_DEVICE_LOCAL_MEM_SIZE, &_longNumber);
-                _str << "\tCL_DEVICE_LOCAL_MEM_SIZE:           " << _number << std::endl;
+                _str << "\tCL_DEVICE_LOCAL_MEM_SIZE:           " << _longNumber << std::endl;
 
-                cl_bool b;
-                _devices[i][j].getInfo(CL_DEVICE_HOST_UNIFIED_MEMORY, &b);
-                _data = b ? "TRUE" : "FALSE";
+                _devices[i][j].getInfo(CL_DEVICE_HOST_UNIFIED_MEMORY, &_b);
+                _data = _b ? "TRUE" : "FALSE";
                 _str << "\tCL_DEVICE_HOST_UNIFIED_MEMORY:      " << _data.c_str() << std::endl;
 
-                _devices[i][j].getInfo(CL_DEVICE_AVAILABLE, &b);
-                _data = b ? "TRUE" : "FALSE";
+                _devices[i][j].getInfo(CL_DEVICE_AVAILABLE, &_b);
+                _data = _b ? "TRUE" : "FALSE";
                 _str << "\tCL_DEVICE_AVAILABLE:                " << _data.c_str() << std::endl;
 
-                _devices[i][j].getInfo(CL_DEVICE_COMPILER_AVAILABLE, &b);
-                _data = b ? "TRUE" : "FALSE";
+                _devices[i][j].getInfo(CL_DEVICE_COMPILER_AVAILABLE, &_b);
+                _data = _b ? "TRUE" : "FALSE";
                 _str << "\tCL_DEVICE_COMPILER_AVAILABLE:       " << _data.c_str() << std::endl;
 
+                _data = "";
+                _devices[i][j].getInfo(CL_DEVICE_EXECUTION_CAPABILITIES, &_cap);
+                _appendBitfield<cl_device_exec_capabilities>(_cap, CL_EXEC_KERNEL, "CL_EXEC_KERNEL", _data);
+                _appendBitfield<cl_device_exec_capabilities>(_cap, CL_EXEC_NATIVE_KERNEL, "CL_EXEC_NATIVE_KERNEL", _data);
+                _str << "\tCL_DEVICE_EXECUTION_CAPABILITIES:   " << _data.c_str() << std::endl;
+
+                _data = "";
+                _devices[i][j].getInfo(CL_DEVICE_QUEUE_PROPERTIES, &_qCap);
+                _appendBitfield<cl_command_queue_properties>(_qCap, CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE, "CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE", _data);
+                _appendBitfield<cl_command_queue_properties>(_qCap, CL_QUEUE_PROFILING_ENABLE, "CL_QUEUE_PROFILING_ENABLE", _data);
+                _str << "\tCL_DEVICE_QUEUE_PROPERTIES:         " << _data.c_str() << std::endl;
+
                 _devices[i][j].getInfo(CL_DEVICE_NAME, &_data);
-                _str << "\tCL_DEVICE_NAME:              " << _data.c_str() << std::endl;
+                _str << "\tCL_DEVICE_NAME:                     " << _data.c_str() << std::endl;
 
                 _devices[i][j].getInfo(CL_DEVICE_VENDOR, &_data);
                 _str << "\tCL_DEVICE_VENDOR:                   " << _data.c_str() << std::endl;
 
+                _devices[i][j].getInfo(CL_DEVICE_PROFILE, &_data);
+                _str << "\tCL_DEVICE_PROFILE:                  " << _data.c_str() << std::endl;
+
+                _devices[i][j].getInfo(CL_DEVICE_VERSION, &_data);
+                _str << "\tCL_DEVICE_VERSION:                  " << _data.c_str() << std::endl;
+
                 _devices[i][j].getInfo(CL_DRIVER_VERSION, &_data);
                 _str << "\tCL_DRIVER_VERSION:                  " << _data.c_str() << std::endl;
+
+                _data = "";
+                _devices[i][j].getInfo(CL_DEVICE_DOUBLE_FP_CONFIG, &_fConf);
+                _appendBitfield<cl_device_fp_config>(_fConf, CL_FP_DENORM, "CL_FP_DENORM", _data);
+                _appendBitfield<cl_device_fp_config>(_fConf, CL_FP_INF_NAN, "CL_FP_INF_NAN", _data);
+                _appendBitfield<cl_device_fp_config>(_fConf, CL_FP_ROUND_TO_NEAREST, "CL_FP_ROUND_TO_NEAREST", _data);
+                _appendBitfield<cl_device_fp_config>(_fConf, CL_FP_ROUND_TO_ZERO, "CL_FP_ROUND_TO_ZERO", _data);
+                _appendBitfield<cl_device_fp_config>(_fConf, CL_FP_ROUND_TO_INF, "CL_FP_ROUND_TO_INF", _data);
+                _appendBitfield<cl_device_fp_config>(_fConf, CL_FP_FMA, "CL_FP_FMA", _data);
+                _str << "\tCL_DEVICE_DOUBLE_FP_CONFIG:         " << _data.c_str() << std::endl;
+
+                _devices[i][j].getInfo(CL_DEVICE_OPENCL_C_VERSION, &_data);
+                _str << "\tCL_DEVICE_OPENCL_C_VERSION:         " << _data.c_str() << std::endl;
 
                 _devices[i][j].getInfo(CL_DEVICE_EXTENSIONS, &_data);
                 _str << "\tCL_DEVICE_EXTENSIONS:               " << _data.c_str() << std::endl;

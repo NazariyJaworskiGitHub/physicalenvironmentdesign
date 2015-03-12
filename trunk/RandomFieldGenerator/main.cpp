@@ -20,10 +20,10 @@ int main(int argc, char *argv[])
 
     std::chrono::steady_clock::time_point _t1 = std::chrono::steady_clock::now();
 
-    RVE64 _RVE;
+    RVE256 _RVE;
     _RVE.generateRandomField();
-    //_RVE.applyGaussianFilter(8);
-    _RVE.applyGaussianFilterCL(8);
+    //_RVE.applyGaussianFilter(32);
+    _RVE.applyGaussianFilterCL(32);
     //_RVE.applyCuttingLevel(0.65);
 
     std::chrono::steady_clock::time_point _t2 = std::chrono::steady_clock::now();
