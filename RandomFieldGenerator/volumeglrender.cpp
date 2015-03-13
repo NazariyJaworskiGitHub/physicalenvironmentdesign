@@ -146,7 +146,7 @@ void VolumeGLRender::_loadFieldIntoTexture() throw(std::runtime_error)
     if(!_RGBABuff)
         throw(std::runtime_error("FATAL: _loadFieldIntoTexture(): can't allocate memory for RVE"));
 
-    for( unsigned long i = 0; i<_RVEDiscretesize * _RVEDiscretesize * _RVEDiscretesize; ++i)
+    for(long i = 0; i<_RVEDiscretesize * _RVEDiscretesize * _RVEDiscretesize; ++i)
     {
         if(_ptrToRVEdata[i] > _innerCutLevel)
         {
