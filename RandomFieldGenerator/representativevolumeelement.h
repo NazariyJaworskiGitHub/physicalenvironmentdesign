@@ -410,7 +410,7 @@ class RepresentativeVolumeElement
         _kernelZPtr->setArg(6, _size);
 
         /// \todo next platforms (CPU/GPU)
-        cl::CommandQueue &_queue = OpenCL::CLManager::instance().getCommandQueue()[0][0];
+        cl::CommandQueue &_queue = OpenCL::CLManager::instance().getCommandQueues()[0][0];
         cl::Event _event;
 
         size_t _kernelMaxWorkGroupSize;

@@ -2,6 +2,7 @@
 #define CLMANAGER_H
 
 #include <iostream>
+#include <list>
 
 #ifndef __CL_ENABLE_EXCEPTIONS
 #define __CL_ENABLE_EXCEPTIONS
@@ -37,22 +38,22 @@ namespace OpenCL
 
         /// Queuse are created on construction
         private: std::vector<std::vector<cl::CommandQueue>> _commandQueues;
-        public : const std::vector<std::vector<cl::CommandQueue>> & getCommandQueue() const
+        public : const std::vector<std::vector<cl::CommandQueue>> & getCommandQueues() const
                                                                   {return _commandQueues;}
-        public : std::vector<std::vector<cl::CommandQueue>> & getCommandQueue() {
+        public : std::vector<std::vector<cl::CommandQueue>> & getCommandQueues() {
                                                                   return _commandQueues;}
 
         /// Create different program objects per contexts only once
         /// (it is like a *.dll)
-        private: std::vector<cl::Program> _programs;
-        public : const std::vector<cl::Program> & getPrograms() const {return _programs;}
-        public : std::vector<cl::Program> & getPrograms() {return _programs;}
+        private: std::list<cl::Program> _programs;
+        public : const std::list<cl::Program> & getPrograms() const {return _programs;}
+        public : std::list<cl::Program> & getPrograms() {return _programs;}
 
         /// Create different kernel objects per contexts only once
         /// (it is like a function in a *.dll)
-        private: std::vector<cl::Kernel> _kernels;
-        public : const std::vector<cl::Kernel> & getKernels() const {return _kernels;}
-        public : std::vector<cl::Kernel> & getKernels() {return _kernels;}
+        private: std::list<cl::Kernel> _kernels;
+        public : const std::list<cl::Kernel> & getKernels() const {return _kernels;}
+        public : std::list<cl::Kernel> & getKernels() {return _kernels;}
 
         /// Printing
         private: template<typename T> static void _appendBitfield(

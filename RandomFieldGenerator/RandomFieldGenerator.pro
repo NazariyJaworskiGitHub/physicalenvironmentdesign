@@ -38,6 +38,11 @@ win32{
     }
 }
 
+#ViennaCL
+# TODO: Remove it into different project
+DEFINES += VIENNACL_WITH_OPENCL
+INCLUDEPATH += E:\ViennaCL-1.6.2\
+
 #For debugging
 CONFIG(debug, release|debug):DEFINES += _DEBUG_MODE
 
@@ -78,13 +83,15 @@ QMAKE_CXXFLAGS_RELEASE += -O2 \ #Equivalent to -O3 (MinGW 4.8.0)
 
 SOURCES += main.cpp \
     CLMANAGER/clmanager.cpp \
-    CLMANAGER/TESTS/test_clmanager.cpp \
+    TESTS/test_clmanager.cpp \
     volumeglrender.cpp \
-    representativevolumeelement.cpp
+    representativevolumeelement.cpp \
+    TESTS/test_viennacl.cpp
 
 HEADERS += \
     CLMANAGER/clmanager.h \
-    CLMANAGER/TESTS/tests_runner.h \
-    CLMANAGER/TESTS/test_clmanager.h \
+    TESTS/tests_runner.h \
+    TESTS/test_clmanager.h \
     volumeglrender.h \
-    representativevolumeelement.h
+    representativevolumeelement.h \
+    TESTS/test_viennacl.h

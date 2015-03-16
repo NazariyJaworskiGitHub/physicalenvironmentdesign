@@ -3,6 +3,8 @@
 #include <iostream>
 #include <sstream>
 
+//QQuaternion _quat;
+
 VolumeGLRender::VolumeGLRender(
         const int RVEDiscreteSize,
         const float *ptrToRVEData,
@@ -32,6 +34,22 @@ void VolumeGLRender::mouseMoveEvent(QMouseEvent *e)
     {
         _angleOY += e->x()-_oldMouseX;
         _angleOX += e->y()-_oldMouseY;
+
+        QMatrix4x4 _m;
+        _m.setToIdentity();
+        _m.rotate(e->x()-_oldMouseX, 0, 1, 0);
+        _m.rotate(e->y()-_oldMouseY, 1, 0, 0);
+        _mControl = _m * _mControl;
+
+//        _m.setToIdentity();
+//        _m.rotate(-(e->x()-_oldMouseX), 0, 1, 0);
+//        _m.rotate(-(e->y()-_oldMouseY), 1, 0, 0);
+//        _mControlRev = _m * _mControlRev;
+
+//        _quat = QQuaternion::fromAxisAndAngle(1, 0, 0, e->y()-_oldMouseY) *
+//            QQuaternion::fromAxisAndAngle(0, 1, 0, e->x()-_oldMouseX) * _quat;
+//        _quat.normalize();
+
         _oldMouseX = e->x();
         _oldMouseY = e->y();
         this->updateGL();
@@ -41,6 +59,9 @@ void VolumeGLRender::mouseMoveEvent(QMouseEvent *e)
 void VolumeGLRender::wheelEvent(QWheelEvent *e)
 {
     _Zoom += _Zoom * e->delta() / 5000;
+
+//    _mControl.scale(_Zoom);
+
     this->updateGL();
 }
 
@@ -93,20 +114,24 @@ void VolumeGLRender::_drawOrigin() noexcept
     glPushMatrix();
 
         glLoadIdentity();
-        gluPerspective( 60.0f, 1.0, 0.1, 1000.0f );
+        gluPerspective( 60.0f, 160.0/120.0, 0.1, 1000.0f );
         int _width = this->width();
         int _height = this->height();
-        glViewport(0,0,100,100);
+        glViewport(0,0,160,120);
 
         glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
 
-            glLoadIdentity();
-            gluLookAt(0, 0, 2,
-                      0, 0, 0,
-                      0, 1, 0);
-            glRotated(_angleOY, 0, 1, 0);
-            glRotated(_angleOX, 1, 0, 0);
+//            glLoadIdentity();
+//            gluLookAt(0, 0, 2,
+//                      0, 0, 0,
+//                      0, 1, 0);
+//            glRotated(_angleOY, 0, 1, 0);
+//            glRotated(_angleOX, 1, 0, 0);
+
+            glLoadMatrixf((_mWorld * _mControl).constData());
+
+            glEnable(GL_DEPTH_TEST);
 
             glLineWidth(3);
 
@@ -132,6 +157,8 @@ void VolumeGLRender::_drawOrigin() noexcept
             this->renderText(0, 0, 1, "z");
 
             glLineWidth(1);
+
+            glDisable(GL_DEPTH_TEST);
 
         glPopMatrix();
 
@@ -194,16 +221,19 @@ void VolumeGLRender::_prepareTextureDisplayList() noexcept
         glEnable(GL_TEXTURE_3D);
         glBindTexture( GL_TEXTURE_3D, _fieldTextureID);
         glBegin(GL_QUADS);
-        for ( float _fIndx = -1.0f; _fIndx <= 1.0f; _fIndx+=0.01f )
+        for ( float _fIndx = 0.0f; _fIndx <= 1.0f; _fIndx += 1.0 / _RVEDiscretesize )
         {
-            glTexCoord3f(0.0f, 0.0f, (_fIndx + 1.0f) / 2.0f);
-            glVertex3f(-1.0f, -1.0f, _fIndx);
-            glTexCoord3f(1.0f, 0.0f, (_fIndx + 1.0f) / 2.0f);
-            glVertex3f(1.0f, -1.0f, _fIndx);
-            glTexCoord3f(1.0f, 1.0f, (_fIndx + 1.0f) / 2.0f);
+            glTexCoord3f(0.0f, 0.0f, _fIndx);
+            glVertex3f(0.0f, 0.0f, _fIndx);
+
+            glTexCoord3f(1.0f, 0.0f, _fIndx);
+            glVertex3f(1.0f, 0.0f, _fIndx);
+
+            glTexCoord3f(1.0f, 1.0f, _fIndx);
             glVertex3f(1.0f, 1.0f, _fIndx);
-            glTexCoord3f(0.0f, 1.0f, (_fIndx + 1.0f) / 2.0f);
-            glVertex3f(-1.0f, 1.0f, _fIndx);
+
+            glTexCoord3f(0.0f, 1.0f, _fIndx);
+            glVertex3f(0.0f, 1.0f, _fIndx);
         }
         glEnd();
         glDisable(GL_TEXTURE_3D);
@@ -242,8 +272,8 @@ void VolumeGLRender::initializeGL()
     aGLFormat.setVersion(aGLFormat.majorVersion(),aGLFormat.minorVersion());
     QGLFormat::setDefaultFormat(aGLFormat);
 
-    glEnable( GL_ALPHA_TEST );
-    glAlphaFunc( GL_GREATER, 0.05f );
+//    glEnable( GL_ALPHA_TEST );
+//    glAlphaFunc( GL_GEQUAL, 0.5f );
 
     glEnable(GL_BLEND);
     glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
@@ -258,6 +288,18 @@ void VolumeGLRender::initializeGL()
 //    glEnable(GL_NORMALIZE);
 //    glLightfv(GL_LIGHT0, GL_DIFFUSE, light0_diffuse);
 //    glLightfv(GL_LIGHT0, GL_POSITION, light0_direction);
+
+    _mTexture.setToIdentity();
+    _mModel.setToIdentity();
+    _mControl.setToIdentity();
+//    _mControlRev.setToIdentity();
+    _mWorld.setToIdentity();
+//    _mProj.setToIdentity();
+
+    _mModel.translate(-0.5,-0.5,-0.5);  /// \todo move it out
+    _mWorld.lookAt(QVector3D(_CameraPosition[0],_CameraPosition[1],_CameraPosition[2]),
+            QVector3D(0,0,0),QVector3D(0,1,0));
+//    _mProj.perspective( 60.0f, 4.0/3.0, 0.1f, 1000.0f );
 }
 
 void VolumeGLRender::initializeGLEW()
@@ -277,6 +319,7 @@ void VolumeGLRender::resizeGL(int nWidth, int nHeight)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective( 60.0f, ((GLfloat)nWidth)/(GLfloat)nHeight, 0.1, 1000.0f );
+//    _mProj.perspective( 60.0f, ((GLfloat)nWidth)/(GLfloat)nHeight, 0.1, 1000.0f );
     glViewport(0,0,(GLint)nWidth,(GLint)nHeight);
 }
 
@@ -286,20 +329,81 @@ void VolumeGLRender::paintGL()
 
     _drawOrigin();
 
-    glMatrixMode(GL_TEXTURE);
-    glLoadIdentity();
-    glTranslatef( 0.5f, 0.5f, 0.5f );   // put to center
-    glRotated(-_angleOY, 0, 1, 0);
-    glRotated(-_angleOX, 1, 0, 0);
-    glScaled(1/_Zoom, 1/_Zoom, 1/_Zoom);
-    glTranslatef( -0.5f,-0.5f, -0.5f ); // put back
+//    glMatrixMode(GL_MODELVIEW);
+//    glLoadMatrixf((_mWorld * _mControl).constData());;
+
+//    glEnable(GL_DEPTH_TEST);
+
+//    glLineWidth(3);
+
+//    glBegin(GL_LINES);
+//    glColor3d(1, 0, 0);
+//    glVertex3d(0, 0, 0);
+//    glVertex3d(1, 0, 0);
+//    glEnd();
+//    this->renderText(1, 0, 0, "x");
+
+//    glBegin(GL_LINES);
+//    glColor3d(0, 1, 0);
+//    glVertex3d(0, 0, 0);
+//    glVertex3d(0, 1, 0);
+//    glEnd();
+//    this->renderText(0, 1, 0, "y");
+
+//    glBegin(GL_LINES);
+//    glColor3d(0, 0, 1);
+//    glVertex3d(0, 0, 0);
+//    glVertex3d(0, 0, 1);
+//    glEnd();
+//    this->renderText(0, 0, 1, "z");
+
+//    glLineWidth(1);
+
+//    glDisable(GL_DEPTH_TEST);
+
+//    glMatrixMode(GL_PROJECTION);
+//    glLoadMatrixf(_mProj.constData());
 
     glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    gluLookAt(_CameraPosition[0], _CameraPosition[1], _CameraPosition[2],
-              0, 0, 0,
-              0, 1, 0);
-    glTranslated(-_ScenePosition[0], -_ScenePosition[1], -_ScenePosition[2]);
+//    glLoadMatrixf((_mWorld * _mModel).constData());
+    glLoadMatrixf((_mWorld * _mControl * _mModel).constData());
+
+    glMatrixMode(GL_TEXTURE);
+
+//    QMatrix4x4 _m;
+//    _m.setToIdentity();
+//    _m.lookAt(QVector3D(0,0,0),QVector3D(0,0,-1),QVector3D(0,1,0));
+
+    _mTexture.setToIdentity();
+
+//    _mTexture.translate(0.5f, 0.5f, 0.5f);
+//    _mTexture.scale(1/_Zoom, 1/_Zoom, 1/_Zoom);
+
+////    _mTexture.rotate(-_angleOX, 1, 0, 0);
+////    _mTexture.rotate(-_angleOY, 0, 1, 0);
+
+//    _mTexture = _mTexture * _mControl;
+
+////    _mTexture.rotate(_quat);
+
+//    _mTexture.translate(-0.5f, -0.5f, -0.5f);
+
+//    _mTexture = _m * _mTexture;
+    glLoadMatrixf(_mTexture.constData());
+
+//    glMatrixMode(GL_TEXTURE);
+//    glLoadIdentity();
+//    glTranslatef( 0.5f, 0.5f, 0.5f );   // put to center
+//    glRotated(-_angleOX, 1, 0, 0);
+//    glRotated(-_angleOY, 0, 1, 0);
+//    glScaled(1/_Zoom, 1/_Zoom, 1/_Zoom);
+//    glTranslatef( -0.5f,-0.5f, -0.5f ); // put back
+
+//    glMatrixMode(GL_MODELVIEW);
+//    glLoadIdentity();
+//    gluLookAt(_CameraPosition[0], _CameraPosition[1], _CameraPosition[2],
+//              0, 0, 0,
+//              0, 1, 0);
 
     glCallList(_drawFieldDisplayListID);
 

@@ -10,11 +10,21 @@
 
 #include <node.h>
 
+#include <QMatrix4x4>
+
 using namespace MathUtils;
 
 /// \todo needs merege, see GridGenerator SimpleGLRender
 class VolumeGLRender : public QGLWidget
 {
+    // Scene = Proj * World * Control * Model
+    private: QMatrix4x4 _mTexture;
+    private: QMatrix4x4 _mModel;
+    private: QMatrix4x4 _mControl;
+//    private: QMatrix4x4 _mControlRev;
+    private: QMatrix4x4 _mWorld;
+//    private: QMatrix4x4 _mProj;
+
     // set on construction, can't be changed
     private: const int _RVEDiscretesize;
     private: const float * const _ptrToRVEdata = nullptr;
@@ -44,12 +54,7 @@ class VolumeGLRender : public QGLWidget
         _CameraPosition = newPosition;}
     public : Vector3D getCameraPosition() const noexcept {return _CameraPosition;}
 
-    private: Vector3D _ScenePosition = Vector3D(0.0, 0.0, 0.0);
-    public : void setScenePosition(const Vector3D &newPosition) noexcept {
-        _ScenePosition = newPosition;}
-    public : Vector3D getScenePosition() const noexcept {return _ScenePosition;}
-
-    private: double _Zoom = 0.5;
+    private: double _Zoom = 1.0;
     public : void setZoom(const double &newZoom) noexcept {
         _Zoom = newZoom;}
     public : double getZoom() const noexcept {return _Zoom;}
