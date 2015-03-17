@@ -86,7 +86,9 @@ SOURCES += main.cpp \
     TESTS/test_clmanager.cpp \
     volumeglrender.cpp \
     representativevolumeelement.cpp \
-    TESTS/test_viennacl.cpp
+    TESTS/test_viennacl.cpp \
+    simulation.cpp \
+    TESTS/test_simulation.cpp
 
 HEADERS += \
     CLMANAGER/clmanager.h \
@@ -94,4 +96,6 @@ HEADERS += \
     TESTS/test_clmanager.h \
     volumeglrender.h \
     representativevolumeelement.h \
-    TESTS/test_viennacl.h
+    TESTS/test_viennacl.h \
+    simulation.h \
+    TESTS/test_simulation.h
