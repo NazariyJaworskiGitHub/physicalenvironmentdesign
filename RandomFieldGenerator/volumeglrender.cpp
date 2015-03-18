@@ -8,10 +8,12 @@
 VolumeGLRender::VolumeGLRender(
         const int RVEDiscreteSize,
         const float *ptrToRVEData,
+        const float *ptrToRVEPotentialField,
         QWidget *pwgt) noexcept:
     QGLWidget(QGLFormat(QGL::SampleBuffers),pwgt),
     _RVEDiscretesize(RVEDiscreteSize),
-    _ptrToRVEdata(ptrToRVEData)
+    _ptrToRVEdata(ptrToRVEData),
+    _ptrToRVEpotentialField(ptrToRVEPotentialField)
 {
 }
 
@@ -103,6 +105,26 @@ void VolumeGLRender::keyPressEvent(QKeyEvent *e)
             this->updateGL();
         }
     }
+    else if(e->key() == Qt::Key_PageUp)
+    {
+        if(_potentialFieldAlphaLevel<255)
+        {
+            _potentialFieldAlphaLevel+=5;
+            _loadPotentialFieldIntoTexture();
+            dataString = "Alpha level: " + QString::number(_potentialFieldAlphaLevel);
+            this->updateGL();
+        }
+    }
+    else if(e->key() == Qt::Key_PageDown)
+    {
+        if(_potentialFieldAlphaLevel>0)
+        {
+            _potentialFieldAlphaLevel-=5;
+            _loadPotentialFieldIntoTexture();
+            dataString = "Alpha level: " + QString::number(_potentialFieldAlphaLevel);
+            this->updateGL();
+        }
+    }
 }
 
 /// \warning Intel old video driver bug, when using glColor3ub(255, 0, 0);
@@ -177,6 +199,24 @@ void VolumeGLRender::_loadFieldIntoTexture() throw(std::runtime_error)
     {
         if(_ptrToRVEdata[i] > _innerCutLevel)
         {
+//            int r,g,b;
+//            float a = (1.0f-_ptrToRVEdata[i])*4.0f; //invert and group
+//            int X = std::floor(a);                  //this is the integer part
+//            int Y = std::floor(255*(a-X));          //fractional part from 0 to 255
+//            switch(X)
+//            {
+//                case 0: r = 255;    g=Y;        b=0;    break;
+//                case 1: r = 255-Y;  g=255;      b=0;    break;
+//                case 2: r = 0;      g=255;      b=Y;    break;
+//                case 3: r = 0;      g=255-Y;    b=255;  break;
+//                case 4: r = 0;      g=0;        b=255;  break;
+//            }
+
+//            _RGBABuff[i * 4 + 0] = r;
+//            _RGBABuff[i * 4 + 1] = g;
+//            _RGBABuff[i * 4 + 2] = b;
+//            _RGBABuff[i * 4 + 3] = 255;
+
             _RGBABuff[i * 4 + 0] = 255;
             _RGBABuff[i * 4 + 1] = 255;
             _RGBABuff[i * 4 + 2] = 255;
@@ -191,13 +231,15 @@ void VolumeGLRender::_loadFieldIntoTexture() throw(std::runtime_error)
         }
     }
 
-    glBindTexture(GL_TEXTURE_3D, _fieldTextureID);
+    glBindTexture(GL_TEXTURE_3D, _fieldTextureID[0]);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+//    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+//    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     // see https://www.opengl.org/sdk/docs/man3/xhtml/glTexImage3D.xml
     glTexImage3D(
                 GL_TEXTURE_3D,      // target, copy data to device
@@ -216,10 +258,94 @@ void VolumeGLRender::_loadFieldIntoTexture() throw(std::runtime_error)
 
 void VolumeGLRender::_prepareTextureDisplayList() noexcept
 {
-    _drawFieldDisplayListID = glGenLists(1);
     glNewList(_drawFieldDisplayListID, GL_COMPILE);
+    glEnable(GL_TEXTURE_3D);
+    glBindTexture( GL_TEXTURE_3D, _fieldTextureID[0]);
+    glBegin(GL_QUADS);
+    for ( float _fIndx = 0.0f; _fIndx <= 1.0f; _fIndx += 1.0 / _RVEDiscretesize )
+    {
+        glTexCoord3f(0.0f, 0.0f, _fIndx);
+        glVertex3f(0.0f, 0.0f, _fIndx);
+
+        glTexCoord3f(1.0f, 0.0f, _fIndx);
+        glVertex3f(1.0f, 0.0f, _fIndx);
+
+        glTexCoord3f(1.0f, 1.0f, _fIndx);
+        glVertex3f(1.0f, 1.0f, _fIndx);
+
+        glTexCoord3f(0.0f, 1.0f, _fIndx);
+        glVertex3f(0.0f, 1.0f, _fIndx);
+    }
+    glEnd();
+    glDisable(GL_TEXTURE_3D);
+    glEndList();
+}
+
+void VolumeGLRender::_loadPotentialFieldIntoTexture() throw(std::runtime_error)
+{
+    GLbyte *_RGBABuff = new GLbyte[_RVEDiscretesize * _RVEDiscretesize * _RVEDiscretesize * 4];
+    if(!_RGBABuff)
+        throw(std::runtime_error("FATAL: _loadFieldIntoTexture(): can't allocate memory for RVE"));
+
+    for(long i = 0; i<_RVEDiscretesize * _RVEDiscretesize * _RVEDiscretesize; ++i)
+    {
+//        if(_ptrToRVEpotentialField[i] > _innerCutLevel)
+//        {
+            int r,g,b;
+            float a = (1.0f-_ptrToRVEpotentialField[i])*4.0f;   //invert and group
+            int X = std::floor(a);                              //this is the integer part
+            int Y = std::floor(255*(a-X));                      //fractional part from 0 to 255
+            switch(X)
+            {
+                case 0: r = 255;    g=Y;        b=0;    break;
+                case 1: r = 255-Y;  g=255;      b=0;    break;
+                case 2: r = 0;      g=255;      b=Y;    break;
+                case 3: r = 0;      g=255-Y;    b=255;  break;
+                case 4: r = 0;      g=0;        b=255;  break;
+            }
+
+            _RGBABuff[i * 4 + 0] = r;
+            _RGBABuff[i * 4 + 1] = g;
+            _RGBABuff[i * 4 + 2] = b;
+            _RGBABuff[i * 4 + 3] = _potentialFieldAlphaLevel;
+//        }
+//        else
+//        {
+//            _RGBABuff[i * 4 + 0] = 0;
+//            _RGBABuff[i * 4 + 1] = 0;
+//            _RGBABuff[i * 4 + 2] = 0;
+//            _RGBABuff[i * 4 + 3] = 0;
+//        }
+    }
+
+    glBindTexture(GL_TEXTURE_3D, _fieldTextureID[1]);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    // see https://www.opengl.org/sdk/docs/man3/xhtml/glTexImage3D.xml
+    glTexImage3D(
+                GL_TEXTURE_3D,      // target, copy data to device
+                0,                  // level
+                GL_RGBA,            // internalFormat
+                _RVEDiscretesize,   // width
+                _RVEDiscretesize,   // height
+                _RVEDiscretesize,   // depth
+                0,                  // border
+                GL_RGBA,            // format
+                GL_UNSIGNED_BYTE,   // type
+                _RGBABuff           // ptr to data
+                );
+    delete[] _RGBABuff;
+}
+
+void VolumeGLRender::_preparePotentialTextureDisplayList() noexcept
+{
+    glNewList(_drawFieldDisplayListID+1, GL_COMPILE);
         glEnable(GL_TEXTURE_3D);
-        glBindTexture( GL_TEXTURE_3D, _fieldTextureID);
+        glBindTexture( GL_TEXTURE_3D, _fieldTextureID[1]);
         glBegin(GL_QUADS);
         for ( float _fIndx = 0.0f; _fIndx <= 1.0f; _fIndx += 1.0 / _RVEDiscretesize )
         {
@@ -237,7 +363,7 @@ void VolumeGLRender::_prepareTextureDisplayList() noexcept
         }
         glEnd();
         glDisable(GL_TEXTURE_3D);
-    glEndList();
+        glEndList();
 }
 
 std::string VolumeGLRender::printOpenGLInfo() const noexcept
@@ -309,9 +435,12 @@ void VolumeGLRender::initializeGLEW()
     auto _rez = glewInit();
     std::cout << "GLEW: "<< glewGetErrorString(_rez) << std::endl;
 
-    glGenTextures(1, &_fieldTextureID);
+    glGenTextures(2, _fieldTextureID);
+    _drawFieldDisplayListID = glGenLists(2);
     _loadFieldIntoTexture();
     _prepareTextureDisplayList();
+    _loadPotentialFieldIntoTexture();
+    _preparePotentialTextureDisplayList();
 }
 
 void VolumeGLRender::resizeGL(int nWidth, int nHeight)
@@ -364,9 +493,9 @@ void VolumeGLRender::paintGL()
 //    glMatrixMode(GL_PROJECTION);
 //    glLoadMatrixf(_mProj.constData());
 
-    glMatrixMode(GL_MODELVIEW);
-//    glLoadMatrixf((_mWorld * _mModel).constData());
-    glLoadMatrixf((_mWorld * _mControl * _mModel).constData());
+/*    glMatrixMode(GL_MODELVIEW);
+    glLoadMatrixf((_mWorld * _mModel).constData());
+//    glLoadMatrixf((_mWorld * _mControl * _mModel).constData());
 
     glMatrixMode(GL_TEXTURE);
 
@@ -376,36 +505,38 @@ void VolumeGLRender::paintGL()
 
     _mTexture.setToIdentity();
 
-//    _mTexture.translate(0.5f, 0.5f, 0.5f);
-//    _mTexture.scale(1/_Zoom, 1/_Zoom, 1/_Zoom);
+    _mTexture.translate(0.5f, 0.5f, 0.5f);
+    _mTexture.scale(1/_Zoom, 1/_Zoom, 1/_Zoom);
 
-////    _mTexture.rotate(-_angleOX, 1, 0, 0);
-////    _mTexture.rotate(-_angleOY, 0, 1, 0);
+    _mTexture.rotate(-_angleOX, 1, 0, 0);
+    _mTexture.rotate(-_angleOY, 0, 1, 0);
 
 //    _mTexture = _mTexture * _mControl;
 
 ////    _mTexture.rotate(_quat);
 
-//    _mTexture.translate(-0.5f, -0.5f, -0.5f);
+    _mTexture.translate(-0.5f, -0.5f, -0.5f);
 
 //    _mTexture = _m * _mTexture;
-    glLoadMatrixf(_mTexture.constData());
+    glLoadMatrixf(_mTexture.constData());*/
 
-//    glMatrixMode(GL_TEXTURE);
-//    glLoadIdentity();
-//    glTranslatef( 0.5f, 0.5f, 0.5f );   // put to center
-//    glRotated(-_angleOX, 1, 0, 0);
-//    glRotated(-_angleOY, 0, 1, 0);
-//    glScaled(1/_Zoom, 1/_Zoom, 1/_Zoom);
-//    glTranslatef( -0.5f,-0.5f, -0.5f ); // put back
+    glMatrixMode(GL_TEXTURE);
+    glLoadIdentity();
+    glTranslatef( 0.5f, 0.5f, 0.5f );   // put to center
+    glRotated(-_angleOX, 1, 0, 0);
+    glRotated(-_angleOY, 0, 1, 0);
+    glScaled(1/_Zoom, 1/_Zoom, 1/_Zoom);
+    glTranslatef( -0.5f,-0.5f, -0.5f ); // put back
 
-//    glMatrixMode(GL_MODELVIEW);
-//    glLoadIdentity();
-//    gluLookAt(_CameraPosition[0], _CameraPosition[1], _CameraPosition[2],
-//              0, 0, 0,
-//              0, 1, 0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(0, 0, 1,
+              0, 0, 0,
+              0, 1, 0);
+    glTranslatef( -0.5f, -0.5f, -0.5f );
 
     glCallList(_drawFieldDisplayListID);
+    glCallList(_drawFieldDisplayListID+1);
 
     glColor4d(
             _TextColor[0],

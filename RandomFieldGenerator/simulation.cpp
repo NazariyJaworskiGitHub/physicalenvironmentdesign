@@ -2,10 +2,10 @@
 
 void FEM::Simulation::constructLocalStiffnessMatrix(
         const float step,
-        const unsigned *A,
-        const unsigned *B,
-        const unsigned *C,
-        const unsigned *D,
+        const int *A,
+        const int *B,
+        const int *C,
+        const int *D,
         const float conduction,
         float K[4][4]
         ) noexcept
@@ -180,4 +180,277 @@ void FEM::Simulation::applyLocalNeumannConditions(
         f[2] += q;
         f[3] += q;
     }
+}
+
+float cutting = 0.63;
+void FEM::Simulation::assembleSiffnessMatrix(
+        const float RVEPhysicalLength,
+        const int RVEDiscreteSize,
+        const float *ptrToRVEData,
+        const float conductionMatrix,
+        const float conductionPhase,
+        //char maskNeumannConditions,
+        const float T0,
+        //char maskDirichletConditions,
+        const float flux,
+        std::vector<std::map<long, float> > &cpu_sparse_matrix,
+        std::vector<float> &cpu_loads) noexcept
+{
+    float _step = RVEPhysicalLength / RVEDiscreteSize;
+    for(int k=0; k<RVEDiscreteSize-1; ++k)
+        for(int j=0; j<RVEDiscreteSize-1; ++j)
+            for(int i=0; i<RVEDiscreteSize-1; ++i)
+            {
+                long _index = k*RVEDiscreteSize*RVEDiscreteSize +
+                        j*RVEDiscreteSize + i;
+
+                // Prepare cube nodes indexes
+                long _v0 = _index;                                                          //   i,   j,   k
+                long _v1 = _index + 1;                                                      // i+1,   j,   k
+                long _v2 = _index + RVEDiscreteSize;                                        //   i, j+1,   k
+                long _v3 = _index + 1 + RVEDiscreteSize;                                    // i+1, j+1,   k
+                long _v4 = _index + RVEDiscreteSize*RVEDiscreteSize;                        //   i,   j, k+1
+                long _v5 = _index + 1 + RVEDiscreteSize*RVEDiscreteSize;                    // i+1,   j, k+1
+                long _v6 = _index + RVEDiscreteSize + RVEDiscreteSize*RVEDiscreteSize;      //   i, j+1, k+1
+                long _v7 = _index + 1 + RVEDiscreteSize + RVEDiscreteSize*RVEDiscreteSize;  // i+1, j+1, k+1
+
+                float _K[4][4];
+                float _f[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+                float _curConduction;
+                float _q = flux * _step * _step / 2.0f / RVEPhysicalLength / RVEPhysicalLength / 3.0f;
+
+                // Make 6 tetrahedrons
+
+                // BOTTOM_LEFT _v0 _v1 _v6 _v4
+                //  BOTTOM  _v0 _v1 _v4
+                //  LEFT    _v0 _v4 _v6
+                {
+                    if(
+                            ptrToRVEData[_v0] > cutting &&
+                            ptrToRVEData[_v1] > cutting &&
+                            ptrToRVEData[_v6] > cutting &&
+                            ptrToRVEData[_v4] > cutting )
+                        _curConduction = conductionPhase;
+                    else
+                        _curConduction = conductionMatrix;
+                    {
+                        int _A[] = {  i,   j,   k};
+                        int _B[] = {i+1,   j,   k};
+                        int _C[] = {  i, j+1, k+1};
+                        int _D[] = {  i,   j, k+1};
+                        constructLocalStiffnessMatrix(
+                                    _step,
+                                    _A, _B, _C, _D,
+                                    _curConduction,
+                                    _K);
+                    }
+                    if(i==0)
+                        applyLocalNeumannConditions(
+                                    0b00001101, // LEFT
+                                    _q, _f);
+
+                    if(i==RVEDiscreteSize-2)
+                        applyLocalDirichletConditions(
+                                    0b00000010, // RIGHT
+                                    T0, _K, _f);
+
+                    long _element[] = {_v0, _v1, _v6, _v4};
+                    for(long ii=0; ii<4; ++ii)
+                    {
+                        for(long jj=0; jj<4; ++jj)
+                            cpu_sparse_matrix[_element[ii]][_element[jj]] += _K[ii][jj];
+                        cpu_loads[_element[ii]] += _f[ii];
+                    }
+                }
+
+                // LEFT_FRONT _v0 _v1 _v2 _v6
+                //  LEFT    _v0 _v2 _v6
+                //  FRONT   _v0 _v1 _v2
+                {
+                    if(
+                            ptrToRVEData[_v0] > cutting &&
+                            ptrToRVEData[_v1] > cutting &&
+                            ptrToRVEData[_v2] > cutting &&
+                            ptrToRVEData[_v6] > cutting )
+                        _curConduction = conductionPhase;
+                    else
+                        _curConduction = conductionMatrix;
+                    {
+                        int _A[] = {  i,   j,   k};
+                        int _B[] = {i+1,   j,   k};
+                        int _C[] = {  i, j+1,   k};
+                        int _D[] = {  i, j+1, k+1};
+                        constructLocalStiffnessMatrix(
+                                    _step,
+                                    _A, _B, _C, _D,
+                                    _curConduction,
+                                    _K);
+                    }
+                    if(i==0)
+                        applyLocalNeumannConditions(
+                                    0b00001101, // LEFT
+                                    _q, _f);
+
+                    if(i==RVEDiscreteSize-2)
+                        applyLocalDirichletConditions(
+                                    0b00000010, // RIGHT
+                                    T0, _K, _f);
+
+                    long _element[] = {_v0, _v1, _v2, _v6};
+                    for(long ii=0; ii<4; ++ii)
+                    {
+                        for(long jj=0; jj<4; ++jj)
+                            cpu_sparse_matrix[_element[ii]][_element[jj]] += _K[ii][jj];
+                        cpu_loads[_element[ii]] += _f[ii];
+                    }
+                }
+
+                // RIGHT_BACK _v1 _v5 _v7 _v6
+                //  RIGHT   _v1 _v5 _v7
+                //  BACK    _v5 _v6 _v7
+                {
+                    if(
+                            ptrToRVEData[_v1] > cutting &&
+                            ptrToRVEData[_v5] > cutting &&
+                            ptrToRVEData[_v7] > cutting &&
+                            ptrToRVEData[_v6] > cutting )
+                        _curConduction = conductionPhase;
+                    else
+                        _curConduction = conductionMatrix;
+                    {
+                        int _A[] = {i+1,   j,   k};
+                        int _B[] = {i+1,   j, k+1};
+                        int _C[] = {i+1, j+1, k+1};
+                        int _D[] = {  i, j+1, k+1};
+                        constructLocalStiffnessMatrix(
+                                    _step,
+                                    _A, _B, _C, _D,
+                                    _curConduction,
+                                    _K);
+                    }
+                    if(i==RVEDiscreteSize-2)
+                        applyLocalDirichletConditions(
+                                    0b00000111, // RIGHT
+                                    T0, _K, _f);
+
+                    long _element[] = {_v1, _v5, _v7, _v6};
+                    for(long ii=0; ii<4; ++ii)
+                    {
+                        for(long jj=0; jj<4; ++jj)
+                            cpu_sparse_matrix[_element[ii]][_element[jj]] += _K[ii][jj];
+                        cpu_loads[_element[ii]] += _f[ii];
+                    }
+                }
+
+                // TOP_RIGHT _v1 _v3 _v6 _v7
+                //  TOP     _v3 _v6 _v7
+                //  RIGHT   _v1 _v3 _v7
+                {
+                    if(
+                            ptrToRVEData[_v1] > cutting &&
+                            ptrToRVEData[_v3] > cutting &&
+                            ptrToRVEData[_v6] > cutting &&
+                            ptrToRVEData[_v7] > cutting )
+                        _curConduction = conductionPhase;
+                    else
+                        _curConduction = conductionMatrix;
+                    {
+                        int _A[] = {i+1,   j,   k};
+                        int _B[] = {i+1, j+1,   k};
+                        int _C[] = {  i, j+1, k+1};
+                        int _D[] = {i+1, j+1, k+1};
+                        constructLocalStiffnessMatrix(
+                                    _step,
+                                    _A, _B, _C, _D,
+                                    _curConduction,
+                                    _K);
+                    }
+                    if(i==RVEDiscreteSize-2)
+                        applyLocalDirichletConditions(
+                                    0b00001011, // RIGHT
+                                    T0, _K, _f);
+
+                    long _element[] = {_v1, _v3, _v6, _v7};
+                    for(long ii=0; ii<4; ++ii)
+                    {
+                        for(long jj=0; jj<4; ++jj)
+                            cpu_sparse_matrix[_element[ii]][_element[jj]] += _K[ii][jj];
+                        cpu_loads[_element[ii]] += _f[ii];
+                    }
+                }
+
+                // TOP_FRONT _v1 _v3 _v2 _v6
+                //  TOP     _v2 _v3 _v6
+                //  FRONT   _v1 _v2 _v3
+                {
+                    if(
+                            ptrToRVEData[_v1] > cutting &&
+                            ptrToRVEData[_v3] > cutting &&
+                            ptrToRVEData[_v2] > cutting &&
+                            ptrToRVEData[_v6] > cutting )
+                        _curConduction = conductionPhase;
+                    else
+                        _curConduction = conductionMatrix;
+                    {
+                        int _A[] = {i+1,   j,   k};
+                        int _B[] = {i+1, j+1,   k};
+                        int _C[] = {  i, j+1,   k};
+                        int _D[] = {  i, j+1, k+1};
+                        constructLocalStiffnessMatrix(
+                                    _step,
+                                    _A, _B, _C, _D,
+                                    _curConduction,
+                                    _K);
+                    }
+                    if(i==RVEDiscreteSize-2)
+                        applyLocalDirichletConditions(
+                                    0b00000011, // RIGHT
+                                    T0, _K, _f);
+
+                    long _element[] = {_v1, _v3, _v2, _v6};
+                    for(long ii=0; ii<4; ++ii)
+                    {
+                        for(long jj=0; jj<4; ++jj)
+                            cpu_sparse_matrix[_element[ii]][_element[jj]] += _K[ii][jj];
+                        cpu_loads[_element[ii]] += _f[ii];
+                    }
+                }
+
+                // BOTTOM_BACK _v1 _v4 _v5 _v6
+                //  BOTTOM  _v1 _v4 _v5
+                //  BACK    _v4 _v5 _v6
+                {
+                    if(
+                            ptrToRVEData[_v1] > cutting &&
+                            ptrToRVEData[_v4] > cutting &&
+                            ptrToRVEData[_v5] > cutting &&
+                            ptrToRVEData[_v6] > cutting )
+                        _curConduction = conductionPhase;
+                    else
+                        _curConduction = conductionMatrix;
+                    {
+                        int _A[] = {i+1,   j,   k};
+                        int _B[] = {  i,   j, k+1};
+                        int _C[] = {i+1,   j, k+1};
+                        int _D[] = {  i, j+1, k+1};
+                        constructLocalStiffnessMatrix(
+                                    _step,
+                                    _A, _B, _C, _D,
+                                    _curConduction,
+                                    _K);
+                    }
+                    if(i==RVEDiscreteSize-2)
+                        applyLocalDirichletConditions(
+                                    0b00000101, // RIGHT
+                                    T0, _K, _f);
+
+                    long _element[] = {_v1, _v4, _v5, _v6};
+                    for(long ii=0; ii<4; ++ii)
+                    {
+                        for(long jj=0; jj<4; ++jj)
+                            cpu_sparse_matrix[_element[ii]][_element[jj]] += _K[ii][jj];
+                        cpu_loads[_element[ii]] += _f[ii];
+                    }
+                }
+            }
 }

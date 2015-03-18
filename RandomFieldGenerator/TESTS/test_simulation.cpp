@@ -3,10 +3,10 @@
 void Test_Simulation::constructLocalStiffnessMatrix()
 {
     float _K[4][4];
-    unsigned _A[] = {0,0,0};
-    unsigned _B[] = {1,0,0};
-    unsigned _C[] = {0,1,0};
-    unsigned _D[] = {0,0,1};
+    int _A[] = {0,0,0};
+    int _B[] = {1,0,0};
+    int _C[] = {0,1,0};
+    int _D[] = {0,0,1};
     Simulation::constructLocalStiffnessMatrix(
                 1.0f / 10,
                 _A, _B, _C, _D,
@@ -59,6 +59,25 @@ void Test_Simulation::applyLocalDirichletConditions()
         }
     QVERIFY(_maxError < 1e-4f);
     _maxError = 0.0f;
+    for(int i=0; i<4; ++i)
+    {
+        float err = std::fabs(_f[i]-_fTrue[i]);
+        if(_fTrue[i]!=0.0f)
+            err /= _fTrue[i];
+        if(err>_maxError)
+            _maxError = err;
+    }
+    QVERIFY(_maxError < 1e-4f);
+}
+
+void Test_Simulation::applyLocalNeumannConditions()
+{
+    float _f[4] = {1e6f, 2e6f, 3e6f, 4e6f};
+    Simulation::applyLocalNeumannConditions(
+                0b00001101,
+                1e6f, _f);
+    float _fTrue[4] = {1e6f + 1e6f, 2e6f , 3e6f + 1e6f, 4e6f + 1e6f};
+    float _maxError = 0.0f;
     for(int i=0; i<4; ++i)
     {
         float err = std::fabs(_f[i]-_fTrue[i]);

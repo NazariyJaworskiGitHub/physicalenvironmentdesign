@@ -118,3 +118,8 @@ void Test_ViennaCL::testBeam1D()
         std::cout << e.what() << std::endl;
     }
 }
+
+void Test_ViennaCL::testRVE32()
+{
+
+}

@@ -28,6 +28,7 @@ class VolumeGLRender : public QGLWidget
     // set on construction, can't be changed
     private: const int _RVEDiscretesize;
     private: const float * const _ptrToRVEdata = nullptr;
+    private: const float * const _ptrToRVEpotentialField = nullptr;
 
     private: float _innerCutLevel = 0.5f;
     public : float getInnerCutLevel() const noexcept {return _innerCutLevel;}
@@ -68,15 +69,22 @@ class VolumeGLRender : public QGLWidget
     private: void _drawOrigin() noexcept;
 
     private: GLuint _drawFieldDisplayListID;
-    private: GLuint _fieldTextureID = 0;
+    private: GLuint _fieldTextureID[2];
     private: void _loadFieldIntoTexture() throw(std::runtime_error);
     private: void _prepareTextureDisplayList() noexcept;
+
+//    private: GLuint _drawPotentialFieldDisplayListID;
+//    private: GLuint _potentialFieldTextureID;
+    private: void _loadPotentialFieldIntoTexture() throw(std::runtime_error);
+    private: void _preparePotentialTextureDisplayList() noexcept;
+    private: unsigned char _potentialFieldAlphaLevel = 120;
 
     public : std::string printOpenGLInfo() const noexcept;
 
     public : VolumeGLRender(
             const int RVEDiscreteSize,
             const float * ptrToRVEData,
+            const float * ptrToRVEPotentialField,
             QWidget *pwgt) noexcept;
 
     public : void initializeGL() override;

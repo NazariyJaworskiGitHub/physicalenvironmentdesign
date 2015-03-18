@@ -8,13 +8,12 @@
 #include "CLMANAGER/clmanager.h"
 
 /// It is discretized RVE
-/// \warning fo correct usage of OpenCL functionality, tha _size
+/// \warning fo correct usage of OpenCL functionality, the _size
 /// should be equal to some power of two.
-template<int _size>
 class RepresentativeVolumeElement
 {
-    public : static int getSize() noexcept {return _size;}
-
+    private: int _size;
+    public : int getSize() noexcept {return _size;}
     private: float * _data = nullptr;
     private: float * _cuttedData = nullptr;
     private: int _discreteRadius = 1;
@@ -32,7 +31,8 @@ class RepresentativeVolumeElement
 
     /// Constructor
     /// \todo all OpenCL uses only first system defined platform
-    public : RepresentativeVolumeElement() throw (std::runtime_error)
+    public : RepresentativeVolumeElement(int size) throw (std::runtime_error) :
+        _size(size)
     {
         // Prepare memory
         _data = new float[_size * _size * _size];
@@ -183,6 +183,36 @@ class RepresentativeVolumeElement
                 for( long k = 0; k < _size; ++k)
                     _data[(i * _size * _size) + (j * _size) + k] =
                             (_data[(i * _size * _size) + (j * _size) + k] - _min) /
+                                                        (_max - _min);
+        std::cout << "Done" << std::endl;
+    }
+
+    /// Normalize cuttedData
+    public : void normalizeField2() noexcept
+    {
+        std::cout << "  Finding min and max... ";
+        float _min = _cuttedData[0];
+        float _max = _cuttedData[0];
+
+        for( long i = 0; i < _size; ++i)
+            for( long j = 0; j < _size; ++j)
+                for( long k = 0; k < _size; ++k)
+                {
+                    if(_cuttedData[(i * _size * _size) + (j * _size) + k] < _min)
+                        _min = _cuttedData[(i * _size * _size) + (j * _size) + k];
+                    if(_cuttedData[(i * _size * _size) + (j * _size) + k] > _max)
+                        _max = _cuttedData[(i * _size * _size) + (j * _size) + k];
+                }
+        std::cout << "Done" << std::endl;
+        std::cout << "  min = " << _min << std::endl;
+        std::cout << "  max = " << _max << std::endl;
+
+        std::cout << "  Scaling... ";
+        for( long i = 0; i < _size; ++i)
+            for( long j = 0; j < _size; ++j)
+                for( long k = 0; k < _size; ++k)
+                    _cuttedData[(i * _size * _size) + (j * _size) + k] =
+                            (_cuttedData[(i * _size * _size) + (j * _size) + k] - _min) /
                                                         (_max - _min);
         std::cout << "Done" << std::endl;
     }
@@ -467,9 +497,9 @@ class RepresentativeVolumeElement
             throw(std::runtime_error("applyGaussianFilter(): cutLevel <= 0 && cutLevel >= 1"));
 
         memset(_cuttedData, 0, sizeof(float) * _size * _size * _size);
-        for( unsigned long i = 0; i < _size; ++i)
-            for( unsigned long j = 0; j < _size; ++j)
-                for( unsigned long k = 0; k < _size; ++k)
+        for(long i = 0; i < _size; ++i)
+            for(long j = 0; j < _size; ++j)
+                for(long k = 0; k < _size; ++k)
                     if(_data[(i * _size * _size) + (j * _size) + k] > cutLevel)
                         _cuttedData[(i * _size * _size) + (j * _size) + k] = 1.0f;
                     else
@@ -482,15 +512,5 @@ class RepresentativeVolumeElement
         delete [] _cuttedData;
     }
 };
-
-template<int _size> cl::Program *RepresentativeVolumeElement<_size>::_programPtr = nullptr;
-template<int _size> cl::Kernel *RepresentativeVolumeElement<_size>::_kernelXPtr = nullptr;
-template<int _size> cl::Kernel *RepresentativeVolumeElement<_size>::_kernelYPtr = nullptr;
-template<int _size> cl::Kernel *RepresentativeVolumeElement<_size>::_kernelZPtr = nullptr;
-
-typedef RepresentativeVolumeElement< 32> RVE32;
-typedef RepresentativeVolumeElement< 64> RVE64;
-typedef RepresentativeVolumeElement<128> RVE128;
-typedef RepresentativeVolumeElement<256> RVE256;
 
 #endif // REPRESENTATIVEVOLUMEELEMENT_H
