@@ -17,13 +17,12 @@ using namespace MathUtils;
 /// \todo needs merege, see GridGenerator SimpleGLRender
 class VolumeGLRender : public QGLWidget
 {
-    // Scene = Proj * World * Control * Model
-    private: QMatrix4x4 _mTexture;
-    private: QMatrix4x4 _mModel;
+    // Scene = Proj * World * Control * Zoom * Model
+//    private: QMatrix4x4 _mTexture;
+//    private: QMatrix4x4 _mModel;
     private: QMatrix4x4 _mControl;
-//    private: QMatrix4x4 _mControlRev;
+//    private: QMatrix4x4 _mZoom;
     private: QMatrix4x4 _mWorld;
-//    private: QMatrix4x4 _mProj;
 
     // set on construction, can't be changed
     private: const int _RVEDiscretesize;
@@ -68,13 +67,11 @@ class VolumeGLRender : public QGLWidget
 
     private: void _drawOrigin() noexcept;
 
-    private: GLuint _drawFieldDisplayListID;
-    private: GLuint _fieldTextureID[2];
+    private: GLuint _firstDisplayListID;
+    private: GLuint _textureIDs[2];
     private: void _loadFieldIntoTexture() throw(std::runtime_error);
     private: void _prepareTextureDisplayList() noexcept;
 
-//    private: GLuint _drawPotentialFieldDisplayListID;
-//    private: GLuint _potentialFieldTextureID;
     private: void _loadPotentialFieldIntoTexture() throw(std::runtime_error);
     private: void _preparePotentialTextureDisplayList() noexcept;
     private: unsigned char _potentialFieldAlphaLevel = 120;

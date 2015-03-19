@@ -233,6 +233,7 @@ class RepresentativeVolumeElement
     /// \todo it simple CPU usage for now, use GPU!
     /// \todo add ellipsoid rotation
     /// \todo fix borders calculations
+    /// \todo X and Z are replaced
     public : void applyGaussianFilter(
             int discreteRadius,
             float ellipsoidScaleFactorX = 1.0,
@@ -415,26 +416,27 @@ class RepresentativeVolumeElement
                 sizeof(float) * _size * _size * _size,
                 _cuttedData);
 
+        /// \todo X and Z are replaced
         _kernelXPtr->setArg(0, _discreteRadius);
-        _kernelXPtr->setArg(1, ellipsoidScaleFactorX);
+        _kernelXPtr->setArg(1, ellipsoidScaleFactorZ);
         _kernelXPtr->setArg(2, ellipsoidScaleFactorY);
-        _kernelXPtr->setArg(3, ellipsoidScaleFactorZ);
+        _kernelXPtr->setArg(3, ellipsoidScaleFactorX);
         _kernelXPtr->setArg(4, _dataBuffer);
         _kernelXPtr->setArg(5, _cuttedDataBuffer);
         _kernelXPtr->setArg(6, _size);
 
         _kernelYPtr->setArg(0, _discreteRadius);
-        _kernelYPtr->setArg(1, ellipsoidScaleFactorX);
+        _kernelYPtr->setArg(1, ellipsoidScaleFactorZ);
         _kernelYPtr->setArg(2, ellipsoidScaleFactorY);
-        _kernelYPtr->setArg(3, ellipsoidScaleFactorZ);
+        _kernelYPtr->setArg(3, ellipsoidScaleFactorX);
         _kernelYPtr->setArg(4, _dataBuffer);
         _kernelYPtr->setArg(5, _cuttedDataBuffer);
         _kernelYPtr->setArg(6, _size);
 
         _kernelZPtr->setArg(0, _discreteRadius);
-        _kernelZPtr->setArg(1, ellipsoidScaleFactorX);
+        _kernelZPtr->setArg(1, ellipsoidScaleFactorZ);
         _kernelZPtr->setArg(2, ellipsoidScaleFactorY);
-        _kernelZPtr->setArg(3, ellipsoidScaleFactorZ);
+        _kernelZPtr->setArg(3, ellipsoidScaleFactorX);
         _kernelZPtr->setArg(4, _dataBuffer);
         _kernelZPtr->setArg(5, _cuttedDataBuffer);
         _kernelZPtr->setArg(6, _size);

@@ -3,8 +3,6 @@
 #include <iostream>
 #include <sstream>
 
-//QQuaternion _quat;
-
 VolumeGLRender::VolumeGLRender(
         const int RVEDiscreteSize,
         const float *ptrToRVEData,
@@ -48,9 +46,8 @@ void VolumeGLRender::mouseMoveEvent(QMouseEvent *e)
 //        _m.rotate(-(e->y()-_oldMouseY), 1, 0, 0);
 //        _mControlRev = _m * _mControlRev;
 
-//        _quat = QQuaternion::fromAxisAndAngle(1, 0, 0, e->y()-_oldMouseY) *
-//            QQuaternion::fromAxisAndAngle(0, 1, 0, e->x()-_oldMouseX) * _quat;
-//        _quat.normalize();
+//        _mTexture.rotate(-(e->x()-_oldMouseX), 0, 1, 0);    // it's some kind of magic!
+//        _mTexture.rotate(-(e->y()-_oldMouseY), 1, 0, 0);
 
         _oldMouseX = e->x();
         _oldMouseY = e->y();
@@ -62,7 +59,8 @@ void VolumeGLRender::wheelEvent(QWheelEvent *e)
 {
     _Zoom += _Zoom * e->delta() / 5000;
 
-//    _mControl.scale(_Zoom);
+//    _mZoom.setToIdentity();
+//    _mZoom.scale(_Zoom);
 
     this->updateGL();
 }
@@ -132,25 +130,20 @@ void VolumeGLRender::keyPressEvent(QKeyEvent *e)
 /// keep your video driver up to date!
 void VolumeGLRender::_drawOrigin() noexcept
 {
+    int _width = this->width();
+    int _height = this->height();
+
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
-
+    {
         glLoadIdentity();
         gluPerspective( 60.0f, 160.0/120.0, 0.1, 1000.0f );
-        int _width = this->width();
-        int _height = this->height();
+
         glViewport(0,0,160,120);
 
         glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
-
-//            glLoadIdentity();
-//            gluLookAt(0, 0, 2,
-//                      0, 0, 0,
-//                      0, 1, 0);
-//            glRotated(_angleOY, 0, 1, 0);
-//            glRotated(_angleOX, 1, 0, 0);
-
+        {
             glLoadMatrixf((_mWorld * _mControl).constData());
 
             glEnable(GL_DEPTH_TEST);
@@ -181,9 +174,9 @@ void VolumeGLRender::_drawOrigin() noexcept
             glLineWidth(1);
 
             glDisable(GL_DEPTH_TEST);
-
+        }
         glPopMatrix();
-
+    }
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glViewport(0,0,_width,_height);
@@ -231,15 +224,17 @@ void VolumeGLRender::_loadFieldIntoTexture() throw(std::runtime_error)
         }
     }
 
-    glBindTexture(GL_TEXTURE_3D, _fieldTextureID[0]);
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    glBindTexture(GL_TEXTURE_3D, _textureIDs[0]);
+    //glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+//    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-//    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-//    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+//    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
     // see https://www.opengl.org/sdk/docs/man3/xhtml/glTexImage3D.xml
     glTexImage3D(
                 GL_TEXTURE_3D,      // target, copy data to device
@@ -258,12 +253,19 @@ void VolumeGLRender::_loadFieldIntoTexture() throw(std::runtime_error)
 
 void VolumeGLRender::_prepareTextureDisplayList() noexcept
 {
-    glNewList(_drawFieldDisplayListID, GL_COMPILE);
+    glNewList(_firstDisplayListID, GL_COMPILE);
     glEnable(GL_TEXTURE_3D);
-    glBindTexture( GL_TEXTURE_3D, _fieldTextureID[0]);
+    glBindTexture( GL_TEXTURE_3D, _textureIDs[0]);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glEnable(GL_LIGHTING);
+    glEnable(GL_DEPTH_TEST);
+    glEnable( GL_ALPHA_TEST );
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);  /// \todo wtf???
     glBegin(GL_QUADS);
-    for ( float _fIndx = 0.0f; _fIndx <= 1.0f; _fIndx += 1.0 / _RVEDiscretesize )
+    for ( float _fIndx = 0.0f; _fIndx <= 1.0f; _fIndx += 1.0 / _RVEDiscretesize)
     {
+        glNormal3f(0.0f, 0.0f, 1.0f);
+
         glTexCoord3f(0.0f, 0.0f, _fIndx);
         glVertex3f(0.0f, 0.0f, _fIndx);
 
@@ -275,8 +277,41 @@ void VolumeGLRender::_prepareTextureDisplayList() noexcept
 
         glTexCoord3f(0.0f, 1.0f, _fIndx);
         glVertex3f(0.0f, 1.0f, _fIndx);
+
+        //////////////////////////////////
+        glNormal3f(0.0f, 1.0f, 0.0f);
+
+        glTexCoord3f(1.0f, _fIndx, 0.0f);
+        glVertex3f(1.0f, _fIndx, 0.0f);
+
+        glTexCoord3f(0.0f, _fIndx, 0.0f);
+        glVertex3f(0.0f, _fIndx, 0.0f);
+
+        glTexCoord3f(0.0f, _fIndx, 1.0f);
+        glVertex3f(0.0f, _fIndx, 1.0f);
+
+        glTexCoord3f(1.0f, _fIndx, 1.0f);
+        glVertex3f(1.0f, _fIndx, 1.0f);
+
+        //////////////////////////////////
+        glNormal3f(1.0f, 0.0f, 0.0f);
+
+        glTexCoord3f(_fIndx, 0.0f, 0.0f);
+        glVertex3f(_fIndx, 0.0f, 0.0f);
+
+        glTexCoord3f(_fIndx, 1.0f, 0.0f);
+        glVertex3f(_fIndx, 1.0f, 0.0f);
+
+        glTexCoord3f(_fIndx, 1.0f, 1.0f);
+        glVertex3f(_fIndx, 1.0f, 1.0f);
+
+        glTexCoord3f(_fIndx, 0.0f, 1.0f);
+        glVertex3f(_fIndx, 0.0f, 1.0f);
     }
     glEnd();
+    glDisable(GL_ALPHA_TEST);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_LIGHTING);
     glDisable(GL_TEXTURE_3D);
     glEndList();
 }
@@ -318,13 +353,16 @@ void VolumeGLRender::_loadPotentialFieldIntoTexture() throw(std::runtime_error)
 //        }
     }
 
-    glBindTexture(GL_TEXTURE_3D, _fieldTextureID[1]);
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    glBindTexture(GL_TEXTURE_3D, _textureIDs[1]);
+    //glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
+//    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
     // see https://www.opengl.org/sdk/docs/man3/xhtml/glTexImage3D.xml
     glTexImage3D(
                 GL_TEXTURE_3D,      // target, copy data to device
@@ -343,27 +381,64 @@ void VolumeGLRender::_loadPotentialFieldIntoTexture() throw(std::runtime_error)
 
 void VolumeGLRender::_preparePotentialTextureDisplayList() noexcept
 {
-    glNewList(_drawFieldDisplayListID+1, GL_COMPILE);
-        glEnable(GL_TEXTURE_3D);
-        glBindTexture( GL_TEXTURE_3D, _fieldTextureID[1]);
-        glBegin(GL_QUADS);
-        for ( float _fIndx = 0.0f; _fIndx <= 1.0f; _fIndx += 1.0 / _RVEDiscretesize )
-        {
-            glTexCoord3f(0.0f, 0.0f, _fIndx);
-            glVertex3f(0.0f, 0.0f, _fIndx);
+    glNewList(_firstDisplayListID+1, GL_COMPILE);
+    glEnable(GL_TEXTURE_3D);
+    glBindTexture( GL_TEXTURE_3D, _textureIDs[1]);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+//    glEnable(GL_LIGHTING);
+    glEnable(GL_DEPTH_TEST);
+    glBegin(GL_QUADS);
+    for ( float _fIndx = 0.0f; _fIndx <= 1.0f; _fIndx += 1.0 / _RVEDiscretesize)
+    {
+//        glNormal3f(0.0f, 0.0f, 1.0f);
 
-            glTexCoord3f(1.0f, 0.0f, _fIndx);
-            glVertex3f(1.0f, 0.0f, _fIndx);
+        glTexCoord3f(0.0f, 0.0f, _fIndx);
+        glVertex3f(0.0f, 0.0f, _fIndx);
 
-            glTexCoord3f(1.0f, 1.0f, _fIndx);
-            glVertex3f(1.0f, 1.0f, _fIndx);
+        glTexCoord3f(1.0f, 0.0f, _fIndx);
+        glVertex3f(1.0f, 0.0f, _fIndx);
 
-            glTexCoord3f(0.0f, 1.0f, _fIndx);
-            glVertex3f(0.0f, 1.0f, _fIndx);
-        }
-        glEnd();
-        glDisable(GL_TEXTURE_3D);
-        glEndList();
+        glTexCoord3f(1.0f, 1.0f, _fIndx);
+        glVertex3f(1.0f, 1.0f, _fIndx);
+
+        glTexCoord3f(0.0f, 1.0f, _fIndx);
+        glVertex3f(0.0f, 1.0f, _fIndx);
+
+        //////////////////////////////////
+//        glNormal3f(0.0f, 1.0f, 0.0f);
+
+        glTexCoord3f(1.0f, _fIndx, 0.0f);
+        glVertex3f(1.0f, _fIndx, 0.0f);
+
+        glTexCoord3f(0.0f, _fIndx, 0.0f);
+        glVertex3f(0.0f, _fIndx, 0.0f);
+
+        glTexCoord3f(0.0f, _fIndx, 1.0f);
+        glVertex3f(0.0f, _fIndx, 1.0f);
+
+        glTexCoord3f(1.0f, _fIndx, 1.0f);
+        glVertex3f(1.0f, _fIndx, 1.0f);
+        //////////////////////////////////
+//        glNormal3f(1.0f, 0.0f, 0.0f);
+
+        glTexCoord3f(_fIndx, 0.0f, 0.0f);
+        glVertex3f(_fIndx, 0.0f, 0.0f);
+
+        glTexCoord3f(_fIndx, 1.0f, 0.0f);
+        glVertex3f(_fIndx, 1.0f, 0.0f);
+
+        glTexCoord3f(_fIndx, 1.0f, 1.0f);
+        glVertex3f(_fIndx, 1.0f, 1.0f);
+
+        glTexCoord3f(_fIndx, 0.0f, 1.0f);
+        glVertex3f(_fIndx, 0.0f, 1.0f);
+    }
+    glEnd();
+//    glDisable(GL_ALPHA_TEST);
+    glDisable(GL_DEPTH_TEST);
+//    glDisable(GL_LIGHTING);
+    glDisable(GL_TEXTURE_3D);
+    glEndList();
 }
 
 std::string VolumeGLRender::printOpenGLInfo() const noexcept
@@ -381,51 +456,59 @@ std::string VolumeGLRender::printOpenGLInfo() const noexcept
 
 void VolumeGLRender::initializeGL()
 {
-    glClearColor(
-                _EnvironmentColor[0],
-                _EnvironmentColor[1],
-                _EnvironmentColor[2],
-                _EnvironmentColor[3]);
-//    glClearDepth(1.0f);
-//    glEnable(GL_DEPTH_TEST);
-//    //glEnable(GL_LINE_SMOOTH);
-//    glDepthFunc(GL_LEQUAL);
-//    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-//    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-//    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
     QGLFormat aGLFormat;
     aGLFormat.setSampleBuffers(true);
     aGLFormat.setVersion(aGLFormat.majorVersion(),aGLFormat.minorVersion());
     QGLFormat::setDefaultFormat(aGLFormat);
 
+    glClearColor(
+                _EnvironmentColor[0],
+                _EnvironmentColor[1],
+                _EnvironmentColor[2],
+                _EnvironmentColor[3]);
+    glClearDepth(1.0f);
+//    glEnable(GL_DEPTH_TEST);
+//    //glEnable(GL_LINE_SMOOTH);
+    glDepthFunc(GL_LEQUAL);
+//    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+//    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+//    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
+//    glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
+//    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+//    glHint(GL_TEXTURE_COMPRESSION_HINT, GL_NICEST);
+
+//    glEnable(GL_CULL_FACE);
+
 //    glEnable( GL_ALPHA_TEST );
-//    glAlphaFunc( GL_GEQUAL, 0.5f );
+    glAlphaFunc( GL_GEQUAL, 0.5f );
 
     glEnable(GL_BLEND);
     glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
-//    GLfloat light0_diffuse[] = {1.0, 1.0, 1.0};
-//    GLfloat light0_direction[] = {0.0, 0.0, 1.0, 0.0};
+    GLfloat light0_diffuse[] = {1.0, 1.0, 1.0};
+    GLfloat light0_direction[] = {0.0, 0.0, 1.0, 0.0};
 //    glEnable(GL_LIGHTING);
-//    glEnable(GL_LIGHT0);
-//    glEnable(GL_COLOR_MATERIAL);
-//    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, light0_diffuse);
-//    glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
-//    glEnable(GL_NORMALIZE);
-//    glLightfv(GL_LIGHT0, GL_DIFFUSE, light0_diffuse);
-//    glLightfv(GL_LIGHT0, GL_POSITION, light0_direction);
+    glEnable(GL_LIGHT0);
+    glEnable(GL_COLOR_MATERIAL);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, light0_diffuse);
+    glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+    glEnable(GL_NORMALIZE);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, light0_diffuse);
+    glLightfv(GL_LIGHT0, GL_POSITION, light0_direction);
 
-    _mTexture.setToIdentity();
-    _mModel.setToIdentity();
+//    _mTexture.setToIdentity();
+//    _mModel.setToIdentity();
     _mControl.setToIdentity();
-//    _mControlRev.setToIdentity();
+//    _mZoom.setToIdentity();
     _mWorld.setToIdentity();
-//    _mProj.setToIdentity();
 
-    _mModel.translate(-0.5,-0.5,-0.5);  /// \todo move it out
+//    _mTexture.translate(0.5f, 0.5f, 0.5f);  // see mouse control
+
+//    _mModel.scale(2.0f, 2.0f, 2.0f);
+//    _mModel.translate(-0.5f,-0.5f,-0.5f);  /// \todo move it out
+
     _mWorld.lookAt(QVector3D(_CameraPosition[0],_CameraPosition[1],_CameraPosition[2]),
             QVector3D(0,0,0),QVector3D(0,1,0));
-//    _mProj.perspective( 60.0f, 4.0/3.0, 0.1f, 1000.0f );
 }
 
 void VolumeGLRender::initializeGLEW()
@@ -435,8 +518,8 @@ void VolumeGLRender::initializeGLEW()
     auto _rez = glewInit();
     std::cout << "GLEW: "<< glewGetErrorString(_rez) << std::endl;
 
-    glGenTextures(2, _fieldTextureID);
-    _drawFieldDisplayListID = glGenLists(2);
+    glGenTextures(2, _textureIDs);
+    _firstDisplayListID = glGenLists(2);
     _loadFieldIntoTexture();
     _prepareTextureDisplayList();
     _loadPotentialFieldIntoTexture();
@@ -447,8 +530,7 @@ void VolumeGLRender::resizeGL(int nWidth, int nHeight)
 {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective( 60.0f, ((GLfloat)nWidth)/(GLfloat)nHeight, 0.1, 1000.0f );
-//    _mProj.perspective( 60.0f, ((GLfloat)nWidth)/(GLfloat)nHeight, 0.1, 1000.0f );
+    gluPerspective( 60.0f, ((GLfloat)nWidth)/(GLfloat)nHeight, 0.01, 1000.0f );
     glViewport(0,0,(GLint)nWidth,(GLint)nHeight);
 }
 
@@ -458,85 +540,94 @@ void VolumeGLRender::paintGL()
 
     _drawOrigin();
 
-//    glMatrixMode(GL_MODELVIEW);
-//    glLoadMatrixf((_mWorld * _mControl).constData());;
+//    {
+//        glMatrixMode(GL_MODELVIEW);
+//        glLoadMatrixf((_mWorld * _mControl).constData());;
 
-//    glEnable(GL_DEPTH_TEST);
+//        glEnable(GL_DEPTH_TEST);
 
-//    glLineWidth(3);
+//        glLineWidth(3);
 
-//    glBegin(GL_LINES);
-//    glColor3d(1, 0, 0);
-//    glVertex3d(0, 0, 0);
-//    glVertex3d(1, 0, 0);
-//    glEnd();
-//    this->renderText(1, 0, 0, "x");
+//        glBegin(GL_LINES);
+//        glColor3d(1, 0, 0);
+//        glVertex3d(0, 0, 0);
+//        glVertex3d(1, 0, 0);
+//        glEnd();
+//        this->renderText(1, 0, 0, "x");
 
-//    glBegin(GL_LINES);
-//    glColor3d(0, 1, 0);
-//    glVertex3d(0, 0, 0);
-//    glVertex3d(0, 1, 0);
-//    glEnd();
-//    this->renderText(0, 1, 0, "y");
+//        glBegin(GL_LINES);
+//        glColor3d(0, 1, 0);
+//        glVertex3d(0, 0, 0);
+//        glVertex3d(0, 1, 0);
+//        glEnd();
+//        this->renderText(0, 1, 0, "y");
 
-//    glBegin(GL_LINES);
-//    glColor3d(0, 0, 1);
-//    glVertex3d(0, 0, 0);
-//    glVertex3d(0, 0, 1);
-//    glEnd();
-//    this->renderText(0, 0, 1, "z");
+//        glBegin(GL_LINES);
+//        glColor3d(0, 0, 1);
+//        glVertex3d(0, 0, 0);
+//        glVertex3d(0, 0, 1);
+//        glEnd();
+//        this->renderText(0, 0, 1, "z");
 
-//    glLineWidth(1);
+//        glLineWidth(1);
+//        glDisable(GL_DEPTH_TEST);
+//    }
 
-//    glDisable(GL_DEPTH_TEST);
+    {
+        glMatrixMode(GL_MODELVIEW);
+        //glLoadMatrixf(_mWorld.constData());
+        glLoadMatrixf((_mWorld * _mControl).constData());
+        glScalef(_Zoom, _Zoom, _Zoom);
+        //glScalef(2.0f, 2.0f, 2.0f);
+        glTranslatef(-0.5f, -0.5f, -0.5f);
 
-//    glMatrixMode(GL_PROJECTION);
-//    glLoadMatrixf(_mProj.constData());
+        glMatrixMode(GL_TEXTURE);
+        glLoadIdentity();
+//        glLoadMatrixf(_mTexture.constData());
+//        //glScalef(1.0f/_Zoom, 1.0f/_Zoom, 1.0f/_Zoom);
+        glScalef(0.99f, 0.99f, 0.99f);
+//        glTranslatef(-0.5f, -0.5f, -0.5f);
 
-/*    glMatrixMode(GL_MODELVIEW);
-    glLoadMatrixf((_mWorld * _mModel).constData());
-//    glLoadMatrixf((_mWorld * _mControl * _mModel).constData());
+        glCallList(_firstDisplayListID);
+        glCallList(_firstDisplayListID+1);
 
-    glMatrixMode(GL_TEXTURE);
+        glEnable(GL_DEPTH_TEST);
+        glBegin(GL_LINES);
+        {
+            glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
+            glVertex3f(0.0f, 0.0f, 0.0f);
+            glVertex3f(1.0f, 0.0f, 0.0f);
+            glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
+            glVertex3f(0.0f, 0.0f, 0.0f);
+            glVertex3f(0.0f, 1.0f, 0.0f);
+            glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
+            glVertex3f(0.0f, 0.0f, 0.0f);
+            glVertex3f(0.0f, 0.0f, 1.0f);
 
-//    QMatrix4x4 _m;
-//    _m.setToIdentity();
-//    _m.lookAt(QVector3D(0,0,0),QVector3D(0,0,-1),QVector3D(0,1,0));
+            glColor4f(0.75f, 0.75f, 0.75f, 1.0f);
+            glVertex3f(1.0f, 1.0f, 0.0f);
+            glVertex3f(1.0f, 1.0f, 1.0f);
+            glVertex3f(1.0f, 1.0f, 0.0f);
+            glVertex3f(0.0f, 1.0f, 0.0f);
+            glVertex3f(1.0f, 1.0f, 0.0f);
+            glVertex3f(1.0f, 0.0f, 0.0f);
+            glVertex3f(0.0f, 1.0f, 0.0f);
+            glVertex3f(0.0f, 1.0f, 1.0f);
+            glVertex3f(1.0f, 0.0f, 0.0f);
+            glVertex3f(1.0f, 0.0f, 1.0f);
 
-    _mTexture.setToIdentity();
-
-    _mTexture.translate(0.5f, 0.5f, 0.5f);
-    _mTexture.scale(1/_Zoom, 1/_Zoom, 1/_Zoom);
-
-    _mTexture.rotate(-_angleOX, 1, 0, 0);
-    _mTexture.rotate(-_angleOY, 0, 1, 0);
-
-//    _mTexture = _mTexture * _mControl;
-
-////    _mTexture.rotate(_quat);
-
-    _mTexture.translate(-0.5f, -0.5f, -0.5f);
-
-//    _mTexture = _m * _mTexture;
-    glLoadMatrixf(_mTexture.constData());*/
-
-    glMatrixMode(GL_TEXTURE);
-    glLoadIdentity();
-    glTranslatef( 0.5f, 0.5f, 0.5f );   // put to center
-    glRotated(-_angleOX, 1, 0, 0);
-    glRotated(-_angleOY, 0, 1, 0);
-    glScaled(1/_Zoom, 1/_Zoom, 1/_Zoom);
-    glTranslatef( -0.5f,-0.5f, -0.5f ); // put back
-
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    gluLookAt(0, 0, 1,
-              0, 0, 0,
-              0, 1, 0);
-    glTranslatef( -0.5f, -0.5f, -0.5f );
-
-    glCallList(_drawFieldDisplayListID);
-    glCallList(_drawFieldDisplayListID+1);
+            glVertex3f(0.0f, 0.0f, 1.0f);
+            glVertex3f(0.0f, 1.0f, 1.0f);
+            glVertex3f(1.0f, 0.0f, 1.0f);
+            glVertex3f(1.0f, 1.0f, 1.0f);
+            glVertex3f(0.0f, 0.0f, 1.0f);
+            glVertex3f(1.0f, 0.0f, 1.0f);
+            glVertex3f(0.0f, 1.0f, 1.0f);
+            glVertex3f(1.0f, 1.0f, 1.0f);
+        }
+        glEnd();
+        glDisable(GL_DEPTH_TEST);
+    }
 
     glColor4d(
             _TextColor[0],

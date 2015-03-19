@@ -23,16 +23,15 @@ int main(int argc, char *argv[])
     std::cout << OpenCL::CLManager::instance().printPlatformsInfo();
     std::cout << OpenCL::CLManager::instance().printDevicesInfo();
 
-    run_tests_all();
+//    run_tests_all();
 
     std::chrono::steady_clock::time_point _t1 = std::chrono::steady_clock::now();
 
     int size = 128;
-    int radius = 16;
     RepresentativeVolumeElement _RVE(size);
     _RVE.generateRandomField();
     //_RVE.applyGaussianFilter(32);
-    _RVE.applyGaussianFilterCL(radius);
+    _RVE.applyGaussianFilterCL(128, 1.0f, 0.1f, 0.1f);
     //_RVE.applyCuttingLevel(0.65);
 
     std::chrono::steady_clock::time_point _t2 = std::chrono::steady_clock::now();
