@@ -27,29 +27,30 @@ int main(int argc, char *argv[])
 
 //    run_tests_all();
 
-    Console _console(std::cout, std::cin);
+//    Console _console(std::cout, std::cin);
 
-    class TestConsoleCommand : public ConsoleCommand
-    {
-        public: TestConsoleCommand(Console &console) :
-            ConsoleCommand("test", "test help\n", console){}
-        public: int executeConsoleCommand(const std::vector<std::string> &argv) override
-        {
-            getConsole().getOutputStream() << "test execution" << std::endl;
-            return 0;
-        }
-    } _testCommand(_console);
+//    class TestConsoleCommand : public ConsoleCommand
+//    {
+//        public: TestConsoleCommand(Console &console) :
+//            ConsoleCommand("test", "test help\n", console){}
+//        public: int executeConsoleCommand(const std::vector<std::string> &argv) override
+//        {
+//            getConsole().getOutputStream() << "test execution" << std::endl;
+//            return 0;
+//        }
+//    } _testCommand(_console);
 
-    _console.run();
+//    _console.run();
 
     ///////////////////////////////////////////////////////////////////////////////////////
     std::chrono::steady_clock::time_point _t1 = std::chrono::steady_clock::now();
 
-    int size = 128;
+    int size = 64;
     RepresentativeVolumeElement _RVE(size);
     _RVE.generateRandomField();
     //_RVE.applyGaussianFilter(32);
-    _RVE.applyGaussianFilterCL(32, 1.0f, 0.2f, 0.2f);
+    //_RVE.applyGaussianFilterCL(64, 1.0f, 0.25f, 0.25f);
+    _RVE.applyGaussianFilterCL(32, 1.0f, 0.25f, 0.25f);
     //_RVE.applyCuttingLevel(0.65);
 
     std::chrono::steady_clock::time_point _t2 = std::chrono::steady_clock::now();
@@ -106,6 +107,7 @@ int main(int argc, char *argv[])
     ///////////////////////////////////////////////////////////////////////////////////////
 
     VolumeGLRender _render(_RVE.getSize(), _RVE.getData(), _RVE.getCuttedData(), NULL);
+    _render.setBoundingBoxRepresentationSize(1.0f);
     _render.printOpenGLInfo();
     _render.initializeGL();
     _render.initializeGLEW();

@@ -8,20 +8,14 @@
 #include <QGLWidget>
 #include <QString>
 
-#include <node.h>
-
+#include <QVector3D>
+#include <QVector4D>
 #include <QMatrix4x4>
 
-using namespace MathUtils;
-
-/// \todo needs merege, see GridGenerator SimpleGLRender
 class VolumeGLRender : public QGLWidget
 {
     // Scene = Proj * World * Control * Zoom * Model
-//    private: QMatrix4x4 _mTexture;
-//    private: QMatrix4x4 _mModel;
     private: QMatrix4x4 _mControl;
-//    private: QMatrix4x4 _mZoom;
     private: QMatrix4x4 _mWorld;
 
     // set on construction, can't be changed
@@ -36,28 +30,27 @@ class VolumeGLRender : public QGLWidget
     private: int _oldMouseX = 0;
     private: int _oldMouseY = 0;
     private: bool _isPressed = false;
-    private: double _angleOY = 0;
-    private: double _angleOX = 0;
 
-    private: Vector4D _EnvironmentColor = Vector4D(0.25, 0.5, 0.5, 1.0);
-    public : void setEnvironmenColor(double R, double G, double B, double A){
-        _EnvironmentColor(R,G,B,A);}
+    private: QColor _EnvironmentColor = QColor(64, 128, 128, 255);
+    public : void setEnvironmenColor(const QColor &newColor) noexcept{
+        _EnvironmentColor = newColor;}
 
-    private: Vector4D _TextColor = Vector4D(0.0, 1.0, 0.0, 1.0);
-    public : void setTextColor(double R, double G, double B, double A){
-        _TextColor(R,G,B,A);}
+    private: QColor _TextColor = QColor(0, 255, 0, 255);
+    public : void setTextColor(const QColor &newColor){
+        _TextColor = newColor;}
+    public : QString _infoString = "Info string";
+    public : void setInfoString(const QString &newString) noexcept{
+        _infoString = newString;}
 
-    public : QString dataString = "Test string";
-
-    private: Vector3D _CameraPosition = Vector3D(0.0, 0.0, 2.0);
-    public : void setCameraPosition(const Vector3D &newPosition) noexcept {
+    private: QVector3D _CameraPosition = QVector3D(0.0f, 0.0f, 2.0f);
+    public : void setCameraPosition(const QVector3D &newPosition) noexcept {
         _CameraPosition = newPosition;}
-    public : Vector3D getCameraPosition() const noexcept {return _CameraPosition;}
+    public : QVector3D getCameraPosition() const noexcept {return _CameraPosition;}
 
-    private: double _Zoom = 1.0;
-    public : void setZoom(const double &newZoom) noexcept {
+    private: float _Zoom = 1.0f;
+    public : void setZoom(const float &newZoom) noexcept {
         _Zoom = newZoom;}
-    public : double getZoom() const noexcept {return _Zoom;}
+    public : float getZoom() const noexcept {return _Zoom;}
 
     public : void mousePressEvent(QMouseEvent *e) override;
     public : void mouseReleaseEvent(QMouseEvent *e) override;
@@ -65,16 +58,29 @@ class VolumeGLRender : public QGLWidget
     public : void wheelEvent(QWheelEvent *e) override;
     public : void keyPressEvent(QKeyEvent *e) override;
 
+    private: void _grayscaleToRainbow(const float gray, int &r, int &g, int &b) noexcept;
+
+    private: void _drawArrow(
+            GLfloat x1, GLfloat y1, GLfloat z1,
+            GLfloat x2, GLfloat y2, GLfloat z2) noexcept;
     private: void _drawOrigin() noexcept;
 
-    private: GLuint _firstDisplayListID;
+    public : float _boundingBoxRepresentationSize = 1.0f;
+    public : void setBoundingBoxRepresentationSize(const float &newRepresentationSize) noexcept{
+        _boundingBoxRepresentationSize = newRepresentationSize;}
+    private: void _drawBoundingBox() noexcept;
+
+    private: GLuint _firstDisplayListID; // just increment for next list id
     private: GLuint _textureIDs[2];
     private: void _loadFieldIntoTexture() throw(std::runtime_error);
     private: void _prepareTextureDisplayList() noexcept;
-
     private: void _loadPotentialFieldIntoTexture() throw(std::runtime_error);
     private: void _preparePotentialTextureDisplayList() noexcept;
     private: unsigned char _potentialFieldAlphaLevel = 120;
+
+    private: float _minPotentialValue = 0.0f;
+    private: float _maxPotentialValue = 1.0f;
+    private: void _drawRainbowTable() noexcept;
 
     public : std::string printOpenGLInfo() const noexcept;
 
