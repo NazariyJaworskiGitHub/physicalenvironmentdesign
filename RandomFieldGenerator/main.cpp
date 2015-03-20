@@ -16,6 +16,8 @@
 #include <viennacl/linalg/bicgstab.hpp>
 #include "simulation.h"
 
+#include "CONSOLE/console.h"
+
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
@@ -25,13 +27,29 @@ int main(int argc, char *argv[])
 
 //    run_tests_all();
 
+    Console _console(std::cout, std::cin);
+
+    class TestConsoleCommand : public ConsoleCommand
+    {
+        public: TestConsoleCommand(Console &console) :
+            ConsoleCommand("test", "test help\n", console){}
+        public: int executeConsoleCommand(const std::vector<std::string> &argv) override
+        {
+            getConsole().getOutputStream() << "test execution" << std::endl;
+            return 0;
+        }
+    } _testCommand(_console);
+
+    _console.run();
+
+    ///////////////////////////////////////////////////////////////////////////////////////
     std::chrono::steady_clock::time_point _t1 = std::chrono::steady_clock::now();
 
     int size = 128;
     RepresentativeVolumeElement _RVE(size);
     _RVE.generateRandomField();
     //_RVE.applyGaussianFilter(32);
-    _RVE.applyGaussianFilterCL(128, 1.0f, 0.1f, 0.1f);
+    _RVE.applyGaussianFilterCL(32, 1.0f, 0.2f, 0.2f);
     //_RVE.applyCuttingLevel(0.65);
 
     std::chrono::steady_clock::time_point _t2 = std::chrono::steady_clock::now();
@@ -95,6 +113,7 @@ int main(int argc, char *argv[])
     _render.resize(800,600);
     _render.show();
 
+    ///////////////////////////////////////////////////////////////////////////////////////
     return app.exec();
 }
 
