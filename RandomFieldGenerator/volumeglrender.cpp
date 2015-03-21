@@ -43,8 +43,8 @@ void VolumeGLRender::mouseMoveEvent(QMouseEvent *e)
     {
         QMatrix4x4 _m;
         _m.setToIdentity();
-        _m.rotate(e->x()-_oldMouseX, 0, 1, 0);
-        _m.rotate(e->y()-_oldMouseY, 1, 0, 0);
+        _m.rotate( (e->x()-_oldMouseX), 0, 1, 0);
+        _m.rotate( (e->y()-_oldMouseY), 1, 0, 0);
         _mControl = _m * _mControl;
         _oldMouseX = e->x();
         _oldMouseY = e->y();
@@ -254,28 +254,10 @@ void VolumeGLRender::_loadFieldIntoTexture() throw(std::runtime_error)
 
     for(long i = 0; i<_RVEDiscretesize * _RVEDiscretesize * _RVEDiscretesize; ++i)
     {
-        if(_ptrToRVEdata[i] > _innerCutLevel)
-        {
-//            int _r, _g, _b;
-//            _grayscaleToRainbow(_ptrToRVEdata[i], _r, _g, _b);
-
-//            _RGBABuff[i * 4 + 0] = r;
-//            _RGBABuff[i * 4 + 1] = g;
-//            _RGBABuff[i * 4 + 2] = b;
-//            _RGBABuff[i * 4 + 3] = 255;
-
-            _RGBABuff[i * 4 + 0] = 255;
-            _RGBABuff[i * 4 + 1] = 255;
-            _RGBABuff[i * 4 + 2] = 255;
-            _RGBABuff[i * 4 + 3] = 255;
-        }
-        else
-        {
-            _RGBABuff[i * 4 + 0] = 0;
-            _RGBABuff[i * 4 + 1] = 0;
-            _RGBABuff[i * 4 + 2] = 0;
-            _RGBABuff[i * 4 + 3] = 0;
-        }
+        _RGBABuff[i * 4 + 0] = 255;
+        _RGBABuff[i * 4 + 1] = 255;
+        _RGBABuff[i * 4 + 2] = 255;
+        _RGBABuff[i * 4 + 3] = (_ptrToRVEdata[i] > _innerCutLevel) ? 255 : 0;
     }
 
     glBindTexture(GL_TEXTURE_3D, _textureIDs[0]);
@@ -309,6 +291,7 @@ void VolumeGLRender::_prepareTextureDisplayList() noexcept
     glEnable(GL_LIGHTING);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_ALPHA_TEST);
+    glDisable(GL_BLEND);
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);  // material color (for lightning)
     glBegin(GL_QUADS);
     for ( float _fIndx = 0.0f; _fIndx <= 1.0f; _fIndx += 1.0 / _RVEDiscretesize)
@@ -358,6 +341,7 @@ void VolumeGLRender::_prepareTextureDisplayList() noexcept
         glVertex3f(_fIndx, 0.0f, 1.0f);
     }
     glEnd();
+    glEnable(GL_BLEND);
     glDisable(GL_ALPHA_TEST);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_LIGHTING);
@@ -374,24 +358,14 @@ void VolumeGLRender::_loadPotentialFieldIntoTexture() throw(std::runtime_error)
     float _delta = _maxPotentialValue - _minPotentialValue;
     for(long i = 0; i<_RVEDiscretesize * _RVEDiscretesize * _RVEDiscretesize; ++i)
     {
-//        if(_ptrToRVEpotentialField[i] > _innerCutLevel)
-//        {
-            int _r, _g, _b;
-            _grayscaleToRainbow((_ptrToRVEpotentialField[i] - _minPotentialValue) / _delta,
-                                _r, _g, _b);
+        int _r, _g, _b;
+        _grayscaleToRainbow((_ptrToRVEpotentialField[i] - _minPotentialValue) / _delta,
+                            _r, _g, _b);
 
-            _RGBABuff[i * 4 + 0] = _r;
-            _RGBABuff[i * 4 + 1] = _g;
-            _RGBABuff[i * 4 + 2] = _b;
-            _RGBABuff[i * 4 + 3] = _potentialFieldAlphaLevel;
-//        }
-//        else
-//        {
-//            _RGBABuff[i * 4 + 0] = 0;
-//            _RGBABuff[i * 4 + 1] = 0;
-//            _RGBABuff[i * 4 + 2] = 0;
-//            _RGBABuff[i * 4 + 3] = 0;
-//        }
+        _RGBABuff[i * 4 + 0] = _r;
+        _RGBABuff[i * 4 + 1] = _g;
+        _RGBABuff[i * 4 + 2] = _b;
+        _RGBABuff[i * 4 + 3] = _potentialFieldAlphaLevel;
     }
 
     glBindTexture(GL_TEXTURE_3D, _textureIDs[1]);
@@ -575,16 +549,20 @@ void VolumeGLRender::initializeGL()
     glEnable(GL_BLEND);
     glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
-    GLfloat light0_diffuse[] = {1.0f, 1.0f, 1.0f};
-    GLfloat light0_direction[] = {0.0f, 0.0f, 1.0f, 0.0f};
-//    glEnable(GL_LIGHTING);
-    glEnable(GL_LIGHT0);
     glEnable(GL_COLOR_MATERIAL);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, light0_diffuse);
-    glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
     glEnable(GL_NORMALIZE);
+    glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+    glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+    GLfloat light0_ambient[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+    GLfloat light0_diffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    //GLfloat light0_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    // See position at paintGL()
+    glLightfv(GL_LIGHT0, GL_AMBIENT, light0_ambient);
     glLightfv(GL_LIGHT0, GL_DIFFUSE, light0_diffuse);
-    glLightfv(GL_LIGHT0, GL_POSITION, light0_direction);
+    //glLightfv(GL_LIGHT0, GL_SPECULAR, light0_specular);
+    glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 2.0f);
+    glEnable(GL_LIGHT0);
+//    glEnable(GL_LIGHTING);
 
     _mControl.setToIdentity();
     _mWorld.setToIdentity();
@@ -669,9 +647,16 @@ void VolumeGLRender::paintGL()
     _drawOrigin();
 
     glMatrixMode(GL_MODELVIEW);
-    glLoadMatrixf((_mWorld * _mControl).constData());
+    glLoadMatrixf((_mWorld * _mControl).constData());   
+
     glScalef(_Zoom, _Zoom, _Zoom);
     glTranslatef(-0.5f, -0.5f, -0.5f);
+
+    glPushMatrix();
+        glLoadMatrixf(_mWorld.constData());
+        GLfloat light0_position[] = {0.0f, 0.0f, 3.0f, 1.0f};
+        glLightfv(GL_LIGHT0, GL_POSITION, light0_position);
+    glPopMatrix();
 
     _drawBoundingBox();
 
