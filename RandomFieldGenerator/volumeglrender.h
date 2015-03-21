@@ -35,6 +35,9 @@ class VolumeGLRender : public QGLWidget
     public : void setEnvironmenColor(const QColor &newColor) noexcept{
         _EnvironmentColor = newColor;}
 
+    private: QFont _TextFont = QFont();
+    public : void setTextFont(const QFont &newFont){
+        _TextFont = newFont;}
     private: QColor _TextColor = QColor(0, 255, 0, 255);
     public : void setTextColor(const QColor &newColor){
         _TextColor = newColor;}
@@ -78,8 +81,8 @@ class VolumeGLRender : public QGLWidget
     private: void _preparePotentialTextureDisplayList() noexcept;
     private: unsigned char _potentialFieldAlphaLevel = 120;
 
-    private: float _minPotentialValue = 0.0f;
-    private: float _maxPotentialValue = 1.0f;
+    private: float _minPotentialValue;  // see constructor
+    private: float _maxPotentialValue;
     private: void _drawRainbowTable() noexcept;
 
     public : std::string printOpenGLInfo() const noexcept;
@@ -95,7 +98,7 @@ class VolumeGLRender : public QGLWidget
     public : void resizeGL(int nWidth,int nHeight) override;
     public : void paintGL() override;
 
-    public : ~VolumeGLRender(){}
+    public : ~VolumeGLRender();
 };
 
 #endif // VOLUMEGLRENDER_H

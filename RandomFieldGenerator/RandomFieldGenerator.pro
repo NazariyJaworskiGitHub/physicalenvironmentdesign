@@ -102,3 +102,5 @@ HEADERS += \
     TESTS/test_simulation.h \
     CONSOLE/console.h \
     CONSOLE/consolecommand.h
+
+FORMS +=

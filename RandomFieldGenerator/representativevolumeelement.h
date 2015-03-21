@@ -178,42 +178,12 @@ class RepresentativeVolumeElement
         std::cout << "  max = " << _max << std::endl;
 
         std::cout << "  Scaling... ";
+        float _delta = _max - _min;
         for( long i = 0; i < _size; ++i)
             for( long j = 0; j < _size; ++j)
                 for( long k = 0; k < _size; ++k)
                     _data[(i * _size * _size) + (j * _size) + k] =
-                            (_data[(i * _size * _size) + (j * _size) + k] - _min) /
-                                                        (_max - _min);
-        std::cout << "Done" << std::endl;
-    }
-
-    /// Normalize cuttedData
-    public : void normalizeField2() noexcept
-    {
-        std::cout << "  Finding min and max... ";
-        float _min = _cuttedData[0];
-        float _max = _cuttedData[0];
-
-        for( long i = 0; i < _size; ++i)
-            for( long j = 0; j < _size; ++j)
-                for( long k = 0; k < _size; ++k)
-                {
-                    if(_cuttedData[(i * _size * _size) + (j * _size) + k] < _min)
-                        _min = _cuttedData[(i * _size * _size) + (j * _size) + k];
-                    if(_cuttedData[(i * _size * _size) + (j * _size) + k] > _max)
-                        _max = _cuttedData[(i * _size * _size) + (j * _size) + k];
-                }
-        std::cout << "Done" << std::endl;
-        std::cout << "  min = " << _min << std::endl;
-        std::cout << "  max = " << _max << std::endl;
-
-        std::cout << "  Scaling... ";
-        for( long i = 0; i < _size; ++i)
-            for( long j = 0; j < _size; ++j)
-                for( long k = 0; k < _size; ++k)
-                    _cuttedData[(i * _size * _size) + (j * _size) + k] =
-                            (_cuttedData[(i * _size * _size) + (j * _size) + k] - _min) /
-                                                        (_max - _min);
+                            (_data[(i * _size * _size) + (j * _size) + k] - _min) / _delta;
         std::cout << "Done" << std::endl;
     }
 

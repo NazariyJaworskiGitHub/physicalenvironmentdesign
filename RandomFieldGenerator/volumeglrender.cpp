@@ -13,6 +13,15 @@ VolumeGLRender::VolumeGLRender(
     _ptrToRVEdata(ptrToRVEData),
     _ptrToRVEpotentialField(ptrToRVEPotentialField)
 {
+    _minPotentialValue = _ptrToRVEpotentialField[0];
+    _maxPotentialValue = _ptrToRVEpotentialField[0];
+    for(long i = 1; i<_RVEDiscretesize * _RVEDiscretesize * _RVEDiscretesize; ++i)
+    {
+        if(_ptrToRVEpotentialField[i] < _minPotentialValue)
+            _minPotentialValue = _ptrToRVEpotentialField[i];
+        if(_ptrToRVEpotentialField[i] > _maxPotentialValue)
+            _maxPotentialValue = _ptrToRVEpotentialField[i];
+    }
 }
 
 void VolumeGLRender::mousePressEvent(QMouseEvent *e)
@@ -206,11 +215,11 @@ void VolumeGLRender::_drawOrigin() noexcept
 
             // this don't depend on the depth test
             glColor3d(1, 0, 0);
-            this->renderText(0.75f, 0, 0, "x");
+            this->renderText(0.75f, 0, 0, "x", _TextFont);
             glColor3d(0, 1, 0);
-            this->renderText(0, 0.75f, 0, "y");
+            this->renderText(0, 0.75f, 0, "y", _TextFont);
             glColor3d(0, 0, 1);
-            this->renderText(0, 0, 0.75f, "z");
+            this->renderText(0, 0, 0.75f, "z", _TextFont);
 
             glEnable(GL_DEPTH_TEST);
             glEnable(GL_LIGHTING);
@@ -270,14 +279,6 @@ void VolumeGLRender::_loadFieldIntoTexture() throw(std::runtime_error)
     }
 
     glBindTexture(GL_TEXTURE_3D, _textureIDs[0]);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
-//    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-//    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
     // see https://www.opengl.org/sdk/docs/man3/xhtml/glTexImage3D.xml
     glTexImage3D(
                 GL_TEXTURE_3D,      // target, copy data to device
@@ -299,11 +300,16 @@ void VolumeGLRender::_prepareTextureDisplayList() noexcept
     glNewList(_firstDisplayListID, GL_COMPILE);
     glEnable(GL_TEXTURE_3D);
     glBindTexture( GL_TEXTURE_3D, _textureIDs[0]);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glEnable(GL_LIGHTING);
     glEnable(GL_DEPTH_TEST);
-    glEnable( GL_ALPHA_TEST );
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);  /// \todo wtf???
+    glEnable(GL_ALPHA_TEST);
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);  // material color (for lightning)
     glBegin(GL_QUADS);
     for ( float _fIndx = 0.0f; _fIndx <= 1.0f; _fIndx += 1.0 / _RVEDiscretesize)
     {
@@ -365,12 +371,14 @@ void VolumeGLRender::_loadPotentialFieldIntoTexture() throw(std::runtime_error)
     if(!_RGBABuff)
         throw(std::runtime_error("FATAL: _loadFieldIntoTexture(): can't allocate memory for RVE"));
 
+    float _delta = _maxPotentialValue - _minPotentialValue;
     for(long i = 0; i<_RVEDiscretesize * _RVEDiscretesize * _RVEDiscretesize; ++i)
     {
 //        if(_ptrToRVEpotentialField[i] > _innerCutLevel)
 //        {
             int _r, _g, _b;
-            _grayscaleToRainbow(_ptrToRVEpotentialField[i], _r, _g, _b);
+            _grayscaleToRainbow((_ptrToRVEpotentialField[i] - _minPotentialValue) / _delta,
+                                _r, _g, _b);
 
             _RGBABuff[i * 4 + 0] = _r;
             _RGBABuff[i * 4 + 1] = _g;
@@ -387,14 +395,6 @@ void VolumeGLRender::_loadPotentialFieldIntoTexture() throw(std::runtime_error)
     }
 
     glBindTexture(GL_TEXTURE_3D, _textureIDs[1]);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
-//    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-//    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
     // see https://www.opengl.org/sdk/docs/man3/xhtml/glTexImage3D.xml
     glTexImage3D(
                 GL_TEXTURE_3D,      // target, copy data to device
@@ -416,8 +416,12 @@ void VolumeGLRender::_preparePotentialTextureDisplayList() noexcept
     glNewList(_firstDisplayListID+1, GL_COMPILE);
     glEnable(GL_TEXTURE_3D);
     glBindTexture( GL_TEXTURE_3D, _textureIDs[1]);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-//    glEnable(GL_LIGHTING);
     glEnable(GL_DEPTH_TEST);
     glBegin(GL_QUADS);
     for ( float _fIndx = 0.0f; _fIndx <= 1.0f; _fIndx += 1.0 / _RVEDiscretesize)
@@ -467,7 +471,6 @@ void VolumeGLRender::_preparePotentialTextureDisplayList() noexcept
     }
     glEnd();
     glDisable(GL_DEPTH_TEST);
-//    glDisable(GL_LIGHTING);
     glDisable(GL_TEXTURE_3D);
     glEndList();
 }
@@ -477,9 +480,11 @@ void VolumeGLRender::_drawRainbowTable() noexcept
     int _width = this->width();
     int _height = this->height();
 
-    int _nBlocks = 32;
     int _tableWidth = 80;
-    float _delta = (_maxPotentialValue - _minPotentialValue) / _nBlocks;
+    int _cellHeight = 10 + QFontInfo(_TextFont).pixelSize();
+    int _nBlocks = _height / _cellHeight;
+    float _textYoffset = 5.0f / _height;
+    float _delta = (_maxPotentialValue - _minPotentialValue) / (_nBlocks-1);
 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
@@ -497,7 +502,7 @@ void VolumeGLRender::_drawRainbowTable() noexcept
                       0,1,0);
 
             float _x = (float)_tableWidth/(float)_height/2.0;
-            for (int i=0; i <=_nBlocks; ++i)
+            for (int i=0; i <_nBlocks; ++i)
             {
                 int _r, _g, _b;
                 _grayscaleToRainbow((float)i / (float)(_nBlocks-1), _r, _g, _b);
@@ -505,7 +510,7 @@ void VolumeGLRender::_drawRainbowTable() noexcept
                 float _yBottom = (-0.5f + (float)i / (float)_nBlocks) * 0.8f;
                 float _yTop = (-0.5f + (float)(i+1) / (float)_nBlocks) * 0.8f;
 
-                glColor3ub(_r, _g, _b);
+                glColor4ub(_r, _g, _b, _potentialFieldAlphaLevel);
                 glBegin(GL_QUADS);
                 glVertex2f(-_x, _yTop);
                 glVertex2f( _x, _yTop);
@@ -513,9 +518,10 @@ void VolumeGLRender::_drawRainbowTable() noexcept
                 glVertex2f(-_x, _yBottom);
                 glEnd();
 
-                glColor3f(0.0f, 0.0f, 0.0f);
-                this->renderText(-_x*0.8, _yBottom, 0.0f,
-                                 QString::number(_minPotentialValue + i*_delta, 10, 10));
+                glColor4ub(0, 0, 0, _potentialFieldAlphaLevel);
+                this->renderText(-_x*0.75, _yBottom + _textYoffset, 0.0f,
+                                 QString::number(_minPotentialValue + i*_delta, 'e', 6),
+                                 _TextFont);
             }
         }
         glPopMatrix();
@@ -591,8 +597,7 @@ void VolumeGLRender::initializeGLEW()
     this->context()->makeCurrent();
 
     auto _rez = glewInit();
-    std::cout << "GLEW: "<< glewGetErrorString(_rez) << std::endl;
-
+    std::cout << "GLEW: "<< glewGetErrorString(_rez) << std::endl;      
     glGenTextures(2, _textureIDs);
     _firstDisplayListID = glGenLists(2);
     _loadFieldIntoTexture();
@@ -649,9 +654,12 @@ void VolumeGLRender::_drawBoundingBox() noexcept
     glDisable(GL_DEPTH_TEST);
 
     // this don't depend on the depth test
-    this->renderText(  0.5f, -0.03f, -0.03f, QString::number(_boundingBoxRepresentationSize) + "m");
-    this->renderText(-0.03f,   0.5f, -0.03f, QString::number(_boundingBoxRepresentationSize) + "m");
-    this->renderText(-0.03f, -0.03f,   0.5f, QString::number(_boundingBoxRepresentationSize) + "m");
+    this->renderText(  0.5f, -0.03f, -0.03f,
+                       QString::number(_boundingBoxRepresentationSize) + "m", _TextFont);
+    this->renderText(-0.03f,   0.5f, -0.03f,
+                     QString::number(_boundingBoxRepresentationSize) + "m", _TextFont);
+    this->renderText(-0.03f, -0.03f,   0.5f,
+                     QString::number(_boundingBoxRepresentationSize) + "m", _TextFont);
 }
 
 void VolumeGLRender::paintGL()
@@ -660,54 +668,17 @@ void VolumeGLRender::paintGL()
 
     _drawOrigin();
 
-//    {
-//        glMatrixMode(GL_MODELVIEW);
-//        glLoadMatrixf((_mWorld * _mControl).constData());;
+    glMatrixMode(GL_MODELVIEW);
+    glLoadMatrixf((_mWorld * _mControl).constData());
+    glScalef(_Zoom, _Zoom, _Zoom);
+    glTranslatef(-0.5f, -0.5f, -0.5f);
 
-//        glEnable(GL_DEPTH_TEST);
+    _drawBoundingBox();
 
-//        glLineWidth(3);
-
-//        glBegin(GL_LINES);
-//        glColor3d(1, 0, 0);
-//        glVertex3d(0, 0, 0);
-//        glVertex3d(1, 0, 0);
-//        glEnd();
-//        this->renderText(1, 0, 0, "x");
-
-//        glBegin(GL_LINES);
-//        glColor3d(0, 1, 0);
-//        glVertex3d(0, 0, 0);
-//        glVertex3d(0, 1, 0);
-//        glEnd();
-//        this->renderText(0, 1, 0, "y");
-
-//        glBegin(GL_LINES);
-//        glColor3d(0, 0, 1);
-//        glVertex3d(0, 0, 0);
-//        glVertex3d(0, 0, 1);
-//        glEnd();
-//        this->renderText(0, 0, 1, "z");
-
-//        glLineWidth(1);
-//        glDisable(GL_DEPTH_TEST);
-//    }
-
-    {
-        glMatrixMode(GL_MODELVIEW);
-        glLoadMatrixf((_mWorld * _mControl).constData());
-        glScalef(_Zoom, _Zoom, _Zoom);
-        glTranslatef(-0.5f, -0.5f, -0.5f);
-
-        glMatrixMode(GL_TEXTURE);
-        glLoadIdentity();
-        glScalef(0.99f, 0.99f, 0.99f);
-
-        _drawBoundingBox();
-
+    if(_potentialFieldAlphaLevel!=255)
         glCallList(_firstDisplayListID);
+    if(_potentialFieldAlphaLevel!=0)
         glCallList(_firstDisplayListID+1);
-    }
 
     _drawRainbowTable();
 
@@ -716,5 +687,10 @@ void VolumeGLRender::paintGL()
             _TextColor.greenF(),
             _TextColor.blueF(),
             _TextColor.alphaF());
-    this->renderText(1.0, 10.0, _infoString);
+    this->renderText(1.0, 10.0, _infoString, _TextFont);
+}
+
+VolumeGLRender::~VolumeGLRender()
+{
+
 }

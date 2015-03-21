@@ -45,12 +45,12 @@ int main(int argc, char *argv[])
     ///////////////////////////////////////////////////////////////////////////////////////
     std::chrono::steady_clock::time_point _t1 = std::chrono::steady_clock::now();
 
-    int size = 64;
+    int size = 128;
     RepresentativeVolumeElement _RVE(size);
     _RVE.generateRandomField();
     //_RVE.applyGaussianFilter(32);
-    //_RVE.applyGaussianFilterCL(64, 1.0f, 0.25f, 0.25f);
     _RVE.applyGaussianFilterCL(32, 1.0f, 0.25f, 0.25f);
+    //_RVE.applyGaussianFilterCL(16, 1.0f, 0.5f, 0.5f);
     //_RVE.applyCuttingLevel(0.65);
 
     std::chrono::steady_clock::time_point _t2 = std::chrono::steady_clock::now();
@@ -96,7 +96,6 @@ int main(int argc, char *argv[])
     viennacl::copy(_u.begin(), _u.end(), _RVE.getCuttedData());
 //    for(long i=0; i<size*size*size; ++i)
 //        std::cout << "[" << i << "]:" << _RVE.getData()[i] << " ";
-    _RVE.normalizeField2();
     _t2 = std::chrono::steady_clock::now();
     time_span = std::chrono::duration_cast<std::chrono::duration<double>>(_t2 - _t1);
     std::cout << time_span.count() << " seconds" << std::endl;
@@ -109,7 +108,7 @@ int main(int argc, char *argv[])
     VolumeGLRender _render(_RVE.getSize(), _RVE.getData(), _RVE.getCuttedData(), NULL);
     _render.setBoundingBoxRepresentationSize(1.0f);
     _render.printOpenGLInfo();
-    _render.initializeGL();
+    _render.initializeGL(); /// \todo put into constructor
     _render.initializeGLEW();
     _render.setWindowTitle("Volume render");
     _render.resize(800,600);
