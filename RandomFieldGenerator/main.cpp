@@ -2,7 +2,7 @@
 #include <iomanip>
 #include <QApplication>
 
-#include "volumeglrender.h"
+#include "UI/volumeglrender.h"
 #include "representativevolumeelement.h"
 
 #include "CLMANAGER/clmanager.h"
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
     ///////////////////////////////////////////////////////////////////////////////////////
     std::chrono::steady_clock::time_point _t1 = std::chrono::steady_clock::now();
 
-    int size = 128;
+    int size = 64;
     RepresentativeVolumeElement _RVE(size);
     _RVE.generateRandomField();
     //_RVE.applyGaussianFilter(32);
@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
     std::cout << "matrix (elements): " << _matrixSize << std::endl;
     ///////////////////////////////////////////////////////////////////////////////////////
 
-    VolumeGLRender _render(_RVE.getSize(), _RVE.getData(), _RVE.getCuttedData(), NULL);
+    UserInterface::VolumeGLRender _render(_RVE.getSize(), _RVE.getData(), _RVE.getCuttedData(), NULL);
     _render.setBoundingBoxRepresentationSize(1.0f);
     _render.printOpenGLInfo();
     _render.initializeGL(); /// \todo put into constructor

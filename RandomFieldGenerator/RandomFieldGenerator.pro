@@ -4,6 +4,7 @@ CONFIG += no_keywords
 
 QT += testlib
 QT += opengl
+QT += widgets
 
 #For GLEW
 win32{
@@ -84,23 +85,26 @@ QMAKE_CXXFLAGS_RELEASE += -O2 \ #Equivalent to -O3 (MinGW 4.8.0)
 SOURCES += main.cpp \
     CLMANAGER/clmanager.cpp \
     TESTS/test_clmanager.cpp \
-    volumeglrender.cpp \
+    UI/volumeglrender.cpp \
     representativevolumeelement.cpp \
     TESTS/test_viennacl.cpp \
     simulation.cpp \
     TESTS/test_simulation.cpp \
-    CONSOLE/consolecommand.cpp
+    CONSOLE/consolecommand.cpp \
+    UI/volumeglrenderformatdialog.cpp
 
 HEADERS += \
     CLMANAGER/clmanager.h \
     TESTS/tests_runner.h \
     TESTS/test_clmanager.h \
-    volumeglrender.h \
+    UI/volumeglrender.h \
     representativevolumeelement.h \
     TESTS/test_viennacl.h \
     simulation.h \
     TESTS/test_simulation.h \
     CONSOLE/console.h \
-    CONSOLE/consolecommand.h
+    CONSOLE/consolecommand.h \
+    UI/volumeglrenderformatdialog.h
 
-FORMS +=
+FORMS += \
+    UI/volumeglrenderformatdialog.ui
