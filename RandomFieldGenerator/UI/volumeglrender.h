@@ -39,9 +39,9 @@ namespace UserInterface
         private: int _oldMouseY = 0;
         private: bool _isPressed = false;
 
-        private: QColor _EnvironmentColor = QColor(64, 128, 128, 255);
+        private: QColor _BackgroundColor = QColor(64, 128, 128, 255);
         public : void setEnvironmenColor(const QColor &newColor) noexcept{
-            _EnvironmentColor = newColor;}
+            _BackgroundColor = newColor;}
 
         private: QFont _TextFont = QFont();
         public : void setTextFont(const QFont &newFont){
@@ -91,6 +91,8 @@ namespace UserInterface
 
         private: float _minPotentialValue;  // see constructor
         private: float _maxPotentialValue;
+        private: const float _minPotentialValueBackup = 0;
+        private: const float _maxPotentialValueBackup = 0;
         private: void _drawRainbowTable() noexcept;
 
         public : std::string printOpenGLInfo() const noexcept;

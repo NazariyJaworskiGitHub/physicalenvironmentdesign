@@ -50,7 +50,7 @@
     <rect>
      <x>160</x>
      <y>10</y>
-     <width>231</width>
+     <width>311</width>
      <height>21</height>
     </rect>
    </property>
@@ -61,17 +61,159 @@
     <enum>Qt::Horizontal</enum>
    </property>
   </widget>
-  <widget class="QLineEdit" name="PotentialFieldTransparencyLineEdit">
+  <widget class="QLabel" name="BackgroundColorLabel">
    <property name="geometry">
     <rect>
-     <x>400</x>
-     <y>10</y>
-     <width>71</width>
+     <x>10</x>
+     <y>40</y>
+     <width>141</width>
      <height>21</height>
     </rect>
    </property>
-   <property name="readOnly">
-    <bool>true</bool>
+   <property name="text">
+    <string>Background color</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="BackgroundColorButton">
+   <property name="geometry">
+    <rect>
+     <x>160</x>
+     <y>40</y>
+     <width>311</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true"/>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="TextColorLabel">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>70</y>
+     <width>141</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Text color</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="TextColorButton">
+   <property name="geometry">
+    <rect>
+     <x>160</x>
+     <y>70</y>
+     <width>311</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="TextFontLabel">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>101</y>
+     <width>141</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Text font</string>
+   </property>
+  </widget>
+  <widget class="QFontComboBox" name="TextFontComboBox">
+   <property name="geometry">
+    <rect>
+     <x>160</x>
+     <y>100</y>
+     <width>251</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="TextFontSizeSpinBox">
+   <property name="geometry">
+    <rect>
+     <x>410</x>
+     <y>100</y>
+     <width>61</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MaxPotentialFieldValueLabel">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>130</y>
+     <width>141</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Max. potential field value </string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MinPotentialFieldValueLabel">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>161</y>
+     <width>141</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Min. potential field value </string>
+   </property>
+  </widget>
+  <widget class="QSlider" name="MaxPotentialFieldValueSlider">
+   <property name="geometry">
+    <rect>
+     <x>160</x>
+     <y>130</y>
+     <width>311</width>
+     <height>19</height>
+    </rect>
+   </property>
+   <property name="minimum">
+    <number>1</number>
+   </property>
+   <property name="maximum">
+    <number>100</number>
+   </property>
+   <property name="value">
+    <number>100</number>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
+   </property>
+  </widget>
+  <widget class="QSlider" name="MinPotentialFieldValueSlider">
+   <property name="geometry">
+    <rect>
+     <x>160</x>
+     <y>160</y>
+     <width>311</width>
+     <height>19</height>
+    </rect>
+   </property>
+   <property name="minimum">
+    <number>0</number>
+   </property>
+   <property name="value">
+    <number>0</number>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
    </property>
   </widget>
  </widget>

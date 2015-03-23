@@ -6,8 +6,6 @@
 #include <QMenu>
 #include <QDialog>
 
-#include "ui_volumeglrenderformatdialog.h"
-
 using namespace UserInterface;
 
 VolumeGLRender::VolumeGLRender(
@@ -29,6 +27,12 @@ VolumeGLRender::VolumeGLRender(
         if(_ptrToRVEpotentialField[i] > _maxPotentialValue)
             _maxPotentialValue = _ptrToRVEpotentialField[i];
     }
+    (*const_cast<float*>(&_minPotentialValueBackup)) = _minPotentialValue;
+    (*const_cast<float*>(&_maxPotentialValueBackup)) = _maxPotentialValue;
+
+    initializeGL();
+    initializeGLEW();
+    setWindowTitle("Volume render");
 }
 
 void VolumeGLRender::mousePressEvent(QMouseEvent *e)
@@ -47,7 +51,7 @@ void VolumeGLRender::mouseReleaseEvent(QMouseEvent *e)
     {
         QMenu _menu;
 
-        QAction* _ActionFormat = new QAction("Format", this);
+        QAction* _ActionFormat = new QAction("Format...", this);
         connect(_ActionFormat, SIGNAL(triggered()), this, SLOT(slot_createFormatDialog()));
         _menu.addAction(_ActionFormat);
 
@@ -213,7 +217,6 @@ void VolumeGLRender::_drawOrigin() noexcept
         {
             glLoadMatrixf((_mWorld * _mControl).constData());
 
-            // this don't depend on the depth test
             glColor3d(1, 0, 0);
             this->renderText(0.75f, 0, 0, "x", _TextFont);
             glColor3d(0, 1, 0);
@@ -290,7 +293,6 @@ void VolumeGLRender::_prepareTextureDisplayList() noexcept
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glEnable(GL_LIGHTING);
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_ALPHA_TEST);
     glDisable(GL_BLEND);
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);  // material color (for lightning)
     glBegin(GL_QUADS);
@@ -298,51 +300,29 @@ void VolumeGLRender::_prepareTextureDisplayList() noexcept
     {
         glNormal3f(0.0f, 0.0f, 1.0f);
 
-        glTexCoord3f(0.0f, 0.0f, _fIndx);
-        glVertex3f(0.0f, 0.0f, _fIndx);
-
-        glTexCoord3f(1.0f, 0.0f, _fIndx);
-        glVertex3f(1.0f, 0.0f, _fIndx);
-
-        glTexCoord3f(1.0f, 1.0f, _fIndx);
-        glVertex3f(1.0f, 1.0f, _fIndx);
-
-        glTexCoord3f(0.0f, 1.0f, _fIndx);
-        glVertex3f(0.0f, 1.0f, _fIndx);
+        glTexCoord3f(0.0f, 0.0f, _fIndx);   glVertex3f(0.0f, 0.0f, _fIndx);
+        glTexCoord3f(1.0f, 0.0f, _fIndx);   glVertex3f(1.0f, 0.0f, _fIndx);
+        glTexCoord3f(1.0f, 1.0f, _fIndx);   glVertex3f(1.0f, 1.0f, _fIndx);
+        glTexCoord3f(0.0f, 1.0f, _fIndx);   glVertex3f(0.0f, 1.0f, _fIndx);
 
         //////////////////////////////////
         glNormal3f(0.0f, 1.0f, 0.0f);
 
-        glTexCoord3f(1.0f, _fIndx, 0.0f);
-        glVertex3f(1.0f, _fIndx, 0.0f);
-
-        glTexCoord3f(0.0f, _fIndx, 0.0f);
-        glVertex3f(0.0f, _fIndx, 0.0f);
-
-        glTexCoord3f(0.0f, _fIndx, 1.0f);
-        glVertex3f(0.0f, _fIndx, 1.0f);
-
-        glTexCoord3f(1.0f, _fIndx, 1.0f);
-        glVertex3f(1.0f, _fIndx, 1.0f);
+        glTexCoord3f(1.0f, _fIndx, 0.0f);   glVertex3f(1.0f, _fIndx, 0.0f);
+        glTexCoord3f(0.0f, _fIndx, 0.0f);   glVertex3f(0.0f, _fIndx, 0.0f);
+        glTexCoord3f(0.0f, _fIndx, 1.0f);   glVertex3f(0.0f, _fIndx, 1.0f);
+        glTexCoord3f(1.0f, _fIndx, 1.0f);   glVertex3f(1.0f, _fIndx, 1.0f);
 
         //////////////////////////////////
         glNormal3f(1.0f, 0.0f, 0.0f);
 
-        glTexCoord3f(_fIndx, 0.0f, 0.0f);
-        glVertex3f(_fIndx, 0.0f, 0.0f);
-
-        glTexCoord3f(_fIndx, 1.0f, 0.0f);
-        glVertex3f(_fIndx, 1.0f, 0.0f);
-
-        glTexCoord3f(_fIndx, 1.0f, 1.0f);
-        glVertex3f(_fIndx, 1.0f, 1.0f);
-
-        glTexCoord3f(_fIndx, 0.0f, 1.0f);
-        glVertex3f(_fIndx, 0.0f, 1.0f);
+        glTexCoord3f(_fIndx, 0.0f, 0.0f);   glVertex3f(_fIndx, 0.0f, 0.0f);
+        glTexCoord3f(_fIndx, 1.0f, 0.0f);   glVertex3f(_fIndx, 1.0f, 0.0f);
+        glTexCoord3f(_fIndx, 1.0f, 1.0f);   glVertex3f(_fIndx, 1.0f, 1.0f);
+        glTexCoord3f(_fIndx, 0.0f, 1.0f);   glVertex3f(_fIndx, 0.0f, 1.0f);
     }
     glEnd();
     glEnable(GL_BLEND);
-    glDisable(GL_ALPHA_TEST);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_LIGHTING);
     glDisable(GL_TEXTURE_3D);
@@ -359,13 +339,21 @@ void VolumeGLRender::_loadPotentialFieldIntoTexture() throw(std::runtime_error)
     for(long i = 0; i<_RVEDiscretesize * _RVEDiscretesize * _RVEDiscretesize; ++i)
     {
         int _r, _g, _b;
-        _grayscaleToRainbow((_ptrToRVEpotentialField[i] - _minPotentialValue) / _delta,
-                            _r, _g, _b);
+        float _val = (_ptrToRVEpotentialField[i] - _minPotentialValue) / _delta;
+        if(_val >= 0.0f && _val <= 1.0f)
+            _RGBABuff[i * 4 + 3] = _potentialFieldAlphaLevel;
+        else
+        {
+            if(_val < 0.0f) _val = 0.0f;
+            if(_val > 1.0f) _val = 1.0f;
+            _RGBABuff[i * 4 + 3] = 0;
+        }
+
+        _grayscaleToRainbow(_val, _r, _g, _b);
 
         _RGBABuff[i * 4 + 0] = _r;
         _RGBABuff[i * 4 + 1] = _g;
         _RGBABuff[i * 4 + 2] = _b;
-        _RGBABuff[i * 4 + 3] = _potentialFieldAlphaLevel;
     }
 
     glBindTexture(GL_TEXTURE_3D, _textureIDs[1]);
@@ -387,63 +375,64 @@ void VolumeGLRender::_loadPotentialFieldIntoTexture() throw(std::runtime_error)
 
 void VolumeGLRender::_preparePotentialTextureDisplayList() noexcept
 {
+    /// see https://mail.gnome.org/archives/commits-list/2012-February/msg05204.html
     glNewList(_firstDisplayListID+1, GL_COMPILE);
     glEnable(GL_TEXTURE_3D);
-    glBindTexture( GL_TEXTURE_3D, _textureIDs[1]);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_3D, _textureIDs[1]);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     glEnable(GL_DEPTH_TEST);
-    glBegin(GL_QUADS);
-    for ( float _fIndx = 0.0f; _fIndx <= 1.0f; _fIndx += 1.0 / _RVEDiscretesize)
+    for (int _i = 0; _i<2; ++_i)
     {
-//        glNormal3f(0.0f, 0.0f, 1.0f);
+        if (_i == 0)
+        {
+            // Clear alpha buffer
+            glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+            glBlendFuncSeparate(GL_ZERO, GL_ONE, GL_ONE, GL_ZERO);
+        }
+        else if (_i == 1)
+        {
+            // Draw pixels
+            glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+            glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+            glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP);
+            glBlendFuncSeparate(GL_DST_ALPHA, GL_ONE_MINUS_DST_ALPHA, GL_ZERO, GL_ZERO);
+        }
+        else
+        {
+            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        }
 
-        glTexCoord3f(0.0f, 0.0f, _fIndx);
-        glVertex3f(0.0f, 0.0f, _fIndx);
+        glBegin(GL_QUADS);
+        for ( float _fIndx = 0.0f; _fIndx <= 1.0f; _fIndx += 1.0 / _RVEDiscretesize)
+        {
+    //        glNormal3f(0.0f, 0.0f, 1.0f);
+            glTexCoord3f(0.0f, 0.0f, _fIndx);   glVertex3f(0.0f, 0.0f, _fIndx);
+            glTexCoord3f(1.0f, 0.0f, _fIndx);   glVertex3f(1.0f, 0.0f, _fIndx);
+            glTexCoord3f(1.0f, 1.0f, _fIndx);   glVertex3f(1.0f, 1.0f, _fIndx);
+            glTexCoord3f(0.0f, 1.0f, _fIndx);   glVertex3f(0.0f, 1.0f, _fIndx);
 
-        glTexCoord3f(1.0f, 0.0f, _fIndx);
-        glVertex3f(1.0f, 0.0f, _fIndx);
-
-        glTexCoord3f(1.0f, 1.0f, _fIndx);
-        glVertex3f(1.0f, 1.0f, _fIndx);
-
-        glTexCoord3f(0.0f, 1.0f, _fIndx);
-        glVertex3f(0.0f, 1.0f, _fIndx);
-
-        //////////////////////////////////
-//        glNormal3f(0.0f, 1.0f, 0.0f);
-
-        glTexCoord3f(1.0f, _fIndx, 0.0f);
-        glVertex3f(1.0f, _fIndx, 0.0f);
-
-        glTexCoord3f(0.0f, _fIndx, 0.0f);
-        glVertex3f(0.0f, _fIndx, 0.0f);
-
-        glTexCoord3f(0.0f, _fIndx, 1.0f);
-        glVertex3f(0.0f, _fIndx, 1.0f);
-
-        glTexCoord3f(1.0f, _fIndx, 1.0f);
-        glVertex3f(1.0f, _fIndx, 1.0f);
-        //////////////////////////////////
-//        glNormal3f(1.0f, 0.0f, 0.0f);
-
-        glTexCoord3f(_fIndx, 0.0f, 0.0f);
-        glVertex3f(_fIndx, 0.0f, 0.0f);
-
-        glTexCoord3f(_fIndx, 1.0f, 0.0f);
-        glVertex3f(_fIndx, 1.0f, 0.0f);
-
-        glTexCoord3f(_fIndx, 1.0f, 1.0f);
-        glVertex3f(_fIndx, 1.0f, 1.0f);
-
-        glTexCoord3f(_fIndx, 0.0f, 1.0f);
-        glVertex3f(_fIndx, 0.0f, 1.0f);
+            //////////////////////////////////
+    //        glNormal3f(0.0f, 1.0f, 0.0f);
+            glTexCoord3f(1.0f, _fIndx, 0.0f);   glVertex3f(1.0f, _fIndx, 0.0f);
+            glTexCoord3f(0.0f, _fIndx, 0.0f);   glVertex3f(0.0f, _fIndx, 0.0f);
+            glTexCoord3f(0.0f, _fIndx, 1.0f);   glVertex3f(0.0f, _fIndx, 1.0f);
+            glTexCoord3f(1.0f, _fIndx, 1.0f);   glVertex3f(1.0f, _fIndx, 1.0f);
+            //////////////////////////////////
+    //        glNormal3f(1.0f, 0.0f, 0.0f);
+            glTexCoord3f(_fIndx, 0.0f, 0.0f);   glVertex3f(_fIndx, 0.0f, 0.0f);
+            glTexCoord3f(_fIndx, 1.0f, 0.0f);   glVertex3f(_fIndx, 1.0f, 0.0f);
+            glTexCoord3f(_fIndx, 1.0f, 1.0f);   glVertex3f(_fIndx, 1.0f, 1.0f);
+            glTexCoord3f(_fIndx, 0.0f, 1.0f);   glVertex3f(_fIndx, 0.0f, 1.0f);
+        }
+        glEnd();
     }
-    glEnd();
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_TEXTURE_3D);
     glEndList();
@@ -454,11 +443,12 @@ void VolumeGLRender::_drawRainbowTable() noexcept
     int _width = this->width();
     int _height = this->height();
 
-    int _tableWidth = 80;
+    int _tableWidth = QFontMetrics(_TextFont).width('0') * 15;
     int _cellHeight = 10 + QFontInfo(_TextFont).pixelSize();
     int _nBlocks = _height / _cellHeight;
     float _textYoffset = 5.0f / _height;
     float _delta = (_maxPotentialValue - _minPotentialValue) / (_nBlocks-1);
+    int _valuePrecision = 8;
 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
@@ -494,7 +484,8 @@ void VolumeGLRender::_drawRainbowTable() noexcept
 
                 glColor4ub(0, 0, 0, _potentialFieldAlphaLevel);
                 this->renderText(-_x*0.75, _yBottom + _textYoffset, 0.0f,
-                                 QString::number(_minPotentialValue + i*_delta, 'e', 6),
+                                 QString::number(
+                                     _minPotentialValue + i*_delta, 'e', _valuePrecision),
                                  _TextFont);
             }
         }
@@ -525,11 +516,6 @@ void VolumeGLRender::initializeGL()
     aGLFormat.setVersion(aGLFormat.majorVersion(),aGLFormat.minorVersion());
     QGLFormat::setDefaultFormat(aGLFormat);
 
-    glClearColor(
-                _EnvironmentColor.redF(),
-                _EnvironmentColor.greenF(),
-                _EnvironmentColor.blueF(),
-                _EnvironmentColor.alphaF());
     glClearDepth(1.0f);
 //    glEnable(GL_DEPTH_TEST);
 //    //glEnable(GL_LINE_SMOOTH);
@@ -543,11 +529,11 @@ void VolumeGLRender::initializeGL()
 
 //    glEnable(GL_CULL_FACE);
 
-//    glEnable( GL_ALPHA_TEST );
-    glAlphaFunc( GL_GEQUAL, 0.5f );
+    glEnable(GL_ALPHA_TEST);
+    glAlphaFunc(GL_GREATER, 0.0f);
 
     glEnable(GL_BLEND);
-    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glEnable(GL_COLOR_MATERIAL);
     glEnable(GL_NORMALIZE);
@@ -631,7 +617,12 @@ void VolumeGLRender::_drawBoundingBox() noexcept
     glEnd();
     glDisable(GL_DEPTH_TEST);
 
-    // this don't depend on the depth test
+    glColor4f(
+            _TextColor.redF(),
+            _TextColor.greenF(),
+            _TextColor.blueF(),
+            _TextColor.alphaF());
+
     this->renderText(  0.5f, -0.03f, -0.03f,
                        QString::number(_boundingBoxRepresentationSize) + "m", _TextFont);
     this->renderText(-0.03f,   0.5f, -0.03f,
@@ -642,7 +633,13 @@ void VolumeGLRender::_drawBoundingBox() noexcept
 
 void VolumeGLRender::paintGL()
 {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClearColor(
+                _BackgroundColor.redF(),
+                _BackgroundColor.greenF(),
+                _BackgroundColor.blueF(),
+                _BackgroundColor.alphaF());
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     _drawOrigin();
 
@@ -683,12 +680,6 @@ VolumeGLRender::~VolumeGLRender()
 
 void VolumeGLRender::slot_createFormatDialog()
 {
-//    VolumeGLRenderFormatDialog _dialog;
-//    QDialog * window = new QDialog(this);
-//    _dialog.setupUi(window);
-//    window->setAutoFillBackground(false);
-//    window->setModal(true);
-//    window->show();
     UserInterface::VolumeGLRenderFormatDialog *_dialog =
             new UserInterface::VolumeGLRenderFormatDialog(this);
     _dialog->show();

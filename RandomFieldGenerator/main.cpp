@@ -45,12 +45,12 @@ int main(int argc, char *argv[])
     ///////////////////////////////////////////////////////////////////////////////////////
     std::chrono::steady_clock::time_point _t1 = std::chrono::steady_clock::now();
 
-    int size = 64;
+    int size = 128;
     RepresentativeVolumeElement _RVE(size);
     _RVE.generateRandomField();
     //_RVE.applyGaussianFilter(32);
-    _RVE.applyGaussianFilterCL(32, 1.0f, 0.25f, 0.25f);
-    //_RVE.applyGaussianFilterCL(16, 1.0f, 0.5f, 0.5f);
+    //_RVE.applyGaussianFilterCL(32, 1.0f, 0.25f, 0.25f);
+    _RVE.applyGaussianFilterCL(32);
     //_RVE.applyCuttingLevel(0.65);
 
     std::chrono::steady_clock::time_point _t2 = std::chrono::steady_clock::now();
@@ -105,12 +105,12 @@ int main(int argc, char *argv[])
     std::cout << "matrix (elements): " << _matrixSize << std::endl;
     ///////////////////////////////////////////////////////////////////////////////////////
 
-    UserInterface::VolumeGLRender _render(_RVE.getSize(), _RVE.getData(), _RVE.getCuttedData(), NULL);
+//    QLocale::setDefault(QLocale::C);
+    UserInterface::VolumeGLRender _render(
+                _RVE.getSize(), _RVE.getData(), _RVE.getCuttedData(), NULL);
     _render.setBoundingBoxRepresentationSize(1.0f);
-    _render.printOpenGLInfo();
-    _render.initializeGL(); /// \todo put into constructor
-    _render.initializeGLEW();
-    _render.setWindowTitle("Volume render");
+    _render.setInfoString("Info string");
+//    std::cout << _render.printOpenGLInfo();
     _render.resize(800,600);
     _render.show();
 
