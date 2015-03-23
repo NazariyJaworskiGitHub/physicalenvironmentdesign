@@ -70,6 +70,8 @@ namespace UserInterface
         public : void keyPressEvent(QKeyEvent *e) override;
 
         private: void _grayscaleToRainbow(const float gray, int &r, int &g, int &b) noexcept;
+        private: void _renderMultilineText(
+                int x, int y, const QString &text, const QFont &f = QFont()) noexcept;
 
         private: void _drawArrow(
                 GLfloat x1, GLfloat y1, GLfloat z1,

@@ -89,7 +89,7 @@ class Console
         _outputStream << '>';
     }
 
-    public: void run()
+    public: void runMainLoop()
     {
         _outputStream << _getConsoleHelpMsg() << '>';
         _isRuning = true;

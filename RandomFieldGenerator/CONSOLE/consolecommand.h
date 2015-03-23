@@ -24,7 +24,7 @@ class ConsoleCommand
     /// Override this
     public : virtual int executeConsoleCommand(const std::vector<std::string> &argv) = 0;
 
-    public : ~ConsoleCommand(){}
+    public : virtual ~ConsoleCommand(){}
 };
 
 #endif // CONSOLECOMMAND_H

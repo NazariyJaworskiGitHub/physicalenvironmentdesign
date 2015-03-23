@@ -16,7 +16,8 @@
 #include <viennacl/linalg/bicgstab.hpp>
 #include "simulation.h"
 
-#include "CONSOLE/console.h"
+#include "CONSOLE/consolerunner.h"
+#include "CONSOLE/rvemanager.h"
 
 int main(int argc, char *argv[])
 {
@@ -27,30 +28,17 @@ int main(int argc, char *argv[])
 
 //    run_tests_all();
 
-//    Console _console(std::cout, std::cin);
-
-//    class TestConsoleCommand : public ConsoleCommand
-//    {
-//        public: TestConsoleCommand(Console &console) :
-//            ConsoleCommand("test", "test help\n", console){}
-//        public: int executeConsoleCommand(const std::vector<std::string> &argv) override
-//        {
-//            getConsole().getOutputStream() << "test execution" << std::endl;
-//            return 0;
-//        }
-//    } _testCommand(_console);
-
-//    _console.run();
+    ConsoleRunner _consoleRunner(std::cout, std::cin, &app);
+    _consoleRunner.start();
 
     ///////////////////////////////////////////////////////////////////////////////////////
     std::chrono::steady_clock::time_point _t1 = std::chrono::steady_clock::now();
 
-    int size = 128;
+    int size = 64;
     RepresentativeVolumeElement _RVE(size);
     _RVE.generateRandomField();
-    //_RVE.applyGaussianFilter(32);
     //_RVE.applyGaussianFilterCL(32, 1.0f, 0.25f, 0.25f);
-    _RVE.applyGaussianFilterCL(32);
+    _RVE.applyGaussianFilterCL(8);
     //_RVE.applyCuttingLevel(0.65);
 
     std::chrono::steady_clock::time_point _t2 = std::chrono::steady_clock::now();
@@ -109,8 +97,7 @@ int main(int argc, char *argv[])
     UserInterface::VolumeGLRender _render(
                 _RVE.getSize(), _RVE.getData(), _RVE.getCuttedData(), NULL);
     _render.setBoundingBoxRepresentationSize(1.0f);
-    _render.setInfoString("Info string");
-//    std::cout << _render.printOpenGLInfo();
+    _render.setInfoString("Info string\nLine 2");
     _render.resize(800,600);
     _render.show();
 

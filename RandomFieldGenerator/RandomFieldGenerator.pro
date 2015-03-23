@@ -104,7 +104,9 @@ HEADERS += \
     TESTS/test_simulation.h \
     CONSOLE/console.h \
     CONSOLE/consolecommand.h \
-    UI/volumeglrenderformatdialog.h
+    UI/volumeglrenderformatdialog.h \
+    CONSOLE/consolerunner.h \
+    CONSOLE/rvemanager.h
 
 FORMS += \
     UI/volumeglrenderformatdialog.ui

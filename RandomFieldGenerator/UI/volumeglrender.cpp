@@ -46,6 +46,7 @@ void VolumeGLRender::mousePressEvent(QMouseEvent *e)
 void VolumeGLRender::mouseReleaseEvent(QMouseEvent *e)
 {
     _isPressed = false;
+    //this->updateGL();
 
     if(e->button() == Qt::RightButton)
     {
@@ -58,7 +59,7 @@ void VolumeGLRender::mouseReleaseEvent(QMouseEvent *e)
         _menu.addSeparator();
         _menu.exec(mapToGlobal(e->pos()));
     }
-//    QGLWidget::mouseReleaseEvent(event);  //Dont forget to pass on the event to parent
+//    QGLWidget::mouseReleaseEvent(event);  //Dont forget to pass on the event to parent    
 }
 
 void VolumeGLRender::mouseMoveEvent(QMouseEvent *e)
@@ -124,9 +125,9 @@ void VolumeGLRender::keyPressEvent(QKeyEvent *e)
 
 void VolumeGLRender::_grayscaleToRainbow(const float gray, int &r, int &g, int &b) noexcept
 {
-    float _inv = (1.0f-gray)*4.0f;    //invert and group
-    int _X = std::floor(_inv);                              //this is the integer part
-    int _Y = std::floor(255*(_inv-_X));                     //fractional part from 0 to 255
+    float _inv = (1.0f-gray)*4.0f;      //invert and group
+    int _X = std::floor(_inv);          //this is the integer part
+    int _Y = std::floor(255*(_inv-_X)); //fractional part from 0 to 255
     switch(_X)
     {
         case 0: r = 255;        g = _Y;         b = 0;     break;
@@ -134,6 +135,23 @@ void VolumeGLRender::_grayscaleToRainbow(const float gray, int &r, int &g, int &
         case 2: r = 0;          g = 255;        b = _Y;    break;
         case 3: r = 0;          g = 255 - _Y;   b = 255;   break;
         case 4: r = 0;          g = 0;          b = 255;   break;
+    }
+}
+
+void UserInterface::VolumeGLRender::_renderMultilineText(
+        int x, int y, const QString &text, const QFont &f) noexcept
+{
+    QStringList _lines = text.split('\n', QString::SkipEmptyParts);
+    glColor4f(
+            _TextColor.redF(),
+            _TextColor.greenF(),
+            _TextColor.blueF(),
+            _TextColor.alphaF());
+    int _lineHeight = 2 + QFontInfo(f).pixelSize();
+    for(auto _str: _lines)
+    {
+        y += _lineHeight;
+        this->renderText(x, y, _str, f);
     }
 }
 
@@ -657,10 +675,13 @@ void VolumeGLRender::paintGL()
 
     _drawBoundingBox();
 
-    if(_potentialFieldAlphaLevel!=255)
-        glCallList(_firstDisplayListID);
-    if(_potentialFieldAlphaLevel!=0)
-        glCallList(_firstDisplayListID+1);
+    //if(!_isPressed)
+    {
+        if(_potentialFieldAlphaLevel!=255)
+            glCallList(_firstDisplayListID);
+        if(_potentialFieldAlphaLevel!=0)
+            glCallList(_firstDisplayListID+1);
+    }
 
     _drawRainbowTable();
 
@@ -669,7 +690,7 @@ void VolumeGLRender::paintGL()
             _TextColor.greenF(),
             _TextColor.blueF(),
             _TextColor.alphaF());
-    this->renderText(1.0, 10.0, _infoString, _TextFont);
+    _renderMultilineText(2, 0, _infoString, _TextFont);
 }
 
 VolumeGLRender::~VolumeGLRender()
