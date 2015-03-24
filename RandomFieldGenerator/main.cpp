@@ -6,6 +6,8 @@
 #include "representativevolumeelement.h"
 
 #include "CLMANAGER/clmanager.h"
+#include "CLMANAGER/viennaclmanager.h"
+
 #include "TESTS/tests_runner.h"
 
 #include <chrono>
@@ -17,24 +19,23 @@
 #include "simulation.h"
 
 #include "CONSOLE/consolerunner.h"
-#include "CONSOLE/rvemanager.h"
+#include "CONSOLE/representativevolumeelementconsoleinterface.h"
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-    std::cout << OpenCL::CLManager::instance().printPlatformsInfo();
-    std::cout << OpenCL::CLManager::instance().printDevicesInfo();
+    OpenCL::setupViennaCL();
 
-//    run_tests_all();
+    run_tests_all();
 
-    ConsoleRunner _consoleRunner(std::cout, std::cin, &app);
+    Controller::ConsoleRunner _consoleRunner(std::cout, std::cin, &app);
     _consoleRunner.start();
 
     ///////////////////////////////////////////////////////////////////////////////////////
     std::chrono::steady_clock::time_point _t1 = std::chrono::steady_clock::now();
 
-    int size = 64;
+    int size = 128;
     RepresentativeVolumeElement _RVE(size);
     _RVE.generateRandomField();
     //_RVE.applyGaussianFilterCL(32, 1.0f, 0.25f, 0.25f);
@@ -47,8 +48,14 @@ int main(int argc, char *argv[])
     std::cout << time_span.count() << " seconds" << std::endl;
 
     ///////////////////////////////////////////////////////////////////////////////////////
+    OpenCL::CLManager::instance().setCurrentPlatform(0);
+    OpenCL::CLManager::instance().setCurrentDevice(0);
+    viennacl::ocl::switch_context(0);
+    viennacl::ocl::current_context().switch_device(0);
+
     std::cout << "assembling and solving SLAE" << std::endl;
     _t1 = std::chrono::steady_clock::now();
+
     viennacl::compressed_matrix<float>  _K(size*size*size, size*size*size);
     viennacl::vector<float>             _f(size*size*size);
     viennacl::vector<float>             _u(size*size*size);

@@ -3,15 +3,17 @@
 
 #include <QThread>
 
-#include "CONSOLE/console.h"
+#include "representativevolumeelementconsoleinterface.h"
+#include "clmanagerconsoleinterface.h"
 
-#include "CONSOLE/rvemanager.h"
-
+namespace Controller
+{
 class ConsoleRunner : public QThread, public Console
 {
     Q_OBJECT
 
-    private: RVEManager _RVEManager;
+    private: RepresentativeVolumeElementConsoleInterface *_RVEManager = nullptr;
+    private: CLManagerConsoleInterface *_CLManager = nullptr;
 
     /// Use start() to execute this
     public : void run() override {
@@ -23,14 +25,17 @@ class ConsoleRunner : public QThread, public Console
             QObject * parent = 0):
         QThread(parent),
         Console(outputStream, inputStream),
-        _RVEManager(*this)
+        _RVEManager(new RepresentativeVolumeElementConsoleInterface(*this)),
+        _CLManager(new CLManagerConsoleInterface(*this))
     {}
 
     public : ~ConsoleRunner()
     {
         //quit();
         wait(); // Application will wait all threads befor quit
+        delete _RVEManager;
     }
 };
+}
 
 #endif // CONSOLERUNNER_H

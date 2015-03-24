@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+namespace Controller
+{
 class Console;
 
 class ConsoleCommand
@@ -26,5 +28,6 @@ class ConsoleCommand
 
     public : virtual ~ConsoleCommand(){}
 };
+}
 
 #endif // CONSOLECOMMAND_H

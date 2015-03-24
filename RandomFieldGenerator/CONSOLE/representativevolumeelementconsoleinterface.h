@@ -3,12 +3,18 @@
 
 #include <map>
 
+#include "console.h"
+
 #include "representativevolumeelement.h"
 #include "consolecommand.h"
 
-class RVEManager
+namespace Controller
+{
+class RepresentativeVolumeElementConsoleInterface
 {
     private: std::map<std::string, RepresentativeVolumeElement*> _RVEs;
+
+    /// createRVE ----------------------------------------------------------------------------
     public : std::string createRVE(const std::string &name, int size) noexcept
     {
         try
@@ -29,8 +35,9 @@ class RVEManager
     }
     private: class _CreateRVECommand : public ConsoleCommand
     {
-        private: RVEManager &_manager;
-        public: _CreateRVECommand(RVEManager &manager, Console &console) :
+        private: RepresentativeVolumeElementConsoleInterface &_manager;
+        public: _CreateRVECommand(
+                RepresentativeVolumeElementConsoleInterface &manager, Console &console) :
             ConsoleCommand(
                 "createRVE",
                 "createRVE <Name> <size>\n"
@@ -52,6 +59,7 @@ class RVEManager
         }
     } *_commandCreateRVE = nullptr;
 
+    /// deleteRVE --------------------------------------------------------------------------------
     public : std::string deleteRVE(const std::string &name) noexcept
     {
         try
@@ -70,8 +78,9 @@ class RVEManager
     }
     private: class _DeleteRVECommand : public ConsoleCommand
     {
-        private: RVEManager &_manager;
-        public: _DeleteRVECommand(RVEManager &manager, Console &console) :
+        private: RepresentativeVolumeElementConsoleInterface &_manager;
+        public: _DeleteRVECommand(
+                RepresentativeVolumeElementConsoleInterface &manager, Console &console) :
             ConsoleCommand(
                 "deleteRVE",
                 "deleteRVE <Name>\n"
@@ -92,6 +101,7 @@ class RVEManager
         }
     } *_commandDeleteRVE = nullptr;
 
+    /// printRVE --------------------------------------------------------------------------------
     public : std::string printRVE() noexcept
     {
         if(_RVEs.empty())
@@ -106,8 +116,9 @@ class RVEManager
     }
     private: class _PrintRVECommand : public ConsoleCommand
     {
-        private: RVEManager &_manager;
-        public: _PrintRVECommand(RVEManager &manager, Console &console) :
+        private: RepresentativeVolumeElementConsoleInterface &_manager;
+        public: _PrintRVECommand(
+                RepresentativeVolumeElementConsoleInterface &manager, Console &console) :
             ConsoleCommand(
                 "printRVE",
                 "createRVE\n"
@@ -128,12 +139,12 @@ class RVEManager
         }
     } *_commandPrintRVE = nullptr;
 
-    public : RVEManager(Console &console):
+    public : RepresentativeVolumeElementConsoleInterface(Console &console):
         _commandCreateRVE(new _CreateRVECommand(*this, console)),
         _commandDeleteRVE(new _DeleteRVECommand(*this, console)),
         _commandPrintRVE(new _PrintRVECommand(*this, console))
         {}
-    public : ~RVEManager()
+    public : ~RepresentativeVolumeElementConsoleInterface()
     {
         for(auto _rve: _RVEs)
             delete _rve.second;
@@ -142,5 +153,6 @@ class RVEManager
         delete _commandPrintRVE;
     }
 };
+}
 
 #endif // RVEMANAGER

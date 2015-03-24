@@ -1,6 +1,8 @@
 #include "consolecommand.h"
 #include "console.h"
 
+using namespace Controller;
+
 ConsoleCommand::ConsoleCommand(
         const std::string commandName,
         const std::string commandHelp,

@@ -12,20 +12,15 @@ void Test_CLManager::testHelloWorld()
 
     cl::Program &_program = CLManager::instance().createProgram(
                 _clSourceHelloWorld,
-                CLManager::instance().getContexts().front(),
-                CLManager::instance().getDevices().front());
+                CLManager::instance().getCurrentContext(),
+                CLManager::instance().getCurrentDevices());
 
     cl::Kernel &_kernel = CLManager::instance().createKernel(_program, "hello");
 
     ////////////////////////////////////////////////////////////////////////////////
     cl::Event _event;
 
-    cl::CommandQueue _queue(
-                CLManager::instance().getContexts().front(),
-                CLManager::instance().getDevices()[0].front()//,
-//                0,
-//                &err
-                );
+    cl::CommandQueue &_queue = CLManager::instance().getCurrentCommandQueue();
 
     _queue.enqueueNDRangeKernel(
                 _kernel,

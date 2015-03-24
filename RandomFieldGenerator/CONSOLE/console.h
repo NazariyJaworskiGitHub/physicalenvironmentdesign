@@ -8,6 +8,8 @@
 
 #include "CONSOLE/consolecommand.h"
 
+namespace Controller
+{
 class Console
 {
     private: std::ostream &_outputStream;
@@ -102,5 +104,6 @@ class Console
         }
     }
 };
+}
 
 #endif // CONSOLE_H

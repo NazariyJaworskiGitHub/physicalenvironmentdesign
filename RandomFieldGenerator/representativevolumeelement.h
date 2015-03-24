@@ -1,14 +1,15 @@
 #ifndef REPRESENTATIVEVOLUMEELEMENT_H
 #define REPRESENTATIVEVOLUMEELEMENT_H
 
-#include <MathUtils>
-
+#include <stdexcept>
+#include <cmath>
 #include <iostream>
 
+#include <FUNCTIONS/rand.h>
 #include "CLMANAGER/clmanager.h"
 
 /// It is discretized RVE
-/// \warning fo correct usage of OpenCL functionality, the _size
+/// \warning for correct usage of OpenCL functionality, the _size
 /// should be equal to some power of two.
 class RepresentativeVolumeElement
 {
@@ -128,11 +129,10 @@ class RepresentativeVolumeElement
                 }";
 
             /// Don't worry, CLManager will destroy this objects at the end of application
-
             _programPtr = &OpenCL::CLManager::instance().createProgram(
                     _CLSource_applyGaussianFilter,
-                    OpenCL::CLManager::instance().getContexts()[0], /// \todo next platforms
-                    OpenCL::CLManager::instance().getDevices()[0]);
+                    OpenCL::CLManager::instance().getCurrentContext(),
+                    OpenCL::CLManager::instance().getCurrentDevices());
 
             _kernelXPtr = &OpenCL::CLManager::instance().createKernel(
                         *_programPtr, "applyGaussianFilterX");
@@ -146,6 +146,7 @@ class RepresentativeVolumeElement
     }
 
     /// Generate normalized random field
+    ///  \todo move to device
     public : void generateRandomField() noexcept
     {
         memset(_data, 0, sizeof(float) * _size * _size * _size);
@@ -158,6 +159,7 @@ class RepresentativeVolumeElement
     }
 
     /// Normalize data
+    /// \todo move to device
     public : void normalizeField() noexcept
     {
         std::cout << "  Finding min and max... ";
@@ -240,9 +242,9 @@ class RepresentativeVolumeElement
                                 _GaussianFilter(
                                     _discreteRadius,
                                     p, 0, 0,
-                                    ellipsoidScaleFactorX,
+                                    ellipsoidScaleFactorZ,
                                     ellipsoidScaleFactorY,
-                                    ellipsoidScaleFactorZ);
+                                    ellipsoidScaleFactorX);
                     }
         }
         memcpy(_data, _cuttedData, sizeof(float) * _size * _size * _size);
@@ -266,9 +268,9 @@ class RepresentativeVolumeElement
                                 _GaussianFilter(
                                     _discreteRadius,
                                     0, q, 0,
-                                    ellipsoidScaleFactorX,
+                                    ellipsoidScaleFactorZ,
                                     ellipsoidScaleFactorY,
-                                    ellipsoidScaleFactorZ);
+                                    ellipsoidScaleFactorX);
                     }
         }
         memcpy(_data, _cuttedData, sizeof(float) * _size * _size * _size);
@@ -292,9 +294,9 @@ class RepresentativeVolumeElement
                                 _GaussianFilter(
                                     _discreteRadius,
                                     0, 0, r,
-                                    ellipsoidScaleFactorX,
+                                    ellipsoidScaleFactorZ,
                                     ellipsoidScaleFactorY,
-                                    ellipsoidScaleFactorZ);
+                                    ellipsoidScaleFactorX);
                     }
         }
         memcpy(_data, _cuttedData, sizeof(float) * _size * _size * _size);
@@ -376,12 +378,12 @@ class RepresentativeVolumeElement
         std::cout << "  Preparing OpenCL...";
 
         cl::Buffer _dataBuffer(
-                OpenCL::CLManager::instance().getContexts()[0], /// \todo next platforms
+                OpenCL::CLManager::instance().getCurrentContext(),
                 CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
                 sizeof(float) * _size * _size * _size,
                 _data);
         cl::Buffer _cuttedDataBuffer(
-                OpenCL::CLManager::instance().getContexts()[0], /// \todo next platforms
+                OpenCL::CLManager::instance().getCurrentContext(),
                 CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
                 sizeof(float) * _size * _size * _size,
                 _cuttedData);
@@ -411,12 +413,11 @@ class RepresentativeVolumeElement
         _kernelZPtr->setArg(5, _cuttedDataBuffer);
         _kernelZPtr->setArg(6, _size);
 
-        /// \todo next platforms (CPU/GPU)
-        cl::CommandQueue &_queue = OpenCL::CLManager::instance().getCommandQueues()[0][0];
+        cl::CommandQueue &_queue = OpenCL::CLManager::instance().getCurrentCommandQueue();
         cl::Event _event;
 
         size_t _kernelMaxWorkGroupSize;
-        OpenCL::CLManager::instance().getDevices()[0][0].getInfo(
+        OpenCL::CLManager::instance().getCurrentDevice().getInfo(
                 CL_DEVICE_MAX_WORK_GROUP_SIZE, &_kernelMaxWorkGroupSize);
 
         unsigned _n = 1;
@@ -462,6 +463,7 @@ class RepresentativeVolumeElement
 
     /// Apply cutting plane
     /// Note, cuttedData will be defined only after this call
+    /// \todo move to device
     public : void applyCuttingLevel(
             float cutLevel) throw (std::logic_error)
     {

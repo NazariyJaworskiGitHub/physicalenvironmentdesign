@@ -2,7 +2,7 @@
 
 #include <chrono>
 
-#include "CLMANAGER/clmanager.h"
+#include "CLMANAGER/viennaclmanager.h"
 
 #include <viennacl/compressed_matrix.hpp>
 #include <viennacl/vector.hpp>
@@ -14,12 +14,10 @@ void Test_ViennaCL::testBeam1D()
     {
         std::cout << "  Preparing device...             ";
         std::chrono::steady_clock::time_point _t1 = std::chrono::steady_clock::now();
-
-        viennacl::ocl::setup_context(
-                    0,
-                    OpenCL::CLManager::instance().getContexts()[0](),
-                OpenCL::CLManager::instance().getDevices()[0][0](),
-                OpenCL::CLManager::instance().getCommandQueues()[0][0]());
+        OpenCL::CLManager::instance().setCurrentPlatform(0);
+        OpenCL::CLManager::instance().setCurrentDevice(0);
+        viennacl::ocl::switch_context(0);
+        viennacl::ocl::current_context().switch_device(0);
 
         std::chrono::steady_clock::time_point _t2 = std::chrono::steady_clock::now();
         std::chrono::duration<double> time_span =

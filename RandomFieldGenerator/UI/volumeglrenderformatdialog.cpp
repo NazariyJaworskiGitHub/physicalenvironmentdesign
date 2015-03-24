@@ -41,10 +41,7 @@ VolumeGLRenderFormatDialog::VolumeGLRenderFormatDialog(QWidget *parent) :
                 (_parent->_minPotentialValue - _parent->_minPotentialValueBackup) /
                 (_parent->_maxPotentialValueBackup - _parent->_minPotentialValueBackup) * 100.0f);
 
-    setModal(true);
     //setWindowOpacity(0.75);
-
-    setWindowTitle("Volume render format");
 }
 
 VolumeGLRenderFormatDialog::~VolumeGLRenderFormatDialog()

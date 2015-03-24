@@ -26,12 +26,12 @@ namespace OpenCL
         public : const std::vector<cl::Platform> & getPlatforms() const {return _platforms;}
         public : std::vector<cl::Platform> & getPlatforms() {return _platforms;}
 
-        /// Contexts are checked on construction
+        /// Contexts are checked on construction, number of contexts = number of platforms
         private: std::vector<cl::Context> _contexts;
         public : const std::vector<cl::Context> & getContexts() const {return _contexts;}
         public : std::vector<cl::Context> & getContexts() {return _contexts;}
 
-        /// Devices are checked on construction
+        /// Devices are checked on construction, devices are in platforms/contexts
         private: std::vector<std::vector<cl::Device>> _devices;
         public : const std::vector<std::vector<cl::Device>> & getDevices() const {return _devices;}
         public : std::vector<std::vector<cl::Device>> & getDevices() {return _devices;}
@@ -42,6 +42,26 @@ namespace OpenCL
                                                                   {return _commandQueues;}
         public : std::vector<std::vector<cl::CommandQueue>> & getCommandQueues() {
                                                                   return _commandQueues;}
+
+        /// Selection stuff, the first by default
+        private: int _platformIndex = 0;    // also = context index
+        public : int getCurrentPlatformIndex() const noexcept {return _platformIndex;}
+        public : int getCurrentContextIndex() const noexcept {return _platformIndex;}
+        private: int _deviceIndex = 0;      // also = command queue index
+        public : int getCurrentDeviceIndex() const noexcept {return _deviceIndex;}
+        public : int getCurrentCommandQueueIndex() const noexcept {return _deviceIndex;}
+        public : cl::Platform &getCurrentPlatform() noexcept {return _platforms[_platformIndex];}
+        public : cl::Context &getCurrentContext() noexcept {return _contexts[_platformIndex];}
+        public : void setCurrentPlatform(int index) noexcept {_platformIndex = index;}
+        public : void setCurrentContext(int index) noexcept {_platformIndex = index;}
+        public : cl::Device &getCurrentDevice() noexcept {
+            return _devices[_platformIndex][_deviceIndex];}
+        public : std::vector<cl::Device> &getCurrentDevices() noexcept {
+            return _devices[_platformIndex];}
+        public : cl::CommandQueue &getCurrentCommandQueue() noexcept {
+            return _commandQueues[_platformIndex][_deviceIndex];}
+        public : void setCurrentDevice(int index) noexcept {_deviceIndex = index;}
+        public : void setCurrentCommandQueue(int index) noexcept {_deviceIndex = index;}
 
         /// Create different program objects per contexts only once
         /// (it is like a *.dll)
