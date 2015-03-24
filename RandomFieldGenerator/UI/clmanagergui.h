@@ -7,16 +7,26 @@ namespace Ui {
 class CLManagerGUI;
 }
 
-class CLManagerGUI : public QDialog
+namespace UserInterface
 {
-    Q_OBJECT
+    class CLManagerGUI : public QDialog
+    {
+        Q_OBJECT
 
-public:
-    explicit CLManagerGUI(QWidget *parent = 0);
-    ~CLManagerGUI();
+    public:
+        explicit CLManagerGUI(QWidget *parent = 0);
+        ~CLManagerGUI();
 
-private:
-    Ui::CLManagerGUI *ui;
-};
+    public: int getPlatformIndex() const;
+    public: int getDeviceIndex() const;
+
+    private Q_SLOTS:
+        void on_PlatformComboBox_currentIndexChanged(int index);
+        void on_DeviceComboBox_currentIndexChanged(int index);
+
+    private:
+        Ui::CLManagerGUI *ui;
+    };
+}
 
 #endif // CLMANAGERGUI_H

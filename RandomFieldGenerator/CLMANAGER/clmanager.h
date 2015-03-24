@@ -78,7 +78,9 @@ namespace OpenCL
         /// Printing
         private: template<typename T> static void _appendBitfield(
          const T info, const T value, const cl::STRING_CLASS name, cl::STRING_CLASS &str) ;
+        public : std::string printPlatformInfo(int index) const;
         public : std::string printPlatformsInfo() const;
+        public : std::string printDeviceInfo(int index1, int index2) const;
         public : std::string printDevicesInfo() const;
 
         /// Usage

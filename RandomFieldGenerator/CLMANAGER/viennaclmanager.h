@@ -21,11 +21,11 @@ namespace OpenCL
                         CLManager::instance().getContexts().size());
             for(unsigned _i=0; _i<CLManager::instance().getContexts().size(); ++_i)
             {
-                for(unsigned _j=0; _j< CLManager::instance().getDevices().size(); ++_j)
+                for(unsigned _j=0; _j< CLManager::instance().getDevices()[_i].size(); ++_j)
                 {
-                    _nativeDevices[_j].push_back(
+                    _nativeDevices[_i].push_back(
                                 CLManager::instance().getDevices()[_i][_j]());
-                    _nativeCommandQueues[_j].push_back(
+                    _nativeCommandQueues[_i].push_back(
                                 CLManager::instance().getCommandQueues()[_i][_j]());
                 }
                 viennacl::ocl::setup_context(

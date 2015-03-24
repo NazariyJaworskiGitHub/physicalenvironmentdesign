@@ -92,7 +92,8 @@ SOURCES += main.cpp \
     TESTS/test_simulation.cpp \
     CONSOLE/consolecommand.cpp \
     UI/volumeglrenderformatdialog.cpp \
-    UI/clmanagergui.cpp
+    UI/clmanagergui.cpp \
+    UI/userinterfacemanager.cpp
 
 HEADERS += \
     CLMANAGER/clmanager.h \
@@ -110,7 +111,8 @@ HEADERS += \
     CONSOLE/clmanagerconsoleinterface.h \
     CONSOLE/representativevolumeelementconsoleinterface.h \
     CLMANAGER/viennaclmanager.h \
-    UI/clmanagergui.h
+    UI/clmanagergui.h \
+    UI/userinterfacemanager.h
 
 FORMS += \
     UI/volumeglrenderformatdialog.ui \

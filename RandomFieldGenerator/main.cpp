@@ -2,6 +2,8 @@
 #include <iomanip>
 #include <QApplication>
 
+#include "UI/userinterfacemanager.h"
+#include "UI/clmanagergui.h"
 #include "UI/volumeglrender.h"
 #include "representativevolumeelement.h"
 
@@ -23,19 +25,22 @@
 
 int main(int argc, char *argv[])
 {
-    QApplication app(argc, argv);
+    //QApplication app(argc, argv);
+    UserInterface::UserInterfaceManager::instance();
 
     OpenCL::setupViennaCL();
 
     run_tests_all();
 
-    Controller::ConsoleRunner _consoleRunner(std::cout, std::cin, &app);
+    //Controller::ConsoleRunner _consoleRunner(std::cout, std::cin, &app);
+    Controller::ConsoleRunner _consoleRunner(std::cout, std::cin,
+                                             &UserInterface::UserInterfaceManager::instance());
     _consoleRunner.start();
 
     ///////////////////////////////////////////////////////////////////////////////////////
     std::chrono::steady_clock::time_point _t1 = std::chrono::steady_clock::now();
 
-    int size = 128;
+    int size = 64;
     RepresentativeVolumeElement _RVE(size);
     _RVE.generateRandomField();
     //_RVE.applyGaussianFilterCL(32, 1.0f, 0.25f, 0.25f);
@@ -109,6 +114,7 @@ int main(int argc, char *argv[])
     _render.show();
 
     ///////////////////////////////////////////////////////////////////////////////////////
-    return app.exec();
+    //return app.exec();
+    return UserInterface::UserInterfaceManager::instance().exec();
 }
 
