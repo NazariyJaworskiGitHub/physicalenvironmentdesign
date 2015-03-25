@@ -48,7 +48,7 @@ INCLUDEPATH += E:\ViennaCL-1.6.2\
 CONFIG(debug, release|debug):DEFINES += _DEBUG_MODE
 
 #For dr.memory debug
-QMAKE_CXXFLAGS_DEBUG += -ggdb
+#QMAKE_CXXFLAGS_DEBUG += -ggdb
 
 #Optimisation flags
 #see https://gcc.gnu.org/onlinedocs/gcc-4.9.2/gcc/Optimize-Options.html#Optimize-Options
@@ -93,7 +93,8 @@ SOURCES += main.cpp \
     CONSOLE/consolecommand.cpp \
     UI/volumeglrenderformatdialog.cpp \
     UI/clmanagergui.cpp \
-    UI/userinterfacemanager.cpp
+    UI/userinterfacemanager.cpp \
+    LOGGER/logger.cpp
 
 HEADERS += \
     CLMANAGER/clmanager.h \
@@ -112,7 +113,9 @@ HEADERS += \
     CONSOLE/representativevolumeelementconsoleinterface.h \
     CLMANAGER/viennaclmanager.h \
     UI/clmanagergui.h \
-    UI/userinterfacemanager.h
+    UI/userinterfacemanager.h \
+    LOGGER/logger.h \
+    LOGGER/loggerprivate.h
 
 FORMS += \
     UI/volumeglrenderformatdialog.ui \

@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include "CLMANAGER/viennaclmanager.h"
+#include "CONSOLE/consolerunner.h"
 
 using namespace UserInterface;
 
@@ -44,7 +45,22 @@ UserInterface::UserInterfaceManager &UserInterface::UserInterfaceManager::instan
     return _staticUserInterfaceManager;
 }
 
+void UserInterfaceManager::setConsoleRunnerLifetime(
+        Controller::ConsoleRunner &consoleRunner) noexcept
+{
+    setQuitOnLastWindowClosed(false);
+    connect(&consoleRunner, SIGNAL(finished()),
+            &UserInterface::UserInterfaceManager::instance(), SLOT(quit()));
+}
+
 UserInterface::UserInterfaceManager::~UserInterfaceManager()
 {
     if(_CLManagerSetupForm) delete _CLManagerSetupForm;
+}
+
+
+UserInterface::UserInterfaceManager::UserInterfaceManager(int argc, char *argv[]):
+    QApplication(argc, argv)
+{
+
 }

@@ -5,15 +5,18 @@
 
 #include "clmanagergui.h"
 
+namespace Controller
+{
+    class ConsoleRunner;
+}
+
 namespace UserInterface
 {
     class UserInterfaceManager : public QApplication
     {
         Q_OBJECT
 
-        public : UserInterfaceManager(int argc, char *argv[]):
-            QApplication(argc, argv)
-        {}
+        private: UserInterfaceManager(int argc, char *argv[]);
 
         private: UserInterface::CLManagerGUI *_CLManagerSetupForm = nullptr;
         public : Q_SIGNAL void signal_OCLSetupGUIError();
@@ -22,6 +25,10 @@ namespace UserInterface
         public : Q_SLOT void OCLSetupGUIFinish(int result);
 
         public : static UserInterfaceManager &instance();
+
+        /// Use to bind UserInterfaceManager lifetime to consoleRunner lifetime
+        public : void setConsoleRunnerLifetime(
+                Controller::ConsoleRunner &consoleRunner) noexcept;
 
         public : ~UserInterfaceManager();
     };
