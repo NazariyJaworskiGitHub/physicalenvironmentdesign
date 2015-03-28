@@ -94,7 +94,8 @@ SOURCES += main.cpp \
     UI/volumeglrenderformatdialog.cpp \
     UI/clmanagergui.cpp \
     UI/userinterfacemanager.cpp \
-    LOGGER/logger.cpp
+    LOGGER/logger.cpp \
+    UI/volumeglrenderbasecontroller.cpp
 
 HEADERS += \
     CLMANAGER/clmanager.h \
@@ -115,7 +116,8 @@ HEADERS += \
     UI/clmanagergui.h \
     UI/userinterfacemanager.h \
     LOGGER/logger.h \
-    LOGGER/loggerprivate.h
+    LOGGER/loggerprivate.h \
+    UI/volumeglrenderbasecontroller.h
 
 FORMS += \
     UI/volumeglrenderformatdialog.ui \

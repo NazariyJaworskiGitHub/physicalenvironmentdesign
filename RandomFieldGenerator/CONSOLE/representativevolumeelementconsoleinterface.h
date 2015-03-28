@@ -51,10 +51,10 @@ class RepresentativeVolumeElementConsoleInterface
         {
             if(argv.size() != 2)
             {
-                getConsole().getOutputStream() << "Error: wrong number of arguments.\n";
+                getConsole().writeToOutput("Error: wrong number of arguments.\n");
                 return -1;
             }
-            getConsole().getOutputStream() << _manager.createRVE(argv[0], std::atoi(argv[1].data()));
+            getConsole().writeToOutput(_manager.createRVE(argv[0], std::atoi(argv[1].data())));
             return 0;
         }
     } *_commandCreateRVE = nullptr;
@@ -93,10 +93,10 @@ class RepresentativeVolumeElementConsoleInterface
         {
             if(argv.size() != 1)
             {
-                getConsole().getOutputStream() << "Error: wrong number of arguments.\n";
+                getConsole().writeToOutput("Error: wrong number of arguments.\n");
                 return -1;
             }
-            getConsole().getOutputStream() << _manager.deleteRVE(argv[0]);
+            getConsole().writeToOutput(_manager.deleteRVE(argv[0]));
             return 0;
         }
     } *_commandDeleteRVE = nullptr;
@@ -131,10 +131,10 @@ class RepresentativeVolumeElementConsoleInterface
         {
             if(argv.size() != 0)
             {
-                getConsole().getOutputStream() << "Error: wrong number of arguments.\n";
+                getConsole().writeToOutput("Error: wrong number of arguments.\n");
                 return -1;
             }
-            getConsole().getOutputStream() << _manager.printRVE();
+            getConsole().writeToOutput(_manager.printRVE());
             return 0;
         }
     } *_commandPrintRVE = nullptr;

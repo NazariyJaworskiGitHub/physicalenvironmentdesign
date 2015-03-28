@@ -12,10 +12,10 @@ namespace Controller
 {
 class Console
 {
-    private: std::ostream &_outputStream;
-    public : std::ostream &getOutputStream() noexcept {return _outputStream;}
-    private: std::istream &_inputStream;
-    public : std::istream &getInputStream() noexcept {return _inputStream;}
+    protected: std::ostream &_outputStream;
+//    public : std::ostream &getOutputStream() noexcept {return _outputStream;}
+    protected: std::istream &_inputStream;
+//    public : std::istream &getInputStream() noexcept {return _inputStream;}
     private: std::map<std::string, ConsoleCommand*> _commands;
     private: volatile bool _isRuning = false;
 
@@ -39,7 +39,8 @@ class Console
         for(auto i : _commands)
             _str << " " << i.first << std::endl;
         _str << "Type 'help' or '\\?' to see this message again." << std::endl
-             << "Type 'help' or '\\?' and 'command name' to see command help message." << std::endl
+             << "Type 'help' or '\\?' and 'command name' to see command help message."
+             << std::endl
              << "Type 'exit' to exit the console." << std::endl;
         return _str.str();
     }
@@ -49,12 +50,27 @@ class Console
 
     public : ~Console(){}
 
-    public : void operator << (const std::string str) noexcept
+    public : virtual void writeToOutput(const std::string &str) noexcept
     {
+        _outputStream << str;
+    }
+
+    public : virtual void echoInput(const std::string &str) noexcept
+    {
+        // should be clean
+    }
+
+    public : void operator << (const std::string &str) noexcept
+    {
+        echoInput(str);
+
+        std::stringstream _output;
+
         std::istringstream _strStreamWrap{str};
         std::string _commandName;
         _strStreamWrap >> _commandName; // Get firs word
-        std::map<std::string, ConsoleCommand*>::iterator _curCommand = _commands.find(_commandName);
+        std::map<std::string, ConsoleCommand*>::iterator _curCommand =
+                _commands.find(_commandName);
         if(_curCommand != _commands.end())
         {
             // construct arguments
@@ -70,14 +86,14 @@ class Console
                 _curCommand = _commands.find(_commandName);
                 if(_curCommand != _commands.end())
                 {
-                    _outputStream << _curCommand->second->getCommandHelp();
+                    _output << _curCommand->second->getCommandHelp();
                 }
                 else
-                    _outputStream << _wrongCommandMsg(_commandName);
+                    _output << _wrongCommandMsg(_commandName);
             }
             else
             {
-                _outputStream << _getConsoleHelpMsg();
+                _output << _getConsoleHelpMsg();
             }
         }
         else if(_commandName.compare("exit") == 0)
@@ -86,14 +102,16 @@ class Console
         }
         else
         {
-            _outputStream << _wrongCommandMsg(_commandName);
+            _output << _wrongCommandMsg(_commandName);
         }
-        _outputStream << '>';
+        _output << '>';
+
+        writeToOutput(_output.str());
     }
 
     public: void runMainLoop()
     {
-        _outputStream << _getConsoleHelpMsg() << '>';
+//        _outputStream << _getConsoleHelpMsg() << '>';
         _isRuning = true;
         char _c[255];
         for(;_isRuning;)

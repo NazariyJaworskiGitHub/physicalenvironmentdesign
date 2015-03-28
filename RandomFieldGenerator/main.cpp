@@ -30,25 +30,25 @@ int main(int argc, char *argv[])
     Controller::ConsoleRunner _consoleRunner(std::cout, std::cin);
     _consoleRunner.start();
 
-    Log::Logger LogFile("logfile.txt", &_consoleRunner);
+//    Log::Logger LogFile("logfile.txt", &_consoleRunner);
 
     UserInterface::UserInterfaceManager::instance().setConsoleRunnerLifetime(_consoleRunner);
 
-    LogFile << "Setup done.";
+//    LogFile << "Setup done.";
 
     ///////////////////////////////////////////////////////////////////////////////////////
     OpenCL::setupViennaCL();
     run_tests_all();
-    LogFile << "Tests done.";
+//    LogFile << "Tests done.";
 
     ///////////////////////////////////////////////////////////////////////////////////////
     std::chrono::steady_clock::time_point _t1 = std::chrono::steady_clock::now();
 
-    int size = 128;
+    int size = 64;
     RepresentativeVolumeElement _RVE(size);
     _RVE.generateRandomField();
     //_RVE.applyGaussianFilterCL(32, 1.0f, 0.25f, 0.25f);
-    _RVE.applyGaussianFilterCL(10);
+    _RVE.applyGaussianFilterCL(8);
     //_RVE.applyCuttingLevel(0.65);
 
     std::chrono::steady_clock::time_point _t2 = std::chrono::steady_clock::now();

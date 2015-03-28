@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include <ctime>
+#include <iomanip>
 #include <QObject>
 //#include <QMutex>
 
@@ -22,9 +23,13 @@ namespace Log
 
             std::time_t _time = std::time(NULL);
             std::tm _timeInfo(*std::localtime(&_time));
-            _logFileStream << "[" << _timeInfo.tm_hour << ":"
-                           << _timeInfo.tm_min << ":"
-                           << _timeInfo.tm_sec << "] "
+            _logFileStream << "["
+                           << std::setfill('0') << std::setw(2) << _timeInfo.tm_hour
+                           << ":"
+                           << std::setfill('0') << std::setw(2) << _timeInfo.tm_min
+                           << ":"
+                           << std::setfill('0') << std::setw(2) << _timeInfo.tm_sec
+                           << "] "
                            << msg.toStdString() << std::endl;
 //            _myMutex.unlock();
         }

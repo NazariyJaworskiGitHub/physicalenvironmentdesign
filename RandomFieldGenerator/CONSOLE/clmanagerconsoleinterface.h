@@ -34,18 +34,18 @@ class _OCLSetupGUICommand : public QObject, public ConsoleCommand
     }
     public: Q_SIGNAL void signal_OCLSetupGUIStart();
     public: Q_SLOT void OCLSetupGUIFinish(){
-        getConsole().getOutputStream() << "OpenCL Setup GUI finish.\n";}
+        getConsole().writeToOutput("OpenCL Setup GUI finish.\n");}
     public: Q_SLOT void OCLSetupGUIError(){
-        getConsole().getOutputStream() << "OpenCL Setup GUI is already running.\n";}
+        getConsole().writeToOutput("OpenCL Setup GUI is already running.\n");}
 
     public: int executeConsoleCommand(const std::vector<std::string> &argv) override
     {
         if(argv.size() != 0)
         {
-            getConsole().getOutputStream() << "Error: wrong number of arguments.\n";
+            getConsole().writeToOutput("Error: wrong number of arguments.\n");
             return -1;
         }
-        getConsole().getOutputStream() << "OpenCL Setup GUI start.\n";
+        getConsole().writeToOutput("OpenCL Setup GUI start.\n");
         Q_EMIT signal_OCLSetupGUIStart();
         return 0;
     }
@@ -66,10 +66,10 @@ class CLManagerConsoleInterface
         {
             if(argv.size() != 0)
             {
-                getConsole().getOutputStream() << "Error: wrong number of arguments.\n";
+                getConsole().writeToOutput("Error: wrong number of arguments.\n");
                 return -1;
             }
-            getConsole().getOutputStream() << OpenCL::CLManager::instance().printPlatformsInfo();
+            getConsole().writeToOutput(OpenCL::CLManager::instance().printPlatformsInfo());
             return 0;
         }
     } *_commandOCLPlatforms = nullptr;
@@ -87,10 +87,10 @@ class CLManagerConsoleInterface
         {
             if(argv.size() != 0)
             {
-                getConsole().getOutputStream() << "Error: wrong number of arguments.\n";
+                getConsole().writeToOutput("Error: wrong number of arguments.\n");
                 return -1;
             }
-            getConsole().getOutputStream() << OpenCL::CLManager::instance().printDevicesInfo();
+            getConsole().writeToOutput(OpenCL::CLManager::instance().printDevicesInfo());
             return 0;
         }
     } *_commandOCLDevices = nullptr;
