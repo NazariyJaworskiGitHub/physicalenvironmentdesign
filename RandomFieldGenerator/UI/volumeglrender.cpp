@@ -1,9 +1,7 @@
 #include "volumeglrender.h"
 
-#include <iostream>
-
 #include <QMenu>
-#include <QDialog>
+//#include <QDialog>
 
 using namespace UserInterface;
 
@@ -340,8 +338,10 @@ void VolumeGLRender::_drawRainbowTable() noexcept
 void VolumeGLRender::initializeGLEW()
 {
     this->context()->makeCurrent();
-    auto _rez = glewInit();
-    std::cout << "GLEW: "<< glewGetErrorString(_rez) << std::endl;      /// \todo remove cout
+    auto _res = glewInit();
+    if(_res != GLEW_OK)
+        throw(std::runtime_error(std::string("FATAL: GLEW: ") + reinterpret_cast<const char*>(
+                                     glewGetErrorString(_res))));
     glGenTextures(2, _textureIDs);
     _firstDisplayListID = glGenLists(2);
     _loadFieldIntoTexture();

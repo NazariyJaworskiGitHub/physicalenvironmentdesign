@@ -5,6 +5,8 @@
 #include "UI/userinterfacemanager.h"
 #include "UI/clmanagergui.h"
 #include "UI/volumeglrender.h"
+#include "UI/volumeglrenderrve.h"
+
 #include "representativevolumeelement.h"
 
 #include "CLMANAGER/clmanager.h"
@@ -44,7 +46,7 @@ int main(int argc, char *argv[])
     ///////////////////////////////////////////////////////////////////////////////////////
     std::chrono::steady_clock::time_point _t1 = std::chrono::steady_clock::now();
 
-    int size = 64;
+    int size = 128;
     RepresentativeVolumeElement _RVE(size);
     _RVE.generateRandomField();
     //_RVE.applyGaussianFilterCL(32, 1.0f, 0.25f, 0.25f);
@@ -107,6 +109,15 @@ int main(int argc, char *argv[])
     for(long i=0; i<size*size*size; ++i)
         _matrixSize += cpu_sparse_matrix[i].size();
     std::cout << "matrix (elements): " << _matrixSize << std::endl;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    UserInterface::VolumeGLRenderRVE _renderRVE(&_RVE, NULL);
+    _renderRVE.setBoundingBoxRepresentationSize(1.0f);
+    _renderRVE.setInfoString("Info string\nLine 2");
+    _renderRVE.resize(800,600);
+    _renderRVE.show();
+
     ///////////////////////////////////////////////////////////////////////////////////////
 
 //    QLocale::setDefault(QLocale::C);

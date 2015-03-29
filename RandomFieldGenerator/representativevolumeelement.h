@@ -14,7 +14,7 @@
 class RepresentativeVolumeElement
 {
     private: int _size;
-    public : int getSize() noexcept {return _size;}
+    public : int getSize() const noexcept {return _size;}
     private: float * _data = nullptr;
     private: float * _cuttedData = nullptr;
     private: int _discreteRadius = 1;
@@ -189,11 +189,11 @@ class RepresentativeVolumeElement
         std::cout << "Done" << std::endl;
     }
 
-    // Note, r should be > 0;
-    private: inline float _GaussianFilter(
+    // Note, r, fx, fy, fz should be > 0;
+    public: static inline float GaussianFilter(
             float r,
             float x, float y, float z,
-            float fx, float fy, float fz) const noexcept
+            float fx, float fy, float fz) noexcept
     {
         return std::exp(-(x*x/fx/fx + y*y/fy/fy + z*z/fz/fz) / ((r/2.0) * (r/2.0)));
     }
@@ -239,7 +239,7 @@ class RepresentativeVolumeElement
                         _cuttedData[(i * _size * _size) + (j * _size) + k] +=
                                 _data[(((i+p)&(_size-1)) * _size * _size) +
                                     (j * _size) + k] *
-                                _GaussianFilter(
+                                GaussianFilter(
                                     _discreteRadius,
                                     p, 0, 0,
                                     ellipsoidScaleFactorZ,
@@ -265,7 +265,7 @@ class RepresentativeVolumeElement
                         _cuttedData[(i * _size * _size) + (j * _size) + k] +=
                                 _data[(i * _size * _size) +
                                     (((j+q)&(_size-1)) * _size) + k] *
-                                _GaussianFilter(
+                                GaussianFilter(
                                     _discreteRadius,
                                     0, q, 0,
                                     ellipsoidScaleFactorZ,
@@ -291,7 +291,7 @@ class RepresentativeVolumeElement
                         _cuttedData[(i * _size * _size) + (j * _size) + k] +=
                                 _data[(i * _size * _size) + (j * _size) +
                                     ((k+r)&(_size-1))] *
-                                _GaussianFilter(
+                                GaussianFilter(
                                     _discreteRadius,
                                     0, 0, r,
                                     ellipsoidScaleFactorZ,

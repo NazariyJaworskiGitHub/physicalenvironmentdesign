@@ -40,7 +40,6 @@ namespace UserInterface
         public : virtual void mouseReleaseEvent(QMouseEvent *e) override;
         public : virtual void keyPressEvent(QKeyEvent *e) override;
 
-//        public : virtual void initializeGL() override;
         public : virtual void initializeGLEW();
         public : virtual void paintGL() override;
 
@@ -52,7 +51,7 @@ namespace UserInterface
 
         public : ~VolumeGLRender();
 
-        private Q_SLOTS: void slot_createFormatDialog();
+        private: Q_SLOT void slot_createFormatDialog();
     };
 }
 
