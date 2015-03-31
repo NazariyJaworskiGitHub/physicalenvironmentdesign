@@ -85,20 +85,20 @@ void FEM::Simulation::constructLocalStiffnessMatrix(
     _det /= 6.0f;
 
     // Calculate local stiffness matrix
-    // [C] = [K] = 1/V * [B]^T * [conduction] * [B]
-    K[0][0] = conduction / _det * (_B[0][0]*_B[0][0] + _B[1][0]*_B[1][0] + _B[2][0]*_B[2][0]);
-    K[0][1] = conduction / _det * (_B[0][0]*_B[0][1] + _B[1][0]*_B[1][1] + _B[2][0]*_B[2][1]);
-    K[0][2] = conduction / _det * (_B[0][0]*_B[0][2] + _B[1][0]*_B[1][2] + _B[2][0]*_B[2][2]);
-    K[0][3] = conduction / _det * (_B[0][0]*_B[0][3] + _B[1][0]*_B[1][3] + _B[2][0]*_B[2][3]);
+    // [C] = [K] = V * [B]^T * [conduction] * [B]
+    K[0][0] = conduction * _det * (_B[0][0]*_B[0][0] + _B[1][0]*_B[1][0] + _B[2][0]*_B[2][0]);
+    K[0][1] = conduction * _det * (_B[0][0]*_B[0][1] + _B[1][0]*_B[1][1] + _B[2][0]*_B[2][1]);
+    K[0][2] = conduction * _det * (_B[0][0]*_B[0][2] + _B[1][0]*_B[1][2] + _B[2][0]*_B[2][2]);
+    K[0][3] = conduction * _det * (_B[0][0]*_B[0][3] + _B[1][0]*_B[1][3] + _B[2][0]*_B[2][3]);
 
-    K[1][1] = conduction / _det * (_B[0][1]*_B[0][1] + _B[1][1]*_B[1][1] + _B[2][1]*_B[2][1]);
-    K[1][2] = conduction / _det * (_B[0][1]*_B[0][2] + _B[1][1]*_B[1][2] + _B[2][1]*_B[2][2]);
-    K[1][3] = conduction / _det * (_B[0][1]*_B[0][3] + _B[1][1]*_B[1][3] + _B[2][1]*_B[2][3]);
+    K[1][1] = conduction * _det * (_B[0][1]*_B[0][1] + _B[1][1]*_B[1][1] + _B[2][1]*_B[2][1]);
+    K[1][2] = conduction * _det * (_B[0][1]*_B[0][2] + _B[1][1]*_B[1][2] + _B[2][1]*_B[2][2]);
+    K[1][3] = conduction * _det * (_B[0][1]*_B[0][3] + _B[1][1]*_B[1][3] + _B[2][1]*_B[2][3]);
 
-    K[2][2] = conduction / _det * (_B[0][2]*_B[0][2] + _B[1][2]*_B[1][2] + _B[2][2]*_B[2][2]);
-    K[2][3] = conduction / _det * (_B[0][2]*_B[0][3] + _B[1][2]*_B[1][3] + _B[2][2]*_B[2][3]);
+    K[2][2] = conduction * _det * (_B[0][2]*_B[0][2] + _B[1][2]*_B[1][2] + _B[2][2]*_B[2][2]);
+    K[2][3] = conduction * _det * (_B[0][2]*_B[0][3] + _B[1][2]*_B[1][3] + _B[2][2]*_B[2][3]);
 
-    K[3][3] = conduction / _det * (_B[0][3]*_B[0][3] + _B[1][3]*_B[1][3] + _B[2][3]*_B[2][3]);
+    K[3][3] = conduction * _det * (_B[0][3]*_B[0][3] + _B[1][3]*_B[1][3] + _B[2][3]*_B[2][3]);
 
     K[1][0] = K[0][1];
     K[2][0] = K[0][2];
@@ -197,6 +197,8 @@ void FEM::Simulation::assembleSiffnessMatrix(
         std::vector<float> &cpu_loads) noexcept
 {
     float _step = RVEPhysicalLength / RVEDiscreteSize;
+    float _q = flux * _step * _step / 2.0f / 3.0f;
+
     for(int k=0; k<RVEDiscreteSize-1; ++k)
         for(int j=0; j<RVEDiscreteSize-1; ++j)
             for(int i=0; i<RVEDiscreteSize-1; ++i)
@@ -212,12 +214,7 @@ void FEM::Simulation::assembleSiffnessMatrix(
                 long _v4 = _index + RVEDiscreteSize*RVEDiscreteSize;                        //   i,   j, k+1
                 long _v5 = _index + 1 + RVEDiscreteSize*RVEDiscreteSize;                    // i+1,   j, k+1
                 long _v6 = _index + RVEDiscreteSize + RVEDiscreteSize*RVEDiscreteSize;      //   i, j+1, k+1
-                long _v7 = _index + 1 + RVEDiscreteSize + RVEDiscreteSize*RVEDiscreteSize;  // i+1, j+1, k+1
-
-                float _K[4][4];
-                float _f[4] = {0.0f, 0.0f, 0.0f, 0.0f};
-                float _curConduction;
-                float _q = flux * _step * _step / 2.0f / RVEPhysicalLength / RVEPhysicalLength / 3.0f;
+                long _v7 = _index + 1 + RVEDiscreteSize + RVEDiscreteSize*RVEDiscreteSize;  // i+1, j+1, k+1               
 
                 // Make 6 tetrahedrons
 
@@ -225,6 +222,10 @@ void FEM::Simulation::assembleSiffnessMatrix(
                 //  BOTTOM  _v0 _v1 _v4
                 //  LEFT    _v0 _v4 _v6
                 {
+                    float _K[4][4];
+                    float _f[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+                    float _curConduction;
+
                     if(
                             ptrToRVEData[_v0] > cutting &&
                             ptrToRVEData[_v1] > cutting &&
@@ -248,11 +249,15 @@ void FEM::Simulation::assembleSiffnessMatrix(
                         applyLocalNeumannConditions(
                                     0b00001101, // LEFT
                                     _q, _f);
+//                        applyLocalDirichletConditions(
+//                                    0b00001101, // LEFT
+//                                    T0+1, _K, _f);
 
                     if(i==RVEDiscreteSize-2)
                         applyLocalDirichletConditions(
                                     0b00000010, // RIGHT
                                     T0, _K, _f);
+
 
                     long _element[] = {_v0, _v1, _v6, _v4};
                     for(long ii=0; ii<4; ++ii)
@@ -267,6 +272,10 @@ void FEM::Simulation::assembleSiffnessMatrix(
                 //  LEFT    _v0 _v2 _v6
                 //  FRONT   _v0 _v1 _v2
                 {
+                    float _K[4][4];
+                    float _f[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+                    float _curConduction;
+
                     if(
                             ptrToRVEData[_v0] > cutting &&
                             ptrToRVEData[_v1] > cutting &&
@@ -290,6 +299,9 @@ void FEM::Simulation::assembleSiffnessMatrix(
                         applyLocalNeumannConditions(
                                     0b00001101, // LEFT
                                     _q, _f);
+//                        applyLocalDirichletConditions(
+//                                    0b00001101, // LEFT
+//                                    T0+1, _K, _f);
 
                     if(i==RVEDiscreteSize-2)
                         applyLocalDirichletConditions(
@@ -309,6 +321,10 @@ void FEM::Simulation::assembleSiffnessMatrix(
                 //  RIGHT   _v1 _v5 _v7
                 //  BACK    _v5 _v6 _v7
                 {
+                    float _K[4][4];
+                    float _f[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+                    float _curConduction;
+
                     if(
                             ptrToRVEData[_v1] > cutting &&
                             ptrToRVEData[_v5] > cutting &&
@@ -328,6 +344,11 @@ void FEM::Simulation::assembleSiffnessMatrix(
                                     _curConduction,
                                     _K);
                     }
+//                    if(i==0) /////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//                        applyLocalDirichletConditions(
+//                                    0b00001000, // LEFT
+//                                    T0+1, _K, _f);
+
                     if(i==RVEDiscreteSize-2)
                         applyLocalDirichletConditions(
                                     0b00000111, // RIGHT
@@ -346,6 +367,10 @@ void FEM::Simulation::assembleSiffnessMatrix(
                 //  TOP     _v3 _v6 _v7
                 //  RIGHT   _v1 _v3 _v7
                 {
+                    float _K[4][4];
+                    float _f[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+                    float _curConduction;
+
                     if(
                             ptrToRVEData[_v1] > cutting &&
                             ptrToRVEData[_v3] > cutting &&
@@ -365,6 +390,11 @@ void FEM::Simulation::assembleSiffnessMatrix(
                                     _curConduction,
                                     _K);
                     }
+//                    if(i==0) /////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//                        applyLocalDirichletConditions(
+//                                    0b00000100, // LEFT
+//                                    T0+1, _K, _f);
+
                     if(i==RVEDiscreteSize-2)
                         applyLocalDirichletConditions(
                                     0b00001011, // RIGHT
@@ -383,6 +413,10 @@ void FEM::Simulation::assembleSiffnessMatrix(
                 //  TOP     _v2 _v3 _v6
                 //  FRONT   _v1 _v2 _v3
                 {
+                    float _K[4][4];
+                    float _f[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+                    float _curConduction;
+
                     if(
                             ptrToRVEData[_v1] > cutting &&
                             ptrToRVEData[_v3] > cutting &&
@@ -402,6 +436,11 @@ void FEM::Simulation::assembleSiffnessMatrix(
                                     _curConduction,
                                     _K);
                     }
+//                    if(i==0) /////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//                        applyLocalDirichletConditions(
+//                                    0b00001100, // LEFT
+//                                    T0+1, _K, _f);
+
                     if(i==RVEDiscreteSize-2)
                         applyLocalDirichletConditions(
                                     0b00000011, // RIGHT
@@ -420,6 +459,10 @@ void FEM::Simulation::assembleSiffnessMatrix(
                 //  BOTTOM  _v1 _v4 _v5
                 //  BACK    _v4 _v5 _v6
                 {
+                    float _K[4][4];
+                    float _f[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+                    float _curConduction;
+
                     if(
                             ptrToRVEData[_v1] > cutting &&
                             ptrToRVEData[_v4] > cutting &&
@@ -439,6 +482,11 @@ void FEM::Simulation::assembleSiffnessMatrix(
                                     _curConduction,
                                     _K);
                     }
+//                    if(i==0) /////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//                        applyLocalDirichletConditions(
+//                                    0b00001010, // LEFT
+//                                    T0+1, _K, _f);
+
                     if(i==RVEDiscreteSize-2)
                         applyLocalDirichletConditions(
                                     0b00000101, // RIGHT
