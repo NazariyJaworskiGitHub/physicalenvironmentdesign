@@ -50,8 +50,6 @@ int main(int argc, char *argv[])
     RepresentativeVolumeElement _RVE(size);
     _RVE.generateRandomField();
     _RVE.applyGaussianFilterCL(32, 1.0f, 0.25f, 0.25f);
-    //_RVE.applyGaussianFilterCL(8);
-    //_RVE.applyCuttingLevel(0.65);
 
     std::chrono::steady_clock::time_point _t2 = std::chrono::steady_clock::now();
     std::chrono::duration<double> time_span =
@@ -99,11 +97,11 @@ int main(int argc, char *argv[])
 
     ///////////////////////////////////////////////////////////////////////////////////////
 
-    UserInterface::VolumeGLRenderRVE _renderRVE(&_RVE, NULL);
-    _renderRVE.setBoundingBoxRepresentationSize(1e-3f);
-    _renderRVE.setInfoString("");
-    _renderRVE.resize(800,600);
-    _renderRVE.show();
+//    UserInterface::VolumeGLRenderRVE _renderRVE(&_RVE, NULL);
+//    _renderRVE.setBoundingBoxRepresentationSize(1e-3f);
+//    _renderRVE.setInfoString("");
+//    _renderRVE.resize(800,600);
+//    _renderRVE.show();
 
     ///////////////////////////////////////////////////////////////////////////////////////
 

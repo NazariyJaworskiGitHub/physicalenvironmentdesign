@@ -212,15 +212,15 @@ class RepresentativeVolumeElement
             float ellipsoidScaleFactorY = 1.0,
             float ellipsoidScaleFactorZ = 1.0) throw (std::logic_error)
     {
-        std::cout << "applyGaussianFilter() call:" << std::endl;
+        std::cout << "applyGaussianFilterCL() call:" << std::endl;
         if(discreteRadius <= 0)
-            throw(std::runtime_error("applyGaussianFilter(): radius <= 0"));
-        if(ellipsoidScaleFactorX <= 0)
-            throw(std::runtime_error("applyGaussianFilter(): ellipsoidScaleFactorX <= 0"));
-        if(ellipsoidScaleFactorY <= 0)
-            throw(std::runtime_error("applyGaussianFilter(): ellipsoidScaleFactorY <= 0"));
-        if(ellipsoidScaleFactorZ <= 0)
-            throw(std::runtime_error("applyGaussianFilter(): ellipsoidScaleFactorZ <= 0"));
+            throw(std::runtime_error("applyGaussianFilterCL(): radius <= 0"));
+        if(ellipsoidScaleFactorX <= 0.0f || ellipsoidScaleFactorX > 1.0f)
+            throw(std::runtime_error("applyGaussianFilterCL(): ellipsoidScaleFactorX <= 0 or > 1"));
+        if(ellipsoidScaleFactorY <= 0.0f || ellipsoidScaleFactorY > 1.0f)
+            throw(std::runtime_error("applyGaussianFilterCL(): ellipsoidScaleFactorY <= 0 or > 1"));
+        if(ellipsoidScaleFactorZ <= 0.0f || ellipsoidScaleFactorZ > 1.0f)
+            throw(std::runtime_error("applyGaussianFilterCL(): ellipsoidScaleFactorZ <= 0 or > 1"));
 
         _discreteRadius = discreteRadius;
 
@@ -366,12 +366,12 @@ class RepresentativeVolumeElement
         std::cout << "applyGaussianFilterCL() call:" << std::endl;
         if(discreteRadius <= 0)
             throw(std::runtime_error("applyGaussianFilterCL(): radius <= 0"));
-        if(ellipsoidScaleFactorX <= 0)
-            throw(std::runtime_error("applyGaussianFilterCL(): ellipsoidScaleFactorX <= 0"));
-        if(ellipsoidScaleFactorY <= 0)
-            throw(std::runtime_error("applyGaussianFilterCL(): ellipsoidScaleFactorY <= 0"));
-        if(ellipsoidScaleFactorZ <= 0)
-            throw(std::runtime_error("applyGaussianFilterCL(): ellipsoidScaleFactorZ <= 0"));
+        if(ellipsoidScaleFactorX <= 0.0f || ellipsoidScaleFactorX > 1.0f)
+            throw(std::runtime_error("applyGaussianFilterCL(): ellipsoidScaleFactorX <= 0 or > 1"));
+        if(ellipsoidScaleFactorY <= 0.0f || ellipsoidScaleFactorY > 1.0f)
+            throw(std::runtime_error("applyGaussianFilterCL(): ellipsoidScaleFactorY <= 0 or > 1"));
+        if(ellipsoidScaleFactorZ <= 0.0f || ellipsoidScaleFactorZ > 1.0f)
+            throw(std::runtime_error("applyGaussianFilterCL(): ellipsoidScaleFactorZ <= 0 or > 1"));
 
         _discreteRadius = discreteRadius;
 

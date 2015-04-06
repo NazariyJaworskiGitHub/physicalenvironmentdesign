@@ -33,6 +33,8 @@ namespace UserInterface
 
         void on_GenerateRandomFieldPushButton_clicked();
 
+    private: Q_SLOT void _applyGaussFltrRVEDone();
+
     private:
         Ui::VolumeGLRenderRVEEditDialog *ui;
         FilterPreviewGLRender *_previewRender = nullptr;
@@ -45,6 +47,12 @@ namespace UserInterface
         float getFilterScaleFactorYValue() const;
 
         float getFilterScaleFactorZValue() const;
+
+    public: Q_SIGNAL signal_applyGaussFltrRVE(
+                int discreteRadius,
+                float ellipsoidScaleFactorX,
+                float ellipsoidScaleFactorY,
+                float ellipsoidScaleFactorZ);
     };
 }
 

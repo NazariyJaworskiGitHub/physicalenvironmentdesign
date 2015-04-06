@@ -18,10 +18,44 @@ int _EditRVECommand::executeConsoleCommand(const std::vector<std::string> &argv)
     }
     else
     {
+        _RVEName = argv[0];
         getConsole().writeToOutput("Edit RVE GUI start.\n");
         Q_EMIT signal_editRVEGUIStart(_pos->second);
         return 0;
     }
+}
+
+/// \todo send true command
+void _EditRVECommand::applyGaussFltrRVE(
+        int discreteRadius,
+        float ellipsoidScaleFactorX,
+        float ellipsoidScaleFactorY,
+        float ellipsoidScaleFactorZ)
+{
+    {
+        std::stringstream _str;
+        _str << "genRndFldRVE " << _RVEName << "\n";
+        getConsole().writeToOutput(_str.str());
+    }
+    getConsole().writeToOutput(_manager.genRndFldRVE(_RVEName));
+
+    {
+        std::stringstream _str;
+        _str << "applyGaussFltrRVE " << _RVEName << " "
+             << discreteRadius << " "
+             << ellipsoidScaleFactorX << " "
+             << ellipsoidScaleFactorY << " "
+             << ellipsoidScaleFactorZ << "\n";
+        getConsole().writeToOutput(_str.str());
+    }
+    getConsole().writeToOutput(_manager.applyGaussFltrRVE(
+                                   _RVEName,
+                                   discreteRadius,
+                                   ellipsoidScaleFactorX,
+                                   ellipsoidScaleFactorY,
+                                   ellipsoidScaleFactorZ));
+
+    Q_EMIT signal_applyGaussFltrRVEDone();
 }
 
 
@@ -104,7 +138,6 @@ std::string Controller::RepresentativeVolumeElementConsoleInterface::printRVE() 
     return _str.str();
 }
 
-
 int RepresentativeVolumeElementConsoleInterface::_PrintRVECommand::executeConsoleCommand(
         const std::vector<std::string> &argv)
 {
@@ -114,5 +147,72 @@ int RepresentativeVolumeElementConsoleInterface::_PrintRVECommand::executeConsol
         return -1;
     }
     getConsole().writeToOutput(_manager.printRVE());
+    return 0;
+}
+
+std::string RepresentativeVolumeElementConsoleInterface::genRndFldRVE(
+        const std::string &name) noexcept
+{
+    auto _pos = RVEs.find(name);
+    if(_pos == RVEs.end())
+        return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+    else
+        _pos->second->generateRandomField();
+    return "Representative Volume Element " + name + " random field generation done.\n";
+}
+
+int RepresentativeVolumeElementConsoleInterface::_genRndFldRVECommand::executeConsoleCommand(
+        const std::vector<std::string> &argv)
+{
+    if(argv.size() != 1)
+    {
+        getConsole().writeToOutput("Error: wrong number of arguments.\n");
+        return -1;
+    }
+    getConsole().writeToOutput(_manager.genRndFldRVE(argv[0]));
+    return 0;
+}
+
+std::string RepresentativeVolumeElementConsoleInterface::applyGaussFltrRVE(
+        const std::string &name,
+        int discreteRadius,
+        float ellipsoidScaleFactorX,
+        float ellipsoidScaleFactorY,
+        float ellipsoidScaleFactorZ)
+{
+    try
+    {
+        auto _pos = RVEs.find(name);
+        if(_pos == RVEs.end())
+            return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+        else
+            _pos->second->applyGaussianFilterCL(
+                        discreteRadius,
+                        ellipsoidScaleFactorX,
+                        ellipsoidScaleFactorY,
+                        ellipsoidScaleFactorZ);
+    }
+    catch(std::exception &e)
+    {
+        return e.what();
+    }
+    return "Representative Volume Element " + name + " Gaussian blur filter applying done.\n";
+}
+
+
+int RepresentativeVolumeElementConsoleInterface::_applyGaussFltrRVECommand::executeConsoleCommand(
+        const std::vector<std::string> &argv)
+{
+    if(argv.size() != 5)
+    {
+        getConsole().writeToOutput("Error: wrong number of arguments.\n");
+        return -1;
+    }
+    getConsole().writeToOutput(_manager.applyGaussFltrRVE(
+            argv[0],
+            std::atoi(argv[1].data()),
+            std::atof(argv[2].data()),
+            std::atof(argv[3].data()),
+            std::atof(argv[4].data())));
     return 0;
 }

@@ -21,12 +21,13 @@ class _EditRVECommand : public QObject, public ConsoleCommand
     Q_OBJECT
 
     private: RepresentativeVolumeElementConsoleInterface &_manager;
+    private: std::string _RVEName;
     public: _EditRVECommand(
             RepresentativeVolumeElementConsoleInterface &manager,
             Console &console) :
         ConsoleCommand(
             "editRVE",
-            "editRVE\n"
+            "editRVE <Name>\n"
             "Call the Graphical User Interface Representative Volume Element edit form.\n"
             "Arguments:\n"
             " <Name> - the name of RVE in RAM memory.\n",
@@ -42,6 +43,14 @@ class _EditRVECommand : public QObject, public ConsoleCommand
         connect(&UserInterface::UserInterfaceManager::instance(),
                 SIGNAL(signal_editRVEGUIFinish()),
                 this, SLOT(editRVEGUIFinish()));
+
+        connect(&UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_applyGaussFltrRVE_T(int,float,float,float)),
+                this, SLOT(applyGaussFltrRVE(int,float,float,float)));
+
+        connect(this, SIGNAL(signal_applyGaussFltrRVEDone()),
+                &UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_applyGaussFltrRVEDone_T()));
     }
     public: Q_SIGNAL void signal_editRVEGUIStart(RepresentativeVolumeElement* ptrToRVE);
     public: Q_SLOT void editRVEGUIFinish(){
@@ -49,11 +58,20 @@ class _EditRVECommand : public QObject, public ConsoleCommand
     public: Q_SLOT void editRVEGUIError(){
         getConsole().writeToOutput("Edit RVE GUI is already running.\n");}
 
+    public: Q_SLOT void applyGaussFltrRVE(
+            int discreteRadius,
+            float ellipsoidScaleFactorX,
+            float ellipsoidScaleFactorY,
+            float ellipsoidScaleFactorZ);
+    public: Q_SIGNAL void signal_applyGaussFltrRVEDone();
+
     public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
 };
 
-class RepresentativeVolumeElementConsoleInterface
+class RepresentativeVolumeElementConsoleInterface : public QObject
 {
+    Q_OBJECT
+
     public : std::map<std::string, RepresentativeVolumeElement*> RVEs;
 
     /// createRVE ----------------------------------------------------------------------------
@@ -113,11 +131,64 @@ class RepresentativeVolumeElementConsoleInterface
 
     _EditRVECommand *_commandEditRVE = nullptr;
 
+    /// genRndFldRVE -------------------------------------------------------------------------
+    public : std::string genRndFldRVE(const std::string &name) noexcept;
+    private: class _genRndFldRVECommand : public ConsoleCommand
+    {
+        private: RepresentativeVolumeElementConsoleInterface &_manager;
+        public: _genRndFldRVECommand(
+                RepresentativeVolumeElementConsoleInterface &manager, Console &console) :
+            ConsoleCommand(
+                "genRndFldRVE",
+                "genRndFldRVE <Name>\n"
+                "Generate a normalized random field for given Representative Volume Element.\n"
+                "Arguments:\n"
+                " <Name> - the name of RVE in RAM memory.\n",
+                console),
+                _manager(manager){}
+        public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
+    } *_commandGenRndFldRVE = nullptr;
+
+    /// genRndFldRVE -------------------------------------------------------------------------
+    public : std::string applyGaussFltrRVE(
+            const std::string &name,
+            int discreteRadius,
+            float ellipsoidScaleFactorX,
+            float ellipsoidScaleFactorY,
+            float ellipsoidScaleFactorZ);
+    private: class _applyGaussFltrRVECommand : public ConsoleCommand
+    {
+        private: RepresentativeVolumeElementConsoleInterface &_manager;
+        public: _applyGaussFltrRVECommand(
+                RepresentativeVolumeElementConsoleInterface &manager, Console &console) :
+            ConsoleCommand(
+                "applyGaussFltrRVE",
+                "applyGaussFltrRVE <Name> <Radius> <ScaleFactorX> "
+                "<ScaleFactorY> <ScaleFactorZ>\n"
+                "Apply Gaussian blur filter to given Representative "
+                "Volume Element random field.\n"
+                "Arguments:\n"
+                " <Name> - the name of RVE in RAM memory;\n"
+                " <Radius> - the radius of filter mask, should be > 0;\n"
+                " <ScaleFactorX> - the ellipsoid scale factor on X axis of "
+                "filter mask, should be > 0 and <= 1;\n"
+                " <ScaleFactorY> - the ellipsoid scale factor on Y axis of "
+                "filter mask, should be > 0 and <= 1;\n"
+                " <ScaleFactorZ> - the ellipsoid scale factor on Z axis of "
+                "filter mask, should be > 0 and <= 1;\n",
+                console),
+                _manager(manager){}
+        public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
+    } *_commAndapplyGaussFltrRVE = nullptr;
+
+    /// Constructor --------------------------------------------------------------------------
     public : RepresentativeVolumeElementConsoleInterface(Console &console):
         _commandCreateRVE(new _CreateRVECommand(*this, console)),
         _commandDeleteRVE(new _DeleteRVECommand(*this, console)),
         _commandPrintRVE(new _PrintRVECommand(*this, console)),
-        _commandEditRVE(new _EditRVECommand(*this, console))
+        _commandEditRVE(new _EditRVECommand(*this, console)),
+        _commandGenRndFldRVE(new _genRndFldRVECommand(*this, console)),
+        _commAndapplyGaussFltrRVE(new _applyGaussFltrRVECommand(*this, console))
         {}
     public : ~RepresentativeVolumeElementConsoleInterface()
     {
@@ -127,6 +198,8 @@ class RepresentativeVolumeElementConsoleInterface
         delete _commandDeleteRVE;
         delete _commandPrintRVE;
         delete _commandEditRVE;
+        delete _commandGenRndFldRVE;
+        delete _commAndapplyGaussFltrRVE;
     }
 };
 }

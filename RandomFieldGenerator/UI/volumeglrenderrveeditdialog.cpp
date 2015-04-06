@@ -3,6 +3,8 @@
 
 #include "volumeglrenderrve.h"
 
+#include "userinterfacemanager.h"
+
 using namespace UserInterface;
 
 VolumeGLRenderRVEEditDialog::VolumeGLRenderRVEEditDialog(QWidget *parent) :
@@ -38,8 +40,15 @@ VolumeGLRenderRVEEditDialog::VolumeGLRenderRVEEditDialog(QWidget *parent) :
                 _parent->_ptrToRVE, ui->groupBox);
     _previewRender->resize(261,261);
     _previewRender->move(510, 20);
-    //_previewRender->move(520, 90);
 
+    connect(this,SIGNAL(signal_applyGaussFltrRVE(int,float,float,float)),
+            &UserInterfaceManager::instance(),
+            SIGNAL(signal_applyGaussFltrRVE_T(int,float,float,float)), Qt::QueuedConnection);
+
+    connect(&UserInterfaceManager::instance(), SIGNAL(signal_applyGaussFltrRVEDone_T()),
+            this, SLOT(_applyGaussFltrRVEDone()), Qt::QueuedConnection);
+
+    ui->progressBar->setWindowModality(Qt::WindowModal);
     ui->progressBar->hide();
 }
 
@@ -133,21 +142,21 @@ void UserInterface::VolumeGLRenderRVEEditDialog::on_ScaleFactorZSlider_valueChan
 
 void UserInterface::VolumeGLRenderRVEEditDialog::on_GenerateRandomFieldPushButton_clicked()
 {
-    /// \todo bind console command
+    this->setEnabled(false);
 
-    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
-
-    ui->progressBar->show();
     ui->progressBar->setValue(0);
+    ui->progressBar->show();
 
-    this->blockSignals(true);
-    _parent->_ptrToRVE->generateRandomField();
-    _parent->_ptrToRVE->applyGaussianFilterCL(
+    Q_EMIT signal_applyGaussFltrRVE(
                 ui->FilterRadiusSlider->value(),
                 ui->ScaleFactorXSlider->value() / 100.0f,
                 ui->ScaleFactorYSlider->value() / 100.0f,
                 ui->ScaleFactorZSlider->value() / 100.0f);
-    this->blockSignals(false);
+}
+
+void VolumeGLRenderRVEEditDialog::_applyGaussFltrRVEDone()
+{
+    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
 
     _previewRender->doneCurrent();
     _parent->makeCurrent();
@@ -156,6 +165,8 @@ void UserInterface::VolumeGLRenderRVEEditDialog::on_GenerateRandomFieldPushButto
 
     ui->progressBar->setValue(100);
     ui->progressBar->hide();
+
+    this->setEnabled(true);
 }
 
 float VolumeGLRenderRVEEditDialog::getFilterRadiusValue() const

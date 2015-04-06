@@ -51,10 +51,10 @@ void UserInterface::UserInterfaceManager::editRVEGUIStart(
         //_editRVEForm->setBoundingBoxRepresentationSize(1e-3f);
         //_editRVEForm->setInfoString("");
         _editRVEForm->resize(800,600);
-//        connect(_editRVEForm, SIGNAL(destroyed()),
-//                _editRVEForm, SLOT(deleteLater()));
+
         connect(_editRVEForm, SIGNAL(destroyed()),
                 this, SLOT(editRVEGUIFinish()));
+
         _editRVEForm->show();
     }
     else Q_EMIT signal_editRVEGUIError();

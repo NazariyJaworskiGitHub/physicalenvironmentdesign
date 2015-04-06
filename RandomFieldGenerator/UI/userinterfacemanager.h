@@ -17,6 +17,9 @@ namespace UserInterface
     {
         Q_OBJECT
 
+//        private: Controller::ConsoleRunner *_consoleRunner = nullptr;
+//        public : Controller::ConsoleRunner *getConsoleRunner() noexcept {return _consoleRunner;}
+
         private: UserInterfaceManager(int argc, char *argv[]);
 
         private: UserInterface::CLManagerGUI *_CLManagerSetupForm = nullptr;
@@ -30,6 +33,12 @@ namespace UserInterface
         public : Q_SIGNAL void signal_editRVEGUIFinish();
         public : Q_SLOT void editRVEGUIStart(RepresentativeVolumeElement *ptrToRVE);
         public : Q_SLOT void editRVEGUIFinish();
+        public : Q_SIGNAL void signal_applyGaussFltrRVE_T(    // It is transitive to console
+                    int discreteRadius,
+                    float ellipsoidScaleFactorX,
+                    float ellipsoidScaleFactorY,
+                    float ellipsoidScaleFactorZ);
+        public : Q_SIGNAL void signal_applyGaussFltrRVEDone_T(); // It is transitive from console
 
         public : static UserInterfaceManager &instance();
 
