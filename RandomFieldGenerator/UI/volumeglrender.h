@@ -2,7 +2,7 @@
 #define VOLUMEGLRENDER_H
 
 #include "UI/volumeglrenderbasecontroller.h"
-#include "UI/volumeglrenderformatdialog.h"
+#include "UI/volumeglrendereditdialog.h"
 
 namespace UserInterface
 {
@@ -10,7 +10,7 @@ namespace UserInterface
     {
         Q_OBJECT
 
-        friend class UserInterface::VolumeGLRenderFormatDialog;
+        friend class UserInterface::VolumeGLRenderEditDialog;
 
         // set on construction, can't be changed
         private: const int _RVEDiscretesize;
@@ -37,11 +37,12 @@ namespace UserInterface
         private: const float _maxPotentialValueBackup = 0;
         private: void _drawRainbowTable() noexcept;
 
-        public : virtual void mouseReleaseEvent(QMouseEvent *e) override;
         public : virtual void keyPressEvent(QKeyEvent *e) override;
 
         public : virtual void initializeGLEW();
         public : virtual void paintGL() override;
+
+        private: QAction* _actionEdit;
 
         public : VolumeGLRender(
                 const int RVEDiscreteSize,
@@ -51,7 +52,7 @@ namespace UserInterface
 
         public : ~VolumeGLRender();
 
-        private: Q_SLOT void slot_createFormatDialog();
+        private: Q_SLOT void slot_createEditDialog();
     };
 }
 

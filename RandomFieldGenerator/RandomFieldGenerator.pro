@@ -98,7 +98,9 @@ SOURCES += main.cpp \
     UI/volumeglrenderbasecontroller.cpp \
     UI/volumeglrenderrve.cpp \
     UI/volumeglrenderrveeditdialog.cpp \
-    UI/filterpreviewglrender.cpp
+    UI/filterpreviewglrender.cpp \
+    UI/volumeglrendereditdialog.cpp \
+    CONSOLE/representativevolumeelementconsoleinterface.cpp
 
 HEADERS += \
     CLMANAGER/clmanager.h \
@@ -123,9 +125,11 @@ HEADERS += \
     UI/volumeglrenderbasecontroller.h \
     UI/volumeglrenderrve.h \
     UI/volumeglrenderrveeditdialog.h \
-    UI/filterpreviewglrender.h
+    UI/filterpreviewglrender.h \
+    UI/volumeglrendereditdialog.h
 
 FORMS += \
     UI/volumeglrenderformatdialog.ui \
     UI/clmanagergui.ui \
-    UI/volumeglrenderrveeditdialog.ui
+    UI/volumeglrenderrveeditdialog.ui \
+    UI/volumeglrendereditdialog.ui

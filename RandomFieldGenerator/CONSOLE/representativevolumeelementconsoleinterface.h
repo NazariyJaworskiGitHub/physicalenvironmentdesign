@@ -3,36 +3,61 @@
 
 #include <map>
 
+#include "UI/userinterfacemanager.h"    // Include it first to fix OpenGL/GLEW compatibility
 #include "console.h"
-
 #include "representativevolumeelement.h"
 #include "consolecommand.h"
 
+
 namespace Controller
 {
+
+class RepresentativeVolumeElementConsoleInterface;
+
+/// editRVE --------------------------------------------------------------------------------
+/// \warning don't make direct usage! it should be nested, but in that case causes Qt error
+class _EditRVECommand : public QObject, public ConsoleCommand
+{
+    Q_OBJECT
+
+    private: RepresentativeVolumeElementConsoleInterface &_manager;
+    public: _EditRVECommand(
+            RepresentativeVolumeElementConsoleInterface &manager,
+            Console &console) :
+        ConsoleCommand(
+            "editRVE",
+            "editRVE\n"
+            "Call the Graphical User Interface Representative Volume Element edit form.\n"
+            "Arguments:\n"
+            " <Name> - the name of RVE in RAM memory.\n",
+            console),
+        _manager(manager)
+    {
+        connect(this, SIGNAL(signal_editRVEGUIStart(RepresentativeVolumeElement*)),
+                &UserInterface::UserInterfaceManager::instance(),
+                SLOT(editRVEGUIStart(RepresentativeVolumeElement*)));
+        connect(&UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_editRVEGUIError()),
+                this, SLOT(editRVEGUIError()));
+        connect(&UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_editRVEGUIFinish()),
+                this, SLOT(editRVEGUIFinish()));
+    }
+    public: Q_SIGNAL void signal_editRVEGUIStart(RepresentativeVolumeElement* ptrToRVE);
+    public: Q_SLOT void editRVEGUIFinish(){
+        getConsole().writeToOutput("Edit RVE GUI finish.\n");}
+    public: Q_SLOT void editRVEGUIError(){
+        getConsole().writeToOutput("Edit RVE GUI is already running.\n");}
+
+    public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
+};
+
 class RepresentativeVolumeElementConsoleInterface
 {
-    private: std::map<std::string, RepresentativeVolumeElement*> _RVEs;
+    public : std::map<std::string, RepresentativeVolumeElement*> RVEs;
 
     /// createRVE ----------------------------------------------------------------------------
-    public : std::string createRVE(const std::string &name, int size) noexcept
-    {
-        try
-        {
-            if(_RVEs.find(name) != _RVEs.end())
-                return "Error: Representative Volume Element " + name + " already exists.\n";
-            else if((size >= 2) && ((size & (size - 1)) == 0)) // check power o two
-            {
-                _RVEs.emplace(name, new RepresentativeVolumeElement(size));
-            }
-            else return "Error: Cant create Representative Volume Element with given size.\n";
-        }
-        catch(std::exception &e)
-        {
-            return e.what();
-        }
-        return "Representative Volume Element " + name + " created.\n";
-    }
+    public : std::string createRVE(const std::string &name, int size) noexcept;
     private: class _CreateRVECommand : public ConsoleCommand
     {
         private: RepresentativeVolumeElementConsoleInterface &_manager;
@@ -47,35 +72,11 @@ class RepresentativeVolumeElementConsoleInterface
                 " <size> - the discrete size of RVE. It should be equal to some power of two.\n",
                 console),
                 _manager(manager){}
-        public: int executeConsoleCommand(const std::vector<std::string> &argv) override
-        {
-            if(argv.size() != 2)
-            {
-                getConsole().writeToOutput("Error: wrong number of arguments.\n");
-                return -1;
-            }
-            getConsole().writeToOutput(_manager.createRVE(argv[0], std::atoi(argv[1].data())));
-            return 0;
-        }
+        public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
     } *_commandCreateRVE = nullptr;
 
-    /// deleteRVE --------------------------------------------------------------------------------
-    public : std::string deleteRVE(const std::string &name) noexcept
-    {
-        try
-        {
-            auto _pos = _RVEs.find(name);
-            if(_pos == _RVEs.end())
-                return "Error: Representative Volume Element " + name + " doesn't exist.\n";
-            else
-                _RVEs.erase(_pos);
-        }
-        catch(std::exception &e)
-        {
-            return e.what();
-        }
-        return "Representative Volume Element " + name + " deleted.\n";
-    }
+    /// deleteRVE ----------------------------------------------------------------------------
+    public : std::string deleteRVE(const std::string &name) noexcept;
     private: class _DeleteRVECommand : public ConsoleCommand
     {
         private: RepresentativeVolumeElementConsoleInterface &_manager;
@@ -89,31 +90,11 @@ class RepresentativeVolumeElementConsoleInterface
                 " <Name> - the name of RVE in RAM memory.\n",
                 console),
                 _manager(manager){}
-        public: int executeConsoleCommand(const std::vector<std::string> &argv) override
-        {
-            if(argv.size() != 1)
-            {
-                getConsole().writeToOutput("Error: wrong number of arguments.\n");
-                return -1;
-            }
-            getConsole().writeToOutput(_manager.deleteRVE(argv[0]));
-            return 0;
-        }
+        public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
     } *_commandDeleteRVE = nullptr;
 
-    /// printRVE --------------------------------------------------------------------------------
-    public : std::string printRVE() noexcept
-    {
-        if(_RVEs.empty())
-            return "There are no Representative Volume Element (RVE) objects in memory.\n";
-
-        std::stringstream _str;
-        int _i = 0;
-        for(auto _rve: _RVEs)
-            _str << " [" << _i++ << "]: " << _rve.first << " "
-                 <<  _rve.second->getSize() << std::endl;
-        return _str.str();
-    }
+    /// printRVE -----------------------------------------------------------------------------
+    public : std::string printRVE() noexcept;
     private: class _PrintRVECommand : public ConsoleCommand
     {
         private: RepresentativeVolumeElementConsoleInterface &_manager;
@@ -127,30 +108,25 @@ class RepresentativeVolumeElementConsoleInterface
                 "Takes no arguments.\n",
                 console),
                 _manager(manager){}
-        public: int executeConsoleCommand(const std::vector<std::string> &argv) override
-        {
-            if(argv.size() != 0)
-            {
-                getConsole().writeToOutput("Error: wrong number of arguments.\n");
-                return -1;
-            }
-            getConsole().writeToOutput(_manager.printRVE());
-            return 0;
-        }
+        public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
     } *_commandPrintRVE = nullptr;
+
+    _EditRVECommand *_commandEditRVE = nullptr;
 
     public : RepresentativeVolumeElementConsoleInterface(Console &console):
         _commandCreateRVE(new _CreateRVECommand(*this, console)),
         _commandDeleteRVE(new _DeleteRVECommand(*this, console)),
-        _commandPrintRVE(new _PrintRVECommand(*this, console))
+        _commandPrintRVE(new _PrintRVECommand(*this, console)),
+        _commandEditRVE(new _EditRVECommand(*this, console))
         {}
     public : ~RepresentativeVolumeElementConsoleInterface()
     {
-        for(auto _rve: _RVEs)
+        for(auto _rve: RVEs)
             delete _rve.second;
         delete _commandCreateRVE;
         delete _commandDeleteRVE;
         delete _commandPrintRVE;
+        delete _commandEditRVE;
     }
 };
 }

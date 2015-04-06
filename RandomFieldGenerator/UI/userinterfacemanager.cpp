@@ -20,6 +20,7 @@ void UserInterface::UserInterfaceManager::OCLSetupGUIStart()
     else Q_EMIT signal_OCLSetupGUIError();
 }
 
+/// \todo remove cout
 void UserInterface::UserInterfaceManager::OCLSetupGUIFinish(int result)
 {
     if(result == QDialog::Accepted)
@@ -39,6 +40,32 @@ void UserInterface::UserInterfaceManager::OCLSetupGUIFinish(int result)
     Q_EMIT signal_OCLSetupGUIFinish();
 }
 
+/// \todo info and sizes
+void UserInterface::UserInterfaceManager::editRVEGUIStart(
+        RepresentativeVolumeElement* ptrToRVE)
+{
+    if(!_editRVEForm)
+    {
+        _editRVEForm = new UserInterface::VolumeGLRenderRVE(ptrToRVE, NULL);
+        _editRVEForm->setAttribute(Qt::WA_DeleteOnClose);
+        //_editRVEForm->setBoundingBoxRepresentationSize(1e-3f);
+        //_editRVEForm->setInfoString("");
+        _editRVEForm->resize(800,600);
+//        connect(_editRVEForm, SIGNAL(destroyed()),
+//                _editRVEForm, SLOT(deleteLater()));
+        connect(_editRVEForm, SIGNAL(destroyed()),
+                this, SLOT(editRVEGUIFinish()));
+        _editRVEForm->show();
+    }
+    else Q_EMIT signal_editRVEGUIError();
+}
+
+void UserInterface::UserInterfaceManager::editRVEGUIFinish()
+{
+    _editRVEForm = nullptr;
+    Q_EMIT signal_editRVEGUIFinish();
+}
+
 UserInterface::UserInterfaceManager &UserInterface::UserInterfaceManager::instance()
 {
     static UserInterfaceManager _staticUserInterfaceManager(__argc, __argv);
@@ -56,6 +83,7 @@ void UserInterfaceManager::setConsoleRunnerLifetime(
 UserInterface::UserInterfaceManager::~UserInterfaceManager()
 {
     if(_CLManagerSetupForm) delete _CLManagerSetupForm;
+    if(_editRVEForm) delete _editRVEForm;
 }
 
 

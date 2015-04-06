@@ -1,39 +1,20 @@
 #include "volumeglrenderrve.h"
 
-#include <QMenu>
-
 using namespace UserInterface;
 
 VolumeGLRenderRVE::VolumeGLRenderRVE(
         RepresentativeVolumeElement *RVE,
         QWidget *pwgt) noexcept :
     VolumeGLRenderBaseController(pwgt),
-    _ptrToRVE(RVE)
+    _ptrToRVE(RVE),
+    _actionEdit(new QAction("Edit...", this))
 {
+    connect(_actionEdit, SIGNAL(triggered()), this, SLOT(slot_createEditDialog()));
+    _contextMenu->addAction(_actionEdit);
+    _contextMenu->addSeparator();
+
     initializeGLEW();
     setWindowTitle("Volume render");    /// \todo change
-}
-
-void VolumeGLRenderRVE::mouseReleaseEvent(QMouseEvent *e)
-{
-    _isPressed = false;
-
-    if(e->button() == Qt::RightButton)
-    {
-        QMenu _menu;
-
-        QAction* _ActionEdit = new QAction("Edit...", this);
-        connect(_ActionEdit, SIGNAL(triggered()), this, SLOT(slot_createEditDialog()));
-        _menu.addAction(_ActionEdit);
-
-        QAction* _ActionFormat = new QAction("Format...", this);
-        connect(_ActionFormat, SIGNAL(triggered()), this, SLOT(slot_createFormatDialog()));
-        _menu.addAction(_ActionFormat);
-
-        _menu.addSeparator();
-        _menu.exec(mapToGlobal(e->pos()));
-    }
-//    QGLWidget::mouseReleaseEvent(event);  //Dont forget to pass on the event to parent
 }
 
 void VolumeGLRenderRVE::_loadRVEDataIntoTexture() throw(std::runtime_error)
@@ -176,11 +157,6 @@ VolumeGLRenderRVE::~VolumeGLRenderRVE()
 {
     glDeleteLists(_displayListBaseID, 1);
     glDeleteTextures(1, _textureIDs);
-}
-
-void VolumeGLRenderRVE::slot_createFormatDialog()
-{
-
 }
 
 void VolumeGLRenderRVE::slot_createEditDialog()

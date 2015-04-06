@@ -1,11 +1,10 @@
 #ifndef CLMANAGERCONSOLEINTERFACE
 #define CLMANAGERCONSOLEINTERFACE
 
+#include "UI/userinterfacemanager.h"    // Include it first to fix OpenGL/GLEW compatibility
 #include "console.h"
 #include "CLMANAGER/clmanager.h"
 #include "consolecommand.h"
-#include "UI/clmanagergui.h"
-#include "UI/userinterfacemanager.h"
 
 namespace Controller
 {

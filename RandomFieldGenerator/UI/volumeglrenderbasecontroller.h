@@ -12,11 +12,17 @@
 #include <QVector4D>
 #include <QMatrix4x4>
 
+#include <QMenu>
+
+#include "UI/volumeglrenderformatdialog.h"
+
 namespace UserInterface
 {
     class VolumeGLRenderBaseController : public QGLWidget
     {
         Q_OBJECT
+
+        friend class UserInterface::VolumeGLRenderFormatDialog;
 
         // Scene = Proj * World * Control * Zoom * Model
         protected: QMatrix4x4 _mControl;
@@ -75,8 +81,13 @@ namespace UserInterface
         public   : virtual void initializeGL() override;
         public   : virtual void resizeGL(int nWidth,int nHeight) override;
 
+        protected: QMenu *_contextMenu;
+        protected: QAction* _actionFormat;
+
         public   : VolumeGLRenderBaseController(QWidget *pwgt) noexcept;
         public   : ~VolumeGLRenderBaseController();
+
+        public   : Q_SLOT void slot_createFormatDialog();
     };
 }
 

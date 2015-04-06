@@ -1,8 +1,5 @@
 #include "volumeglrender.h"
 
-#include <QMenu>
-//#include <QDialog>
-
 using namespace UserInterface;
 
 VolumeGLRender::VolumeGLRender(
@@ -13,7 +10,8 @@ VolumeGLRender::VolumeGLRender(
     VolumeGLRenderBaseController(pwgt),
     _RVEDiscretesize(RVEDiscreteSize),
     _ptrToRVEdata(ptrToRVEData),
-    _ptrToRVEpotentialField(ptrToRVEPotentialField)
+    _ptrToRVEpotentialField(ptrToRVEPotentialField),
+    _actionEdit(new QAction("Edit...", this))
 {
     _minPotentialValue = _ptrToRVEpotentialField[0];
     _maxPotentialValue = _ptrToRVEpotentialField[0];
@@ -27,26 +25,12 @@ VolumeGLRender::VolumeGLRender(
     (*const_cast<float*>(&_minPotentialValueBackup)) = _minPotentialValue;
     (*const_cast<float*>(&_maxPotentialValueBackup)) = _maxPotentialValue;
 
+    connect(_actionEdit, SIGNAL(triggered()), this, SLOT(slot_createEditDialog()));
+    _contextMenu->addAction(_actionEdit);
+    _contextMenu->addSeparator();
+
     initializeGLEW();
     setWindowTitle("Volume render");
-}
-
-void VolumeGLRender::mouseReleaseEvent(QMouseEvent *e)
-{
-    _isPressed = false;
-
-    if(e->button() == Qt::RightButton)
-    {
-        QMenu _menu;
-
-        QAction* _ActionFormat = new QAction("Format...", this);
-        connect(_ActionFormat, SIGNAL(triggered()), this, SLOT(slot_createFormatDialog()));
-        _menu.addAction(_ActionFormat);
-
-        _menu.addSeparator();
-        _menu.exec(mapToGlobal(e->pos()));
-    }
-//    QGLWidget::mouseReleaseEvent(event);  //Dont forget to pass on the event to parent
 }
 
 void VolumeGLRender::keyPressEvent(QKeyEvent *e)
@@ -400,9 +384,9 @@ VolumeGLRender::~VolumeGLRender()
     glDeleteTextures(2, _textureIDs);
 }
 
-void VolumeGLRender::slot_createFormatDialog()
+void VolumeGLRender::slot_createEditDialog()
 {
-    UserInterface::VolumeGLRenderFormatDialog *_dialog =
-            new UserInterface::VolumeGLRenderFormatDialog(this);
+    UserInterface::VolumeGLRenderEditDialog *_dialog =
+            new UserInterface::VolumeGLRenderEditDialog(this);
     _dialog->show();
 }

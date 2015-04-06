@@ -6,8 +6,14 @@
 using namespace UserInterface;
 
 VolumeGLRenderBaseController::VolumeGLRenderBaseController(QWidget *pwgt) noexcept:
-    QGLWidget(QGLFormat(QGL::SampleBuffers),pwgt)
+    QGLWidget(QGLFormat(QGL::SampleBuffers),pwgt),
+    _contextMenu(new QMenu(this)),
+    _actionFormat(new QAction("Format...", this))
 {
+    connect(_actionFormat, SIGNAL(triggered()), this, SLOT(slot_createFormatDialog()));
+    _contextMenu->addAction(_actionFormat);
+    _contextMenu->addSeparator();
+
     initializeGL();
 }
 
@@ -21,7 +27,13 @@ void VolumeGLRenderBaseController::mousePressEvent(QMouseEvent *e)
 
 void VolumeGLRenderBaseController::mouseReleaseEvent(QMouseEvent *e)
 {
-    ///////////////////////////////////////////////////////////////////////////
+    _isPressed = false;
+
+    if(e->button() == Qt::RightButton)
+    {
+        _contextMenu->exec(mapToGlobal(e->pos()));
+    }
+//    QGLWidget::mouseReleaseEvent(event);  //Dont forget to pass on the event to parent
 }
 
 void VolumeGLRenderBaseController::mouseMoveEvent(QMouseEvent *e)
@@ -306,3 +318,9 @@ VolumeGLRenderBaseController::~VolumeGLRenderBaseController()
 
 }
 
+void VolumeGLRenderBaseController::slot_createFormatDialog()
+{
+    UserInterface::VolumeGLRenderFormatDialog *_dialog =
+            new UserInterface::VolumeGLRenderFormatDialog(this);
+    _dialog->show();
+}

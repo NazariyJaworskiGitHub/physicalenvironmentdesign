@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>VolumeGLRenderFormatDialog</class>
- <widget class="QDialog" name="VolumeGLRenderFormatDialog">
+ <class>VolumeGLRenderEditDialog</class>
+ <widget class="QDialog" name="VolumeGLRenderEditDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,10 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Volume render format</string>
-  </property>
-  <property name="autoFillBackground">
-   <bool>true</bool>
+   <string>Dialog</string>
   </property>
   <property name="modal">
    <bool>true</bool>
@@ -23,9 +20,9 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>271</y>
+     <y>260</y>
      <width>461</width>
-     <height>21</height>
+     <height>32</height>
     </rect>
    </property>
    <property name="orientation">
@@ -35,36 +32,26 @@
     <set>QDialogButtonBox::Close</set>
    </property>
   </widget>
-  <widget class="QLabel" name="BackgroundColorLabel">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>10</y>
-     <width>141</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Background color</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="BackgroundColorButton">
+  <widget class="QSlider" name="MinPotentialFieldValueSlider">
    <property name="geometry">
     <rect>
      <x>160</x>
-     <y>10</y>
+     <y>70</y>
      <width>311</width>
-     <height>21</height>
+     <height>19</height>
     </rect>
    </property>
-   <property name="styleSheet">
-    <string notr="true"/>
+   <property name="minimum">
+    <number>0</number>
    </property>
-   <property name="text">
-    <string/>
+   <property name="value">
+    <number>0</number>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
    </property>
   </widget>
-  <widget class="QLabel" name="TextColorLabel">
+  <widget class="QLabel" name="MaxPotentialFieldValueLabel">
    <property name="geometry">
     <rect>
      <x>10</x>
@@ -74,10 +61,23 @@
     </rect>
    </property>
    <property name="text">
-    <string>Text color</string>
+    <string>Max. potential field value </string>
    </property>
   </widget>
-  <widget class="QPushButton" name="TextColorButton">
+  <widget class="QLabel" name="PotentialFieldTransparencyLabel">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>9</y>
+     <width>141</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Potential field transparency</string>
+   </property>
+  </widget>
+  <widget class="QSlider" name="MaxPotentialFieldValueSlider">
    <property name="geometry">
     <rect>
      <x>160</x>
@@ -86,11 +86,36 @@
      <height>21</height>
     </rect>
    </property>
-   <property name="text">
-    <string/>
+   <property name="minimum">
+    <number>1</number>
+   </property>
+   <property name="maximum">
+    <number>100</number>
+   </property>
+   <property name="value">
+    <number>100</number>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
    </property>
   </widget>
-  <widget class="QLabel" name="TextFontLabel">
+  <widget class="QSlider" name="PotentialFieldTransparencySlider">
+   <property name="geometry">
+    <rect>
+     <x>160</x>
+     <y>9</y>
+     <width>311</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="maximum">
+    <number>255</number>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MinPotentialFieldValueLabel">
    <property name="geometry">
     <rect>
      <x>10</x>
@@ -100,27 +125,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Text font</string>
-   </property>
-  </widget>
-  <widget class="QFontComboBox" name="TextFontComboBox">
-   <property name="geometry">
-    <rect>
-     <x>160</x>
-     <y>70</y>
-     <width>251</width>
-     <height>22</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QSpinBox" name="TextFontSizeSpinBox">
-   <property name="geometry">
-    <rect>
-     <x>410</x>
-     <y>70</y>
-     <width>61</width>
-     <height>22</height>
-    </rect>
+    <string>Min. potential field value </string>
    </property>
   </widget>
  </widget>
@@ -129,7 +134,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>VolumeGLRenderFormatDialog</receiver>
+   <receiver>VolumeGLRenderEditDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -145,7 +150,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>VolumeGLRenderFormatDialog</receiver>
+   <receiver>VolumeGLRenderEditDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

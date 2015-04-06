@@ -35,10 +35,10 @@ namespace UserInterface
         private: void _loadRVEDataIntoTexture() throw(std::runtime_error);
         private: void _prepareRVEDataTextureDisplayList() noexcept;
 
-        public : virtual void mouseReleaseEvent(QMouseEvent *e) override;
-
         public : virtual void initializeGLEW() throw(std::runtime_error);
         public : virtual void paintGL() override;
+
+        private: QAction* _actionEdit;
 
         public : VolumeGLRenderRVE(
                 RepresentativeVolumeElement *RVE,
@@ -46,7 +46,6 @@ namespace UserInterface
 
         public :~VolumeGLRenderRVE();
 
-        private: Q_SLOT void slot_createFormatDialog();
         private: Q_SLOT void slot_createEditDialog();
     };
 }
