@@ -27,6 +27,8 @@
 
 #include "LOGGER/logger.h"
 
+#include "UI/xyglrender.h"
+
 int main(int argc, char *argv[])
 {
     Controller::ConsoleRunner _consoleRunner(std::cout, std::cin);
@@ -38,7 +40,7 @@ int main(int argc, char *argv[])
 
 //    LogFile << "Setup done.";
 
-    ///////////////////////////////////////////////////////////////////////////////////////
+/*    ///////////////////////////////////////////////////////////////////////////////////////
     OpenCL::setupViennaCL();
     run_tests_all();
 //    LogFile << "Tests done.";
@@ -112,7 +114,17 @@ int main(int argc, char *argv[])
     _render.setInfoString("Info string\nLine 2");
     _render.resize(800,600);
     _render.show();
+    /////////////////////////////////////////////////////////////////////////////////////// */
 
+    std::vector<float (*)(float)> functions;
+    functions.push_back([](float x)->float{return std::sin(x);});
+    functions.push_back([](float x)->float{return std::cos(x);});
+    functions.push_back([](float x)->float{return x*x;});
+    UserInterface::XYGLRender _render(
+                functions,
+                NULL);
+    _render.resize(800,600);
+    _render.show();
     ///////////////////////////////////////////////////////////////////////////////////////
     return UserInterface::UserInterfaceManager::instance().exec();
 }

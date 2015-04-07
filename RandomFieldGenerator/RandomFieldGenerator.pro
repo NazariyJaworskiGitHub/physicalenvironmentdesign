@@ -100,7 +100,9 @@ SOURCES += main.cpp \
     UI/volumeglrenderrveeditdialog.cpp \
     UI/filterpreviewglrender.cpp \
     UI/volumeglrendereditdialog.cpp \
-    CONSOLE/representativevolumeelementconsoleinterface.cpp
+    CONSOLE/representativevolumeelementconsoleinterface.cpp \
+    UI/xyglrender.cpp \
+    UI/xyglrenderformatdialog.cpp
 
 HEADERS += \
     CLMANAGER/clmanager.h \
@@ -126,10 +128,13 @@ HEADERS += \
     UI/volumeglrenderrve.h \
     UI/volumeglrenderrveeditdialog.h \
     UI/filterpreviewglrender.h \
-    UI/volumeglrendereditdialog.h
+    UI/volumeglrendereditdialog.h \
+    UI/xyglrender.h \
+    UI/xyglrenderformatdialog.h
 
 FORMS += \
     UI/volumeglrenderformatdialog.ui \
     UI/clmanagergui.ui \
     UI/volumeglrenderrveeditdialog.ui \
-    UI/volumeglrendereditdialog.ui
+    UI/volumeglrendereditdialog.ui \
+    UI/xyglrenderformatdialog.ui
