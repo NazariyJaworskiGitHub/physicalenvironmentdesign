@@ -40,9 +40,11 @@ int main(int argc, char *argv[])
 
 //    LogFile << "Setup done.";
 
-/*    ///////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////
     OpenCL::setupViennaCL();
-    run_tests_all();
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+/*    run_tests_all();
 //    LogFile << "Tests done.";
 
     ///////////////////////////////////////////////////////////////////////////////////////
@@ -116,12 +118,20 @@ int main(int argc, char *argv[])
     _render.show();
     /////////////////////////////////////////////////////////////////////////////////////// */
 
-    std::vector<float (*)(float)> functions;
-    functions.push_back([](float x)->float{return std::sin(x);});
-    functions.push_back([](float x)->float{return std::cos(x);});
-    functions.push_back([](float x)->float{return x*x;});
+    std::vector<UserInterface::Function> functions;
+    functions.push_back(UserInterface::Function{"sin",[](float x)->float{return std::sin(x);}});
+    functions.push_back(UserInterface::Function{"cos",[](float x)->float{return std::cos(x);}});
+    functions.push_back(UserInterface::Function{"x*x",[](float x)->float{return x*x;}});
+
+    std::vector<UserInterface::NodalFunction> nodalfunctions;
+    UserInterface::NodalFunction array{"array"};
+    for(int i=0; i<100; ++i)
+        array.nodes.push_back({i*0.01f, MathUtils::rand<float>(0,1)});
+    nodalfunctions.push_back(array);
+
     UserInterface::XYGLRender _render(
-                functions,
+                &functions,
+                &nodalfunctions,
                 NULL);
     _render.resize(800,600);
     _render.show();

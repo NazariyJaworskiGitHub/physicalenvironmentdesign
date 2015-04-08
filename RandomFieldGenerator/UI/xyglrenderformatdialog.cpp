@@ -32,18 +32,42 @@ XYGLRenderFormatDialog::XYGLRenderFormatDialog(QWidget *parent) :
     ui->NumberPlotNodesSpinBox->setValue(_parent->_nodesNum);
 
     // Prepare table (10, 160)
-    for(int i=0; i<_parent->_functions.size(); ++i)
+    if(_parent->_functions)
+        for(int i=0; i<_parent->_functions->size(); ++i)
+        {
+            QLabel *_functionLable = new QLabel(
+                        (*(_parent->_functions))[i].name.data(), this);
+            _functionLable->setGeometry(QRect(10, 190 + i* 30, 141, 21));
+
+            _colorButtons.push_back(new QPushButton(this));
+            _colorButtons[i]->setStyleSheet(
+                        "background-color: " + _parent->_functionColors[i].name(
+                            QColor::HexArgb));
+            _colorButtons[i]->setGeometry(QRect(160, 190 + i* 30, 311, 21));
+
+            connect(_colorButtons[i], SIGNAL(clicked()),
+                this, SLOT(functionColorButtonClicked()));
+        }
+    if(_parent->_nodalFunctions)
     {
-        QLabel *_functionLable = new QLabel("todo Function lable", this);
-        _functionLable->setGeometry(QRect(10, 190 + i* 30, 141, 21));
+        int _offset = 0;
+        if(_parent->_functions)
+            _offset = _parent->_functions->size();
+        for(int i=0; i<_parent->_nodalFunctions->size(); ++i)
+        {
+            QLabel *_functionLable = new QLabel(
+                        (*(_parent->_nodalFunctions))[i].name.data(), this);
+            _functionLable->setGeometry(QRect(10, 190 + (i+_offset)* 30, 141, 21));
 
-        _colorButtons.push_back(new QPushButton(this));
-        _colorButtons[i]->setStyleSheet(
-                    "background-color: " + _parent->_functionColors[i].name(QColor::HexArgb));
-        _colorButtons[i]->setGeometry(QRect(160, 190 + i* 30, 311, 21));
+            _colorButtons.push_back(new QPushButton(this));
+            _colorButtons[i+_offset]->setStyleSheet(
+                        "background-color: " + _parent->_functionColors[i+_offset].name(
+                        QColor::HexArgb));
+            _colorButtons[i+_offset]->setGeometry(QRect(160, 190 + (i+_offset)* 30, 311, 21));
 
-        connect(_colorButtons[i], SIGNAL(clicked()),
-            this, SLOT(functionColorButtonClicked()));
+            connect(_colorButtons[i+_offset], SIGNAL(clicked()),
+                this, SLOT(functionColorButtonClicked()));
+        }
     }
 }
 
@@ -135,7 +159,7 @@ void UserInterface::XYGLRenderFormatDialog::functionColorButtonClicked()
             XYGLRender*>(this->parent());
 
     int _index;
-    for(_index = 0; _index<_parent->_functions.size(); ++_index)
+    for(_index = 0; _index<_parent->_functionColors.size(); ++_index)
         if(_colorButtons[_index] == sender())
             break;
 

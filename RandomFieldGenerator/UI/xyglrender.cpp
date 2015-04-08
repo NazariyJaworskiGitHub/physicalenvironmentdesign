@@ -6,14 +6,23 @@
 using namespace UserInterface;
 
 XYGLRender::XYGLRender(
-        const std::vector<float (*)(float)> &functions,
-        QWidget *pwgt) noexcept :
+        const std::vector<Function> *functions,
+        const std::vector<NodalFunction> *nodalFunctions,
+        QWidget *pwgt) throw(std::runtime_error) :
     QGLWidget(QGLFormat(QGL::SampleBuffers),pwgt),
     _functions(functions),
+    _nodalFunctions(nodalFunctions),
     _contextMenu(new QMenu(this)),
     _actionFormat(new QAction("Format...", this))
 {
-    _functionColors.resize(functions.size());
+    if(_functions && _nodalFunctions)
+        _functionColors.resize(functions->size() + nodalFunctions->size());
+    else if(_functions)
+        _functionColors.resize(functions->size());
+    else if(_nodalFunctions)
+        _functionColors.resize(nodalFunctions->size());
+    else throw(std::runtime_error("Error XYGLRender(): no functions to plot is given\n"));
+
     for(int i=0; i<_functionColors.size(); ++i)
         _functionColors[i] = QColor(
                     MathUtils::rand<int>(0,255),
@@ -162,22 +171,50 @@ void XYGLRender::_drawGrid() noexcept
 
 void XYGLRender::_drawFunctions() noexcept
 {
-    for(int f=0; f<_functions.size(); ++f)
+    if(_functions)
+        for(int f=0; f<_functions->size(); ++f)
+        {
+            glColor4f(
+                        _functionColors[f].redF(),
+                        _functionColors[f].greenF(),
+                        _functionColors[f].blueF(),
+                        _functionColors[f].alphaF());
+
+            float _baseX1 = (-1.0f*width()/height() - _OXOffset)/_Zoom;
+            float _baseX2 = ( 1.0f*width()/height() - _OXOffset)/_Zoom;
+
+            float _stepX = (_baseX2 - _baseX1) / (_nodesNum-1);
+            glBegin(GL_LINE_STRIP);
+            for(int i=0; i<_nodesNum; ++i)
+                glVertex2f(
+                            _baseX1 + i*_stepX,
+                            (*_functions)[f].implementation(_baseX1 + i*_stepX));
+            glEnd();
+        }
+}
+
+void XYGLRender::_drawNodalFunctions() noexcept
+{
+    if(_nodalFunctions)
     {
-        glColor4f(
-                _functionColors[f].redF(),
-                _functionColors[f].greenF(),
-                _functionColors[f].blueF(),
-                _functionColors[f].alphaF());
+        int _offset = 0;
+        if(_functions)
+            _offset = _functions->size();
+        for(int f=0; f<_nodalFunctions->size(); ++f)
+        {
+            glColor4f(
+                        _functionColors[f+_offset].redF(),
+                        _functionColors[f+_offset].greenF(),
+                        _functionColors[f+_offset].blueF(),
+                        _functionColors[f+_offset].alphaF());
 
-        float _baseX1 = (-1.0f*width()/height() - _OXOffset)/_Zoom;
-        float _baseX2 = ( 1.0f*width()/height() - _OXOffset)/_Zoom;
-
-        float _stepX = (_baseX2 - _baseX1) / (_nodesNum-1);
-        glBegin(GL_LINE_STRIP);
-        for(int i=0; i<_nodesNum; ++i)
-            glVertex2f(_baseX1 + i*_stepX, _functions[f](_baseX1 + i*_stepX));
-        glEnd();
+            glBegin(GL_LINE_STRIP);
+            for(int i=0; i<(*_nodalFunctions)[f].nodes.size(); ++i)
+                glVertex2f(
+                            (*_nodalFunctions)[f].nodes[i][0],
+                        (*_nodalFunctions)[f].nodes[i][1]);
+            glEnd();
+        }
     }
 }
 
@@ -235,6 +272,7 @@ void XYGLRender::paintGL()
     _drawGrid();
 
     _drawFunctions();
+    _drawNodalFunctions();
 
 //    glColor4f(
 //            _TextColor.redF(),

@@ -11,8 +11,22 @@
 
 #include "UI/xyglrenderformatdialog.h"
 
+#include "node.h"
+
 namespace UserInterface
 {
+    struct Function
+    {
+        std::string name;
+        float (*implementation)(float);
+    };
+
+    struct NodalFunction
+    {
+        std::string name;
+        std::vector<MathUtils::Node<2,float>> nodes;
+    };
+
     /// \todo refactoring, merege with VolumeGLRenderBaseController
     class XYGLRender : public QGLWidget
     {
@@ -20,13 +34,18 @@ namespace UserInterface
 
         friend class UserInterface::XYGLRenderFormatDialog;
 
-        private  : const std::vector<float (*)(float)> &_functions;
+        /// Each element is pair <Name> <Function>
+        private  : const std::vector<Function> *_functions = nullptr;
 
+        /// Each element is pair <Name> <vector of 2d float Node>
+        private  : const std::vector<NodalFunction> *_nodalFunctions = nullptr;
+
+        /// Note, size = _functions.size() + _nodalFunctions.size()
         protected: std::vector<QColor> _functionColors;
         public   : void setFunctionColor(const int index, const QColor &newColor) noexcept{
                     _functionColors[index] = newColor;}
 
-        protected: QColor _gridColor = QColor(127, 127, 127, 255);
+        protected: QColor _gridColor = QColor(192, 192, 192, 255);
         public   : void setGridColor(const QColor &newColor) noexcept{
                     _gridColor = newColor;}
 
@@ -37,14 +56,14 @@ namespace UserInterface
         private  : float _OXOffset = 0;
         private  : float _OYOffset = 0;
 
-        protected: QColor _BackgroundColor = QColor(64, 128, 128, 255);
+        protected: QColor _BackgroundColor = QColor(255, 255, 255, 255);
         public   : void setEnvironmenColor(const QColor &newColor) noexcept{
                     _BackgroundColor = newColor;}
 
         protected: QFont _TextFont = QFont();
         public   : void setTextFont(const QFont &newFont){
                     _TextFont = newFont;}
-        protected: QColor _TextColor = QColor(0, 255, 0, 255);
+        protected: QColor _TextColor = QColor(0, 0, 0, 255);
         public   : void setTextColor(const QColor &newColor){
                     _TextColor = newColor;}
         protected: QString _infoString = "";
@@ -76,6 +95,7 @@ namespace UserInterface
         public   : void setNodesNumber(int newNodesNumber) noexcept {_nodesNum = newNodesNumber;}
         public   : int getNodesNumber() const noexcept {return _nodesNum;}
         private  : void _drawFunctions() noexcept;
+        private  : void _drawNodalFunctions() noexcept;
 
         public   : virtual void mousePressEvent(QMouseEvent *e) override;
         public   : virtual void mouseReleaseEvent(QMouseEvent *e) override;
@@ -87,9 +107,11 @@ namespace UserInterface
 
         public   : virtual void paintGL() override;
 
+        /// just use nullptr if Function or NodalFunction is no needed
         public   : XYGLRender(
-                const std::vector<float (*)(float)> &functions,
-                QWidget *pwgt) noexcept;
+                const std::vector<Function> *functions,
+                const std::vector<NodalFunction> *nodalFunctions,
+                QWidget *pwgt) throw(std::runtime_error);
         public   :~XYGLRender();
 
         protected: QMenu *_contextMenu;
