@@ -44,16 +44,17 @@ int main(int argc, char *argv[])
     OpenCL::setupViennaCL();
 
     ///////////////////////////////////////////////////////////////////////////////////////
-/*    run_tests_all();
+//    run_tests_all();
 //    LogFile << "Tests done.";
 
     ///////////////////////////////////////////////////////////////////////////////////////
     std::chrono::steady_clock::time_point _t1 = std::chrono::steady_clock::now();
 
-    int size = 64;
+    int size = 128;
     RepresentativeVolumeElement _RVE(size);
-    _RVE.generateRandomField();
-    _RVE.applyGaussianFilterCL(32, 1.0f, 0.25f, 0.25f);
+    _RVE.generateRandomSpheres(100, 5, 10);
+//    _RVE.generateRandomField();
+//    _RVE.applyGaussianFilterCL(32, 1.0f, 0.25f, 0.25f);
 
     std::chrono::steady_clock::time_point _t2 = std::chrono::steady_clock::now();
     std::chrono::duration<double> time_span =
@@ -101,11 +102,11 @@ int main(int argc, char *argv[])
 
     ///////////////////////////////////////////////////////////////////////////////////////
 
-//    UserInterface::VolumeGLRenderRVE _renderRVE(&_RVE, NULL);
-//    _renderRVE.setBoundingBoxRepresentationSize(1e-3f);
-//    _renderRVE.setInfoString("");
-//    _renderRVE.resize(800,600);
-//    _renderRVE.show();
+    UserInterface::VolumeGLRenderRVE _renderRVE(&_RVE, NULL);
+    _renderRVE.setBoundingBoxRepresentationSize(1e-3f);
+    _renderRVE.setInfoString("");
+    _renderRVE.resize(800,600);
+    _renderRVE.show();
 
     ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -116,7 +117,7 @@ int main(int argc, char *argv[])
     _render.setInfoString("Info string\nLine 2");
     _render.resize(800,600);
     _render.show();
-    /////////////////////////////////////////////////////////////////////////////////////// */
+    ///////////////////////////////////////////////////////////////////////////////////////
 
     std::vector<UserInterface::Function> functions;
     functions.push_back(UserInterface::Function{"sin",[](float x)->float{return std::sin(x);}});
@@ -129,12 +130,12 @@ int main(int argc, char *argv[])
         array.nodes.push_back({i*0.01f, MathUtils::rand<float>(0,1)});
     nodalfunctions.push_back(array);
 
-    UserInterface::XYGLRender _render(
+    UserInterface::XYGLRender _render2D(
                 &functions,
                 &nodalfunctions,
                 NULL);
-    _render.resize(800,600);
-    _render.show();
+    _render2D.resize(800,600);
+    _render2D.show();
     ///////////////////////////////////////////////////////////////////////////////////////
     return UserInterface::UserInterfaceManager::instance().exec();
 }

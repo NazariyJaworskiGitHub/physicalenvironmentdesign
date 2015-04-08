@@ -28,6 +28,8 @@ void UserInterface::UserInterfaceManager::OCLSetupGUIFinish(int result)
         int _platform = _CLManagerSetupForm->getPlatformIndex();
         int _device = _CLManagerSetupForm->getDeviceIndex();
 
+        OpenCL::setupViennaCL();
+
         OpenCL::CLManager::instance().setCurrentPlatform(_platform);
         viennacl::ocl::switch_context(_platform);
         std::cout << "OpenCL Platform is switched to " << _platform << std::endl;

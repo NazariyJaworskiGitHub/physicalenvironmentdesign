@@ -8,6 +8,8 @@
 #include <FUNCTIONS/rand.h>
 #include "CLMANAGER/clmanager.h"
 
+#include "node.h"
+
 /// It is discretized RVE
 /// \warning for correct usage of OpenCL functionality, the _size
 /// should be equal to some power of two.
@@ -146,7 +148,8 @@ class RepresentativeVolumeElement
     }
 
     /// Generate normalized random field
-    ///  \todo move to device
+    /// \todo move to device
+    /// \todo make separated cleanup
     public : void generateRandomField() noexcept
     {
         memset(_data, 0, sizeof(float) * _size * _size * _size);
@@ -156,6 +159,39 @@ class RepresentativeVolumeElement
                     _data[(i * _size * _size) + (j * _size) + k] =
                             MathUtils::rand<float>(0.0, 1.0);
         memcpy(_cuttedData, _data, sizeof(float) * _size * _size * _size);
+    }
+
+    /// Generate random spheres
+    /// \todo move to device
+    /// \todo transition layer
+    public : void generateRandomSpheres(
+        const int sphereNum,
+        const int minRadius,
+        const int maxRadius) throw (std::logic_error)
+    {
+        if(sphereNum <= 0)
+            throw(std::runtime_error("generateRandomSpheres(): sphereNum <= 0"));
+        if(minRadius <= 0)
+            throw(std::runtime_error("generateRandomSpheres(): minRadius <= 0"));
+        if(maxRadius <= 0)
+            throw(std::runtime_error("generateRandomSpheres(): maxRadius <= 0"));
+        if(maxRadius < minRadius)
+            throw(std::runtime_error("generateRandomSpheres(): maxRadius < minRadius"));
+
+        for(int i=0; i<sphereNum; ++i)
+        {
+            MathUtils::Node<3,float> _sphereCenter(
+                        MathUtils::rand<int>(0, _size-1),
+                        MathUtils::rand<int>(0, _size-1),
+                        MathUtils::rand<int>(0, _size-1));
+            int _sphereRadius = MathUtils::rand<int>(minRadius, maxRadius);
+            for( long i = 0; i<_size; ++i)
+                for( long j = 0; j<_size; ++j)
+                    for( long k = 0; k<_size; ++k)
+                        if(_sphereCenter.distance(
+                                    MathUtils::Node<3,float>(k,j,i)) <= _sphereRadius)
+                            _data[(i * _size * _size) + (j * _size) + k] = 1.0;
+        }
     }
 
     /// Normalize data
@@ -212,7 +248,7 @@ class RepresentativeVolumeElement
             float ellipsoidScaleFactorY = 1.0,
             float ellipsoidScaleFactorZ = 1.0) throw (std::logic_error)
     {
-        std::cout << "applyGaussianFilterCL() call:" << std::endl;
+        std::cout << "applyGaussianFilter() call:" << std::endl;
         if(discreteRadius <= 0)
             throw(std::runtime_error("applyGaussianFilterCL(): radius <= 0"));
         if(ellipsoidScaleFactorX <= 0.0f || ellipsoidScaleFactorX > 1.0f)

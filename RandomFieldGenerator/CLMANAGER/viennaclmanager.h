@@ -10,7 +10,7 @@ namespace OpenCL
     /// Run before any ViennaCL usage;
     /// Use viennacl::ocl::switch_context() and viennacl::ocl::current_context().switch_device()
     /// after setup;
-    inline static void setupViennaCL() throw (std::runtime_error)
+    inline void setupViennaCL() throw (std::runtime_error)
     {
         static bool _doneSetup = false;
         if(!_doneSetup)
