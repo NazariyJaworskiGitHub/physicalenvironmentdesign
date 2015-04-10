@@ -52,9 +52,25 @@ int main(int argc, char *argv[])
 
     int size = 128;
     RepresentativeVolumeElement _RVE(size);
-    _RVE.generateRandomSpheres(100, 5, 10);
-//    _RVE.generateRandomField();
-//    _RVE.applyGaussianFilterCL(32, 1.0f, 0.25f, 0.25f);
+//    _RVE.generateOverlappingRandomEllipsoids(150, 32, 64, 0.0f, 1.0f, 0.1f, 0.1f);
+    _RVE.generateOverlappingRandomEllipsoids(5, 10, 30, 0.5f);
+//    _RVE.generateOverlappingRandomEllipsoidsBlured(5, 64, 128, 0.8f);
+
+//    _RVE.applyGaussianFilterCL(128);
+
+    _RVE.applyTwoCutMaskOutside(0.4f, 0.6f);
+//    _RVE.applyTwoCutMaskOutside(0.001f, 0.6f);
+
+    _RVE.cleanUnMaskedData();
+    _RVE.addRandomNoise();
+//    _RVE.scaleUnMasked(0.0f, 0.1f);
+
+//    _RVE.applyRelativeRandomNoise();
+
+    _RVE.cleanMask();
+//    _RVE.normalize();
+
+    _RVE.applyGaussianFilterCL(4);
 
     std::chrono::steady_clock::time_point _t2 = std::chrono::steady_clock::now();
     std::chrono::duration<double> time_span =
@@ -117,7 +133,7 @@ int main(int argc, char *argv[])
     _render.setInfoString("Info string\nLine 2");
     _render.resize(800,600);
     _render.show();
-    ///////////////////////////////////////////////////////////////////////////////////////
+/*    ///////////////////////////////////////////////////////////////////////////////////////
 
     std::vector<UserInterface::Function> functions;
     functions.push_back(UserInterface::Function{"sin",[](float x)->float{return std::sin(x);}});
@@ -136,7 +152,7 @@ int main(int argc, char *argv[])
                 NULL);
     _render2D.resize(800,600);
     _render2D.show();
-    ///////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////// */
     return UserInterface::UserInterfaceManager::instance().exec();
 }
 

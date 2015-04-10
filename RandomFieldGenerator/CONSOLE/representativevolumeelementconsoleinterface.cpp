@@ -34,10 +34,17 @@ void _EditRVECommand::applyGaussFltrRVE(
 {
     {
         std::stringstream _str;
-        _str << "genRndFldRVE " << _RVEName << "\n";
+        _str << "cleanRVE " << _RVEName << "\n";
         getConsole().writeToOutput(_str.str());
     }
-    getConsole().writeToOutput(_manager.genRndFldRVE(_RVEName));
+    getConsole().writeToOutput(_manager.cleanRVE(_RVEName));
+
+    {
+        std::stringstream _str;
+        _str << "addRndNoiseRVE " << _RVEName << "\n";
+        getConsole().writeToOutput(_str.str());
+    }
+    getConsole().writeToOutput(_manager.addRndNoiseRVE(_RVEName));
 
     {
         std::stringstream _str;
@@ -150,15 +157,38 @@ int RepresentativeVolumeElementConsoleInterface::_PrintRVECommand::executeConsol
     return 0;
 }
 
-std::string RepresentativeVolumeElementConsoleInterface::genRndFldRVE(
+std::string RepresentativeVolumeElementConsoleInterface::cleanRVE(
         const std::string &name) noexcept
 {
     auto _pos = RVEs.find(name);
     if(_pos == RVEs.end())
         return "Error: Representative Volume Element " + name + " doesn't exist.\n";
     else
-        _pos->second->generateRandomField();
-    return "Representative Volume Element " + name + " random field generation done.\n";
+        _pos->second->cleanData();
+    return "Representative Volume Element " + name + " cleared.\n";
+}
+
+int RepresentativeVolumeElementConsoleInterface::_cleanRVECommand::executeConsoleCommand(
+        const std::vector<std::string> &argv)
+{
+    if(argv.size() != 1)
+    {
+        getConsole().writeToOutput("Error: wrong number of arguments.\n");
+        return -1;
+    }
+    getConsole().writeToOutput(_manager.cleanRVE(argv[0]));
+    return 0;
+}
+
+std::string RepresentativeVolumeElementConsoleInterface::addRndNoiseRVE(
+        const std::string &name) noexcept
+{
+    auto _pos = RVEs.find(name);
+    if(_pos == RVEs.end())
+        return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+    else
+        _pos->second->addRandomNoise();
+    return "Representative Volume Element " + name + " random noise generation done.\n";
 }
 
 int RepresentativeVolumeElementConsoleInterface::_genRndFldRVECommand::executeConsoleCommand(
@@ -169,7 +199,7 @@ int RepresentativeVolumeElementConsoleInterface::_genRndFldRVECommand::executeCo
         getConsole().writeToOutput("Error: wrong number of arguments.\n");
         return -1;
     }
-    getConsole().writeToOutput(_manager.genRndFldRVE(argv[0]));
+    getConsole().writeToOutput(_manager.addRndNoiseRVE(argv[0]));
     return 0;
 }
 

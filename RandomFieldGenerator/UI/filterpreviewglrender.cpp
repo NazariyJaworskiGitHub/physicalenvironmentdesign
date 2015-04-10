@@ -25,7 +25,7 @@ void FilterPreviewGLRender::loadDataIntoTexture() throw(std::runtime_error)
 
     for(long i = 0; i<_size * _size * _size; ++i)
     {
-        int _val = RepresentativeVolumeElement::GaussianFilter(
+        int _val = RepresentativeVolumeElement::GaussianBlurFilter(
                     _parent->getFilterRadiusValue(),
                     i % _size % _size - _size / 2,
                     i / _size % _size - _size / 2,

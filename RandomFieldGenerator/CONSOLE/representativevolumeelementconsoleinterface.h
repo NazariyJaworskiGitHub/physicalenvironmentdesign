@@ -131,25 +131,45 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
 
     _EditRVECommand *_commandEditRVE = nullptr;
 
-    /// genRndFldRVE -------------------------------------------------------------------------
-    public : std::string genRndFldRVE(const std::string &name) noexcept;
+    /// cleanRVE -------------------------------------------------------------------------
+    public : std::string cleanRVE(const std::string &name) noexcept;
+    private: class _cleanRVECommand : public ConsoleCommand
+    {
+        private: RepresentativeVolumeElementConsoleInterface &_manager;
+        public: _cleanRVECommand(
+                RepresentativeVolumeElementConsoleInterface &manager, Console &console) :
+            ConsoleCommand(
+                "cleanRVE",
+                "cleanRVE <Name>\n"
+                "Clean RVE by set it elements to 0.\n"
+                "Arguments:\n"
+                " <Name> - the name of RVE in RAM memory.\n",
+                console),
+                _manager(manager){}
+        public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
+    } *_commandCleanRVE = nullptr;
+
+    /// addRndNoiseRVE -------------------------------------------------------------------------
+    public : std::string addRndNoiseRVE(const std::string &name) noexcept;
     private: class _genRndFldRVECommand : public ConsoleCommand
     {
         private: RepresentativeVolumeElementConsoleInterface &_manager;
         public: _genRndFldRVECommand(
                 RepresentativeVolumeElementConsoleInterface &manager, Console &console) :
             ConsoleCommand(
-                "genRndFldRVE",
-                "genRndFldRVE <Name>\n"
-                "Generate a normalized random field for given Representative Volume Element.\n"
+                "addRndNoiseRVE",
+                "addRndNoiseRVE <Name>\n"
+                "Add random noise to RVE elements that are not masked by RVE mask.\n"
+                "Note that RVE can be unnormalized after this call, "
+                "if it wasn't cleaned before.\n"
                 "Arguments:\n"
                 " <Name> - the name of RVE in RAM memory.\n",
                 console),
                 _manager(manager){}
         public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
-    } *_commandGenRndFldRVE = nullptr;
+    } *_commandAddRndNoiseRVE = nullptr;
 
-    /// genRndFldRVE -------------------------------------------------------------------------
+    /// applyGaussFltrRVE -------------------------------------------------------------------------
     public : std::string applyGaussFltrRVE(
             const std::string &name,
             int discreteRadius,
@@ -187,7 +207,8 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
         _commandDeleteRVE(new _DeleteRVECommand(*this, console)),
         _commandPrintRVE(new _PrintRVECommand(*this, console)),
         _commandEditRVE(new _EditRVECommand(*this, console)),
-        _commandGenRndFldRVE(new _genRndFldRVECommand(*this, console)),
+        _commandCleanRVE(new _cleanRVECommand(*this, console)),
+        _commandAddRndNoiseRVE(new _genRndFldRVECommand(*this, console)),
         _commAndapplyGaussFltrRVE(new _applyGaussFltrRVECommand(*this, console))
         {}
     public : ~RepresentativeVolumeElementConsoleInterface()
@@ -198,7 +219,8 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
         delete _commandDeleteRVE;
         delete _commandPrintRVE;
         delete _commandEditRVE;
-        delete _commandGenRndFldRVE;
+        delete _commandCleanRVE;
+        delete _commandAddRndNoiseRVE;
         delete _commAndapplyGaussFltrRVE;
     }
 };
