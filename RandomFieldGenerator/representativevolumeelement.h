@@ -61,15 +61,19 @@ class RepresentativeVolumeElement
     private : inline void _copyDataToCuttedData() noexcept {
         memcpy(_cuttedData, _data, sizeof(float) * _size * _size * _size);}
 
+    private : void _copyMaskedCuttedDataToData() noexcept;
+
     /// Add random noise to _data elements that are not masked by _mask
     /// (i.e. to elements, where _mask[i,j,k] == 0),
     /// note that _data can be unnormalized after this call, if _data wasn't cleaned before
     /// \todo move to device
     public : void addRandomNoise() noexcept;
 
-    /// Apply relative to unmasked data random noise
+    /// Apply relative to unmasked _data random noise
     /// (i.e. relative to elements, where _mask[i,j,k] == 0),
-    /// relative means that random deviations will be within min(_data) max(_data)
+    /// Note, that _data shold be normalized before this call, to get the correct rezult
+    /// Relative means that random deviations will be near current _data value,
+    /// higher value reduces deviations.
     /// \todo move to device
     public : void applyRelativeRandomNoise() noexcept;
 
@@ -97,114 +101,130 @@ class RepresentativeVolumeElement
             float fx, float fy, float fz) noexcept {
         return std::exp(-(x*x/fx/fx + y*y/fy/fy + z*z/fz/fz) / ((r/2.0) * (r/2.0)));}
 
-//    /// Apply Gaussian filter to previously generated random filed
-//    /// see (2002) Torguato - Random Heterogeneous Materials Microstructure
-//    ///                       and Macroscopic Properties
-//    /// data will hold normalized GRF after this call
-//    /// \todo it simple CPU usage for now, use GPU!
-//    /// \todo add ellipsoid rotation
-//    /// \todo fix borders calculations
-//    /// \todo X and Z are replaced
-//    public : void applyGaussianFilter(
-//            int discreteRadius,
-//            float ellipsoidScaleFactorX = 1.0,
-//            float ellipsoidScaleFactorY = 1.0,
-//            float ellipsoidScaleFactorZ = 1.0) throw (std::logic_error)
-//    {
-//        std::cout << "applyGaussianFilter() call:" << std::endl;
-//        if(discreteRadius <= 0)
-//            throw(std::runtime_error("applyGaussianFilterCL(): radius <= 0"));
-//        if(ellipsoidScaleFactorX <= 0.0f || ellipsoidScaleFactorX > 1.0f)
-//            throw(std::runtime_error("applyGaussianFilterCL(): ellipsoidScaleFactorX <= 0 or > 1"));
-//        if(ellipsoidScaleFactorY <= 0.0f || ellipsoidScaleFactorY > 1.0f)
-//            throw(std::runtime_error("applyGaussianFilterCL(): ellipsoidScaleFactorY <= 0 or > 1"));
-//        if(ellipsoidScaleFactorZ <= 0.0f || ellipsoidScaleFactorZ > 1.0f)
-//            throw(std::runtime_error("applyGaussianFilterCL(): ellipsoidScaleFactorZ <= 0 or > 1"));
+    /// Apply Gaussian filter to previously generated random filed
+    /// see (2002) Torguato - Random Heterogeneous Materials Microstructure
+    ///                       and Macroscopic Properties
+    /// data will hold normalized GRF after this call
+    /// \todo it simple CPU usage for now, use GPU!
+    /// \todo add ellipsoid rotation
+    /// \todo fix borders calculations
+    /// \todo X and Z are replaced
+    public : void applyGaussianFilter(
+            int discreteRadius,
+            float ellipsoidScaleFactorX = 1.0,
+            float ellipsoidScaleFactorY = 1.0,
+            float ellipsoidScaleFactorZ = 1.0) throw (std::logic_error)
+    {
+        std::cout << "applyGaussianFilter() call:" << std::endl;
+        if(discreteRadius <= 0)
+            throw(std::runtime_error("applyGaussianFilter(): radius <= 0"));
+        if(ellipsoidScaleFactorX <= 0.0f || ellipsoidScaleFactorX > 1.0f)
+            throw(std::runtime_error("applyGaussianFilter(): ellipsoidScaleFactorX <= 0 or > 1"));
+        if(ellipsoidScaleFactorY <= 0.0f || ellipsoidScaleFactorY > 1.0f)
+            throw(std::runtime_error("applyGaussianFilter(): ellipsoidScaleFactorY <= 0 or > 1"));
+        if(ellipsoidScaleFactorZ <= 0.0f || ellipsoidScaleFactorZ > 1.0f)
+            throw(std::runtime_error("applyGaussianFilter(): ellipsoidScaleFactorZ <= 0 or > 1"));
 
-//        _discreteRadius = discreteRadius;
+        _discreteRadius = discreteRadius;
 
-//        std::cout << "  Applying filter, phase 1...";
-//        memset(_cuttedData, 0, sizeof(float) * _size * _size * _size);
-//        for( long i = 0; i < _size; ++i)
-//        {
-//            std::cout
-//                    << "\b\b\b\b"
-//                    << (int)(i * 100.0 / (_size-1))
-//                    << "%";
-//            for( long j = 0; j < _size; ++j)
-//                for( long k = 0; k < _size; ++k)
-//                    for( int p = -_discreteRadius; p <= _discreteRadius; ++p)
-//                    {
-//                        _cuttedData[(i * _size * _size) + (j * _size) + k] +=
-//                                _data[(((i+p)&(_size-1)) * _size * _size) +
-//                                    (j * _size) + k] *
-//                                GaussianFilter(
-//                                    _discreteRadius,
-//                                    p, 0, 0,
-//                                    ellipsoidScaleFactorZ,
-//                                    ellipsoidScaleFactorY,
-//                                    ellipsoidScaleFactorX);
-//                    }
-//        }
-//        memcpy(_data, _cuttedData, sizeof(float) * _size * _size * _size);
-//        std::cout << " Done" << std::endl;
+        float *_dataTmpStorage = new float[_size * _size * _size];
+        memcpy(_dataTmpStorage,_data,sizeof(float) * _size * _size * _size);
+        for( long i = 0; i<_size; ++i)
+            for( long j = 0; j<_size; ++j)
+                for( long k = 0; k<_size; ++k)
+                    if(_mask[(i * _size * _size) + (j * _size) + k] != 0)
+                        _data[(i * _size * _size) + (j * _size) + k] =
+                                MathUtils::rand<float>(0.0, 1.0);
 
-//        std::cout << "                ...phase 2...";
-//        memset(_cuttedData, 0, sizeof(float) * _size * _size * _size);
-//        for( long i = 0; i < _size; ++i)
-//        {
-//            std::cout
-//                    << "\b\b\b\b"
-//                    << (int)(i * 100.0 / (_size-1))
-//                    << "%";
-//            for( long j = 0; j < _size; ++j)
-//                for( long k = 0; k < _size; ++k)
-//                    for( int q = -_discreteRadius; q <= _discreteRadius; ++q)
-//                    {
-//                        _cuttedData[(i * _size * _size) + (j * _size) + k] +=
-//                                _data[(i * _size * _size) +
-//                                    (((j+q)&(_size-1)) * _size) + k] *
-//                                GaussianFilter(
-//                                    _discreteRadius,
-//                                    0, q, 0,
-//                                    ellipsoidScaleFactorZ,
-//                                    ellipsoidScaleFactorY,
-//                                    ellipsoidScaleFactorX);
-//                    }
-//        }
-//        memcpy(_data, _cuttedData, sizeof(float) * _size * _size * _size);
-//        std::cout << " Done" << std::endl;
+        std::cout << "  Applying filter, phase 1...\n";
+        memset(_cuttedData, 0, sizeof(float) * _size * _size * _size);
+        for( long i = 0; i < _size; ++i)
+        {
+            std::cout
+                    << "\b\b\b\b"
+                    << (int)(i * 100.0 / (_size-1))
+                    << "%";
+            for( long j = 0; j < _size; ++j)
+                for( long k = 0; k < _size; ++k)
+                    for( int p = -_discreteRadius; p <= _discreteRadius; ++p)
+                    {
+                        _cuttedData[(i * _size * _size) + (j * _size) + k] +=
+                                _data[(((i+p)&(_size-1)) * _size * _size) +
+                                    (j * _size) + k] *
+                                GaussianBlurFilter(
+                                    _discreteRadius,
+                                    p, 0, 0,
+                                    ellipsoidScaleFactorZ,
+                                    ellipsoidScaleFactorY,
+                                    ellipsoidScaleFactorX);
+                    }
+        }
+        memcpy(_data, _cuttedData, sizeof(float) * _size * _size * _size);
+        std::cout << " Done" << std::endl;
 
-//        std::cout << "                ...phase 3...";
-//        memset(_cuttedData, 0, sizeof(float) * _size * _size * _size);
-//        for( long i = 0; i < _size; ++i)
-//        {
-//            std::cout
-//                    << "\b\b\b\b"
-//                    << (int)(i * 100.0 / (_size-1))
-//                    << "%";
-//            for( long j = 0; j < _size; ++j)
-//                for( long k = 0; k < _size; ++k)
-//                    for( int r = -_discreteRadius; r <= _discreteRadius; ++r)
-//                    {
-//                        _cuttedData[(i * _size * _size) + (j * _size) + k] +=
-//                                _data[(i * _size * _size) + (j * _size) +
-//                                    ((k+r)&(_size-1))] *
-//                                GaussianFilter(
-//                                    _discreteRadius,
-//                                    0, 0, r,
-//                                    ellipsoidScaleFactorZ,
-//                                    ellipsoidScaleFactorY,
-//                                    ellipsoidScaleFactorX);
-//                    }
-//        }
-//        memcpy(_data, _cuttedData, sizeof(float) * _size * _size * _size);
-//        std::cout << " Done" << std::endl;
+        std::cout << "                ...phase 2...\n";
+        memset(_cuttedData, 0, sizeof(float) * _size * _size * _size);
+        for( long i = 0; i < _size; ++i)
+        {
+            std::cout
+                    << "\b\b\b\b"
+                    << (int)(i * 100.0 / (_size-1))
+                    << "%";
+            for( long j = 0; j < _size; ++j)
+                for( long k = 0; k < _size; ++k)
+                    for( int q = -_discreteRadius; q <= _discreteRadius; ++q)
+                    {
+                        _cuttedData[(i * _size * _size) + (j * _size) + k] +=
+                                _data[(i * _size * _size) +
+                                    (((j+q)&(_size-1)) * _size) + k] *
+                                GaussianBlurFilter(
+                                    _discreteRadius,
+                                    0, q, 0,
+                                    ellipsoidScaleFactorZ,
+                                    ellipsoidScaleFactorY,
+                                    ellipsoidScaleFactorX);
+                    }
+        }
+        memcpy(_data, _cuttedData, sizeof(float) * _size * _size * _size);
+        std::cout << " Done" << std::endl;
 
-//        normalizeField();
+        std::cout << "                ...phase 3...\n";
+        memset(_cuttedData, 0, sizeof(float) * _size * _size * _size);
+        for( long i = 0; i < _size; ++i)
+        {
+            std::cout
+                    << "\b\b\b\b"
+                    << (int)(i * 100.0 / (_size-1))
+                    << "%";
+            for( long j = 0; j < _size; ++j)
+                for( long k = 0; k < _size; ++k)
+                    for( int r = -_discreteRadius; r <= _discreteRadius; ++r)
+                    {
+                        _cuttedData[(i * _size * _size) + (j * _size) + k] +=
+                                _data[(i * _size * _size) + (j * _size) +
+                                    ((k+r)&(_size-1))] *
+                                GaussianBlurFilter(
+                                    _discreteRadius,
+                                    0, 0, r,
+                                    ellipsoidScaleFactorZ,
+                                    ellipsoidScaleFactorY,
+                                    ellipsoidScaleFactorX);
+                    }
+        }
+        memcpy(_data, _cuttedData, sizeof(float) * _size * _size * _size);
+        std::cout << " Done" << std::endl;
 
-//        std::cout << " applyGaussianFilter() Done" << std::endl;
-//    }
+        normalize();
+
+        for( long i = 0; i<_size; ++i)
+            for( long j = 0; j<_size; ++j)
+                for( long k = 0; k<_size; ++k)
+                    if(_mask[(i * _size * _size) + (j * _size) + k] != 0)
+                        _data[(i * _size * _size) + (j * _size) + k] =
+                                _dataTmpStorage[(i * _size * _size) + (j * _size) + k];
+        delete [] _dataTmpStorage;
+        std::cout << " applyGaussianFilter() Done" << std::endl;
+    }
 
     private: inline void _CLGaussianBlurFilterPhase(
             cl::Buffer &_dataBuffer,
@@ -292,7 +312,7 @@ class RepresentativeVolumeElement
             const float ellipsoidScaleFactorY = 1.0f,
             const float ellipsoidScaleFactorZ = 1.0f) throw (std::logic_error);
 
-    public : void generateOverlappingRandomEllipsoidsBlured(
+    public : void generateOverlappingRandomEllipsoidsSmoothed(
             const int ellipsoidNum,
             const int minRadius,
             const int maxRadius,

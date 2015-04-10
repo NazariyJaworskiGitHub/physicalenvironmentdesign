@@ -50,27 +50,21 @@ int main(int argc, char *argv[])
     ///////////////////////////////////////////////////////////////////////////////////////
     std::chrono::steady_clock::time_point _t1 = std::chrono::steady_clock::now();
 
+    /// \todo RVE mask by <0
     int size = 128;
     RepresentativeVolumeElement _RVE(size);
 //    _RVE.generateOverlappingRandomEllipsoids(150, 32, 64, 0.0f, 1.0f, 0.1f, 0.1f);
-    _RVE.generateOverlappingRandomEllipsoids(5, 10, 30, 0.5f);
-//    _RVE.generateOverlappingRandomEllipsoidsBlured(5, 64, 128, 0.8f);
+    _RVE.generateOverlappingRandomEllipsoids(150, 16, 32, 0.5f, 1.0f, 0.5f, 0.5f);
+//    _RVE.generateOverlappingRandomEllipsoidsSmoothed(15, 16, 32, 0.25f);
 
-//    _RVE.applyGaussianFilterCL(128);
-
-    _RVE.applyTwoCutMaskOutside(0.4f, 0.6f);
-//    _RVE.applyTwoCutMaskOutside(0.001f, 0.6f);
+    _RVE.applyTwoCutMaskOutside(0.001f, 0.999f);
 
     _RVE.cleanUnMaskedData();
     _RVE.addRandomNoise();
-//    _RVE.scaleUnMasked(0.0f, 0.1f);
 
 //    _RVE.applyRelativeRandomNoise();
 
-    _RVE.cleanMask();
-//    _RVE.normalize();
-
-    _RVE.applyGaussianFilterCL(4);
+    _RVE.applyGaussianFilter(5);
 
     std::chrono::steady_clock::time_point _t2 = std::chrono::steady_clock::now();
     std::chrono::duration<double> time_span =
@@ -96,15 +90,15 @@ int main(int argc, char *argv[])
     Simulation::assembleSiffnessMatrix(
                 1e-3f, _RVE.getSize(), _RVE.getData(), 237.0f, 1500.0f, 20.0f, 1e6f,
                 cpu_sparse_matrix, cpu_loads);
-//    Simulation::assembleSiffnessMatrix(
-//                1.0f, _RVE.getSize(), _RVE.getData(), 1.0f, 1.0f, 20.0f, 1.0f,
-//                cpu_sparse_matrix, cpu_loads);
+    //    Simulation::assembleSiffnessMatrix(
+    //                1.0f, _RVE.getSize(), _RVE.getData(), 1.0f, 1.0f, 20.0f, 1.0f,
+    //                cpu_sparse_matrix, cpu_loads);
 
     viennacl::copy(cpu_sparse_matrix, _K);
     viennacl::copy(cpu_loads.begin(), cpu_loads.end(), _f.begin());
 
     _u = viennacl::linalg::solve(_K, _f, viennacl::linalg::cg_tag(1e-4, 1000));
-//    _u = viennacl::linalg::solve(_K, _f, viennacl::linalg::bicgstab_tag());
+    //    _u = viennacl::linalg::solve(_K, _f, viennacl::linalg::bicgstab_tag());
 
     viennacl::copy(_u.begin(), _u.end(), _RVE.getCuttedData());
 
@@ -126,33 +120,33 @@ int main(int argc, char *argv[])
 
     ///////////////////////////////////////////////////////////////////////////////////////
 
-//    QLocale::setDefault(QLocale::C);
+  //    QLocale::setDefault(QLocale::C);
     UserInterface::VolumeGLRender _render(
                 _RVE.getSize(), _RVE.getData(), _RVE.getCuttedData(), NULL);
     _render.setBoundingBoxRepresentationSize(1e-3f);
     _render.setInfoString("Info string\nLine 2");
     _render.resize(800,600);
     _render.show();
-/*    ///////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////
 
-    std::vector<UserInterface::Function> functions;
-    functions.push_back(UserInterface::Function{"sin",[](float x)->float{return std::sin(x);}});
-    functions.push_back(UserInterface::Function{"cos",[](float x)->float{return std::cos(x);}});
-    functions.push_back(UserInterface::Function{"x*x",[](float x)->float{return x*x;}});
+//    std::vector<UserInterface::Function> functions;
+//    functions.push_back(UserInterface::Function{"sin",[](float x)->float{return std::sin(x);}});
+//    functions.push_back(UserInterface::Function{"cos",[](float x)->float{return std::cos(x);}});
+//    functions.push_back(UserInterface::Function{"x*x",[](float x)->float{return x*x;}});
 
-    std::vector<UserInterface::NodalFunction> nodalfunctions;
-    UserInterface::NodalFunction array{"array"};
-    for(int i=0; i<100; ++i)
-        array.nodes.push_back({i*0.01f, MathUtils::rand<float>(0,1)});
-    nodalfunctions.push_back(array);
+//    std::vector<UserInterface::NodalFunction> nodalfunctions;
+//    UserInterface::NodalFunction array{"array"};
+//    for(int i=0; i<100; ++i)
+//        array.nodes.push_back({i*0.01f, MathUtils::rand<float>(0,1)});
+//    nodalfunctions.push_back(array);
 
-    UserInterface::XYGLRender _render2D(
-                &functions,
-                &nodalfunctions,
-                NULL);
-    _render2D.resize(800,600);
-    _render2D.show();
-    /////////////////////////////////////////////////////////////////////////////////////// */
+//    UserInterface::XYGLRender _render2D(
+//                &functions,
+//                &nodalfunctions,
+//                NULL);
+//    _render2D.resize(800,600);
+//    _render2D.show();
+//    ///////////////////////////////////////////////////////////////////////////////////////
     return UserInterface::UserInterfaceManager::instance().exec();
 }
 

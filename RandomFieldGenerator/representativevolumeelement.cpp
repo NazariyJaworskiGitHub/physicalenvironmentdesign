@@ -138,6 +138,16 @@ void RepresentativeVolumeElement::cleanUnMaskedData() noexcept
                     _data[(i * _size * _size) + (j * _size) + k] = 0;
 }
 
+void RepresentativeVolumeElement::_copyMaskedCuttedDataToData() noexcept
+{
+    for( long i = 0; i<_size; ++i)
+        for( long j = 0; j<_size; ++j)
+            for( long k = 0; k<_size; ++k)
+                if(_mask[(i * _size * _size) + (j * _size) + k] == 0)
+                    _data[(i * _size * _size) + (j * _size) + k] =
+                            _cuttedData[(i * _size * _size) + (j * _size) + k];
+}
+
 void RepresentativeVolumeElement::addRandomNoise() noexcept
 {
     for( long i = 0; i<_size; ++i)
@@ -150,35 +160,43 @@ void RepresentativeVolumeElement::addRandomNoise() noexcept
 
 void RepresentativeVolumeElement::applyRelativeRandomNoise() noexcept
 {
-    bool isFirstFound = false;
-    float _min = 0;
-    float _max = 0;
+//    bool isFirstFound = false;
+//    float _min = 0;
+//    float _max = 0;
 
-    for( long i = 0; i < _size; ++i)
-        for( long j = 0; j < _size; ++j)
-            for( long k = 0; k < _size; ++k)
-                if(_mask[(i * _size * _size) + (j * _size) + k] == 0)
-                {
-                    if(!isFirstFound)
-                    {
-                       _min = _max = _data[(i * _size * _size) + (j * _size) + k];
-                       isFirstFound = true;
-                    }
-                    else
-                    {
-                        if(_data[(i * _size * _size) + (j * _size) + k] < _min)
-                            _min = _data[(i * _size * _size) + (j * _size) + k];
-                        if(_data[(i * _size * _size) + (j * _size) + k] > _max)
-                            _max = _data[(i * _size * _size) + (j * _size) + k];
-                    }
-                }
+//    for( long i = 0; i < _size; ++i)
+//        for( long j = 0; j < _size; ++j)
+//            for( long k = 0; k < _size; ++k)
+//                if(_mask[(i * _size * _size) + (j * _size) + k] == 0)
+//                {
+//                    if(!isFirstFound)
+//                    {
+//                       _min = _max = _data[(i * _size * _size) + (j * _size) + k];
+//                       isFirstFound = true;
+//                    }
+//                    else
+//                    {
+//                        if(_data[(i * _size * _size) + (j * _size) + k] < _min)
+//                            _min = _data[(i * _size * _size) + (j * _size) + k];
+//                        if(_data[(i * _size * _size) + (j * _size) + k] > _max)
+//                            _max = _data[(i * _size * _size) + (j * _size) + k];
+//                    }
+//                }
 
     for( long i = 0; i<_size; ++i)
         for( long j = 0; j<_size; ++j)
             for( long k = 0; k<_size; ++k)
                 if(_mask[(i * _size * _size) + (j * _size) + k] == 0)
-                    _data[(i * _size * _size) + (j * _size) + k] +=
-                            MathUtils::rand<float>(_min, _max);
+                {
+                    float &_val = _data[(i * _size * _size) + (j * _size) + k];
+                    float _min = 0;
+                    if(1.0f - _val >= 0.0f)
+                        _min = _val;
+//                    float _max = 1.0f;
+//                    if(_val*2.0f<1.0f)
+//                        _max = _val*2.0f;
+                    _val = MathUtils::rand<float>(_min, 1.0f);
+                }
 }
 
 /// \todo refactor find min and max
@@ -508,42 +526,37 @@ void RepresentativeVolumeElement::generateOverlappingRandomEllipsoids(
                     MathUtils::rand<int>(0, _size-1),
                     MathUtils::rand<int>(0, _size-1));
 
-        float _sphereRadius = MathUtils::rand<float>(minRadius, maxRadius);
 
-//        float _angleX = MathUtils::rand<float>(0.0f, 90.0f);
-//        float _angleY = MathUtils::rand<float>(0.0f, 90.0f);
-//        float _angleZ = MathUtils::rand<float>(0.0f, 90.0f);
+        float _sphereRadius = MathUtils::rand<float>(minRadius, maxRadius);
 
         for( long i = 0; i<_size; ++i)
             for( long j = 0; j<_size; ++j)
                 for( long k = 0; k<_size; ++k)
                     if(_mask[(i * _size * _size) + (j * _size) + k] == 0)
                     {
-                        float _curRadius = (k-_sphereCenter[0])*(k-_sphereCenter[0])/
-                                ellipsoidScaleFactorX/ellipsoidScaleFactorX +
-                                (j-_sphereCenter[1])*(j-_sphereCenter[1])/
-                                ellipsoidScaleFactorY/ellipsoidScaleFactorY +
-                                (i-_sphereCenter[2])*(i-_sphereCenter[2])/
-                                ellipsoidScaleFactorZ/ellipsoidScaleFactorZ;
+                        float _kk = (k-_sphereCenter[0])*(k-_sphereCenter[0]);
+                        if((k-_sphereCenter[0]+_size)*(k-_sphereCenter[0]+_size) < _kk)
+                            _kk = (k-_sphereCenter[0]+_size)*(k-_sphereCenter[0]+_size);
+                        else if ((k-_sphereCenter[0]-_size)*(k-_sphereCenter[0]-_size) < _kk)
+                            _kk = (k-_sphereCenter[0]-_size)*(k-_sphereCenter[0]-_size);
 
-//                        float _curRadius =
-//                                (((k-_sphereCenter[0]) < (k-_size+1-_sphereCenter[0])) ?
-//                                    ((k-_sphereCenter[0])*(k-_sphereCenter[0])) :
-//                            ((k-_size+1-_sphereCenter[0])*(k-_size+1-_sphereCenter[0])))/
-//                          ellipsoidScaleFactorX/ellipsoidScaleFactorX +
+                        float _jj = (j-_sphereCenter[1])*(j-_sphereCenter[1]);
+                        if((j-_sphereCenter[1]+_size)*(j-_sphereCenter[1]+_size) < _jj)
+                            _jj = (j-_sphereCenter[1]+_size)*(j-_sphereCenter[1]+_size);
+                        else if ((j-_sphereCenter[1]-_size)*(j-_sphereCenter[1]-_size) < _jj)
+                            _jj = (j-_sphereCenter[1]-_size)*(j-_sphereCenter[1]-_size);
 
-//                          (((j-_sphereCenter[1]) > (j-_size+1-_sphereCenter[1])) ?
-//                          ((j-_sphereCenter[1])*(j-_sphereCenter[1])) :
-//                          ((j-_size+1-_sphereCenter[1])*(j-_size+1-_sphereCenter[1])))/
-//                          ellipsoidScaleFactorY/ellipsoidScaleFactorY +
+                        float _ii = (i-_sphereCenter[2])*(i-_sphereCenter[2]);
+                        if((i-_sphereCenter[2]+_size)*(i-_sphereCenter[2]+_size) < _ii)
+                            _ii = (i-_sphereCenter[2]+_size)*(i-_sphereCenter[2]+_size);
+                        else if ((i-_sphereCenter[2]-_size)*(i-_sphereCenter[2]-_size) < _ii)
+                            _ii = (i-_sphereCenter[2]-_size)*(i-_sphereCenter[2]-_size);
 
-//                          (((i-_sphereCenter[2]) > (i-_size+1-_sphereCenter[2])) ?
-//                          ((i-_sphereCenter[2])*(i-_sphereCenter[2])) :
-//                          ((i-_size+1-_sphereCenter[2])*(i-_size+1-_sphereCenter[2])))/
-//                          ellipsoidScaleFactorZ/ellipsoidScaleFactorZ;
+                        float _curRadius = _kk/ellipsoidScaleFactorX/ellipsoidScaleFactorX +
+                                _jj/ellipsoidScaleFactorY/ellipsoidScaleFactorY +
+                                _ii/ellipsoidScaleFactorZ/ellipsoidScaleFactorZ;
 
-//                        float _curRadius =
-//                                (k-_size+1-_sphereCenter[0])*(k-_size+1-_sphereCenter[0])/
+//                        float _curRadius = (k-_sphereCenter[0])*(k-_sphereCenter[0])/
 //                                ellipsoidScaleFactorX/ellipsoidScaleFactorX +
 //                                (j-_sphereCenter[1])*(j-_sphereCenter[1])/
 //                                ellipsoidScaleFactorY/ellipsoidScaleFactorY +
@@ -555,13 +568,14 @@ void RepresentativeVolumeElement::generateOverlappingRandomEllipsoids(
                             _data[(i * _size * _size) + (j * _size) + k] = 1.0f;
                         else if(_curRadius <= _sphereRadius*_sphereRadius &&
                                 _curRadius > _sphereRadius*(1.0f-transitionLayerSize)*
-                                _sphereRadius*(1.0f-transitionLayerSize))
+                                _sphereRadius*(1.0f-transitionLayerSize)&&
+                                _data[(i * _size * _size) + (j * _size) + k] < 0.5f)
                             _data[(i * _size * _size) + (j * _size) + k] = 0.5f;
                     }
     }
 }
 
-void RepresentativeVolumeElement::generateOverlappingRandomEllipsoidsBlured(
+void RepresentativeVolumeElement::generateOverlappingRandomEllipsoidsSmoothed(
         const int ellipsoidNum,
         const int minRadius,
         const int maxRadius,
@@ -606,12 +620,35 @@ void RepresentativeVolumeElement::generateOverlappingRandomEllipsoidsBlured(
                 for( long k = 0; k<_size; ++k)
                     if(_mask[(i * _size * _size) + (j * _size) + k] == 0)
                     {
-                        float _curRadius = (k-_sphereCenter[0])*(k-_sphereCenter[0])/
-                                ellipsoidScaleFactorX/ellipsoidScaleFactorX +
-                                (j-_sphereCenter[1])*(j-_sphereCenter[1])/
-                                ellipsoidScaleFactorY/ellipsoidScaleFactorY +
-                                (i-_sphereCenter[2])*(i-_sphereCenter[2])/
-                                ellipsoidScaleFactorZ/ellipsoidScaleFactorZ;
+                        float _kk = (k-_sphereCenter[0])*(k-_sphereCenter[0]);
+                        if((k-_sphereCenter[0]+_size)*(k-_sphereCenter[0]+_size) < _kk)
+                            _kk = (k-_sphereCenter[0]+_size)*(k-_sphereCenter[0]+_size);
+                        else if ((k-_sphereCenter[0]-_size)*(k-_sphereCenter[0]-_size) < _kk)
+                            _kk = (k-_sphereCenter[0]-_size)*(k-_sphereCenter[0]-_size);
+
+                        float _jj = (j-_sphereCenter[1])*(j-_sphereCenter[1]);
+                        if((j-_sphereCenter[1]+_size)*(j-_sphereCenter[1]+_size) < _jj)
+                            _jj = (j-_sphereCenter[1]+_size)*(j-_sphereCenter[1]+_size);
+                        else if ((j-_sphereCenter[1]-_size)*(j-_sphereCenter[1]-_size) < _jj)
+                            _jj = (j-_sphereCenter[1]-_size)*(j-_sphereCenter[1]-_size);
+
+                        float _ii = (i-_sphereCenter[2])*(i-_sphereCenter[2]);
+                        if((i-_sphereCenter[2]+_size)*(i-_sphereCenter[2]+_size) < _ii)
+                            _ii = (i-_sphereCenter[2]+_size)*(i-_sphereCenter[2]+_size);
+                        else if ((i-_sphereCenter[2]-_size)*(i-_sphereCenter[2]-_size) < _ii)
+                            _ii = (i-_sphereCenter[2]-_size)*(i-_sphereCenter[2]-_size);
+
+                        float _curRadius = _kk/ellipsoidScaleFactorX/ellipsoidScaleFactorX +
+                                _jj/ellipsoidScaleFactorY/ellipsoidScaleFactorY +
+                                _ii/ellipsoidScaleFactorZ/ellipsoidScaleFactorZ;
+
+//                        float _curRadius = (k-_sphereCenter[0])*(k-_sphereCenter[0])/
+//                                ellipsoidScaleFactorX/ellipsoidScaleFactorX +
+//                                (j-_sphereCenter[1])*(j-_sphereCenter[1])/
+//                                ellipsoidScaleFactorY/ellipsoidScaleFactorY +
+//                                (i-_sphereCenter[2])*(i-_sphereCenter[2])/
+//                                ellipsoidScaleFactorZ/ellipsoidScaleFactorZ;
+
                         if( _curRadius <= _sphereRadius*(1.0f-transitionLayerSize)*
                                 _sphereRadius*(1.0f-transitionLayerSize))
                             _data[(i * _size * _size) + (j * _size) + k] = 1.0f;
@@ -619,11 +656,10 @@ void RepresentativeVolumeElement::generateOverlappingRandomEllipsoidsBlured(
                                 _curRadius > _sphereRadius*(1.0f-transitionLayerSize)*
                                 _sphereRadius*(1.0f-transitionLayerSize))
                         {
-                            float _val = (_sphereRadius*_sphereRadius - _curRadius)/
-                                    (_sphereRadius*_sphereRadius) * transitionLayerSize;
+                            float _val = (_sphereRadius - std::sqrt(_curRadius))/
+                                    _sphereRadius / transitionLayerSize;
                             if(_data[(i * _size * _size) + (j * _size) + k] < _val)
                             _data[(i * _size * _size) + (j * _size) + k] = _val;
-
                         }
                     }
     }
