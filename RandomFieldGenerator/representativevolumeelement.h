@@ -18,8 +18,8 @@ class RepresentativeVolumeElement
 {
     private: int _size;
     public : int getSize() const noexcept {return _size;}
+    /// mask is _data < 0;
     private: float * _data = nullptr;
-    private: float * _mask = nullptr;
     private: float * _cuttedData = nullptr; /// \todo
     private: int _discreteRadius = 1; /// \todo logic usage?
     public : float * getData() noexcept {return _data;}
@@ -27,7 +27,6 @@ class RepresentativeVolumeElement
     public : float * getCuttedData() noexcept {return _cuttedData;}
     public : const float * getCuttedData() const noexcept {return _cuttedData;}
     public : int getDiscreteRadius() const noexcept {return _discreteRadius;}
-    public : const float * getMask() const noexcept {return _mask;}
 
     private: float _representationSize = 1.0f;
     public : float getRepresentationSize() const noexcept {return _representationSize;}
@@ -51,31 +50,37 @@ class RepresentativeVolumeElement
         memset(_data, 0, sizeof(float) * _size * _size * _size);}
 
     /// Clean masked _data storage, by set it elements to 0
-    /// (i.e _data elements, where _mask[i,j,k] == 0)
+    /// (i.e _data elements >= 0)
     public : void cleanUnMaskedData() noexcept;
 
-    /// Clean _mask storage, by set it elements to 0
-    public : inline void cleanMask() noexcept {
-        memset(_mask, 0, sizeof(float) * _size * _size * _size);}
+    /// Clean mask
+    /// (set all _data elements < 0 equal to -(_data elements)
+    public : void cleanMask() noexcept;
 
     private : inline void _copyDataToCuttedData() noexcept {
         memcpy(_cuttedData, _data, sizeof(float) * _size * _size * _size);}
 
     private : void _copyMaskedCuttedDataToData() noexcept;
 
-    /// Add random noise to _data elements that are not masked by _mask
-    /// (i.e. to elements, where _mask[i,j,k] == 0),
+    /// Add random noise to _data elements that are not masked by_mask
+    /// (i.e. to _data elements >= 0),
     /// note that _data can be unnormalized after this call, if _data wasn't cleaned before
     /// \todo move to device
     public : void addRandomNoise() noexcept;
 
     /// Apply relative to unmasked _data random noise
-    /// (i.e. relative to elements, where _mask[i,j,k] == 0),
+    /// (i.e. relative to _data elements >= 0),
     /// Note, that _data shold be normalized before this call, to get the correct rezult
     /// Relative means that random deviations will be near current _data value,
-    /// higher value reduces deviations.
+    /// high and small values reduce deviations. (value power function is used).
+    /// deviationCoefficient - smaller coefficient increases deviations.
+    /// Coefficient should be inside [0.0f, 1.0f].
     /// \todo move to device
-    public : void applyRelativeRandomNoise() noexcept;
+    public : void applyRelativeRandomNoise(
+            const float deviationCoefficient = 1.0f) throw (std::logic_error);
+
+    /// Find min and max unmasked _data elements values (unmasked i.e >=0)
+    public : void findUnMaskedMinAndMax(float &min, float &max) noexcept;
 
     /// Scale unmasked _data to range levelA <= _data[i,j,k] <= levelB;
     /// 0 <= levelA < levelB <= 1.0f
@@ -85,12 +90,10 @@ class RepresentativeVolumeElement
 
     /// Normalize all data
     /// \todo move to device
-    /// \todo cout
     public : void normalize() noexcept;
 
     /// Normalize unmsked data (i.e. elements, where _mask[i,j,k] == 0)
     /// \todo move to device
-    /// \todo cout
     public : void normalizeUnMasked() noexcept;
 
     /// Gaussian blur filter function, for external usage only
@@ -109,122 +112,12 @@ class RepresentativeVolumeElement
     /// \todo add ellipsoid rotation
     /// \todo fix borders calculations
     /// \todo X and Z are replaced
+    /// \todo cout
     public : void applyGaussianFilter(
             int discreteRadius,
             float ellipsoidScaleFactorX = 1.0,
             float ellipsoidScaleFactorY = 1.0,
-            float ellipsoidScaleFactorZ = 1.0) throw (std::logic_error)
-    {
-        std::cout << "applyGaussianFilter() call:" << std::endl;
-        if(discreteRadius <= 0)
-            throw(std::runtime_error("applyGaussianFilter(): radius <= 0"));
-        if(ellipsoidScaleFactorX <= 0.0f || ellipsoidScaleFactorX > 1.0f)
-            throw(std::runtime_error("applyGaussianFilter(): ellipsoidScaleFactorX <= 0 or > 1"));
-        if(ellipsoidScaleFactorY <= 0.0f || ellipsoidScaleFactorY > 1.0f)
-            throw(std::runtime_error("applyGaussianFilter(): ellipsoidScaleFactorY <= 0 or > 1"));
-        if(ellipsoidScaleFactorZ <= 0.0f || ellipsoidScaleFactorZ > 1.0f)
-            throw(std::runtime_error("applyGaussianFilter(): ellipsoidScaleFactorZ <= 0 or > 1"));
-
-        _discreteRadius = discreteRadius;
-
-        float *_dataTmpStorage = new float[_size * _size * _size];
-        memcpy(_dataTmpStorage,_data,sizeof(float) * _size * _size * _size);
-        for( long i = 0; i<_size; ++i)
-            for( long j = 0; j<_size; ++j)
-                for( long k = 0; k<_size; ++k)
-                    if(_mask[(i * _size * _size) + (j * _size) + k] != 0)
-                        _data[(i * _size * _size) + (j * _size) + k] =
-                                MathUtils::rand<float>(0.0, 1.0);
-
-        std::cout << "  Applying filter, phase 1...\n";
-        memset(_cuttedData, 0, sizeof(float) * _size * _size * _size);
-        for( long i = 0; i < _size; ++i)
-        {
-            std::cout
-                    << "\b\b\b\b"
-                    << (int)(i * 100.0 / (_size-1))
-                    << "%";
-            for( long j = 0; j < _size; ++j)
-                for( long k = 0; k < _size; ++k)
-                    for( int p = -_discreteRadius; p <= _discreteRadius; ++p)
-                    {
-                        _cuttedData[(i * _size * _size) + (j * _size) + k] +=
-                                _data[(((i+p)&(_size-1)) * _size * _size) +
-                                    (j * _size) + k] *
-                                GaussianBlurFilter(
-                                    _discreteRadius,
-                                    p, 0, 0,
-                                    ellipsoidScaleFactorZ,
-                                    ellipsoidScaleFactorY,
-                                    ellipsoidScaleFactorX);
-                    }
-        }
-        memcpy(_data, _cuttedData, sizeof(float) * _size * _size * _size);
-        std::cout << " Done" << std::endl;
-
-        std::cout << "                ...phase 2...\n";
-        memset(_cuttedData, 0, sizeof(float) * _size * _size * _size);
-        for( long i = 0; i < _size; ++i)
-        {
-            std::cout
-                    << "\b\b\b\b"
-                    << (int)(i * 100.0 / (_size-1))
-                    << "%";
-            for( long j = 0; j < _size; ++j)
-                for( long k = 0; k < _size; ++k)
-                    for( int q = -_discreteRadius; q <= _discreteRadius; ++q)
-                    {
-                        _cuttedData[(i * _size * _size) + (j * _size) + k] +=
-                                _data[(i * _size * _size) +
-                                    (((j+q)&(_size-1)) * _size) + k] *
-                                GaussianBlurFilter(
-                                    _discreteRadius,
-                                    0, q, 0,
-                                    ellipsoidScaleFactorZ,
-                                    ellipsoidScaleFactorY,
-                                    ellipsoidScaleFactorX);
-                    }
-        }
-        memcpy(_data, _cuttedData, sizeof(float) * _size * _size * _size);
-        std::cout << " Done" << std::endl;
-
-        std::cout << "                ...phase 3...\n";
-        memset(_cuttedData, 0, sizeof(float) * _size * _size * _size);
-        for( long i = 0; i < _size; ++i)
-        {
-            std::cout
-                    << "\b\b\b\b"
-                    << (int)(i * 100.0 / (_size-1))
-                    << "%";
-            for( long j = 0; j < _size; ++j)
-                for( long k = 0; k < _size; ++k)
-                    for( int r = -_discreteRadius; r <= _discreteRadius; ++r)
-                    {
-                        _cuttedData[(i * _size * _size) + (j * _size) + k] +=
-                                _data[(i * _size * _size) + (j * _size) +
-                                    ((k+r)&(_size-1))] *
-                                GaussianBlurFilter(
-                                    _discreteRadius,
-                                    0, 0, r,
-                                    ellipsoidScaleFactorZ,
-                                    ellipsoidScaleFactorY,
-                                    ellipsoidScaleFactorX);
-                    }
-        }
-        memcpy(_data, _cuttedData, sizeof(float) * _size * _size * _size);
-        std::cout << " Done" << std::endl;
-
-        normalize();
-
-        for( long i = 0; i<_size; ++i)
-            for( long j = 0; j<_size; ++j)
-                for( long k = 0; k<_size; ++k)
-                    if(_mask[(i * _size * _size) + (j * _size) + k] != 0)
-                        _data[(i * _size * _size) + (j * _size) + k] =
-                                _dataTmpStorage[(i * _size * _size) + (j * _size) + k];
-        delete [] _dataTmpStorage;
-        std::cout << " applyGaussianFilter() Done" << std::endl;
-    }
+            float ellipsoidScaleFactorZ = 1.0) throw (std::logic_error);
 
     private: inline void _CLGaussianBlurFilterPhase(
             cl::Buffer &_dataBuffer,
@@ -262,36 +155,17 @@ class RepresentativeVolumeElement
             float ellipsoidScaleFactorY = 1.0f,
             float ellipsoidScaleFactorZ = 1.0f) throw (std::logic_error);
 
-//    /// Apply cutting plane
-//    /// Note, cuttedData will be defined only after this call
-//    /// \todo move to device
-//    public : void applyCuttingLevel(
-//            float cutLevel) throw (std::logic_error)
-//    {
-//        if(cutLevel <= 0 && cutLevel >= 1)
-//            throw(std::runtime_error("applyGaussianFilter(): cutLevel <= 0 && cutLevel >= 1"));
-
-//        memset(_cuttedData, 0, sizeof(float) * _size * _size * _size);
-//        for(long i = 0; i < _size; ++i)
-//            for(long j = 0; j < _size; ++j)
-//                for(long k = 0; k < _size; ++k)
-//                    if(_data[(i * _size * _size) + (j * _size) + k] > cutLevel)
-//                        _cuttedData[(i * _size * _size) + (j * _size) + k] = 1.0f;
-//                    else
-//                        _cuttedData[(i * _size * _size) + (j * _size) + k] = 0.0f;
-//    }
-
     /// Apply two-cut to mask (within)
-    /// (i.e. set all _mask elements, that are within cut levels, equal to 1.0f).
+    /// (i.e. set all _data elements, that are within cut levels, equal to (-_data elements)).
     /// 0.0f <= cutlevelA < cutLevelB <= 1.0f;
     /// Use only for normalized _data.
     /// It cleans previous mask.
-    public : void applyTwoCutMaskWithin(
+    public : void applyTwoCutMaskInside(
             const float cutLevelA,
             const float cutLevelB) throw (std::logic_error);
 
     /// Apply two-cut to mask (outside)
-    /// (i.e. set all _mask elements, that are outside cut levels, equal to 1.0f).
+    /// (i.e. set all _mask elements, that are outside cut levels, equal to (-_data elements)).
     /// 0.0f <= cutlevelA < cutLevelB <= 1.0f;
     /// Use only for normalized _data.
     /// It cleans previous mask.
@@ -299,10 +173,28 @@ class RepresentativeVolumeElement
             const float cutLevelA,
             const float cutLevelB) throw (std::logic_error);
 
-    /// Generate overlapping random ellipsoids at unmasked _data elements
-    /// (i.e. where _mask[i,j,k] == 0),
+    /// Generate random ellipsoid at unmasked _data elements
+    /// (i.e. where _data elements >=0),
     /// \todo move to device
     /// \todo random orientation
+    /// \todo refactoring
+    public : void generateRandomEllipsoidSmoothed(
+            const int x,
+            const int y,
+            const int z,
+            const int minRadius,
+            const int maxRadius,
+            const float transitionLayerSize = 0.0f,
+            const float ellipsoidScaleFactorX = 1.0f,
+            const float ellipsoidScaleFactorY = 1.0f,
+            const float ellipsoidScaleFactorZ = 1.0f,
+            const float coreValue = 1.0f) throw (std::logic_error);
+
+    /// Generate overlapping random ellipsoids at unmasked _data elements
+    /// (i.e. where _data elements >=0),
+    /// \todo move to device
+    /// \todo random orientation
+    /// \todo refactoring
     public : void generateOverlappingRandomEllipsoids(
             const int ellipsoidNum,
             const int minRadius,
@@ -310,8 +202,15 @@ class RepresentativeVolumeElement
             const float transitionLayerSize = 0.0f,
             const float ellipsoidScaleFactorX = 1.0f,
             const float ellipsoidScaleFactorY = 1.0f,
-            const float ellipsoidScaleFactorZ = 1.0f) throw (std::logic_error);
+            const float ellipsoidScaleFactorZ = 1.0f,
+            const float coreValue = 1.0f,
+            const float transitionLayerValue = 0.5f) throw (std::logic_error);
 
+    /// Generate overlapping random ellipsoids at unmasked _data elements
+    /// (i.e. where _data elements >=0),
+    /// \todo move to device
+    /// \todo random orientation
+    /// \todo refactoring
     public : void generateOverlappingRandomEllipsoidsSmoothed(
             const int ellipsoidNum,
             const int minRadius,
@@ -319,12 +218,13 @@ class RepresentativeVolumeElement
             const float transitionLayerSize = 1.0f,
             const float ellipsoidScaleFactorX = 1.0f,
             const float ellipsoidScaleFactorY = 1.0f,
-            const float ellipsoidScaleFactorZ = 1.0f) throw (std::logic_error);
+            const float ellipsoidScaleFactorZ = 1.0f,
+            const float coreValue = 1.0f) throw (std::logic_error);
 
     public : ~RepresentativeVolumeElement()
     {
         delete [] _data;
-        delete [] _mask;
+//        delete [] _mask;
         delete [] _cuttedData;
     }
 };

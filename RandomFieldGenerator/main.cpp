@@ -53,18 +53,23 @@ int main(int argc, char *argv[])
     /// \todo RVE mask by <0
     int size = 128;
     RepresentativeVolumeElement _RVE(size);
-//    _RVE.generateOverlappingRandomEllipsoids(150, 32, 64, 0.0f, 1.0f, 0.1f, 0.1f);
-    _RVE.generateOverlappingRandomEllipsoids(150, 16, 32, 0.5f, 1.0f, 0.5f, 0.5f);
+//    _RVE.generateOverlappingRandomEllipsoids(1, 64, 64, 0.4f);
+//    _RVE.generateOverlappingRandomEllipsoidsSmoothed(1, 64, 64, 0.4f);
+//    _RVE.generateOverlappingRandomEllipsoids(150, 16, 32, 0.5f, 1.0f, 0.5f, 0.5f);
 //    _RVE.generateOverlappingRandomEllipsoidsSmoothed(15, 16, 32, 0.25f);
+    _RVE.generateRandomEllipsoidSmoothed(size/2, size/2, size/2, size/2, size/2, 0.4f);
 
     _RVE.applyTwoCutMaskOutside(0.001f, 0.999f);
 
-    _RVE.cleanUnMaskedData();
-    _RVE.addRandomNoise();
+//    _RVE.cleanUnMaskedData();
+//    _RVE.addRandomNoise();
 
-//    _RVE.applyRelativeRandomNoise();
+    _RVE.applyRelativeRandomNoise(0.02f);
 
-    _RVE.applyGaussianFilter(5);
+//    _RVE.applyGaussianFilter(8);
+    _RVE.applyGaussianFilterCL(size/16);
+
+    _RVE.cleanMask();
 
     std::chrono::steady_clock::time_point _t2 = std::chrono::steady_clock::now();
     std::chrono::duration<double> time_span =
