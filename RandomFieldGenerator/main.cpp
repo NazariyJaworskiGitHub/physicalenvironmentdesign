@@ -50,24 +50,27 @@ int main(int argc, char *argv[])
     ///////////////////////////////////////////////////////////////////////////////////////
     std::chrono::steady_clock::time_point _t1 = std::chrono::steady_clock::now();
 
-    /// \todo RVE mask by <0
     int size = 128;
     RepresentativeVolumeElement _RVE(size);
 //    _RVE.generateOverlappingRandomEllipsoids(1, 64, 64, 0.4f);
 //    _RVE.generateOverlappingRandomEllipsoidsSmoothed(1, 64, 64, 0.4f);
 //    _RVE.generateOverlappingRandomEllipsoids(150, 16, 32, 0.5f, 1.0f, 0.5f, 0.5f);
 //    _RVE.generateOverlappingRandomEllipsoidsSmoothed(15, 16, 32, 0.25f);
-    _RVE.generateRandomEllipsoidSmoothed(size/2, size/2, size/2, size/2, size/2, 0.4f);
+    _RVE.generateRandomEllipsoidSmoothed(size/2, size/2, 0, size/2, size/2, 0.3f);
 
-    _RVE.applyTwoCutMaskOutside(0.001f, 0.999f);
-
+//    _RVE.applyTwoCutMaskOutside(0.001f, 0.999f);
 //    _RVE.cleanUnMaskedData();
 //    _RVE.addRandomNoise();
+//    _RVE.applyGaussianFilterCL(size/8);
 
-    _RVE.applyRelativeRandomNoise(0.02f);
+    _RVE.applyTwoCutMaskOutside(0.001f, 0.999f);
+    _RVE.applyRelativeRandomNoise(0.0075f, 0.0f);
+    _RVE.applyGaussianFilter(size/8);   /// \todo fix!
+//    _RVE.applyGaussianFilterCL(size/8);
 
-//    _RVE.applyGaussianFilter(8);
-    _RVE.applyGaussianFilterCL(size/16);
+    _RVE.applyRelativeRandomNoise(0.75f, 0.0f);
+    _RVE.applyGaussianFilter(size/32);  /// \todo fix!
+//    _RVE.applyGaussianFilterCL(size/32);
 
     _RVE.cleanMask();
 
@@ -77,43 +80,43 @@ int main(int argc, char *argv[])
     std::cout << time_span.count() << " seconds" << std::endl;
 
     ///////////////////////////////////////////////////////////////////////////////////////
-    OpenCL::CLManager::instance().setCurrentPlatform(0);
-    OpenCL::CLManager::instance().setCurrentDevice(0);
-    viennacl::ocl::switch_context(0);
-    viennacl::ocl::current_context().switch_device(0);
+//    OpenCL::CLManager::instance().setCurrentPlatform(0);
+//    OpenCL::CLManager::instance().setCurrentDevice(0);
+//    viennacl::ocl::switch_context(0);
+//    viennacl::ocl::current_context().switch_device(0);
 
-    std::cout << "assembling and solving SLAE" << std::endl;
-    _t1 = std::chrono::steady_clock::now();
+//    std::cout << "assembling and solving SLAE" << std::endl;
+//    _t1 = std::chrono::steady_clock::now();
 
-    viennacl::compressed_matrix<float>  _K(size*size*size, size*size*size);
-    viennacl::vector<float>             _f(size*size*size);
-    viennacl::vector<float>             _u(size*size*size);
+//    viennacl::compressed_matrix<float>  _K(size*size*size, size*size*size);
+//    viennacl::vector<float>             _f(size*size*size);
+//    viennacl::vector<float>             _u(size*size*size);
 
-    std::vector<std::map<long, float>> cpu_sparse_matrix(size*size*size);
-    std::vector<float> cpu_loads(size*size*size);
+//    std::vector<std::map<long, float>> cpu_sparse_matrix(size*size*size);
+//    std::vector<float> cpu_loads(size*size*size);
 
-    Simulation::assembleSiffnessMatrix(
-                1e-3f, _RVE.getSize(), _RVE.getData(), 237.0f, 1500.0f, 20.0f, 1e6f,
-                cpu_sparse_matrix, cpu_loads);
-    //    Simulation::assembleSiffnessMatrix(
-    //                1.0f, _RVE.getSize(), _RVE.getData(), 1.0f, 1.0f, 20.0f, 1.0f,
-    //                cpu_sparse_matrix, cpu_loads);
+//    Simulation::assembleSiffnessMatrix(
+//                1e-3f, _RVE.getSize(), _RVE.getData(), 237.0f, 1500.0f, 20.0f, 1e6f,
+//                cpu_sparse_matrix, cpu_loads);
+//    //    Simulation::assembleSiffnessMatrix(
+//    //                1.0f, _RVE.getSize(), _RVE.getData(), 1.0f, 1.0f, 20.0f, 1.0f,
+//    //                cpu_sparse_matrix, cpu_loads);
 
-    viennacl::copy(cpu_sparse_matrix, _K);
-    viennacl::copy(cpu_loads.begin(), cpu_loads.end(), _f.begin());
+//    viennacl::copy(cpu_sparse_matrix, _K);
+//    viennacl::copy(cpu_loads.begin(), cpu_loads.end(), _f.begin());
 
-    _u = viennacl::linalg::solve(_K, _f, viennacl::linalg::cg_tag(1e-4, 1000));
-    //    _u = viennacl::linalg::solve(_K, _f, viennacl::linalg::bicgstab_tag());
+//    _u = viennacl::linalg::solve(_K, _f, viennacl::linalg::cg_tag(1e-4, 1000));
+//    //    _u = viennacl::linalg::solve(_K, _f, viennacl::linalg::bicgstab_tag());
 
-    viennacl::copy(_u.begin(), _u.end(), _RVE.getCuttedData());
+//    viennacl::copy(_u.begin(), _u.end(), _RVE.getCuttedData());
 
-    _t2 = std::chrono::steady_clock::now();
-    time_span = std::chrono::duration_cast<std::chrono::duration<double>>(_t2 - _t1);
-    std::cout << time_span.count() << " seconds" << std::endl;
-    unsigned long _matrixSize = 0;
-    for(long i=0; i<size*size*size; ++i)
-        _matrixSize += cpu_sparse_matrix[i].size();
-    std::cout << "matrix (elements): " << _matrixSize << std::endl;
+//    _t2 = std::chrono::steady_clock::now();
+//    time_span = std::chrono::duration_cast<std::chrono::duration<double>>(_t2 - _t1);
+//    std::cout << time_span.count() << " seconds" << std::endl;
+//    unsigned long _matrixSize = 0;
+//    for(long i=0; i<size*size*size; ++i)
+//        _matrixSize += cpu_sparse_matrix[i].size();
+//    std::cout << "matrix (elements): " << _matrixSize << std::endl;
 
     ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -125,13 +128,13 @@ int main(int argc, char *argv[])
 
     ///////////////////////////////////////////////////////////////////////////////////////
 
-  //    QLocale::setDefault(QLocale::C);
-    UserInterface::VolumeGLRender _render(
-                _RVE.getSize(), _RVE.getData(), _RVE.getCuttedData(), NULL);
-    _render.setBoundingBoxRepresentationSize(1e-3f);
-    _render.setInfoString("Info string\nLine 2");
-    _render.resize(800,600);
-    _render.show();
+//  //    QLocale::setDefault(QLocale::C);
+//    UserInterface::VolumeGLRender _render(
+//                _RVE.getSize(), _RVE.getData(), _RVE.getCuttedData(), NULL);
+//    _render.setBoundingBoxRepresentationSize(1e-3f);
+//    _render.setInfoString("Info string\nLine 2");
+//    _render.resize(800,600);
+//    _render.show();
     ///////////////////////////////////////////////////////////////////////////////////////
 
 //    std::vector<UserInterface::Function> functions;

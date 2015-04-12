@@ -71,13 +71,16 @@ class RepresentativeVolumeElement
     /// Apply relative to unmasked _data random noise
     /// (i.e. relative to _data elements >= 0),
     /// Note, that _data shold be normalized before this call, to get the correct rezult
-    /// Relative means that random deviations will be near current _data value,
+    /// Relative means that random distribution will be near current _data value,
     /// high and small values reduce deviations. (value power function is used).
-    /// deviationCoefficient - smaller coefficient increases deviations.
-    /// Coefficient should be inside [0.0f, 1.0f].
+    /// distrCoefTop and distrCoefBottom should be inside [0.0f, 1.0f],
+    /// 0.0f - means max distribution (relative 1 for top and relative 0 for bottom)
+    /// 1.0f - means min distribution (current value)
+    /// if > 1.0f top and bottom will be switched
     /// \todo move to device
     public : void applyRelativeRandomNoise(
-            const float deviationCoefficient = 1.0f) throw (std::logic_error);
+            const float distrCoefBottom = 0.0f,
+            const float distrCoefTop = 0.0f) throw (std::logic_error);
 
     /// Find min and max unmasked _data elements values (unmasked i.e >=0)
     public : void findUnMaskedMinAndMax(float &min, float &max) noexcept;

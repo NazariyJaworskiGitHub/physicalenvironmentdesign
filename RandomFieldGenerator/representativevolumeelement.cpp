@@ -179,12 +179,17 @@ void RepresentativeVolumeElement::addRandomNoise() noexcept
 }
 
 void RepresentativeVolumeElement::applyRelativeRandomNoise(
-        const float deviationCoefficient) throw (std::logic_error)
+        const float distrCoefBottom,
+        const float distrCoefTop) throw (std::logic_error)
 {
-    if(deviationCoefficient < 0.0f || deviationCoefficient > 1.0f)
+    if(distrCoefBottom < 0.0f || distrCoefTop < 0.0f)
         throw(std::runtime_error(
-                "applyRelativeRandomNoise(): "
-                "deviationCoefficient < 0.0f || deviationCoefficient > 1.0f"));
+                "applyRelativeRandomNoise(): distrCoefTop < 0.0f || distrCoefBottom < 0.0f"));
+
+    float _min = 0;
+    float _max = 0;
+    findUnMaskedMinAndMax(_min,_max);
+    float _delta = _max-_min;
 
     for( long i = 0; i<_size; ++i)
         for( long j = 0; j<_size; ++j)
@@ -192,19 +197,22 @@ void RepresentativeVolumeElement::applyRelativeRandomNoise(
             {
                 float &_val = _data[(i * _size * _size) + (j * _size) + k];
                 if(_val >= 0)
+                {
                     _val = MathUtils::rand<float>(
-                                std::pow(_val,deviationCoefficient),
-                                1.0f-std::pow(std::fabs(_val-1.0f),deviationCoefficient));
+                                (1.0f-std::pow(std::fabs((_val-_min)/_delta-1.0f),
+                                              distrCoefBottom))*_delta+_min,
+                                std::pow((_val-_min)/_delta,distrCoefTop)*_delta+_min);
 //                    _val = MathUtils::rand<float>(
 //                                _val*deviationCoefficient,
 //                                _val*deviationCoefficient+(1.0f-deviationCoefficient));
+                }
             }
 }
 
 void RepresentativeVolumeElement::findUnMaskedMinAndMax(float &min, float &max) noexcept
 {
-    min = 0;
-    max = 0;
+//    min = 0;
+//    max = 0;
 
     bool isFirstFound = false;
 
@@ -229,6 +237,11 @@ void RepresentativeVolumeElement::findUnMaskedMinAndMax(float &min, float &max) 
                     }
                 }
             }
+//    if(_min == _max)
+//    {
+//        _min = 0.0f;
+//        _max = 1.0f;
+//    }
 }
 
 /// \todo refactor find min and max
@@ -262,6 +275,7 @@ void RepresentativeVolumeElement::scaleUnMasked(
 
 }
 
+/// \todo _MASK_EPS_
 void RepresentativeVolumeElement::normalize() noexcept
 {
     float _min = std::fabs(_data[0]);   // data can be masked (<0)
@@ -329,14 +343,14 @@ void RepresentativeVolumeElement::applyGaussianFilter(
                                  "can't allocate memory for temporary storage"));
 
     memcpy(_dataTmpStorage,_data,sizeof(float) * _size * _size * _size);
-    for( long i = 0; i<_size; ++i)
-        for( long j = 0; j<_size; ++j)
-            for( long k = 0; k<_size; ++k)
-            {
-                float &_val = _data[(i * _size * _size) + (j * _size) + k];
-                if(_val < 0)
-                    _val = MathUtils::rand<float>(0.0, 1.0);
-            }
+//    for( long i = 0; i<_size; ++i)
+//        for( long j = 0; j<_size; ++j)
+//            for( long k = 0; k<_size; ++k)
+//            {
+//                float &_val = _data[(i * _size * _size) + (j * _size) + k];
+//                if(_val < 0)
+//                    _val = MathUtils::rand<float>(0.0, 1.0);
+//            }
 
     std::cout << "  Applying filter, phase 1...\n";
     memset(_cuttedData, 0, sizeof(float) * _size * _size * _size);
@@ -348,18 +362,37 @@ void RepresentativeVolumeElement::applyGaussianFilter(
                 << "%";
         for( long j = 0; j < _size; ++j)
             for( long k = 0; k < _size; ++k)
-                for( int p = -_discreteRadius; p <= _discreteRadius; ++p)
+            {
+                if(_data[(i * _size * _size) + (j * _size) + k] >= 0)
                 {
-                    _cuttedData[(i * _size * _size) + (j * _size) + k] +=
-                            _data[(((i+p)&(_size-1)) * _size * _size) +
-                            (j * _size) + k] *
-                            GaussianBlurFilter(
-                                _discreteRadius,
-                                p, 0, 0,
-                                ellipsoidScaleFactorZ,
-                                ellipsoidScaleFactorY,
-                                ellipsoidScaleFactorX);
+                    float _coeff = 0.0f;
+                    for( int p = -_discreteRadius; p <= _discreteRadius; ++p)
+                    {
+                        if(_data[(((i+p)&(_size-1)) * _size * _size) +
+                                (j * _size) + k] >= 0)
+                        {
+                            _coeff += GaussianBlurFilter(
+                                        _discreteRadius,
+                                        p, 0, 0,
+                                        ellipsoidScaleFactorZ,
+                                        ellipsoidScaleFactorY,
+                                        ellipsoidScaleFactorX);
+                            _cuttedData[(i * _size * _size) + (j * _size) + k] +=
+                                    _data[(((i+p)&(_size-1)) * _size * _size) +
+                                    (j * _size) + k] *
+                                    GaussianBlurFilter(
+                                        _discreteRadius,
+                                        p, 0, 0,
+                                        ellipsoidScaleFactorZ,
+                                        ellipsoidScaleFactorY,
+                                        ellipsoidScaleFactorX);
+                        }
+                    }
+                    _cuttedData[(i * _size * _size) + (j * _size) + k] /= _coeff;
                 }
+                else _cuttedData[(i * _size * _size) + (j * _size) + k] = - _MASK_EPS_;
+
+            }
     }
     memcpy(_data, _cuttedData, sizeof(float) * _size * _size * _size);
     std::cout << " Done" << std::endl;
@@ -374,18 +407,36 @@ void RepresentativeVolumeElement::applyGaussianFilter(
                 << "%";
         for( long j = 0; j < _size; ++j)
             for( long k = 0; k < _size; ++k)
-                for( int q = -_discreteRadius; q <= _discreteRadius; ++q)
+            {
+                if(_data[(i * _size * _size) + (j * _size) + k] >= 0)
                 {
-                    _cuttedData[(i * _size * _size) + (j * _size) + k] +=
-                            _data[(i * _size * _size) +
-                            (((j+q)&(_size-1)) * _size) + k] *
-                            GaussianBlurFilter(
-                                _discreteRadius,
-                                0, q, 0,
-                                ellipsoidScaleFactorZ,
-                                ellipsoidScaleFactorY,
-                                ellipsoidScaleFactorX);
+                    float _coeff = 0.0f;
+                    for( int q = -_discreteRadius; q <= _discreteRadius; ++q)
+                    {
+                        if(_data[(i * _size * _size) +
+                                (((j+q)&(_size-1)) * _size) + k] >= 0)
+                        {
+                            _coeff += GaussianBlurFilter(
+                                        _discreteRadius,
+                                        0, q, 0,
+                                        ellipsoidScaleFactorZ,
+                                        ellipsoidScaleFactorY,
+                                        ellipsoidScaleFactorX);
+                            _cuttedData[(i * _size * _size) + (j * _size) + k] +=
+                                    _data[(i * _size * _size) +
+                                    (((j+q)&(_size-1)) * _size) + k] *
+                                    GaussianBlurFilter(
+                                        _discreteRadius,
+                                        0, q, 0,
+                                        ellipsoidScaleFactorZ,
+                                        ellipsoidScaleFactorY,
+                                        ellipsoidScaleFactorX);
+                        }
+                    }
+                    _cuttedData[(i * _size * _size) + (j * _size) + k] /= _coeff;
                 }
+                else _cuttedData[(i * _size * _size) + (j * _size) + k] = - _MASK_EPS_;
+            }
     }
     memcpy(_data, _cuttedData, sizeof(float) * _size * _size * _size);
     std::cout << " Done" << std::endl;
@@ -400,23 +451,41 @@ void RepresentativeVolumeElement::applyGaussianFilter(
                 << "%";
         for( long j = 0; j < _size; ++j)
             for( long k = 0; k < _size; ++k)
-                for( int r = -_discreteRadius; r <= _discreteRadius; ++r)
+            {
+                if(_data[(i * _size * _size) + (j * _size) + k] >= 0)
                 {
-                    _cuttedData[(i * _size * _size) + (j * _size) + k] +=
-                            _data[(i * _size * _size) + (j * _size) +
-                            ((k+r)&(_size-1))] *
-                            GaussianBlurFilter(
-                                _discreteRadius,
-                                0, 0, r,
-                                ellipsoidScaleFactorZ,
-                                ellipsoidScaleFactorY,
-                                ellipsoidScaleFactorX);
+                    float _coeff = 0.0f;
+                    for( int r = -_discreteRadius; r <= _discreteRadius; ++r)
+                    {
+                        if(_data[(i * _size * _size) + (j * _size) +
+                                ((k+r)&(_size-1))] >= 0)
+                        {
+                            _coeff += GaussianBlurFilter(
+                                        _discreteRadius,
+                                        0, 0, r,
+                                        ellipsoidScaleFactorZ,
+                                        ellipsoidScaleFactorY,
+                                        ellipsoidScaleFactorX);
+                            _cuttedData[(i * _size * _size) + (j * _size) + k] +=
+                                    _data[(i * _size * _size) + (j * _size) +
+                                    ((k+r)&(_size-1))] *
+                                    GaussianBlurFilter(
+                                        _discreteRadius,
+                                        0, 0, r,
+                                        ellipsoidScaleFactorZ,
+                                        ellipsoidScaleFactorY,
+                                        ellipsoidScaleFactorX);
+                        }
+                    }
+                    _cuttedData[(i * _size * _size) + (j * _size) + k] /= _coeff;
                 }
+                else _cuttedData[(i * _size * _size) + (j * _size) + k] = - _MASK_EPS_;
+            }
     }
     memcpy(_data, _cuttedData, sizeof(float) * _size * _size * _size);
     std::cout << " Done" << std::endl;
 
-    normalize();
+    normalizeUnMasked();
 
     for( long i = 0; i<_size; ++i)
         for( long j = 0; j<_size; ++j)
