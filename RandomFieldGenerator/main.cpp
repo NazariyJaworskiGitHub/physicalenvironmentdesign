@@ -48,31 +48,39 @@ int main(int argc, char *argv[])
 //    LogFile << "Tests done.";
 
     ///////////////////////////////////////////////////////////////////////////////////////
+//    OpenCL::CLManager::instance().setCurrentPlatform(0);
+//    OpenCL::CLManager::instance().setCurrentDevice(1);
+//    viennacl::ocl::switch_context(0);
+//    viennacl::ocl::current_context().switch_device(1);
+
     std::chrono::steady_clock::time_point _t1 = std::chrono::steady_clock::now();
 
-    int size = 128;
+    int size = 256;
     RepresentativeVolumeElement _RVE(size);
 //    _RVE.generateOverlappingRandomEllipsoids(1, 64, 64, 0.4f);
 //    _RVE.generateOverlappingRandomEllipsoidsSmoothed(1, 64, 64, 0.4f);
 //    _RVE.generateOverlappingRandomEllipsoids(150, 16, 32, 0.5f, 1.0f, 0.5f, 0.5f);
 //    _RVE.generateOverlappingRandomEllipsoidsSmoothed(15, 16, 32, 0.25f);
-    _RVE.generateRandomEllipsoidSmoothed(size/2, size/2, 0, size/2, size/2, 0.3f);
+//    _RVE.generateRandomEllipsoidSmoothed(size/2, size/2, size/2, size/2, size/2, 0.25f);
 
 //    _RVE.applyTwoCutMaskOutside(0.001f, 0.999f);
 //    _RVE.cleanUnMaskedData();
-//    _RVE.addRandomNoise();
-//    _RVE.applyGaussianFilterCL(size/8);
+    _RVE.addRandomNoise();
+    _RVE.applyGaussianFilter(size/4);
+//    _RVE.applyGaussianFilterCL(size/4);
 
-    _RVE.applyTwoCutMaskOutside(0.001f, 0.999f);
-    _RVE.applyRelativeRandomNoise(0.0075f, 0.0f);
-    _RVE.applyGaussianFilter(size/8);   /// \todo fix!
-//    _RVE.applyGaussianFilterCL(size/8);
+//    _RVE.applyTwoCutMaskOutside(0.001f, 0.999f);
+//    _RVE.applyRelativeRandomNoise(0.0075f, 0.0f);
+//    _RVE.applyGaussianFilter(size/8, 0.25f); /// \todo fix!
+//    _RVE.applyGaussianFilter(size/32, 2.0f); /// \todo fix!
+//    _RVE.applyGaussianFilterCL(size/8, 1.0f, 1.0f, 1.0f, true, 0.25f);
+//    _RVE.applyGaussianFilterCL(size/32, 1.0f, 1.0f, 1.0f, true, 5.0f);
 
-    _RVE.applyRelativeRandomNoise(0.75f, 0.0f);
-    _RVE.applyGaussianFilter(size/32);  /// \todo fix!
+//    _RVE.applyRelativeRandomNoise(0.75f, 0.0f);
+//    _RVE.applyGaussianFilter(size/8);  /// \todo fix!
 //    _RVE.applyGaussianFilterCL(size/32);
 
-    _RVE.cleanMask();
+//    _RVE.cleanMask();
 
     std::chrono::steady_clock::time_point _t2 = std::chrono::steady_clock::now();
     std::chrono::duration<double> time_span =

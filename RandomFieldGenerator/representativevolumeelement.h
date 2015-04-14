@@ -118,9 +118,11 @@ class RepresentativeVolumeElement
     /// \todo cout
     public : void applyGaussianFilter(
             int discreteRadius,
-            float ellipsoidScaleFactorX = 1.0,
-            float ellipsoidScaleFactorY = 1.0,
-            float ellipsoidScaleFactorZ = 1.0) throw (std::logic_error);
+            float ellipsoidScaleFactorX = 1.0f,
+            float ellipsoidScaleFactorY = 1.0f,
+            float ellipsoidScaleFactorZ = 1.0f,
+            bool useDataAsIntensity = false,
+            float intensityFactor = 1.0f) throw (std::logic_error);
 
     private: inline void _CLGaussianBlurFilterPhase(
             cl::Buffer &_dataBuffer,
@@ -156,7 +158,9 @@ class RepresentativeVolumeElement
             int discreteRadius,
             float ellipsoidScaleFactorX = 1.0f,
             float ellipsoidScaleFactorY = 1.0f,
-            float ellipsoidScaleFactorZ = 1.0f) throw (std::logic_error);
+            float ellipsoidScaleFactorZ = 1.0f,
+            bool useDataAsIntensity = false,
+            float intensityFactor = 1.0f) throw (std::logic_error);
 
     /// Apply two-cut to mask (within)
     /// (i.e. set all _data elements, that are within cut levels, equal to (-_data elements)).
@@ -223,6 +227,11 @@ class RepresentativeVolumeElement
             const float ellipsoidScaleFactorY = 1.0f,
             const float ellipsoidScaleFactorZ = 1.0f,
             const float coreValue = 1.0f) throw (std::logic_error);
+
+    private: void _add(
+            float *recipient,
+            const float *value,
+            const float factor) noexcept;
 
     public : ~RepresentativeVolumeElement()
     {
