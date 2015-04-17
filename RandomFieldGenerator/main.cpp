@@ -53,21 +53,29 @@ int main(int argc, char *argv[])
 //    viennacl::ocl::switch_context(0);
 //    viennacl::ocl::current_context().switch_device(1);
 
-    std::chrono::steady_clock::time_point _t1 = std::chrono::steady_clock::now();
+//    std::chrono::steady_clock::time_point _t1 = std::chrono::steady_clock::now();
 
     int size = 256;
     RepresentativeVolumeElement _RVE(size);
 //    _RVE.generateOverlappingRandomEllipsoids(1, 64, 64, 0.4f);
-//    _RVE.generateOverlappingRandomEllipsoidsSmoothed(1, 64, 64, 0.4f);
+//    _RVE.generateOverlappingRandomEllipsoidsSmoothed(75, size/2, size, 0.5f, 1, 0.1, 0.1);
 //    _RVE.generateOverlappingRandomEllipsoids(150, 16, 32, 0.5f, 1.0f, 0.5f, 0.5f);
 //    _RVE.generateOverlappingRandomEllipsoidsSmoothed(15, 16, 32, 0.25f);
-//    _RVE.generateRandomEllipsoidSmoothed(size/2, size/2, size/2, size/2, size/2, 0.25f);
+//    _RVE.generateRandomEllipsoidSmoothed(size/2, size/2, 0, size/2, size/2, 0.25f);
+
+    std::chrono::steady_clock::time_point _t1 = std::chrono::steady_clock::now();
 
 //    _RVE.applyTwoCutMaskOutside(0.001f, 0.999f);
 //    _RVE.cleanUnMaskedData();
-    _RVE.addRandomNoise();
-    _RVE.applyGaussianFilter(size/4);
+//    _RVE.addRandomNoise();
+//    _RVE.applyGaussianFilter(size/4);
+//    _RVE.applyGaussianFilter(size/16,1,1,1,true,0.25f);
+//    _RVE.applyGaussianFilter(size/64,1,1,1,true,2);
+//    _RVE.applyGaussianFilter(size/256,1,1,1,true,8);
 //    _RVE.applyGaussianFilterCL(size/4);
+//    _RVE.applyGaussianFilterCL(size/16,1,1,1,true,0.25f);
+//    _RVE.applyGaussianFilterCL(size/64,1,1,1,true,2);
+//    _RVE.applyGaussianFilterCL(size/256,1,1,1,true,8);
 
 //    _RVE.applyTwoCutMaskOutside(0.001f, 0.999f);
 //    _RVE.applyRelativeRandomNoise(0.0075f, 0.0f);
@@ -82,16 +90,25 @@ int main(int argc, char *argv[])
 
 //    _RVE.cleanMask();
 
+//    _RVE.generateVoronoiRandomCells(500);
+    _RVE.generateVoronoiRandomCellsCL(500);
+    _RVE.applyTwoCutMaskOutside(0, 0.05f);
+    _RVE.cleanUnMaskedData(0.0f);
+    _RVE.applyTwoCutMaskInside(0, 0.05f);
+    _RVE.cleanUnMaskedData(1.0f);
+    _RVE.cleanMask();
+    _RVE.invertUnMasked();
+
     std::chrono::steady_clock::time_point _t2 = std::chrono::steady_clock::now();
     std::chrono::duration<double> time_span =
             std::chrono::duration_cast<std::chrono::duration<double>>(_t2 - _t1);
     std::cout << time_span.count() << " seconds" << std::endl;
 
     ///////////////////////////////////////////////////////////////////////////////////////
-//    OpenCL::CLManager::instance().setCurrentPlatform(0);
-//    OpenCL::CLManager::instance().setCurrentDevice(0);
-//    viennacl::ocl::switch_context(0);
-//    viennacl::ocl::current_context().switch_device(0);
+////    OpenCL::CLManager::instance().setCurrentPlatform(0);
+////    OpenCL::CLManager::instance().setCurrentDevice(0);
+////    viennacl::ocl::switch_context(0);
+////    viennacl::ocl::current_context().switch_device(0);
 
 //    std::cout << "assembling and solving SLAE" << std::endl;
 //    _t1 = std::chrono::steady_clock::now();

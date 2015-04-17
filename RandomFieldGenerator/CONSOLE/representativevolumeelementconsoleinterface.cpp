@@ -65,7 +65,7 @@ void _EditRVECommand::applyGaussFltrRVE(
     Q_EMIT signal_applyGaussFltrRVEDone();
 }
 
-
+/// \todo remove commented
 std::string RepresentativeVolumeElementConsoleInterface::createRVE(
         const std::string &name, int size) noexcept
 {
@@ -73,11 +73,11 @@ std::string RepresentativeVolumeElementConsoleInterface::createRVE(
     {
         if(RVEs.find(name) != RVEs.end())
             return "Error: Representative Volume Element " + name + " already exists.\n";
-        else if((size >= 2) && ((size & (size - 1)) == 0)) // check power o two
-        {
+//        else if((size >= 2) && ((size & (size - 1)) == 0)) // check power o two
+//        {
             RVEs.emplace(name, new RepresentativeVolumeElement(size));
-        }
-        else return "Error: Cant create Representative Volume Element with given size.\n";
+//        }
+//        else return "Error: Cant create Representative Volume Element with given size.\n";
     }
     catch(std::exception &e)
     {

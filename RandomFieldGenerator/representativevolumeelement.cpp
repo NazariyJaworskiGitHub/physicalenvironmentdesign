@@ -4,6 +4,7 @@ cl::Program *RepresentativeVolumeElement::_programPtr = nullptr;
 cl::Kernel *RepresentativeVolumeElement::_kernelXPtr = nullptr;
 cl::Kernel *RepresentativeVolumeElement::_kernelYPtr = nullptr;
 cl::Kernel *RepresentativeVolumeElement::_kernelZPtr = nullptr;
+cl::Kernel *RepresentativeVolumeElement::_kernelVoronoiPtr = nullptr;
 
 #define _MASK_EPS_ 1.0f
 
@@ -13,6 +14,11 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
     _size(discreteSize),
     _representationSize(representationSize)
 {
+    if(!((_size >= 2) && ((_size & (_size - 1)) == 0))) // check power o two
+        throw(std::runtime_error("Error: RepresentativeVolumeElement():"
+                                 "Cant create Representative Volume Element "
+                                 "with given size.\n"));
+
     // Prepare memory
     _data = new float[_size * _size * _size];
     _cuttedData = new float[_size * _size * _size];
@@ -30,40 +36,15 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
     if(!_programPtr)
     {
         std::string _CLSource_applyGaussianFilter = "\
-                float _GaussianFilter(\
+            float _GaussianFilter(\
                     float r,\
                     float x, float y, float z,\
                     float fx, float fy, float fz)\
-        {\
-                return exp(-(x*x/fx/fx + y*y/fy/fy + z*z/fz/fz) / ((r/2.0) * (r/2.0)));\
-        }\
-                    \
-                    __kernel void applyGaussianFilterX(\
-                        int discreteRadius,\
-                        float ellipsoidScaleFactorX,\
-                        float ellipsoidScaleFactorY,\
-                        float ellipsoidScaleFactorZ,\
-                        __global float *_data,\
-                        __global float *_cuttedData,\
-                        int _size)\
             {\
-                    long i = get_global_id(0);\
-                    long j = get_global_id(1);\
-                    long k = get_global_id(2);\
-                    \
-                    for( int p = -discreteRadius; p <= discreteRadius; ++p)\
-                    _cuttedData[(i * _size * _size) + (j * _size) + k] +=\
-                    _data[(((i+p)&(_size-1)) * _size * _size) +\
-                    (j * _size) + k] *\
-                    _GaussianFilter(\
-                        discreteRadius,\
-                        p, 0, 0,\
-                        ellipsoidScaleFactorX,\
-                        ellipsoidScaleFactorY,\
-                        ellipsoidScaleFactorZ);\
-        }\
-        \
-        __kernel void applyGaussianFilterY(\
+                return exp(-(x*x/fx/fx + y*y/fy/fy + z*z/fz/fz) / ((r/2.0) * (r/2.0)));\
+            }\
+            \
+            __kernel void applyGaussianFilterX(\
                     int discreteRadius,\
                     float ellipsoidScaleFactorX,\
                     float ellipsoidScaleFactorY,\
@@ -71,24 +52,49 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
                     __global float *_data,\
                     __global float *_cuttedData,\
                     int _size)\
-        {\
-            long i = get_global_id(0);\
-            long j = get_global_id(1);\
-            long k = get_global_id(2);\
+            {\
+                long i = get_global_id(0);\
+                long j = get_global_id(1);\
+                long k = get_global_id(2);\
             \
-            for( int q = -discreteRadius; q <= discreteRadius; ++q)\
-                _cuttedData[(i * _size * _size) + (j * _size) + k] +=\
+                for( int p = -discreteRadius; p <= discreteRadius; ++p)\
+                    _cuttedData[(i * _size * _size) + (j * _size) + k] +=\
+                        _data[(((i+p)&(_size-1)) * _size * _size) +\
+                            (j * _size) + k] *\
+                        _GaussianFilter(\
+                            discreteRadius,\
+                            p, 0, 0,\
+                            ellipsoidScaleFactorX,\
+                            ellipsoidScaleFactorY,\
+                            ellipsoidScaleFactorZ);\
+            }\
+            \
+            __kernel void applyGaussianFilterY(\
+                    int discreteRadius,\
+                    float ellipsoidScaleFactorX,\
+                    float ellipsoidScaleFactorY,\
+                    float ellipsoidScaleFactorZ,\
+                    __global float *_data,\
+                    __global float *_cuttedData,\
+                    int _size)\
+            {\
+                long i = get_global_id(0);\
+                long j = get_global_id(1);\
+                long k = get_global_id(2);\
+            \
+                for( int q = -discreteRadius; q <= discreteRadius; ++q)\
+                    _cuttedData[(i * _size * _size) + (j * _size) + k] +=\
                         _data[(i * _size * _size) +\
-                        (((j+q)&(_size-1)) * _size) + k] *\
+                            (((j+q)&(_size-1)) * _size) + k] *\
                         _GaussianFilter(\
                             discreteRadius,\
                             0, q, 0,\
                             ellipsoidScaleFactorX,\
                             ellipsoidScaleFactorY,\
                             ellipsoidScaleFactorZ);\
-        }\
-        \
-        __kernel void applyGaussianFilterZ(\
+            }\
+            \
+            __kernel void applyGaussianFilterZ(\
                     int discreteRadius,\
                     float ellipsoidScaleFactorX,\
                     float ellipsoidScaleFactorY,\
@@ -96,22 +102,114 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
                     __global float *_data,\
                     __global float *_cuttedData,\
                     int _size)\
-        {\
-            long i = get_global_id(0);\
-            long j = get_global_id(1);\
-            long k = get_global_id(2);\
+            {\
+                long i = get_global_id(0);\
+                long j = get_global_id(1);\
+                long k = get_global_id(2);\
             \
-            for( int r = -discreteRadius; r <= discreteRadius; ++r)\
-                _cuttedData[(i * _size * _size) + (j * _size) + k] +=\
+                for( int r = -discreteRadius; r <= discreteRadius; ++r)\
+                    _cuttedData[(i * _size * _size) + (j * _size) + k] +=\
                         _data[(i * _size * _size) + (j * _size) +\
-                        ((k+r)&(_size-1))] *\
+                            ((k+r)&(_size-1))] *\
                         _GaussianFilter(\
                             discreteRadius,\
                             0, 0, r,\
                             ellipsoidScaleFactorX,\
                             ellipsoidScaleFactorY,\
                             ellipsoidScaleFactorZ);\
-        }";
+            }\
+            \
+            void _distanceOnRepeatedSides(\
+                    float ax, float ay, float az,\
+                    float bx, float by, float bz,\
+                    float *kk, float *jj, float *ii,\
+                    int _size)\
+            {\
+                *kk = (ax-bx)*(ax-bx);\
+                float _tmpijk = (ax-_size-bx)*(ax-_size-bx);\
+                if(_tmpijk <*kk) *kk = _tmpijk;\
+                else _tmpijk = (ax+_size-bx)*(ax+_size-bx);\
+                if(_tmpijk <*kk) *kk = _tmpijk;\
+            \
+                *jj = (ay-by)*(ay-by);\
+                _tmpijk = (ay-_size-by)*(ay-_size-by);\
+                if(_tmpijk <*jj) *jj = _tmpijk;\
+                else _tmpijk = (ay+_size-by)*(ay+_size-by);\
+                if(_tmpijk <*jj) *jj = _tmpijk;\
+            \
+                *ii = (az-bz)*(az-bz);\
+                _tmpijk = (az-_size-bz)*(az-_size-bz);\
+                if(_tmpijk <*ii) *ii = _tmpijk;\
+                else _tmpijk = (az+_size-bz)*(az+_size-bz);\
+                if(_tmpijk <*ii) *ii = _tmpijk;\
+            }\
+            \
+            __kernel void voronoi(\
+                    __global float *_initialPoints,\
+                    int cellNum,\
+                    __global float *_data,\
+                    int _size)\
+            {\
+                int i = get_global_id(0);\
+                int j = get_global_id(1);\
+                int k = get_global_id(2);\
+                \
+                float _kk, _jj, _ii;\
+                _distanceOnRepeatedSides(\
+                    _initialPoints[0],\
+                    _initialPoints[1],\
+                    _initialPoints[2],\
+                    k, j, i, &_kk, &_jj, &_ii, _size);\
+                float _minDist1 = sqrt(_kk + _jj + _ii);\
+                int _curIndex1 = 0;\
+                for(int c=1; c<cellNum; ++c)\
+                {\
+                    _distanceOnRepeatedSides(\
+                        _initialPoints[c*3+0],\
+                        _initialPoints[c*3+1],\
+                        _initialPoints[c*3+2],\
+                        k, j, i, &_kk, &_jj, &_ii, _size);\
+                    float _curDist = sqrt(_kk + _jj + _ii);\
+                    if(_curDist < _minDist1)\
+                    {\
+                        _minDist1 = _curDist;\
+                        _curIndex1 = c;\
+                    }\
+                }\
+                \
+                float _minDist2;\
+                if(_curIndex1)\
+                {\
+                    _distanceOnRepeatedSides(\
+                        _initialPoints[0],\
+                        _initialPoints[1],\
+                        _initialPoints[2],\
+                        k, j, i, &_kk, &_jj, &_ii, _size);\
+                    _minDist2 = sqrt(_kk + _jj + _ii);\
+                }\
+                else\
+                {\
+                    _distanceOnRepeatedSides(\
+                        _initialPoints[3+0],\
+                        _initialPoints[3+1],\
+                        _initialPoints[3+2],\
+                        k, j, i, &_kk, &_jj, &_ii, _size);\
+                    _minDist2 = sqrt(_kk + _jj + _ii);\
+                }\
+                for(int c=0; c<cellNum; ++c)\
+                {\
+                    if(c==_curIndex1) continue;\
+                    _distanceOnRepeatedSides(\
+                        _initialPoints[c*3+0],\
+                        _initialPoints[c*3+1],\
+                        _initialPoints[c*3+2],\
+                        k, j, i, &_kk, &_jj, &_ii, _size);\
+                    float _curDist = sqrt(_kk + _jj + _ii);\
+                    if(_curDist < _minDist2 && _curDist >= _minDist1)\
+                        _minDist2 = _curDist;\
+                }\
+                _data[(i * _size * _size) + (j * _size) + k] = _minDist2-_minDist1;\
+            }";
 
         /// Don't worry, CLManager will destroy this objects at the end of application
         _programPtr = &OpenCL::CLManager::instance().createProgram(
@@ -127,10 +225,13 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
 
         _kernelZPtr = &OpenCL::CLManager::instance().createKernel(
                     *_programPtr, "applyGaussianFilterZ");
+
+        _kernelVoronoiPtr = &OpenCL::CLManager::instance().createKernel(
+                    *_programPtr, "voronoi");
     }
 }
 
-void RepresentativeVolumeElement::cleanUnMaskedData() noexcept
+void RepresentativeVolumeElement::cleanUnMaskedData(float filler) noexcept
 {
     for( long i = 0; i<_size; ++i)
         for( long j = 0; j<_size; ++j)
@@ -138,7 +239,7 @@ void RepresentativeVolumeElement::cleanUnMaskedData() noexcept
             {
                 float &_val = _data[(i * _size * _size) + (j * _size) + k];
                 if(_val >= 0)
-                    _val = 0;
+                    _val = filler;
             }
 }
 
@@ -275,21 +376,23 @@ void RepresentativeVolumeElement::scaleUnMasked(
 
 }
 
-/// \todo _MASK_EPS_
 void RepresentativeVolumeElement::normalize() noexcept
 {
-    float _min = std::fabs(_data[0]);   // data can be masked (<0)
-    float _max = std::fabs(_data[0]);
+    float _min = 0;
+    float _max = 0;
+    _min = _max = (_data[0] >= 0) ? (_data[0]) :
+        (-_data[0] - _MASK_EPS_);   // data can be masked (<0)
 
     for( long i = 0; i < _size; ++i)
         for( long j = 0; j < _size; ++j)
             for( long k = 0; k < _size; ++k)
             {
-                float _val = std::fabs(_data[(i * _size * _size) + (j * _size) + k]);
-                if(_val < _min)
-                    _min = _val;
-                if(_val > _max)
-                    _max = _val;
+                float &_val = _data[(i * _size * _size) + (j * _size) + k];
+                float _umaskedVal = (_val >= 0) ? (_val) : (-_val - _MASK_EPS_);
+                if(_umaskedVal < _min)
+                    _min = _umaskedVal;
+                if(_umaskedVal > _max)
+                    _max = _umaskedVal;
             }
 
     float _delta = _max - _min;
@@ -298,7 +401,9 @@ void RepresentativeVolumeElement::normalize() noexcept
             for( long k = 0; k < _size; ++k)
             {
                 float &_val = _data[(i * _size * _size) + (j * _size) + k];
-                _val = (std::fabs(_val) - _min) / _delta;
+                float _umaskedVal = (((_val >= 0) ? (_val) : (-_val - _MASK_EPS_)) -
+                                                   _min) / _delta;
+                _val = (_val >= 0) ? (_umaskedVal) : (-_umaskedVal - _MASK_EPS_);
             }
 }
 
@@ -316,6 +421,18 @@ void RepresentativeVolumeElement::normalizeUnMasked() noexcept
                 float &_val = _data[(i * _size * _size) + (j * _size) + k];
                 if(_val >= 0)
                     _val = (_val - _min) / _delta;
+            }
+}
+
+void RepresentativeVolumeElement::invertUnMasked() noexcept
+{
+    for( long i = 0; i < _size; ++i)
+        for( long j = 0; j < _size; ++j)
+            for( long k = 0; k < _size; ++k)
+            {
+                float &_val = _data[(i * _size * _size) + (j * _size) + k];
+                if(_val >= 0)
+                    _val = 1.0f - _val;
             }
 }
 
@@ -759,23 +876,12 @@ void RepresentativeVolumeElement::generateRandomEllipsoidSmoothed(
                 if(_val >= 0)
                 {
                     // Also check from other side of RVE, to get identical opposite sides
-                    float _kk = (k-_sphereCenter[0])*(k-_sphereCenter[0]);
-                    if((k-_sphereCenter[0]+_size)*(k-_sphereCenter[0]+_size) < _kk)
-                        _kk = (k-_sphereCenter[0]+_size)*(k-_sphereCenter[0]+_size);
-                    else if ((k-_sphereCenter[0]-_size)*(k-_sphereCenter[0]-_size) < _kk)
-                        _kk = (k-_sphereCenter[0]-_size)*(k-_sphereCenter[0]-_size);
-
-                    float _jj = (j-_sphereCenter[1])*(j-_sphereCenter[1]);
-                    if((j-_sphereCenter[1]+_size)*(j-_sphereCenter[1]+_size) < _jj)
-                        _jj = (j-_sphereCenter[1]+_size)*(j-_sphereCenter[1]+_size);
-                    else if ((j-_sphereCenter[1]-_size)*(j-_sphereCenter[1]-_size) < _jj)
-                        _jj = (j-_sphereCenter[1]-_size)*(j-_sphereCenter[1]-_size);
-
-                    float _ii = (i-_sphereCenter[2])*(i-_sphereCenter[2]);
-                    if((i-_sphereCenter[2]+_size)*(i-_sphereCenter[2]+_size) < _ii)
-                        _ii = (i-_sphereCenter[2]+_size)*(i-_sphereCenter[2]+_size);
-                    else if ((i-_sphereCenter[2]-_size)*(i-_sphereCenter[2]-_size) < _ii)
-                        _ii = (i-_sphereCenter[2]-_size)*(i-_sphereCenter[2]-_size);
+                    float _kk, _jj, _ii;
+                    _distanceOnRepeatedSides(
+                                _sphereCenter[0],
+                            _sphereCenter[1],
+                            _sphereCenter[2],
+                            k,j,i,_kk, _jj, _ii);
 
                     float _curRadius = _kk/ellipsoidScaleFactorX/ellipsoidScaleFactorX +
                             _jj/ellipsoidScaleFactorY/ellipsoidScaleFactorY +
@@ -860,23 +966,12 @@ void RepresentativeVolumeElement::generateOverlappingRandomEllipsoids(
                     if(_val >= 0)
                     {
                         // Also check from other side of RVE, to get identical opposite sides
-                        float _kk = (k-_sphereCenter[0])*(k-_sphereCenter[0]);
-                        if((k-_sphereCenter[0]+_size)*(k-_sphereCenter[0]+_size) < _kk)
-                            _kk = (k-_sphereCenter[0]+_size)*(k-_sphereCenter[0]+_size);
-                        else if ((k-_sphereCenter[0]-_size)*(k-_sphereCenter[0]-_size) < _kk)
-                            _kk = (k-_sphereCenter[0]-_size)*(k-_sphereCenter[0]-_size);
-
-                        float _jj = (j-_sphereCenter[1])*(j-_sphereCenter[1]);
-                        if((j-_sphereCenter[1]+_size)*(j-_sphereCenter[1]+_size) < _jj)
-                            _jj = (j-_sphereCenter[1]+_size)*(j-_sphereCenter[1]+_size);
-                        else if ((j-_sphereCenter[1]-_size)*(j-_sphereCenter[1]-_size) < _jj)
-                            _jj = (j-_sphereCenter[1]-_size)*(j-_sphereCenter[1]-_size);
-
-                        float _ii = (i-_sphereCenter[2])*(i-_sphereCenter[2]);
-                        if((i-_sphereCenter[2]+_size)*(i-_sphereCenter[2]+_size) < _ii)
-                            _ii = (i-_sphereCenter[2]+_size)*(i-_sphereCenter[2]+_size);
-                        else if ((i-_sphereCenter[2]-_size)*(i-_sphereCenter[2]-_size) < _ii)
-                            _ii = (i-_sphereCenter[2]-_size)*(i-_sphereCenter[2]-_size);
+                        float _kk, _jj, _ii;
+                        _distanceOnRepeatedSides(
+                                    _sphereCenter[0],
+                                _sphereCenter[1],
+                                _sphereCenter[2],
+                                k,j,i,_kk, _jj, _ii);
 
                         float _curRadius = _kk/ellipsoidScaleFactorX/ellipsoidScaleFactorX +
                                 _jj/ellipsoidScaleFactorY/ellipsoidScaleFactorY +
@@ -955,23 +1050,12 @@ void RepresentativeVolumeElement::generateOverlappingRandomEllipsoidsSmoothed(
                     if(_val >= 0)
                     {
                         // Also check from other side of RVE, to get identical opposite sides
-                        float _kk = (k-_sphereCenter[0])*(k-_sphereCenter[0]);
-                        if((k-_sphereCenter[0]+_size)*(k-_sphereCenter[0]+_size) < _kk)
-                            _kk = (k-_sphereCenter[0]+_size)*(k-_sphereCenter[0]+_size);
-                        else if ((k-_sphereCenter[0]-_size)*(k-_sphereCenter[0]-_size) < _kk)
-                            _kk = (k-_sphereCenter[0]-_size)*(k-_sphereCenter[0]-_size);
-
-                        float _jj = (j-_sphereCenter[1])*(j-_sphereCenter[1]);
-                        if((j-_sphereCenter[1]+_size)*(j-_sphereCenter[1]+_size) < _jj)
-                            _jj = (j-_sphereCenter[1]+_size)*(j-_sphereCenter[1]+_size);
-                        else if ((j-_sphereCenter[1]-_size)*(j-_sphereCenter[1]-_size) < _jj)
-                            _jj = (j-_sphereCenter[1]-_size)*(j-_sphereCenter[1]-_size);
-
-                        float _ii = (i-_sphereCenter[2])*(i-_sphereCenter[2]);
-                        if((i-_sphereCenter[2]+_size)*(i-_sphereCenter[2]+_size) < _ii)
-                            _ii = (i-_sphereCenter[2]+_size)*(i-_sphereCenter[2]+_size);
-                        else if ((i-_sphereCenter[2]-_size)*(i-_sphereCenter[2]-_size) < _ii)
-                            _ii = (i-_sphereCenter[2]-_size)*(i-_sphereCenter[2]-_size);
+                        float _kk, _jj, _ii;
+                        _distanceOnRepeatedSides(
+                                    _sphereCenter[0],
+                                _sphereCenter[1],
+                                _sphereCenter[2],
+                                k,j,i,_kk, _jj, _ii);
 
                         float _curRadius = _kk/ellipsoidScaleFactorX/ellipsoidScaleFactorX +
                                 _jj/ellipsoidScaleFactorY/ellipsoidScaleFactorY +
@@ -994,6 +1078,187 @@ void RepresentativeVolumeElement::generateOverlappingRandomEllipsoidsSmoothed(
     }
 }
 
+void RepresentativeVolumeElement::generateVoronoiRandomCells(
+        const int cellNum) throw (std::logic_error)
+{
+    if(cellNum < 2)
+        throw(std::runtime_error("generateVoronoiRandomCells(): "
+                                 "cellNum < 2"));
+
+    cleanData();
+
+    // Generate initial points
+    std::vector<MathUtils::Node<3,float>> _initialPoints;
+    for(int c=0; c<cellNum; ++c)
+        _initialPoints.push_back(MathUtils::Node<3,float>(
+            MathUtils::rand<int>(0,_size-1),
+            MathUtils::rand<int>(0,_size-1),
+            MathUtils::rand<int>(0,_size-1)));
+
+    for( long i = 0; i<_size; ++i)
+        for( long j = 0; j<_size; ++j)
+            for( long k = 0; k<_size; ++k)
+            {
+                float _kk, _jj, _ii;
+
+                _distanceOnRepeatedSides(
+                            _initialPoints[0][0],
+                        _initialPoints[0][1],
+                        _initialPoints[0][2],
+                        k,j,i,_kk, _jj, _ii);
+                float _minDist1 = std::sqrt(_kk + _jj + _ii);
+//                float _minDist1 = _initialPoints[0].distance(
+//                            MathUtils::Node<3,float>(k,j,i));
+
+                int _curIndex1 = 0;
+
+                for(int c=1; c<cellNum; ++c)
+                {
+                    _distanceOnRepeatedSides(
+                                _initialPoints[c][0],
+                            _initialPoints[c][1],
+                            _initialPoints[c][2],
+                            k,j,i,_kk, _jj, _ii);
+                    float _curDist = std::sqrt(_kk + _jj + _ii);
+//                    float _curDist = _initialPoints[c].distance(
+//                                MathUtils::Node<3,float>(k,j,i));
+
+                    if(_curDist < _minDist1)
+                    {
+                        _minDist1 = _curDist;
+                        _curIndex1 = c;
+                    }
+
+                }
+
+                float _minDist2;
+//                int _curIndex2 = 0;
+                if(_curIndex1)
+                {
+                    _distanceOnRepeatedSides(
+                                _initialPoints[0][0],
+                            _initialPoints[0][1],
+                            _initialPoints[0][2],
+                            k,j,i,_kk, _jj, _ii);
+                    _minDist2 = std::sqrt(_kk + _jj + _ii);
+//                    _minDist2 = _initialPoints[0].distance(
+//                                MathUtils::Node<3,float>(k,j,i));
+                }
+                else
+                {
+                    _distanceOnRepeatedSides(
+                                _initialPoints[1][0],
+                            _initialPoints[1][1],
+                            _initialPoints[1][2],
+                            k,j,i,_kk, _jj, _ii);
+                    _minDist2 = std::sqrt(_kk + _jj + _ii);
+//                    _minDist2 = _initialPoints[1].distance(
+//                            MathUtils::Node<3,float>(k,j,i));
+//                    _curIndex2 = 1;
+                }
+
+                for(int c=0; c<cellNum; ++c)
+                {
+                    if(c==_curIndex1) continue;
+                    _distanceOnRepeatedSides(
+                                _initialPoints[c][0],
+                            _initialPoints[c][1],
+                            _initialPoints[c][2],
+                            k,j,i,_kk, _jj, _ii);
+                    float _curDist = std::sqrt(_kk + _jj + _ii);
+//                    float _curDist = _initialPoints[c].distance(
+//                                MathUtils::Node<3,float>(k,j,i));
+
+                    if(_curDist < _minDist2 && _curDist >= _minDist1)
+                    {
+                        _minDist2 = _curDist;
+//                        _curIndex2 = c;
+                    }
+                }
+                _data[(i * _size * _size) + (j * _size) + k] = _minDist2-_minDist1;
+            }
+
+    normalizeUnMasked();
+
+    for(int c=0; c<cellNum; ++c)
+        _data[((int)_initialPoints[c][2] * _size * _size) +
+                ((int)_initialPoints[c][1] * _size) + (int)_initialPoints[c][0]] = 1.0f;
+}
+
+void RepresentativeVolumeElement::generateVoronoiRandomCellsCL(
+        const int cellNum) throw (std::logic_error)
+{
+    if(cellNum < 2)
+        throw(std::runtime_error("generateVoronoiRandomCells(): "
+                                 "cellNum < 2"));
+
+    cleanData();
+
+    // Generate initial points
+    float *_initialPoints = new float[cellNum*3];
+    if(!_initialPoints)
+        throw(std::runtime_error("generateVoronoiRandomCells():"
+                                 "can't allocate memory for temporary storage"));
+    for(int c=0; c<cellNum; ++c)
+    {
+        _initialPoints[c*3+0] = MathUtils::rand<int>(0,_size-1);
+        _initialPoints[c*3+1] = MathUtils::rand<int>(0,_size-1);
+        _initialPoints[c*3+2] = MathUtils::rand<int>(0,_size-1);
+    }
+
+    cl::Buffer _dataBuffer(
+                OpenCL::CLManager::instance().getCurrentContext(),
+                CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+                sizeof(float) * _size * _size * _size,
+                _data);
+
+    cl::Buffer _initialPointsBuffer(
+                OpenCL::CLManager::instance().getCurrentContext(),
+                CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+                sizeof(float) * cellNum * 3,
+                _initialPoints);
+
+    _kernelVoronoiPtr->setArg(0, _initialPointsBuffer);
+    _kernelVoronoiPtr->setArg(1, cellNum);
+    _kernelVoronoiPtr->setArg(2, _dataBuffer);
+    _kernelVoronoiPtr->setArg(3, _size);
+
+    cl::CommandQueue &_queue = OpenCL::CLManager::instance().getCurrentCommandQueue();
+    cl::Event _event;
+
+    size_t _kernelMaxWorkGroupSize;
+    OpenCL::CLManager::instance().getCurrentDevice().getInfo(
+                CL_DEVICE_MAX_WORK_GROUP_SIZE, &_kernelMaxWorkGroupSize);
+
+    unsigned _n = 1;
+    for(; (_size/_n)*(_size/_n)*(_size/_n) > _kernelMaxWorkGroupSize; _n *= 2);
+
+    cl::NDRange _localThreads(_size/_n, _size/_n, _size/_n);
+
+    _queue.enqueueNDRangeKernel(
+                *_kernelVoronoiPtr,
+                cl::NullRange,
+                cl::NDRange(_size, _size, _size),
+                _localThreads,
+                NULL,
+                &_event);
+    _event.wait();
+
+    _queue.enqueueReadBuffer(
+                _dataBuffer,
+                CL_FALSE,
+                0,
+                sizeof(float) * _size * _size * _size,
+                _data,
+                NULL,
+                &_event);
+    _event.wait();
+
+    normalizeUnMasked();
+
+    delete [] _initialPoints;
+}
+
 void RepresentativeVolumeElement::_add(
         float *recipient,
         const float *value,
@@ -1009,4 +1274,34 @@ void RepresentativeVolumeElement::_add(
                 else
                     recipient[_index] += factor * (- value[_index] - _MASK_EPS_);
             }
+}
+
+void RepresentativeVolumeElement::_distanceOnRepeatedSides(
+        const float ax,
+        const float ay,
+        const float az,
+        const float bx,
+        const float by,
+        const float bz,
+        float &kk,
+        float &jj,
+        float &ii) noexcept
+{
+    kk = (ax-bx)*(ax-bx);
+    float _tmpijk = (ax-_size-bx)*(ax-_size-bx);
+    if(_tmpijk <kk) kk = _tmpijk;
+    else _tmpijk = (ax+_size-bx)*(ax+_size-bx);
+    if(_tmpijk <kk) kk = _tmpijk;
+
+    jj = (ay-by)*(ay-by);
+    _tmpijk = (ay-_size-by)*(ay-_size-by);
+    if(_tmpijk <jj) jj = _tmpijk;
+    else _tmpijk = (ay+_size-by)*(ay+_size-by);
+    if(_tmpijk <jj) jj = _tmpijk;
+
+    ii = (az-bz)*(az-bz);
+    _tmpijk = (az-_size-bz)*(az-_size-bz);
+    if(_tmpijk <ii) ii = _tmpijk;
+    else _tmpijk = (az+_size-bz)*(az+_size-bz);
+    if(_tmpijk <ii) ii = _tmpijk;
 }

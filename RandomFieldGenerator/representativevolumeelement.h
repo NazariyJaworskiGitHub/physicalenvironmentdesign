@@ -38,6 +38,7 @@ class RepresentativeVolumeElement
     private: static cl::Kernel *_kernelXPtr;
     private: static cl::Kernel *_kernelYPtr;
     private: static cl::Kernel *_kernelZPtr;
+    private: static cl::Kernel *_kernelVoronoiPtr;
 
     /// Constructor
     /// \todo all OpenCL uses only first system defined platform
@@ -51,7 +52,7 @@ class RepresentativeVolumeElement
 
     /// Clean masked _data storage, by set it elements to 0
     /// (i.e _data elements >= 0)
-    public : void cleanUnMaskedData() noexcept;
+    public : void cleanUnMaskedData(float filler = 0.0f) noexcept;
 
     /// Clean mask
     /// (set all _data elements < 0 equal to -(_data elements)
@@ -98,6 +99,9 @@ class RepresentativeVolumeElement
     /// Normalize unmsked data (i.e. elements, where _mask[i,j,k] == 0)
     /// \todo move to device
     public : void normalizeUnMasked() noexcept;
+
+    /// Invert normalized un masked data
+    public : void invertUnMasked() noexcept;
 
     /// Gaussian blur filter function, for external usage only
     /// Note, r, fx, fy, fz should be > 0;
@@ -228,10 +232,31 @@ class RepresentativeVolumeElement
             const float ellipsoidScaleFactorZ = 1.0f,
             const float coreValue = 1.0f) throw (std::logic_error);
 
+    /// Generate Voronoi diagram random cells
+    /// It clears all previous data
+    public : void generateVoronoiRandomCells(
+            const int cellNum) throw (std::logic_error);
+
+    /// Generate Voronoi diagram random cells OpenCL version
+    /// It clears all previous data
+    public : void generateVoronoiRandomCellsCL(
+            const int cellNum) throw (std::logic_error);
+
     private: void _add(
             float *recipient,
             const float *value,
             const float factor) noexcept;
+
+    private: void _distanceOnRepeatedSides(
+            const float ax,
+            const float ay,
+            const float az,
+            const float bx,
+            const float by,
+            const float bz,
+            float &kk,
+            float &jj,
+            float &ii) noexcept;
 
     public : ~RepresentativeVolumeElement()
     {
