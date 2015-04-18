@@ -41,31 +41,33 @@ void _EditRVECommand::applyGaussFltrRVE(
 
     {
         std::stringstream _str;
-        _str << "addRndNoiseRVE " << _RVEName << "\n";
+        _str << "addRandomNoiseRVE " << _RVEName << "\n";
         getConsole().writeToOutput(_str.str());
     }
-    getConsole().writeToOutput(_manager.addRndNoiseRVE(_RVEName));
+    getConsole().writeToOutput(_manager.addRandomNoiseRVE(_RVEName));
 
     {
         std::stringstream _str;
-        _str << "applyGaussFltrRVE " << _RVEName << " "
+        _str << "applyGaussianFilterRVE " << _RVEName << " "
              << discreteRadius << " "
              << ellipsoidScaleFactorX << " "
              << ellipsoidScaleFactorY << " "
              << ellipsoidScaleFactorZ << "\n";
         getConsole().writeToOutput(_str.str());
     }
-    getConsole().writeToOutput(_manager.applyGaussFltrRVE(
+    /// \todo new arguments
+    getConsole().writeToOutput(_manager.applyGaussianFilterRVE(
                                    _RVEName,
                                    discreteRadius,
                                    ellipsoidScaleFactorX,
                                    ellipsoidScaleFactorY,
-                                   ellipsoidScaleFactorZ));
+                                   ellipsoidScaleFactorZ,
+                                   false,
+                                   1.0f));
 
     Q_EMIT signal_applyGaussFltrRVEDone();
 }
 
-/// \todo remove commented
 std::string RepresentativeVolumeElementConsoleInterface::createRVE(
         const std::string &name, int size) noexcept
 {
@@ -73,11 +75,11 @@ std::string RepresentativeVolumeElementConsoleInterface::createRVE(
     {
         if(RVEs.find(name) != RVEs.end())
             return "Error: Representative Volume Element " + name + " already exists.\n";
-//        else if((size >= 2) && ((size & (size - 1)) == 0)) // check power o two
-//        {
+        else if((size >= 2) && ((size & (size - 1)) == 0)) // check power o two
+        {
             RVEs.emplace(name, new RepresentativeVolumeElement(size));
-//        }
-//        else return "Error: Cant create Representative Volume Element with given size.\n";
+        }
+        else return "Error: Cant create Representative Volume Element with given size.\n";
     }
     catch(std::exception &e)
     {
@@ -165,7 +167,7 @@ std::string RepresentativeVolumeElementConsoleInterface::cleanRVE(
         return "Error: Representative Volume Element " + name + " doesn't exist.\n";
     else
         _pos->second->cleanData();
-    return "Representative Volume Element " + name + " cleared.\n";
+    return "Representative Volume Element " + name + " cleaned.\n";
 }
 
 int RepresentativeVolumeElementConsoleInterface::_cleanRVECommand::executeConsoleCommand(
@@ -180,7 +182,56 @@ int RepresentativeVolumeElementConsoleInterface::_cleanRVECommand::executeConsol
     return 0;
 }
 
-std::string RepresentativeVolumeElementConsoleInterface::addRndNoiseRVE(
+std::string RepresentativeVolumeElementConsoleInterface::cleanUnMaskedRVE(
+        const std::string &name, float filler) noexcept
+{
+    auto _pos = RVEs.find(name);
+    if(_pos == RVEs.end())
+        return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+    else
+        _pos->second->cleanUnMaskedData(filler);
+    return "Representative Volume Element " + name + " cleaned.\n";
+}
+
+int RepresentativeVolumeElementConsoleInterface::_cleanUnMaskedRVECommand::executeConsoleCommand(
+        const std::vector<std::string> &argv)
+{
+    if(argv.size() < 1 || argv.size() > 2)
+    {
+        getConsole().writeToOutput("Error: wrong number of arguments.\n");
+        return -1;
+    }
+    else if(argv.size() == 1)
+        getConsole().writeToOutput(_manager.cleanUnMaskedRVE(argv[0], 0.0f));
+    else
+        getConsole().writeToOutput(_manager.cleanUnMaskedRVE(argv[0], std::atof(argv[1].data())));
+    return 0;
+}
+
+std::string RepresentativeVolumeElementConsoleInterface::cleanMaskRVE(
+        const std::string &name) noexcept
+{
+    auto _pos = RVEs.find(name);
+    if(_pos == RVEs.end())
+        return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+    else
+        _pos->second->cleanMask();
+    return "Representative Volume Element mask" + name + " cleaned.\n";
+}
+
+int RepresentativeVolumeElementConsoleInterface::_cleanMaskRVECommand::executeConsoleCommand(
+        const std::vector<std::string> &argv)
+{
+    if(argv.size() != 1)
+    {
+        getConsole().writeToOutput("Error: wrong number of arguments.\n");
+        return -1;
+    }
+    getConsole().writeToOutput(_manager.cleanMaskRVE(argv[0]));
+    return 0;
+}
+
+std::string RepresentativeVolumeElementConsoleInterface::addRandomNoiseRVE(
         const std::string &name) noexcept
 {
     auto _pos = RVEs.find(name);
@@ -191,7 +242,7 @@ std::string RepresentativeVolumeElementConsoleInterface::addRndNoiseRVE(
     return "Representative Volume Element " + name + " random noise generation done.\n";
 }
 
-int RepresentativeVolumeElementConsoleInterface::_genRndFldRVECommand::executeConsoleCommand(
+int RepresentativeVolumeElementConsoleInterface::_addRandomNoiseRVECommandmmand::executeConsoleCommand(
         const std::vector<std::string> &argv)
 {
     if(argv.size() != 1)
@@ -199,16 +250,64 @@ int RepresentativeVolumeElementConsoleInterface::_genRndFldRVECommand::executeCo
         getConsole().writeToOutput("Error: wrong number of arguments.\n");
         return -1;
     }
-    getConsole().writeToOutput(_manager.addRndNoiseRVE(argv[0]));
+    getConsole().writeToOutput(_manager.addRandomNoiseRVE(argv[0]));
     return 0;
 }
 
-std::string RepresentativeVolumeElementConsoleInterface::applyGaussFltrRVE(
+std::string RepresentativeVolumeElementConsoleInterface::normalizeUnMaskedRVE(
+        const std::string &name) noexcept
+{
+    auto _pos = RVEs.find(name);
+    if(_pos == RVEs.end())
+        return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+    else
+        _pos->second->normalizeUnMasked();
+    return "Representative Volume Element " + name + " normalized.\n";
+}
+
+int RepresentativeVolumeElementConsoleInterface::_normalizeUnMaskedRVECommand::executeConsoleCommand(
+        const std::vector<std::string> &argv)
+{
+    if(argv.size() != 1)
+    {
+        getConsole().writeToOutput("Error: wrong number of arguments.\n");
+        return -1;
+    }
+    getConsole().writeToOutput(_manager.normalizeUnMaskedRVE(argv[0]));
+    return 0;
+}
+
+std::string RepresentativeVolumeElementConsoleInterface::invertUnMaskedRVE(
+        const std::string &name) noexcept
+{
+    auto _pos = RVEs.find(name);
+    if(_pos == RVEs.end())
+        return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+    else
+        _pos->second->invertUnMasked();
+    return "Representative Volume Element " + name + " inverted.\n";
+}
+
+int RepresentativeVolumeElementConsoleInterface::_invertUnMaskedRVECommand::executeConsoleCommand(
+        const std::vector<std::string> &argv)
+{
+    if(argv.size() != 1)
+    {
+        getConsole().writeToOutput("Error: wrong number of arguments.\n");
+        return -1;
+    }
+    getConsole().writeToOutput(_manager.invertUnMaskedRVE(argv[0]));
+    return 0;
+}
+
+std::string RepresentativeVolumeElementConsoleInterface::applyGaussianFilterRVE(
         const std::string &name,
         int discreteRadius,
         float ellipsoidScaleFactorX,
         float ellipsoidScaleFactorY,
-        float ellipsoidScaleFactorZ)
+        float ellipsoidScaleFactorZ,
+        bool useDataAsIntensity,
+        float intensityFactor)
 {
     try
     {
@@ -220,7 +319,9 @@ std::string RepresentativeVolumeElementConsoleInterface::applyGaussFltrRVE(
                         discreteRadius,
                         ellipsoidScaleFactorX,
                         ellipsoidScaleFactorY,
-                        ellipsoidScaleFactorZ);
+                        ellipsoidScaleFactorZ,
+                        useDataAsIntensity,
+                        intensityFactor);
     }
     catch(std::exception &e)
     {
@@ -229,20 +330,91 @@ std::string RepresentativeVolumeElementConsoleInterface::applyGaussFltrRVE(
     return "Representative Volume Element " + name + " Gaussian blur filter applying done.\n";
 }
 
-
-int RepresentativeVolumeElementConsoleInterface::_applyGaussFltrRVECommand::executeConsoleCommand(
+int RepresentativeVolumeElementConsoleInterface::_applyGaussianFilterRVECommand::executeConsoleCommand(
         const std::vector<std::string> &argv)
 {
-    if(argv.size() != 5)
+    if(argv.size() < 2 || argv.size() > 7)
     {
         getConsole().writeToOutput("Error: wrong number of arguments.\n");
         return -1;
     }
-    getConsole().writeToOutput(_manager.applyGaussFltrRVE(
+    int discreteRadius = std::atoi(argv[1].data());
+    float ellipsoidScaleFactorX = 1.0f;
+    float ellipsoidScaleFactorY = 1.0f;
+    float ellipsoidScaleFactorZ = 1.0f;
+    bool useDataAsIntensity = false;
+    float intensityFactor = 1.0f;
+    switch(argv.size())
+    {
+    case 7: intensityFactor =std::atof(argv[6].data());
+    case 6: if(argv[5].compare("true") == 0) useDataAsIntensity = true;
+        else if(argv[5].compare("false") == 0) useDataAsIntensity = false;
+        else
+        {
+            getConsole().writeToOutput("wrong <useDataAsIntensity> argument\n");
+            return -1;
+        }
+    case 5: ellipsoidScaleFactorZ = std::atof(argv[4].data());
+    case 4: ellipsoidScaleFactorY = std::atof(argv[3].data());
+    case 3: ellipsoidScaleFactorX = std::atof(argv[2].data());
+    }
+
+    getConsole().writeToOutput(_manager.applyGaussianFilterRVE(
             argv[0],
-            std::atoi(argv[1].data()),
-            std::atof(argv[2].data()),
-            std::atof(argv[3].data()),
-            std::atof(argv[4].data())));
+            discreteRadius,
+            ellipsoidScaleFactorX,
+            ellipsoidScaleFactorY,
+            ellipsoidScaleFactorZ,
+            useDataAsIntensity,
+            intensityFactor));
+
+    return 0;
+}
+
+std::string RepresentativeVolumeElementConsoleInterface::applyTwoCutMaskInsideRVE(
+        const std::string &name, float cutLevelA, float cutLevelB) noexcept
+{
+    auto _pos = RVEs.find(name);
+    if(_pos == RVEs.end())
+        return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+    else
+        _pos->second->applyTwoCutMaskInside(cutLevelA, cutLevelB);
+    return "Representative Volume Element mask" + name + " is set.\n";
+}
+
+int RepresentativeVolumeElementConsoleInterface::_applyTwoCutMaskInsideRVECommand::executeConsoleCommand(
+        const std::vector<std::string> &argv)
+{
+    if(argv.size() != 3)
+    {
+        getConsole().writeToOutput("Error: wrong number of arguments.\n");
+        return -1;
+    }
+    getConsole().writeToOutput(_manager.applyTwoCutMaskInsideRVE(
+                                   argv[0], std::atof(argv[1].data()), std::atof(argv[2].data())));
+    return 0;
+}
+
+std::string RepresentativeVolumeElementConsoleInterface::applyTwoCutMaskOutsideRVE(
+        const std::string &name, float cutLevelA, float cutLevelB) noexcept
+{
+    auto _pos = RVEs.find(name);
+    if(_pos == RVEs.end())
+        return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+    else
+        _pos->second->applyTwoCutMaskOutside(cutLevelA, cutLevelB);
+    return "Representative Volume Element mask" + name + " is set.\n";
+}
+
+int RepresentativeVolumeElementConsoleInterface::_applyTwoCutMaskOutsideRVECommand::executeConsoleCommand(
+        const std::vector<std::string> &argv)
+{
+    if(argv.size() != 3)
+    {
+        getConsole().writeToOutput("Error: wrong number of arguments.\n");
+        return -1;
+    }
+    getConsole().writeToOutput(_manager.applyTwoCutMaskOutsideRVE(
+                                   argv[0], std::atof(argv[1].data()), std::atof(argv[2].data())));
     return 0;
 }

@@ -281,7 +281,7 @@ void RepresentativeVolumeElement::addRandomNoise() noexcept
 
 void RepresentativeVolumeElement::applyRelativeRandomNoise(
         const float distrCoefBottom,
-        const float distrCoefTop) throw (std::logic_error)
+        const float distrCoefTop) throw (std::runtime_error)
 {
     if(distrCoefBottom < 0.0f || distrCoefTop < 0.0f)
         throw(std::runtime_error(
@@ -348,7 +348,7 @@ void RepresentativeVolumeElement::findUnMaskedMinAndMax(float &min, float &max) 
 /// \todo refactor find min and max
 void RepresentativeVolumeElement::scaleUnMasked(
         const float levelA,
-        const float levelB) throw (std::logic_error)
+        const float levelB) throw (std::runtime_error)
 {
     if(levelA < 0.0f || levelA >= levelB)
         throw(std::runtime_error(
@@ -442,7 +442,7 @@ void RepresentativeVolumeElement::applyGaussianFilter(
         float ellipsoidScaleFactorY,
         float ellipsoidScaleFactorZ,
         bool useDataAsIntensity,
-        float intensityFactor) throw (std::logic_error)
+        float intensityFactor) throw (std::runtime_error)
 {
     std::cout << "applyGaussianFilter() call:" << std::endl;
     if(discreteRadius <= 0)
@@ -625,7 +625,7 @@ void RepresentativeVolumeElement::applyGaussianFilterCL(
         float ellipsoidScaleFactorY,
         float ellipsoidScaleFactorZ,
         bool useDataAsIntensity,
-        float intensityFactor) throw (std::logic_error)
+        float intensityFactor) throw (std::runtime_error)
 {
     std::cout << "applyGaussianFilterCL() call:" << std::endl;
     if(discreteRadius <= 0)
@@ -770,7 +770,7 @@ void RepresentativeVolumeElement::applyGaussianFilterCL(
 
 void RepresentativeVolumeElement::applyTwoCutMaskInside(
         const float cutLevelA,
-        const float cutLevelB) throw (std::logic_error)
+        const float cutLevelB) throw (std::runtime_error)
 {
     if(cutLevelA < 0.0f || cutLevelA >= cutLevelB)
         throw(std::runtime_error(
@@ -792,7 +792,7 @@ void RepresentativeVolumeElement::applyTwoCutMaskInside(
 
 void RepresentativeVolumeElement::applyTwoCutMaskOutside(
         const float cutLevelA,
-        const float cutLevelB) throw (std::logic_error)
+        const float cutLevelB) throw (std::runtime_error)
 {
     if(cutLevelA < 0.0f || cutLevelA >= cutLevelB)
         throw(std::runtime_error(
@@ -812,7 +812,7 @@ void RepresentativeVolumeElement::applyTwoCutMaskOutside(
             }
 }
 
-void RepresentativeVolumeElement::generateRandomEllipsoidSmoothed(
+void RepresentativeVolumeElement::generateRandomEllipsoidIntense(
         const int x,
         const int y,
         const int z,
@@ -822,7 +822,7 @@ void RepresentativeVolumeElement::generateRandomEllipsoidSmoothed(
         const float ellipsoidScaleFactorX,
         const float ellipsoidScaleFactorY,
         const float ellipsoidScaleFactorZ,
-        const float coreValue) throw (std::logic_error)
+        const float coreValue) throw (std::runtime_error)
 {
     if(x < 0 || x >= _size)
         throw(std::runtime_error("generateRandomEllipsoidSmoothed(): "
@@ -912,7 +912,7 @@ void RepresentativeVolumeElement::generateOverlappingRandomEllipsoids(
         const float ellipsoidScaleFactorY,
         const float ellipsoidScaleFactorZ,
         const float coreValue,
-        const float transitionLayerValue) throw (std::logic_error)
+        const float transitionLayerValue) throw (std::runtime_error)
 {
     if(ellipsoidNum <= 0)
         throw(std::runtime_error("generateOverlappingRandomEllipsoids(): "
@@ -990,7 +990,7 @@ void RepresentativeVolumeElement::generateOverlappingRandomEllipsoids(
     }
 }
 
-void RepresentativeVolumeElement::generateOverlappingRandomEllipsoidsSmoothed(
+void RepresentativeVolumeElement::generateOverlappingRandomEllipsoidsIntense(
         const int ellipsoidNum,
         const int minRadius,
         const int maxRadius,
@@ -998,7 +998,7 @@ void RepresentativeVolumeElement::generateOverlappingRandomEllipsoidsSmoothed(
         const float ellipsoidScaleFactorX,
         const float ellipsoidScaleFactorY,
         const float ellipsoidScaleFactorZ,
-        const float coreValue) throw (std::logic_error)
+        const float coreValue) throw (std::runtime_error)
 {
     if(ellipsoidNum <= 0)
         throw(std::runtime_error("generateOverlappingRandomEllipsoidsSmoothed(): "
@@ -1079,7 +1079,7 @@ void RepresentativeVolumeElement::generateOverlappingRandomEllipsoidsSmoothed(
 }
 
 void RepresentativeVolumeElement::generateVoronoiRandomCells(
-        const int cellNum) throw (std::logic_error)
+        const int cellNum) throw (std::runtime_error)
 {
     if(cellNum < 2)
         throw(std::runtime_error("generateVoronoiRandomCells(): "
@@ -1186,7 +1186,7 @@ void RepresentativeVolumeElement::generateVoronoiRandomCells(
 }
 
 void RepresentativeVolumeElement::generateVoronoiRandomCellsCL(
-        const int cellNum) throw (std::logic_error)
+        const int cellNum) throw (std::runtime_error)
 {
     if(cellNum < 2)
         throw(std::runtime_error("generateVoronoiRandomCells(): "

@@ -79,9 +79,10 @@ class RepresentativeVolumeElement
     /// 1.0f - means min distribution (current value)
     /// if > 1.0f top and bottom will be switched
     /// \todo move to device
+    /// \todo usage
     public : void applyRelativeRandomNoise(
             const float distrCoefBottom = 0.0f,
-            const float distrCoefTop = 0.0f) throw (std::logic_error);
+            const float distrCoefTop = 0.0f) throw (std::runtime_error);
 
     /// Find min and max unmasked _data elements values (unmasked i.e >=0)
     public : void findUnMaskedMinAndMax(float &min, float &max) noexcept;
@@ -90,7 +91,7 @@ class RepresentativeVolumeElement
     /// 0 <= levelA < levelB <= 1.0f
     public : void scaleUnMasked(
             const float levelA,
-            const float levelB) throw (std::logic_error);
+            const float levelB) throw (std::runtime_error);
 
     /// Normalize all data
     /// \todo move to device
@@ -126,7 +127,7 @@ class RepresentativeVolumeElement
             float ellipsoidScaleFactorY = 1.0f,
             float ellipsoidScaleFactorZ = 1.0f,
             bool useDataAsIntensity = false,
-            float intensityFactor = 1.0f) throw (std::logic_error);
+            float intensityFactor = 1.0f) throw (std::runtime_error);
 
     private: inline void _CLGaussianBlurFilterPhase(
             cl::Buffer &_dataBuffer,
@@ -164,16 +165,16 @@ class RepresentativeVolumeElement
             float ellipsoidScaleFactorY = 1.0f,
             float ellipsoidScaleFactorZ = 1.0f,
             bool useDataAsIntensity = false,
-            float intensityFactor = 1.0f) throw (std::logic_error);
+            float intensityFactor = 1.0f) throw (std::runtime_error);
 
-    /// Apply two-cut to mask (within)
+    /// Apply two-cut to mask (inside)
     /// (i.e. set all _data elements, that are within cut levels, equal to (-_data elements)).
     /// 0.0f <= cutlevelA < cutLevelB <= 1.0f;
     /// Use only for normalized _data.
     /// It cleans previous mask.
     public : void applyTwoCutMaskInside(
             const float cutLevelA,
-            const float cutLevelB) throw (std::logic_error);
+            const float cutLevelB) throw (std::runtime_error);
 
     /// Apply two-cut to mask (outside)
     /// (i.e. set all _mask elements, that are outside cut levels, equal to (-_data elements)).
@@ -182,14 +183,14 @@ class RepresentativeVolumeElement
     /// It cleans previous mask.
     public : void applyTwoCutMaskOutside(
             const float cutLevelA,
-            const float cutLevelB) throw (std::logic_error);
+            const float cutLevelB) throw (std::runtime_error);
 
     /// Generate random ellipsoid at unmasked _data elements
     /// (i.e. where _data elements >=0),
     /// \todo move to device
     /// \todo random orientation
     /// \todo refactoring
-    public : void generateRandomEllipsoidSmoothed(
+    public : void generateRandomEllipsoidIntense(
             const int x,
             const int y,
             const int z,
@@ -199,7 +200,7 @@ class RepresentativeVolumeElement
             const float ellipsoidScaleFactorX = 1.0f,
             const float ellipsoidScaleFactorY = 1.0f,
             const float ellipsoidScaleFactorZ = 1.0f,
-            const float coreValue = 1.0f) throw (std::logic_error);
+            const float coreValue = 1.0f) throw (std::runtime_error);
 
     /// Generate overlapping random ellipsoids at unmasked _data elements
     /// (i.e. where _data elements >=0),
@@ -215,14 +216,14 @@ class RepresentativeVolumeElement
             const float ellipsoidScaleFactorY = 1.0f,
             const float ellipsoidScaleFactorZ = 1.0f,
             const float coreValue = 1.0f,
-            const float transitionLayerValue = 0.5f) throw (std::logic_error);
+            const float transitionLayerValue = 0.5f) throw (std::runtime_error);
 
     /// Generate overlapping random ellipsoids at unmasked _data elements
     /// (i.e. where _data elements >=0),
     /// \todo move to device
     /// \todo random orientation
     /// \todo refactoring
-    public : void generateOverlappingRandomEllipsoidsSmoothed(
+    public : void generateOverlappingRandomEllipsoidsIntense(
             const int ellipsoidNum,
             const int minRadius,
             const int maxRadius,
@@ -230,17 +231,17 @@ class RepresentativeVolumeElement
             const float ellipsoidScaleFactorX = 1.0f,
             const float ellipsoidScaleFactorY = 1.0f,
             const float ellipsoidScaleFactorZ = 1.0f,
-            const float coreValue = 1.0f) throw (std::logic_error);
+            const float coreValue = 1.0f) throw (std::runtime_error);
 
     /// Generate Voronoi diagram random cells
     /// It clears all previous data
     public : void generateVoronoiRandomCells(
-            const int cellNum) throw (std::logic_error);
+            const int cellNum) throw (std::runtime_error);
 
     /// Generate Voronoi diagram random cells OpenCL version
     /// It clears all previous data
     public : void generateVoronoiRandomCellsCL(
-            const int cellNum) throw (std::logic_error);
+            const int cellNum) throw (std::runtime_error);
 
     private: void _add(
             float *recipient,
