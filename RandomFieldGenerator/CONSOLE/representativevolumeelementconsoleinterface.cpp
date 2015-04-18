@@ -80,12 +80,12 @@ std::string RepresentativeVolumeElementConsoleInterface::createRVE(
             RVEs.emplace(name, new RepresentativeVolumeElement(size));
         }
         else return "Error: Cant create Representative Volume Element with given size.\n";
+        return "Representative Volume Element " + name + " created.\n";
     }
     catch(std::exception &e)
     {
         return e.what();
     }
-    return "Representative Volume Element " + name + " created.\n";
 }
 
 
@@ -97,7 +97,15 @@ int RepresentativeVolumeElementConsoleInterface::_CreateRVECommand::executeConso
         getConsole().writeToOutput("Error: wrong number of arguments.\n");
         return -1;
     }
-    getConsole().writeToOutput(_manager.createRVE(argv[0], std::atoi(argv[1].data())));
+    int _size;
+    std::stringstream _str{argv[1]};
+    if(_str >> _size)
+        getConsole().writeToOutput(_manager.createRVE(argv[0], _size));
+    else
+    {
+        getConsole().writeToOutput("Error: wrong <size> argument.\n");
+        return -1;
+    }
     return 0;
 }
 
@@ -112,12 +120,12 @@ std::string RepresentativeVolumeElementConsoleInterface::deleteRVE(
             return "Error: Representative Volume Element " + name + " doesn't exist.\n";
         else
             RVEs.erase(_pos);
+        return "Representative Volume Element " + name + " deleted.\n";
     }
     catch(std::exception &e)
     {
         return e.what();
     }
-    return "Representative Volume Element " + name + " deleted.\n";
 }
 
 
@@ -136,15 +144,22 @@ int RepresentativeVolumeElementConsoleInterface::_DeleteRVECommand::executeConso
 
 std::string Controller::RepresentativeVolumeElementConsoleInterface::printRVE() noexcept
 {
-    if(RVEs.empty())
-        return "There are no Representative Volume Element (RVE) objects in memory.\n";
+    try
+    {
+        if(RVEs.empty())
+            return "There are no Representative Volume Element (RVE) objects in memory.\n";
 
-    std::stringstream _str;
-    int _i = 0;
-    for(auto _rve: RVEs)
-        _str << " [" << _i++ << "]: " << _rve.first << " "
-             <<  _rve.second->getSize() << std::endl;
-    return _str.str();
+        std::stringstream _str;
+        int _i = 0;
+        for(auto _rve: RVEs)
+            _str << " [" << _i++ << "]: " << _rve.first << " "
+                 <<  _rve.second->getSize() << std::endl;
+        return _str.str();
+    }
+    catch(std::exception &e)
+    {
+        return e.what();
+    }
 }
 
 int RepresentativeVolumeElementConsoleInterface::_PrintRVECommand::executeConsoleCommand(
@@ -162,12 +177,19 @@ int RepresentativeVolumeElementConsoleInterface::_PrintRVECommand::executeConsol
 std::string RepresentativeVolumeElementConsoleInterface::cleanRVE(
         const std::string &name) noexcept
 {
-    auto _pos = RVEs.find(name);
-    if(_pos == RVEs.end())
-        return "Error: Representative Volume Element " + name + " doesn't exist.\n";
-    else
-        _pos->second->cleanData();
-    return "Representative Volume Element " + name + " cleaned.\n";
+    try
+    {
+        auto _pos = RVEs.find(name);
+        if(_pos == RVEs.end())
+            return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+        else
+            _pos->second->cleanData();
+        return "Representative Volume Element " + name + " cleaned.\n";
+    }
+    catch(std::exception &e)
+    {
+        return e.what();
+    }
 }
 
 int RepresentativeVolumeElementConsoleInterface::_cleanRVECommand::executeConsoleCommand(
@@ -185,12 +207,19 @@ int RepresentativeVolumeElementConsoleInterface::_cleanRVECommand::executeConsol
 std::string RepresentativeVolumeElementConsoleInterface::cleanUnMaskedRVE(
         const std::string &name, float filler) noexcept
 {
-    auto _pos = RVEs.find(name);
-    if(_pos == RVEs.end())
-        return "Error: Representative Volume Element " + name + " doesn't exist.\n";
-    else
-        _pos->second->cleanUnMaskedData(filler);
-    return "Representative Volume Element " + name + " cleaned.\n";
+    try
+    {
+        auto _pos = RVEs.find(name);
+        if(_pos == RVEs.end())
+            return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+        else
+            _pos->second->cleanUnMaskedData(filler);
+        return "Representative Volume Element " + name + " cleaned.\n";
+    }
+    catch(std::exception &e)
+    {
+        return e.what();
+    }
 }
 
 int RepresentativeVolumeElementConsoleInterface::_cleanUnMaskedRVECommand::executeConsoleCommand(
@@ -204,19 +233,36 @@ int RepresentativeVolumeElementConsoleInterface::_cleanUnMaskedRVECommand::execu
     else if(argv.size() == 1)
         getConsole().writeToOutput(_manager.cleanUnMaskedRVE(argv[0], 0.0f));
     else
-        getConsole().writeToOutput(_manager.cleanUnMaskedRVE(argv[0], std::atof(argv[1].data())));
+    {
+        float _filler;
+        std::stringstream _str{argv[1]};
+        if(_str >> _filler)
+            getConsole().writeToOutput(_manager.cleanUnMaskedRVE(argv[0], _filler));
+        else
+        {
+            getConsole().writeToOutput("Error: wrong <filler> argument.\n");
+            return -1;
+        }
+    }
     return 0;
 }
 
 std::string RepresentativeVolumeElementConsoleInterface::cleanMaskRVE(
         const std::string &name) noexcept
 {
-    auto _pos = RVEs.find(name);
-    if(_pos == RVEs.end())
-        return "Error: Representative Volume Element " + name + " doesn't exist.\n";
-    else
-        _pos->second->cleanMask();
-    return "Representative Volume Element mask" + name + " cleaned.\n";
+    try
+    {
+        auto _pos = RVEs.find(name);
+        if(_pos == RVEs.end())
+            return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+        else
+            _pos->second->cleanMask();
+        return "Representative Volume Element " + name + " mask cleaned.\n";
+    }
+    catch(std::exception &e)
+    {
+        return e.what();
+    }
 }
 
 int RepresentativeVolumeElementConsoleInterface::_cleanMaskRVECommand::executeConsoleCommand(
@@ -234,12 +280,19 @@ int RepresentativeVolumeElementConsoleInterface::_cleanMaskRVECommand::executeCo
 std::string RepresentativeVolumeElementConsoleInterface::addRandomNoiseRVE(
         const std::string &name) noexcept
 {
-    auto _pos = RVEs.find(name);
-    if(_pos == RVEs.end())
-        return "Error: Representative Volume Element " + name + " doesn't exist.\n";
-    else
-        _pos->second->addRandomNoise();
-    return "Representative Volume Element " + name + " random noise generation done.\n";
+    try
+    {
+        auto _pos = RVEs.find(name);
+        if(_pos == RVEs.end())
+            return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+        else
+            _pos->second->addRandomNoise();
+        return "Representative Volume Element " + name + " random noise generation done.\n";
+    }
+    catch(std::exception &e)
+    {
+        return e.what();
+    }
 }
 
 int RepresentativeVolumeElementConsoleInterface::_addRandomNoiseRVECommandmmand::executeConsoleCommand(
@@ -257,12 +310,19 @@ int RepresentativeVolumeElementConsoleInterface::_addRandomNoiseRVECommandmmand:
 std::string RepresentativeVolumeElementConsoleInterface::normalizeUnMaskedRVE(
         const std::string &name) noexcept
 {
-    auto _pos = RVEs.find(name);
-    if(_pos == RVEs.end())
-        return "Error: Representative Volume Element " + name + " doesn't exist.\n";
-    else
-        _pos->second->normalizeUnMasked();
-    return "Representative Volume Element " + name + " normalized.\n";
+    try
+    {
+        auto _pos = RVEs.find(name);
+        if(_pos == RVEs.end())
+            return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+        else
+            _pos->second->normalizeUnMasked();
+        return "Representative Volume Element " + name + " normalized.\n";
+    }
+    catch(std::exception &e)
+    {
+        return e.what();
+    }
 }
 
 int RepresentativeVolumeElementConsoleInterface::_normalizeUnMaskedRVECommand::executeConsoleCommand(
@@ -280,12 +340,19 @@ int RepresentativeVolumeElementConsoleInterface::_normalizeUnMaskedRVECommand::e
 std::string RepresentativeVolumeElementConsoleInterface::invertUnMaskedRVE(
         const std::string &name) noexcept
 {
-    auto _pos = RVEs.find(name);
-    if(_pos == RVEs.end())
-        return "Error: Representative Volume Element " + name + " doesn't exist.\n";
-    else
-        _pos->second->invertUnMasked();
-    return "Representative Volume Element " + name + " inverted.\n";
+    try
+    {
+        auto _pos = RVEs.find(name);
+        if(_pos == RVEs.end())
+            return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+        else
+            _pos->second->invertUnMasked();
+        return "Representative Volume Element " + name + " inverted.\n";
+    }
+    catch(std::exception &e)
+    {
+        return e.what();
+    }
 }
 
 int RepresentativeVolumeElementConsoleInterface::_invertUnMaskedRVECommand::executeConsoleCommand(
@@ -322,12 +389,12 @@ std::string RepresentativeVolumeElementConsoleInterface::applyGaussianFilterRVE(
                         ellipsoidScaleFactorZ,
                         useDataAsIntensity,
                         intensityFactor);
+        return "Representative Volume Element " + name + " Gaussian blur filter applying done.\n";
     }
     catch(std::exception &e)
     {
         return e.what();
     }
-    return "Representative Volume Element " + name + " Gaussian blur filter applying done.\n";
 }
 
 int RepresentativeVolumeElementConsoleInterface::_applyGaussianFilterRVECommand::executeConsoleCommand(
@@ -338,7 +405,15 @@ int RepresentativeVolumeElementConsoleInterface::_applyGaussianFilterRVECommand:
         getConsole().writeToOutput("Error: wrong number of arguments.\n");
         return -1;
     }
-    int discreteRadius = std::atoi(argv[1].data());
+    int discreteRadius;
+    {
+        std::stringstream _str{argv[1]};
+        if(!(_str >> discreteRadius))
+        {
+            getConsole().writeToOutput("wrong <Radius> argument.\n");
+            return -1;
+        }
+    }
     float ellipsoidScaleFactorX = 1.0f;
     float ellipsoidScaleFactorY = 1.0f;
     float ellipsoidScaleFactorZ = 1.0f;
@@ -346,17 +421,41 @@ int RepresentativeVolumeElementConsoleInterface::_applyGaussianFilterRVECommand:
     float intensityFactor = 1.0f;
     switch(argv.size())
     {
-    case 7: intensityFactor =std::atof(argv[6].data());
+    case 7:{std::stringstream _str{argv[6]};
+            if(!(_str >> intensityFactor))
+            {
+                getConsole().writeToOutput("wrong <intensityFactor> argument.\n");
+                return -1;
+            }
+        }
     case 6: if(argv[5].compare("true") == 0) useDataAsIntensity = true;
         else if(argv[5].compare("false") == 0) useDataAsIntensity = false;
         else
         {
-            getConsole().writeToOutput("wrong <useDataAsIntensity> argument\n");
+            getConsole().writeToOutput("wrong <useDataAsIntensity> argument.\n");
             return -1;
         }
-    case 5: ellipsoidScaleFactorZ = std::atof(argv[4].data());
-    case 4: ellipsoidScaleFactorY = std::atof(argv[3].data());
-    case 3: ellipsoidScaleFactorX = std::atof(argv[2].data());
+    case 5: {std::stringstream _str{argv[4]};
+            if(!(_str >> ellipsoidScaleFactorZ))
+            {
+                getConsole().writeToOutput("wrong <ScaleFactorZ> argument.\n");
+                return -1;
+            }
+        }
+    case 4: {std::stringstream _str{argv[3]};
+            if(!(_str >> ellipsoidScaleFactorY))
+            {
+                getConsole().writeToOutput("wrong <ScaleFactorY> argument.\n");
+                return -1;
+            }
+        }
+    case 3: {std::stringstream _str{argv[2]};
+            if(!(_str >> ellipsoidScaleFactorX))
+            {
+                getConsole().writeToOutput("wrong <ScaleFactorX> argument.\n");
+                return -1;
+            }
+        }
     }
 
     getConsole().writeToOutput(_manager.applyGaussianFilterRVE(
@@ -374,12 +473,19 @@ int RepresentativeVolumeElementConsoleInterface::_applyGaussianFilterRVECommand:
 std::string RepresentativeVolumeElementConsoleInterface::applyTwoCutMaskInsideRVE(
         const std::string &name, float cutLevelA, float cutLevelB) noexcept
 {
-    auto _pos = RVEs.find(name);
-    if(_pos == RVEs.end())
-        return "Error: Representative Volume Element " + name + " doesn't exist.\n";
-    else
-        _pos->second->applyTwoCutMaskInside(cutLevelA, cutLevelB);
-    return "Representative Volume Element mask" + name + " is set.\n";
+    try
+    {
+        auto _pos = RVEs.find(name);
+        if(_pos == RVEs.end())
+            return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+        else
+            _pos->second->applyTwoCutMaskInside(cutLevelA, cutLevelB);
+        return "Representative Volume Element " + name + " mask is set.\n";
+    }
+    catch(std::exception &e)
+    {
+        return e.what();
+    }
 }
 
 int RepresentativeVolumeElementConsoleInterface::_applyTwoCutMaskInsideRVECommand::executeConsoleCommand(
@@ -390,20 +496,45 @@ int RepresentativeVolumeElementConsoleInterface::_applyTwoCutMaskInsideRVEComman
         getConsole().writeToOutput("Error: wrong number of arguments.\n");
         return -1;
     }
+    float cutLevelA;
+    {
+        std::stringstream _str{argv[1]};
+        if(!(_str >> cutLevelA))
+        {
+            getConsole().writeToOutput("wrong <cutLevelA> argument.\n");
+            return -1;
+        }
+    }
+    float cutLevelB;
+    {
+        std::stringstream _str{argv[2]};
+        if(!(_str >> cutLevelB))
+        {
+            getConsole().writeToOutput("wrong <cutLevelB> argument.\n");
+            return -1;
+        }
+    }
     getConsole().writeToOutput(_manager.applyTwoCutMaskInsideRVE(
-                                   argv[0], std::atof(argv[1].data()), std::atof(argv[2].data())));
+                                   argv[0], cutLevelA, cutLevelB));
     return 0;
 }
 
 std::string RepresentativeVolumeElementConsoleInterface::applyTwoCutMaskOutsideRVE(
         const std::string &name, float cutLevelA, float cutLevelB) noexcept
 {
-    auto _pos = RVEs.find(name);
-    if(_pos == RVEs.end())
-        return "Error: Representative Volume Element " + name + " doesn't exist.\n";
-    else
-        _pos->second->applyTwoCutMaskOutside(cutLevelA, cutLevelB);
-    return "Representative Volume Element mask" + name + " is set.\n";
+    try
+    {
+        auto _pos = RVEs.find(name);
+        if(_pos == RVEs.end())
+            return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+        else
+            _pos->second->applyTwoCutMaskOutside(cutLevelA, cutLevelB);
+        return "Representative Volume Element " + name + " mask is set.\n";
+    }
+    catch(std::exception &e)
+    {
+        return e.what();
+    }
 }
 
 int RepresentativeVolumeElementConsoleInterface::_applyTwoCutMaskOutsideRVECommand::executeConsoleCommand(
@@ -414,7 +545,191 @@ int RepresentativeVolumeElementConsoleInterface::_applyTwoCutMaskOutsideRVEComma
         getConsole().writeToOutput("Error: wrong number of arguments.\n");
         return -1;
     }
+    float cutLevelA;
+    {
+        std::stringstream _str{argv[1]};
+        if(!(_str >> cutLevelA))
+        {
+            getConsole().writeToOutput("wrong <cutLevelA> argument.\n");
+            return -1;
+        }
+    }
+    float cutLevelB;
+    {
+        std::stringstream _str{argv[2]};
+        if(!(_str >> cutLevelB))
+        {
+            getConsole().writeToOutput("wrong <cutLevelB> argument.\n");
+            return -1;
+        }
+    }
     getConsole().writeToOutput(_manager.applyTwoCutMaskOutsideRVE(
-                                   argv[0], std::atof(argv[1].data()), std::atof(argv[2].data())));
+                                   argv[0], cutLevelA, cutLevelB));
+    return 0;
+}
+
+std::string RepresentativeVolumeElementConsoleInterface::generateOverlappingRandomEllipsoidsIntenseRVE(
+        const std::string &name,
+        int ellipsoidNum,
+        int minRadius,
+        int maxRadius,
+        float transitionLayerSize,
+        float ellipsoidScaleFactorX,
+        float ellipsoidScaleFactorY,
+        float ellipsoidScaleFactorZ,
+        float coreValue) noexcept
+{
+    try
+    {
+        auto _pos = RVEs.find(name);
+        if(_pos == RVEs.end())
+            return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+        else
+            _pos->second->generateOverlappingRandomEllipsoidsIntense(
+                        ellipsoidNum,
+                        minRadius,
+                        maxRadius,
+                        transitionLayerSize,
+                        ellipsoidScaleFactorX,
+                        ellipsoidScaleFactorY,
+                        ellipsoidScaleFactorZ,
+                        coreValue);
+        return "Representative Volume Element " + name + " Overlapping Random Ellipsoids generated.\n";
+    }
+    catch(std::exception &e)
+    {
+        return e.what();
+    }
+}
+
+int RepresentativeVolumeElementConsoleInterface::_generateOverlappingRandomEllipsoidsIntenseRVECommand::executeConsoleCommand(
+        const std::vector<std::string> &argv)
+{
+    if(argv.size() < 2 || argv.size() > 9)
+    {
+        getConsole().writeToOutput("Error: wrong number of arguments.\n");
+        return -1;
+    }
+    int ellipsoidNum;
+    {
+        std::stringstream _str{argv[1]};
+        if(!(_str >> ellipsoidNum))
+        {
+            getConsole().writeToOutput("wrong <ellipsoidNum> argument.\n");
+            return -1;
+        }
+    }
+    int minRadius;
+    {
+        std::stringstream _str{argv[2]};
+        if(!(_str >> minRadius))
+        {
+            getConsole().writeToOutput("wrong <minRadius> argument.\n");
+            return -1;
+        }
+    }
+    int maxRadius;
+    {
+        std::stringstream _str{argv[3]};
+        if(!(_str >> maxRadius))
+        {
+            getConsole().writeToOutput("wrong <maxRadius> argument.\n");
+            return -1;
+        }
+    }
+    float transitionLayerSize = 1.0f;
+    float ellipsoidScaleFactorX = 1.0f;
+    float ellipsoidScaleFactorY = 1.0f;
+    float ellipsoidScaleFactorZ = 1.0f;
+    float coreValue = 1.0f;
+    switch(argv.size())
+    {
+    case 9:{std::stringstream _str{argv[8]};
+            if(!(_str >> coreValue))
+            {
+                getConsole().writeToOutput("wrong <coreValue> argument.\n");
+                return -1;
+            }
+        }
+    case 8: {std::stringstream _str{argv[7]};
+            if(!(_str >> ellipsoidScaleFactorZ))
+            {
+                getConsole().writeToOutput("wrong <ScaleFactorZ> argument.\n");
+                return -1;
+            }
+        }
+    case 7: {std::stringstream _str{argv[6]};
+            if(!(_str >> ellipsoidScaleFactorY))
+            {
+                getConsole().writeToOutput("wrong <ScaleFactorY> argument.\n");
+                return -1;
+            }
+        }
+    case 6: {std::stringstream _str{argv[5]};
+            if(!(_str >> ellipsoidScaleFactorX))
+            {
+                getConsole().writeToOutput("wrong <ScaleFactorX> argument.\n");
+                return -1;
+            }
+        }
+    case 5: {std::stringstream _str{argv[4]};
+            if(!(_str >> transitionLayerSize))
+            {
+                getConsole().writeToOutput("wrong <transitionLayerSize> argument.\n");
+                return -1;
+            }
+        }
+    }
+
+    getConsole().writeToOutput(_manager.generateOverlappingRandomEllipsoidsIntenseRVE(
+                                   argv[0],
+                               ellipsoidNum,
+                               minRadius,
+                               maxRadius,
+                               transitionLayerSize,
+                               ellipsoidScaleFactorX,
+                               ellipsoidScaleFactorY,
+                               ellipsoidScaleFactorZ,
+                               coreValue));
+
+    return 0;
+}
+
+std::string RepresentativeVolumeElementConsoleInterface::generateVoronoiRandomCellsRVE(
+        const std::string &name, int cellNum) noexcept
+{
+    try
+    {
+        auto _pos = RVEs.find(name);
+        if(_pos == RVEs.end())
+            return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+        else
+            _pos->second->generateVoronoiRandomCellsCL(cellNum);
+        return "Representative Volume Element " + name + " Voronoi random cells generated.\n";
+    }
+    catch(std::exception &e)
+    {
+        return e.what();
+    }
+}
+
+int RepresentativeVolumeElementConsoleInterface::_generateVoronoiRandomCellsRVECommand::executeConsoleCommand(
+        const std::vector<std::string> &argv)
+{
+    if(argv.size() != 2)
+    {
+        getConsole().writeToOutput("Error: wrong number of arguments.\n");
+        return -1;
+    }
+    int cellNum;
+    std::stringstream _str{argv[1]};
+    if(_str >> cellNum)
+        getConsole().writeToOutput(_manager.generateVoronoiRandomCellsRVE(
+                                       argv[0], cellNum));
+    else
+    {
+        getConsole().writeToOutput("wrong <cellNum> argument.\n");
+        return -1;
+    }
     return 0;
 }

@@ -25,7 +25,7 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
 
     if(!_data || !_cuttedData)
         throw(std::runtime_error("Error: RepresentativeVolumeElement():"
-                                 "can't allocate memory for RVE"));
+                                 "can't allocate memory for RVE.\n"));
 
     // Clean all storages
     cleanData();
@@ -212,6 +212,7 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
             }";
 
         /// Don't worry, CLManager will destroy this objects at the end of application
+        /// \todo different platforms
         _programPtr = &OpenCL::CLManager::instance().createProgram(
                     _CLSource_applyGaussianFilter,
                     OpenCL::CLManager::instance().getCurrentContext(),
@@ -285,7 +286,8 @@ void RepresentativeVolumeElement::applyRelativeRandomNoise(
 {
     if(distrCoefBottom < 0.0f || distrCoefTop < 0.0f)
         throw(std::runtime_error(
-                "applyRelativeRandomNoise(): distrCoefTop < 0.0f || distrCoefBottom < 0.0f"));
+                "applyRelativeRandomNoise(): distrCoefTop < 0.0f || "
+                "distrCoefBottom < 0.0f.\n"));
 
     float _min = 0;
     float _max = 0;
@@ -312,9 +314,6 @@ void RepresentativeVolumeElement::applyRelativeRandomNoise(
 
 void RepresentativeVolumeElement::findUnMaskedMinAndMax(float &min, float &max) noexcept
 {
-//    min = 0;
-//    max = 0;
-
     bool isFirstFound = false;
 
     for( long i = 0; i < _size; ++i)
@@ -338,11 +337,6 @@ void RepresentativeVolumeElement::findUnMaskedMinAndMax(float &min, float &max) 
                     }
                 }
             }
-//    if(_min == _max)
-//    {
-//        _min = 0.0f;
-//        _max = 1.0f;
-//    }
 }
 
 /// \todo refactor find min and max
@@ -352,10 +346,10 @@ void RepresentativeVolumeElement::scaleUnMasked(
 {
     if(levelA < 0.0f || levelA >= levelB)
         throw(std::runtime_error(
-                "scaleUnMasked(): levelA < 0.0f || levelA >= levelB"));
+                "scaleUnMasked(): levelA < 0.0f || levelA >= levelB.\n"));
     if(levelB <= levelA || levelB > 1.0f)
         throw(std::runtime_error(
-                "scaleUnMasked(): levelB <= levelA || levelB > 1.0f"));
+                "scaleUnMasked(): levelB <= levelA || levelB > 1.0f.\n"));
 
     float _min = 0;
     float _max = 0;
@@ -446,13 +440,16 @@ void RepresentativeVolumeElement::applyGaussianFilter(
 {
     std::cout << "applyGaussianFilter() call:" << std::endl;
     if(discreteRadius <= 0)
-        throw(std::runtime_error("applyGaussianFilter(): radius <= 0"));
+        throw(std::runtime_error("applyGaussianFilter(): radius <= 0.\n"));
     if(ellipsoidScaleFactorX <= 0.0f || ellipsoidScaleFactorX > 1.0f)
-        throw(std::runtime_error("applyGaussianFilter(): ellipsoidScaleFactorX <= 0 or > 1"));
+        throw(std::runtime_error("applyGaussianFilter(): ellipsoidScaleFactorX "
+                                 "<= 0 or > 1.\n"));
     if(ellipsoidScaleFactorY <= 0.0f || ellipsoidScaleFactorY > 1.0f)
-        throw(std::runtime_error("applyGaussianFilter(): ellipsoidScaleFactorY <= 0 or > 1"));
+        throw(std::runtime_error("applyGaussianFilter(): ellipsoidScaleFactorY "
+                                 "<= 0 or > 1.\n"));
     if(ellipsoidScaleFactorZ <= 0.0f || ellipsoidScaleFactorZ > 1.0f)
-        throw(std::runtime_error("applyGaussianFilter(): ellipsoidScaleFactorZ <= 0 or > 1"));
+        throw(std::runtime_error("applyGaussianFilter(): ellipsoidScaleFactorZ "
+                                 "<= 0 or > 1.\n"));
 
     _discreteRadius = discreteRadius;
 
@@ -462,7 +459,7 @@ void RepresentativeVolumeElement::applyGaussianFilter(
         _dataTmpStorage = new float[_size * _size * _size];
         if(!_dataTmpStorage)
             throw(std::runtime_error("applyGaussianFilterCL():"
-                                     "can't allocate memory for temporary storage"));
+                                     "can't allocate memory for temporary storage.\n"));
 
         memcpy(_dataTmpStorage,_data,sizeof(float) * _size * _size * _size);
 
@@ -629,16 +626,16 @@ void RepresentativeVolumeElement::applyGaussianFilterCL(
 {
     std::cout << "applyGaussianFilterCL() call:" << std::endl;
     if(discreteRadius <= 0)
-        throw(std::runtime_error("applyGaussianFilterCL(): radius <= 0"));
+        throw(std::runtime_error("applyGaussianFilterCL(): radius <= 0.\n"));
     if(ellipsoidScaleFactorX <= 0.0f || ellipsoidScaleFactorX > 1.0f)
         throw(std::runtime_error(
-                "applyGaussianFilterCL(): ellipsoidScaleFactorX <= 0 or > 1"));
+                "applyGaussianFilterCL(): ellipsoidScaleFactorX <= 0 or > 1.\n"));
     if(ellipsoidScaleFactorY <= 0.0f || ellipsoidScaleFactorY > 1.0f)
         throw(std::runtime_error(
-                "applyGaussianFilterCL(): ellipsoidScaleFactorY <= 0 or > 1"));
+                "applyGaussianFilterCL(): ellipsoidScaleFactorY <= 0 or > 1.\n"));
     if(ellipsoidScaleFactorZ <= 0.0f || ellipsoidScaleFactorZ > 1.0f)
         throw(std::runtime_error(
-                "applyGaussianFilterCL(): ellipsoidScaleFactorZ <= 0 or > 1"));
+                "applyGaussianFilterCL(): ellipsoidScaleFactorZ <= 0 or > 1.\n"));
 
     _discreteRadius = discreteRadius;
 
@@ -648,7 +645,7 @@ void RepresentativeVolumeElement::applyGaussianFilterCL(
         _dataTmpStorage = new float[_size * _size * _size];
         if(!_dataTmpStorage)
             throw(std::runtime_error("applyGaussianFilterCL():"
-                                     "can't allocate memory for temporary storage"));
+                                     "can't allocate memory for temporary storage.\n"));
 
         memcpy(_dataTmpStorage,_data,sizeof(float) * _size * _size * _size);
 
@@ -774,10 +771,10 @@ void RepresentativeVolumeElement::applyTwoCutMaskInside(
 {
     if(cutLevelA < 0.0f || cutLevelA >= cutLevelB)
         throw(std::runtime_error(
-                "applyTwoCutMaskWithin(): cutLevelA < 0.0f || cutLevelA >= cutLevelB"));
+                "applyTwoCutMaskWithin(): cutLevelA < 0.0f || cutLevelA >= cutLevelB.\n"));
     if(cutLevelB <= cutLevelA || cutLevelB > 1.0f)
         throw(std::runtime_error(
-                "applyTwoCutMaskWithin(): cutLevelB <= cutLevelA || cutLevelB > 1.0f"));
+                "applyTwoCutMaskWithin(): cutLevelB <= cutLevelA || cutLevelB > 1.0f.\n"));
 
     cleanMask();
     for(long i = 0; i < _size; ++i)
@@ -796,10 +793,10 @@ void RepresentativeVolumeElement::applyTwoCutMaskOutside(
 {
     if(cutLevelA < 0.0f || cutLevelA >= cutLevelB)
         throw(std::runtime_error(
-                "applyTwoCutMaskOutside(): cutLevelA < 0.0f || cutLevelA >= cutLevelB"));
+                "applyTwoCutMaskOutside(): cutLevelA < 0.0f || cutLevelA >= cutLevelB.\n"));
     if(cutLevelB <= cutLevelA || cutLevelB > 1.0f)
         throw(std::runtime_error(
-                "applyTwoCutMaskOutside(): cutLevelB <= cutLevelA || cutLevelB > 1.0f"));
+                "applyTwoCutMaskOutside(): cutLevelB <= cutLevelA || cutLevelB > 1.0f.\n"));
 
     cleanMask();
     for(long i = 0; i < _size; ++i)
@@ -826,43 +823,43 @@ void RepresentativeVolumeElement::generateRandomEllipsoidIntense(
 {
     if(x < 0 || x >= _size)
         throw(std::runtime_error("generateRandomEllipsoidSmoothed(): "
-                                 "x < 0 || x >= _size"));
+                                 "x < 0 || x >= _size.\n"));
     if(y < 0 || y >= _size)
         throw(std::runtime_error("generateRandomEllipsoidSmoothed(): "
-                                 "y < 0 || y >= _size"));
+                                 "y < 0 || y >= _size.\n"));
     if(z < 0 || z >= _size)
         throw(std::runtime_error("generateRandomEllipsoidSmoothed(): "
-                                 "z < 0 || z >= _size"));
+                                 "z < 0 || z >= _size.\n"));
 
     if(minRadius <= 0)
         throw(std::runtime_error("generateRandomEllipsoidSmoothed(): "
-                                 "minRadius <= 0"));
+                                 "minRadius <= 0.\n"));
     if(maxRadius <= 0)
         throw(std::runtime_error("generateRandomEllipsoidSmoothed(): "
-                                 "maxRadius <= 0"));
+                                 "maxRadius <= 0.\n"));
     if(maxRadius < minRadius)
         throw(std::runtime_error("generateRandomEllipsoidSmoothed(): "
-                                 "maxRadius < minRadius"));
+                                 "maxRadius < minRadius.\n"));
     if(transitionLayerSize <= 0.0f || transitionLayerSize > 1.0f)
         throw(std::runtime_error(
                 "generateRandomEllipsoidSmoothed(): transitionLayerSize <= 0.0f || "
-                "transitionLayerSize > 1.0f"));
+                "transitionLayerSize > 1.0f.\n"));
     if(ellipsoidScaleFactorX <= 0.0f || ellipsoidScaleFactorX > 1.0f)
         throw(std::runtime_error(
                 "generateRandomEllipsoidSmoothed(): "
-                "ellipsoidScaleFactorX <= 0 or > 1"));
+                "ellipsoidScaleFactorX <= 0 or > 1.\n"));
     if(ellipsoidScaleFactorY <= 0.0f || ellipsoidScaleFactorY > 1.0f)
         throw(std::runtime_error(
                 "generateRandomEllipsoidSmoothed(): "
-                "ellipsoidScaleFactorY <= 0 or > 1"));
+                "ellipsoidScaleFactorY <= 0 or > 1.\n"));
     if(ellipsoidScaleFactorZ <= 0.0f || ellipsoidScaleFactorZ > 1.0f)
         throw(std::runtime_error(
                 "generateRandomEllipsoidSmoothed(): "
-                "ellipsoidScaleFactorZ <= 0 or > 1"));
+                "ellipsoidScaleFactorZ <= 0 or > 1.\n"));
     if(coreValue < 0.0f || coreValue > 1.0f)
         throw(std::runtime_error(
                 "generateRandomEllipsoidSmoothed(): "
-                "coreValue < 0.0f || coreValue > 1.0f"));
+                "coreValue < 0.0f || coreValue > 1.0f.\n"));
 
     MathUtils::Node<3,float> _sphereCenter(x,y,z);
 
@@ -916,37 +913,40 @@ void RepresentativeVolumeElement::generateOverlappingRandomEllipsoids(
 {
     if(ellipsoidNum <= 0)
         throw(std::runtime_error("generateOverlappingRandomEllipsoids(): "
-                                 "ellopsoidNum <= 0"));
+                                 "ellopsoidNum <= 0.\n"));
     if(minRadius <= 0)
         throw(std::runtime_error("generateOverlappingRandomEllipsoids(): "
-                                 "minRadius <= 0"));
+                                 "minRadius <= 0.\n"));
     if(maxRadius <= 0)
         throw(std::runtime_error("generateOverlappingRandomEllipsoids(): "
-                                 "maxRadius <= 0"));
+                                 "maxRadius <= 0.\n"));
     if(maxRadius < minRadius)
         throw(std::runtime_error("generateOverlappingRandomEllipsoids(): "
-                                 "maxRadius < minRadius"));
+                                 "maxRadius < minRadius.\n"));
     if(transitionLayerSize < 0.0f || transitionLayerSize > 1.0f)
         throw(std::runtime_error(
                 "generateOverlappingRandomEllipsoids(): transitionLayerSize < 0.0f || "
-                "transitionLayerSize > 1.0f"));
+                "transitionLayerSize > 1.0f.\n"));
     if(ellipsoidScaleFactorX <= 0.0f || ellipsoidScaleFactorX > 1.0f)
         throw(std::runtime_error(
-                "generateOverlappingRandomEllipsoids(): ellipsoidScaleFactorX <= 0 or > 1"));
+                "generateOverlappingRandomEllipsoids(): ellipsoidScaleFactorX "
+                "<= 0 or > 1.\n"));
     if(ellipsoidScaleFactorY <= 0.0f || ellipsoidScaleFactorY > 1.0f)
         throw(std::runtime_error(
-                "generateOverlappingRandomEllipsoids(): ellipsoidScaleFactorY <= 0 or > 1"));
+                "generateOverlappingRandomEllipsoids(): ellipsoidScaleFactorY "
+                "<= 0 or > 1.\n"));
     if(ellipsoidScaleFactorZ <= 0.0f || ellipsoidScaleFactorZ > 1.0f)
         throw(std::runtime_error(
-                "generateOverlappingRandomEllipsoids(): ellipsoidScaleFactorZ <= 0 or > 1"));
+                "generateOverlappingRandomEllipsoids(): ellipsoidScaleFactorZ "
+                "<= 0 or > 1.\n"));
     if(coreValue < 0.0f || coreValue > 1.0f)
         throw(std::runtime_error(
                 "generateOverlappingRandomEllipsoids(): "
-                "coreValue < 0.0f || coreValue > 1.0f"));
+                "coreValue < 0.0f || coreValue > 1.0f.\n"));
     if(transitionLayerValue >= coreValue)
         throw(std::runtime_error(
                 "generateOverlappingRandomEllipsoids(): "
-                "transitionLayerValue >= coreValue"));
+                "transitionLayerValue >= coreValue.\n"));
 
     for(int i=0; i<ellipsoidNum; ++i)
     {
@@ -1002,36 +1002,36 @@ void RepresentativeVolumeElement::generateOverlappingRandomEllipsoidsIntense(
 {
     if(ellipsoidNum <= 0)
         throw(std::runtime_error("generateOverlappingRandomEllipsoidsSmoothed(): "
-                                 "ellopsoidNum <= 0"));
+                                 "ellopsoidNum <= 0.\n"));
     if(minRadius <= 0)
         throw(std::runtime_error("generateOverlappingRandomEllipsoidsSmoothed(): "
-                                 "minRadius <= 0"));
+                                 "minRadius <= 0.\n"));
     if(maxRadius <= 0)
         throw(std::runtime_error("generateOverlappingRandomEllipsoidsSmoothed(): "
-                                 "maxRadius <= 0"));
+                                 "maxRadius <= 0.\n"));
     if(maxRadius < minRadius)
         throw(std::runtime_error("generateOverlappingRandomEllipsoidsSmoothed(): "
-                                 "maxRadius < minRadius"));
+                                 "maxRadius < minRadius.\n"));
     if(transitionLayerSize <= 0.0f || transitionLayerSize > 1.0f)
         throw(std::runtime_error(
                 "generateOverlappingRandomEllipsoidsSmoothed(): transitionLayerSize <= 0.0f || "
-                "transitionLayerSize > 1.0f"));
+                "transitionLayerSize > 1.0f.\n"));
     if(ellipsoidScaleFactorX <= 0.0f || ellipsoidScaleFactorX > 1.0f)
         throw(std::runtime_error(
                 "generateOverlappingRandomEllipsoidsSmoothed(): "
-                "ellipsoidScaleFactorX <= 0 or > 1"));
+                "ellipsoidScaleFactorX <= 0 or > 1.\n"));
     if(ellipsoidScaleFactorY <= 0.0f || ellipsoidScaleFactorY > 1.0f)
         throw(std::runtime_error(
                 "generateOverlappingRandomEllipsoidsSmoothed(): "
-                "ellipsoidScaleFactorY <= 0 or > 1"));
+                "ellipsoidScaleFactorY <= 0 or > 1.\n"));
     if(ellipsoidScaleFactorZ <= 0.0f || ellipsoidScaleFactorZ > 1.0f)
         throw(std::runtime_error(
                 "generateOverlappingRandomEllipsoidsSmoothed(): "
-                "ellipsoidScaleFactorZ <= 0 or > 1"));
+                "ellipsoidScaleFactorZ <= 0 or > 1.\n"));
     if(coreValue < 0.0f || coreValue > 1.0f)
         throw(std::runtime_error(
                 "generateOverlappingRandomEllipsoidsSmoothed(): "
-                "coreValue < 0.0f || coreValue > 1.0f"));
+                "coreValue < 0.0f || coreValue > 1.0f.\n"));
 
     for(int i=0; i<ellipsoidNum; ++i)
     {
@@ -1083,7 +1083,7 @@ void RepresentativeVolumeElement::generateVoronoiRandomCells(
 {
     if(cellNum < 2)
         throw(std::runtime_error("generateVoronoiRandomCells(): "
-                                 "cellNum < 2"));
+                                 "cellNum < 2.\n"));
 
     cleanData();
 
@@ -1190,7 +1190,7 @@ void RepresentativeVolumeElement::generateVoronoiRandomCellsCL(
 {
     if(cellNum < 2)
         throw(std::runtime_error("generateVoronoiRandomCells(): "
-                                 "cellNum < 2"));
+                                 "cellNum < 2.\n"));
 
     cleanData();
 
@@ -1198,7 +1198,7 @@ void RepresentativeVolumeElement::generateVoronoiRandomCellsCL(
     float *_initialPoints = new float[cellNum*3];
     if(!_initialPoints)
         throw(std::runtime_error("generateVoronoiRandomCells():"
-                                 "can't allocate memory for temporary storage"));
+                                 "can't allocate memory for temporary storage.\n"));
     for(int c=0; c<cellNum; ++c)
     {
         _initialPoints[c*3+0] = MathUtils::rand<int>(0,_size-1);

@@ -30,7 +30,7 @@ class _EditRVECommand : public QObject, public ConsoleCommand
             "editRVE <Name>\n"
             "Call the Graphical User Interface Representative Volume Element edit form.\n"
             "Arguments:\n"
-            " <Name> - the name of RVE in RAM memory.\n",
+            "[string] <Name> - the name of RVE in RAM memory.\n",
             console),
         _manager(manager)
     {
@@ -86,8 +86,9 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
                 "createRVE <Name> <size>\n"
                 "Creates Representative Volume Element (RVE) object in RAM memory.\n"
                 "Arguments:\n"
-                " <Name> - the name of RVE in RAM memory,\n"
-                " <size> - the discrete size of RVE. It should be equal to some power of two.\n",
+                "[string] <Name> - the name of RVE in RAM memory,\n"
+                "[int]    <size> - the discrete size of RVE. "
+                "It should be equal to some power of two.\n",
                 console),
                 _manager(manager){}
         public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
@@ -105,7 +106,7 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
                 "deleteRVE <Name>\n"
                 "Deletes Representative Volume Element (RVE) object from RAM memory.\n"
                 "Arguments:\n"
-                " <Name> - the name of RVE in RAM memory.\n",
+                "[string] <Name> - the name of RVE in RAM memory.\n",
                 console),
                 _manager(manager){}
         public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
@@ -121,7 +122,8 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
             ConsoleCommand(
                 "printRVE",
                 "createRVE\n"
-                "Prints existing in RAM memory Representative Volume Element (RVE) objects in\n"
+                "Prints existing in RAM memory Representative Volume "
+                "Element (RVE) objects in\n"
                 "format: [<index>]: <name> <size>.\n"
                 "Takes no arguments.\n",
                 console),
@@ -143,13 +145,13 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
                 "cleanRVE <Name>\n"
                 "Clean RVE by set all it elements to 0.\n"
                 "Arguments:\n"
-                " <Name> - the name of RVE in RAM memory.\n",
+                "[string] <Name> - the name of RVE in RAM memory.\n",
                 console),
                 _manager(manager){}
         public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
     } *_commandCleanRVE = nullptr;
 
-    /// cleanUnMaskedRVE -------------------------------------------------------------------------
+    /// cleanUnMaskedRVE ---------------------------------------------------------------------
     public : std::string cleanUnMaskedRVE(const std::string &name, float filler) noexcept;
     private: class _cleanUnMaskedRVECommand : public ConsoleCommand
     {
@@ -161,8 +163,8 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
                 "cleanUnMaskedRVE <Name> <filler>\n"
                 "Clean un masked elements RVE by set them to <filler>.\n"
                 "Arguments:\n"
-                " <Name> - the name of RVE in RAM memory;\n"
-                " <filler> - (optional) value to fill RVE elements (default = 0).\n",
+                "[string] <Name> - the name of RVE in RAM memory;\n"
+                "[float]  <filler> - (optional) value to fill RVE elements (default = 0).\n",
                 console),
                 _manager(manager){}
         public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
@@ -180,13 +182,13 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
                 "cleanMaskRVE <Name>\n"
                 "Clean RVE mask.\n"
                 "Arguments:\n"
-                " <Name> - the name of RVE in RAM memory.\n",
+                "[string] <Name> - the name of RVE in RAM memory.\n",
                 console),
                 _manager(manager){}
         public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
     } *_commandCleanMaskRVE = nullptr;
 
-    /// addRandomNoiseRVE -------------------------------------------------------------------------
+    /// addRandomNoiseRVE -------------------------------------------------------------------
     public : std::string addRandomNoiseRVE(const std::string &name) noexcept;
     private: class _addRandomNoiseRVECommandmmand : public ConsoleCommand
     {
@@ -200,7 +202,7 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
                 "Note that RVE can be unnormalized after this call, "
                 "if it wasn't cleaned before.\n"
                 "Arguments:\n"
-                " <Name> - the name of RVE in RAM memory.\n",
+                "[string] <Name> - the name of RVE in RAM memory.\n",
                 console),
                 _manager(manager){}
         public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
@@ -218,13 +220,13 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
                 "normalizeUnMaskedRVE <Name>\n"
                 "Normalize un msked RVE elements.\n"
                 "Arguments:\n"
-                " <Name> - the name of RVE in RAM memory.\n",
+                "[string] <Name> - the name of RVE in RAM memory.\n",
                 console),
                 _manager(manager){}
         public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
     } *_commandNormalizeUnMaskedRVE = nullptr;
 
-    /// invertUnMaskedRVE ---------------------------------------------------------------------
+    /// invertUnMaskedRVE --------------------------------------------------------------------
     public : std::string invertUnMaskedRVE(const std::string &name) noexcept;
     private: class _invertUnMaskedRVECommand : public ConsoleCommand
     {
@@ -236,13 +238,13 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
                 "invertUnMaskedRVE <Name>\n"
                 "Invert normalized un masked RVE elements.\n"
                 "Arguments:\n"
-                " <Name> - the name of RVE in RAM memory.\n",
+                "[string] <Name> - the name of RVE in RAM memory.\n",
                 console),
                 _manager(manager){}
         public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
     } *_commandInvertUnMaskedRVE = nullptr;
 
-    /// applyGaussianFilterRVE -------------------------------------------------------------------------
+    /// applyGaussianFilterRVE --------------------------------------------------------------
     public : std::string applyGaussianFilterRVE(
             const std::string &name,
             int discreteRadius,
@@ -263,17 +265,17 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
                 "Apply Gaussian blur filter to given Representative "
                 "Volume Element elements.\n"
                 "Arguments:\n"
-                " <Name> - the name of RVE in RAM memory;\n"
-                " <Radius> - the radius of filter mask, should be > 0;\n"
-                " <ScaleFactorX> - (optional) the ellipsoid scale factor on X axis of "
+                "[string] <Name> - the name of RVE in RAM memory;\n"
+                "[int]    <Radius> - the radius of filter mask, should be > 0;\n"
+                "[float]  <ScaleFactorX> - (optional) the ellipsoid scale factor on X axis of "
                 "filter mask, should be > 0 and <= 1;\n"
-                " <ScaleFactorY> - (optional) the ellipsoid scale factor on Y axis of "
+                "[float]  <ScaleFactorY> - (optional) the ellipsoid scale factor on Y axis of "
                 "filter mask, should be > 0 and <= 1;\n"
-                " <ScaleFactorZ> - (optional) the ellipsoid scale factor on Z axis of "
+                "[float]  <ScaleFactorZ> - (optional) the ellipsoid scale factor on Z axis of "
                 "filter mask, should be > 0 and <= 1;\n"
-                " <useDataAsIntensity> - (optional) use RVE elements as intensity "
+                "[bool]   <useDataAsIntensity> - (optional) use RVE elements as intensity "
                 "'true' or 'false';\n"
-                " <intensityFactor> - (optional) if <useDataAsIntensity> equal 'true',"
+                "[float]  <intensityFactor> - (optional) if <useDataAsIntensity> equal 'true',"
                 "use intensity multiply factor.\n",
                 console),
                 _manager(manager){}
@@ -295,10 +297,10 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
                 "applyTwoCutMaskInsideRVE <Name> <cutLevelA> <cutLevelB>\n"
                 "Apply two-cut to mask (inside).\n"
                 "Arguments:\n"
-                " <Name> - the name of RVE in RAM memory;\n"
-                " <cutLevelA> - bottom cut level;"
-                " <cutLevelB> - top cut level;"
-                " 0.0f <= cutlevelA < cutLevelB <= 1.0f.",
+                "[string] <Name> - the name of RVE in RAM memory;\n"
+                "[float]  <cutLevelA> - bottom cut level;\n"
+                "[float]  <cutLevelB> - top cut level;\n"
+                " 0.0f <= cutlevelA < cutLevelB <= 1.0f.\n",
                 console),
                 _manager(manager){}
         public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
@@ -319,14 +321,76 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
                 "applyTwoCutMaskOutsideRVE <Name> <cutLevelA> <cutLevelB>\n"
                 "Apply two-cut to mask (outside).\n"
                 "Arguments:\n"
-                " <Name> - the name of RVE in RAM memory;\n"
-                " <cutLevelA> - bottom cut level;"
-                " <cutLevelB> - top cut level;"
-                " 0.0f <= cutlevelA < cutLevelB <= 1.0f.",
+                "[string] <Name> - the name of RVE in RAM memory;\n"
+                "[float]  <cutLevelA> - bottom cut level;\n"
+                "[float]  <cutLevelB> - top cut level;\n"
+                " 0.0f <= cutlevelA < cutLevelB <= 1.0f.\n",
                 console),
                 _manager(manager){}
         public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
     } *_commandApplyTwoCutMaskOutsideRVE = nullptr;
+
+    /// generateOverlappingRandomEllipsoidsIntenseRVE ----------------------------------------
+    public : std::string generateOverlappingRandomEllipsoidsIntenseRVE(
+            const std::string &name,
+            int ellipsoidNum,
+            int minRadius,
+            int maxRadius,
+            float transitionLayerSize,
+            float ellipsoidScaleFactorX,
+            float ellipsoidScaleFactorY,
+            float ellipsoidScaleFactorZ,
+            float coreValue) noexcept;
+    private: class _generateOverlappingRandomEllipsoidsIntenseRVECommand : public ConsoleCommand
+    {
+        private: RepresentativeVolumeElementConsoleInterface &_manager;
+        public: _generateOverlappingRandomEllipsoidsIntenseRVECommand(
+                RepresentativeVolumeElementConsoleInterface &manager, Console &console) :
+            ConsoleCommand(
+                "generateOverlappingRandomEllipsoidsIntenseRVE",
+                "generateOverlappingRandomEllipsoidsIntenseRVE <Name> <ellipsoidNum> "
+                "<minRadius> <maxRadius> <transitionLayerSize> <ScaleFactorX> "
+                "<ScaleFactorY> <ScaleFactorZ> <coreValue>\n"
+                "Generate overlapping random ellipsoids at unmasked RVE elements\n"
+                "Arguments:\n"
+                "[string] <Name> - the name of RVE in RAM memory;\n"
+                "[int]    <ellipsoidNum> - number of ellipsoids;\n"
+                "[int]    <minRadius> - bottom boudn of radius deviation;\n"
+                "[int]    <maxRadius> - top bound of radius deviation;\n"
+                "[float]  <transitionLayerSize> - (optional) in range [0:1], relative to radius;\n"
+                "[float]  <ScaleFactorX> - (optional) the ellipsoid scale factor on X axis of "
+                "filter mask, should be > 0 and <= 1;\n"
+                "[float]  <ScaleFactorY> - (optional) the ellipsoid scale factor on Y axis of "
+                "filter mask, should be > 0 and <= 1;\n"
+                "[float]  <ScaleFactorZ> - (optional) the ellipsoid scale factor on Z axis of "
+                "filter mask, should be > 0 and <= 1;\n"
+                "[float]  <coreValue> - (optional) intensity value of core.\n",
+                console),
+                _manager(manager){}
+        public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
+    } *_commandGenerateOverlappingRandomEllipsoidsIntenseRVE = nullptr;
+
+    /// generateVoronoiRandomCellsRVE ---------------------------------------------------------
+    public : std::string generateVoronoiRandomCellsRVE(
+            const std::string &name,
+            int cellNum) noexcept;
+    private: class _generateVoronoiRandomCellsRVECommand : public ConsoleCommand
+    {
+        private: RepresentativeVolumeElementConsoleInterface &_manager;
+        public: _generateVoronoiRandomCellsRVECommand(
+                RepresentativeVolumeElementConsoleInterface &manager, Console &console) :
+            ConsoleCommand(
+                "generateVoronoiRandomCellsRVE",
+                "generateVoronoiRandomCellsRVE <Name> <cellNum>\n"
+                "Generate Voronoi diagram random cells OpenCL version. It clears all "
+                "previous data\n"
+                "Arguments:\n"
+                "[string] <Name> - the name of RVE in RAM memory;\n"
+                "[int]    <cellNum> - number of cells.\n",
+                console),
+                _manager(manager){}
+        public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
+    } *_commandgenerateVoronoiRandomCellsRVE = nullptr;
 
     /// Constructor --------------------------------------------------------------------------
     public : RepresentativeVolumeElementConsoleInterface(Console &console):
@@ -342,7 +406,12 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
         _commandInvertUnMaskedRVE(new _invertUnMaskedRVECommand(*this, console)),
         _commandApplyGaussianFilterRVE(new _applyGaussianFilterRVECommand(*this, console)),
         _commandApplyTwoCutMaskInsideRVE(new _applyTwoCutMaskInsideRVECommand(*this, console)),
-        _commandApplyTwoCutMaskOutsideRVE(new _applyTwoCutMaskOutsideRVECommand(*this, console))
+        _commandApplyTwoCutMaskOutsideRVE(
+            new _applyTwoCutMaskOutsideRVECommand(*this, console)),
+        _commandGenerateOverlappingRandomEllipsoidsIntenseRVE(
+            new _generateOverlappingRandomEllipsoidsIntenseRVECommand(*this, console)),
+        _commandgenerateVoronoiRandomCellsRVE(
+            new _generateVoronoiRandomCellsRVECommand(*this, console))
         {}
 
     /// Destructor ---------------------------------------------------------------------------
@@ -363,6 +432,8 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
         delete _commandApplyGaussianFilterRVE;
         delete _commandApplyTwoCutMaskInsideRVE;
         delete _commandApplyTwoCutMaskOutsideRVE;
+        delete _commandGenerateOverlappingRandomEllipsoidsIntenseRVE;
+        delete _commandgenerateVoronoiRandomCellsRVE;
     }
 };
 }

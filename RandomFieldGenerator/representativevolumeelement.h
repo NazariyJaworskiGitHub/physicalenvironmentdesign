@@ -262,7 +262,6 @@ class RepresentativeVolumeElement
     public : ~RepresentativeVolumeElement()
     {
         delete [] _data;
-//        delete [] _mask;
         delete [] _cuttedData;
     }
 };
