@@ -30,7 +30,6 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
     // Clean all storages
     cleanData();
     cleanMask();
-    _copyDataToCuttedData();
 
     // Prepare OpenCL usage
     if(!_programPtr)
@@ -161,52 +160,37 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
                     _initialPoints[2],\
                     k, j, i, &_kk, &_jj, &_ii, _size);\
                 float _minDist1 = sqrt(_kk + _jj + _ii);\
-                int _curIndex1 = 0;\
-                for(int c=1; c<cellNum; ++c)\
+                _distanceOnRepeatedSides(\
+                    _initialPoints[3+0],\
+                    _initialPoints[3+1],\
+                    _initialPoints[3+2],\
+                    k, j, i, &_kk, &_jj, &_ii, _size);\
+                float _minDist2 = sqrt(_kk + _jj + _ii);\
+                \
+                if(_minDist1 > _minDist2)\
                 {\
-                    _distanceOnRepeatedSides(\
-                        _initialPoints[c*3+0],\
-                        _initialPoints[c*3+1],\
-                        _initialPoints[c*3+2],\
-                        k, j, i, &_kk, &_jj, &_ii, _size);\
-                    float _curDist = sqrt(_kk + _jj + _ii);\
-                    if(_curDist < _minDist1)\
-                    {\
-                        _minDist1 = _curDist;\
-                        _curIndex1 = c;\
-                    }\
+                    float tmp = _minDist1;\
+                    _minDist1 = _minDist2;\
+                    _minDist2 = tmp;\
                 }\
                 \
-                float _minDist2;\
-                if(_curIndex1)\
+                for(int c=2; c<cellNum; ++c)\
                 {\
-                    _distanceOnRepeatedSides(\
-                        _initialPoints[0],\
-                        _initialPoints[1],\
-                        _initialPoints[2],\
-                        k, j, i, &_kk, &_jj, &_ii, _size);\
-                    _minDist2 = sqrt(_kk + _jj + _ii);\
-                }\
-                else\
-                {\
-                    _distanceOnRepeatedSides(\
-                        _initialPoints[3+0],\
-                        _initialPoints[3+1],\
-                        _initialPoints[3+2],\
-                        k, j, i, &_kk, &_jj, &_ii, _size);\
-                    _minDist2 = sqrt(_kk + _jj + _ii);\
-                }\
-                for(int c=0; c<cellNum; ++c)\
-                {\
-                    if(c==_curIndex1) continue;\
                     _distanceOnRepeatedSides(\
                         _initialPoints[c*3+0],\
                         _initialPoints[c*3+1],\
                         _initialPoints[c*3+2],\
                         k, j, i, &_kk, &_jj, &_ii, _size);\
                     float _curDist = sqrt(_kk + _jj + _ii);\
-                    if(_curDist < _minDist2 && _curDist >= _minDist1)\
+                    \
+                    if(_curDist < _minDist1)\
+                    {\
+                        _minDist2 = _minDist1;\
+                        _minDist1 = _curDist;\
+                    }\
+                    else if(_curDist < _minDist2)\
                         _minDist2 = _curDist;\
+                    \
                 }\
                 _data[(i * _size * _size) + (j * _size) + k] = _minDist2-_minDist1;\
             }";
@@ -1107,12 +1091,22 @@ void RepresentativeVolumeElement::generateVoronoiRandomCells(
                         _initialPoints[0][2],
                         k,j,i,_kk, _jj, _ii);
                 float _minDist1 = std::sqrt(_kk + _jj + _ii);
-//                float _minDist1 = _initialPoints[0].distance(
-//                            MathUtils::Node<3,float>(k,j,i));
 
-                int _curIndex1 = 0;
+                _distanceOnRepeatedSides(
+                            _initialPoints[1][0],
+                        _initialPoints[1][1],
+                        _initialPoints[1][2],
+                        k,j,i,_kk, _jj, _ii);
+                float _minDist2 = std::sqrt(_kk + _jj + _ii);
 
-                for(int c=1; c<cellNum; ++c)
+                if(_minDist1 > _minDist2)
+                {
+                    float tmp = _minDist1;
+                    _minDist1 = _minDist2;
+                    _minDist2 = tmp;
+                }
+
+                for(int c=2; c<cellNum; ++c)
                 {
                     _distanceOnRepeatedSides(
                                 _initialPoints[c][0],
@@ -1120,69 +1114,20 @@ void RepresentativeVolumeElement::generateVoronoiRandomCells(
                             _initialPoints[c][2],
                             k,j,i,_kk, _jj, _ii);
                     float _curDist = std::sqrt(_kk + _jj + _ii);
-//                    float _curDist = _initialPoints[c].distance(
-//                                MathUtils::Node<3,float>(k,j,i));
 
                     if(_curDist < _minDist1)
                     {
+                        _minDist2 = _minDist1;
                         _minDist1 = _curDist;
-                        _curIndex1 = c;
                     }
-
-                }
-
-                float _minDist2;
-//                int _curIndex2 = 0;
-                if(_curIndex1)
-                {
-                    _distanceOnRepeatedSides(
-                                _initialPoints[0][0],
-                            _initialPoints[0][1],
-                            _initialPoints[0][2],
-                            k,j,i,_kk, _jj, _ii);
-                    _minDist2 = std::sqrt(_kk + _jj + _ii);
-//                    _minDist2 = _initialPoints[0].distance(
-//                                MathUtils::Node<3,float>(k,j,i));
-                }
-                else
-                {
-                    _distanceOnRepeatedSides(
-                                _initialPoints[1][0],
-                            _initialPoints[1][1],
-                            _initialPoints[1][2],
-                            k,j,i,_kk, _jj, _ii);
-                    _minDist2 = std::sqrt(_kk + _jj + _ii);
-//                    _minDist2 = _initialPoints[1].distance(
-//                            MathUtils::Node<3,float>(k,j,i));
-//                    _curIndex2 = 1;
-                }
-
-                for(int c=0; c<cellNum; ++c)
-                {
-                    if(c==_curIndex1) continue;
-                    _distanceOnRepeatedSides(
-                                _initialPoints[c][0],
-                            _initialPoints[c][1],
-                            _initialPoints[c][2],
-                            k,j,i,_kk, _jj, _ii);
-                    float _curDist = std::sqrt(_kk + _jj + _ii);
-//                    float _curDist = _initialPoints[c].distance(
-//                                MathUtils::Node<3,float>(k,j,i));
-
-                    if(_curDist < _minDist2 && _curDist >= _minDist1)
-                    {
+                    else if(_curDist < _minDist2)
                         _minDist2 = _curDist;
-//                        _curIndex2 = c;
-                    }
+
                 }
                 _data[(i * _size * _size) + (j * _size) + k] = _minDist2-_minDist1;
             }
 
     normalizeUnMasked();
-
-    for(int c=0; c<cellNum; ++c)
-        _data[((int)_initialPoints[c][2] * _size * _size) +
-                ((int)_initialPoints[c][1] * _size) + (int)_initialPoints[c][0]] = 1.0f;
 }
 
 void RepresentativeVolumeElement::generateVoronoiRandomCellsCL(

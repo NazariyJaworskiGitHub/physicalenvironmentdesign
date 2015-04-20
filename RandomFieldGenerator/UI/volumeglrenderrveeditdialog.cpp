@@ -5,6 +5,8 @@
 
 #include "userinterfacemanager.h"
 
+#include "QDoubleValidator"
+
 using namespace UserInterface;
 
 VolumeGLRenderRVEEditDialog::VolumeGLRenderRVEEditDialog(QWidget *parent) :
@@ -36,17 +38,80 @@ VolumeGLRenderRVEEditDialog::VolumeGLRenderRVEEditDialog(QWidget *parent) :
     ui->ScaleFactorZSlider->setValue(_parent->_FilterScaleFactorZBackup * 100);
     ui->ScileFactorZLineEdit->setText(QString::number(ui->ScaleFactorZSlider->value() / 100.0f));
 
+    ui->UseDataAsIntensityCheckBox->setCheckState(Qt::Unchecked);
+    ui->IntensityFactorLineEdit->setEnabled(false);
+    ui->IntensityFactorLabel->setEnabled(false);
+
+    QDoubleValidator *_validator = new QDoubleValidator(this);
+    ui->IntensityFactorLineEdit->setValidator(_validator);
+
     _previewRender = new FilterPreviewGLRender(
-                _parent->_ptrToRVE, ui->groupBox);
+                _parent->_ptrToRVE, ui->GaussianFilter);
     _previewRender->resize(261,261);
     _previewRender->move(510, 20);
 
-    connect(this,SIGNAL(signal_applyGaussFltrRVE(int,float,float,float)),
+    connect(this,SIGNAL(signal_cleanRVE()),
             &UserInterfaceManager::instance(),
-            SIGNAL(signal_applyGaussFltrRVE_T(int,float,float,float)), Qt::QueuedConnection);
+            SIGNAL(signal_cleanRVE_T()),
+            Qt::QueuedConnection);
+    connect(&UserInterfaceManager::instance(), SIGNAL(signal_cleanRVEDone_T()),
+            this, SLOT(_enableWidget()), Qt::QueuedConnection);
 
-    connect(&UserInterfaceManager::instance(), SIGNAL(signal_applyGaussFltrRVEDone_T()),
-            this, SLOT(_applyGaussFltrRVEDone()), Qt::QueuedConnection);
+    connect(this,SIGNAL(signal_normalizeUnMaskedRVE()),
+            &UserInterfaceManager::instance(),
+            SIGNAL(signal_normalizeUnMaskedRVE_T()),
+            Qt::QueuedConnection);
+    connect(&UserInterfaceManager::instance(), SIGNAL(signal_normalizeUnMaskedRVEDone_T()),
+            this, SLOT(_enableWidget()), Qt::QueuedConnection);
+
+    connect(this,SIGNAL(signal_invertUnMaskedRVE()),
+            &UserInterfaceManager::instance(),
+            SIGNAL(signal_invertUnMaskedRVE_T()),
+            Qt::QueuedConnection);
+    connect(&UserInterfaceManager::instance(), SIGNAL(signal_invertUnMaskedRVEDone_T()),
+            this, SLOT(_enableWidget()), Qt::QueuedConnection);
+
+    connect(this,SIGNAL(signal_cleanMaskRVE()),
+            &UserInterfaceManager::instance(),
+            SIGNAL(signal_cleanMaskRVE_T()),
+            Qt::QueuedConnection);
+    connect(&UserInterfaceManager::instance(), SIGNAL(signal_cleanMaskRVEDone_T()),
+            this, SLOT(_enableWidget()), Qt::QueuedConnection);
+
+    connect(this,SIGNAL(signal_cleanUnMaskedRVE(float)),
+            &UserInterfaceManager::instance(),
+            SIGNAL(signal_cleanUnMaskedRVE_T(float)),
+            Qt::QueuedConnection);
+    connect(&UserInterfaceManager::instance(), SIGNAL(signal_cleanUnMaskedRVEDone_T()),
+            this, SLOT(_enableWidget()), Qt::QueuedConnection);
+
+    connect(this,SIGNAL(signal_applyTwoCutMaskInsideRVE(float,float)),
+            &UserInterfaceManager::instance(),
+            SIGNAL(signal_applyTwoCutMaskInsideRVE_T(float,float)),
+            Qt::QueuedConnection);
+    connect(&UserInterfaceManager::instance(), SIGNAL(signal_applyTwoCutMaskInsideRVEDone_T()),
+            this, SLOT(_enableWidget()), Qt::QueuedConnection);
+
+    connect(this,SIGNAL(signal_applyTwoCutMaskOutsideRVE(float,float)),
+            &UserInterfaceManager::instance(),
+            SIGNAL(signal_applyTwoCutMaskOutsideRVE_T(float,float)),
+            Qt::QueuedConnection);
+    connect(&UserInterfaceManager::instance(), SIGNAL(signal_applyTwoCutMaskOutsideRVEDone_T()),
+            this, SLOT(_enableWidget()), Qt::QueuedConnection);
+
+    connect(this,SIGNAL(signal_addRandomNoiseRVE()),
+            &UserInterfaceManager::instance(),
+            SIGNAL(signal_addRandomNoiseRVE_T()),
+            Qt::QueuedConnection);
+    connect(&UserInterfaceManager::instance(), SIGNAL(signal_addRandomNoiseRVEDone_T()),
+            this, SLOT(_enableWidget()), Qt::QueuedConnection);
+
+    connect(this,SIGNAL(signal_applyGaussianFilterRVE(int,float,float,float,bool,float)),
+            &UserInterfaceManager::instance(),
+            SIGNAL(signal_applyGaussianFilterRVE_T(int,float,float,float,bool,float)),
+            Qt::QueuedConnection);
+    connect(&UserInterfaceManager::instance(), SIGNAL(signal_applyGaussianFilterRVEDone_T()),
+            this, SLOT(_enableWidget()), Qt::QueuedConnection);
 
     ui->progressBar->setWindowModality(Qt::WindowModal);
     ui->progressBar->hide();
@@ -97,11 +162,12 @@ void VolumeGLRenderRVEEditDialog::on_TopCutLevelSlider_valueChanged(int value)
 void UserInterface::VolumeGLRenderRVEEditDialog::on_FilterRadiusSlider_valueChanged(int value)
 {
     ui->FilterRadiusLineEdit->setText(QString::number(value));
-    if(_previewRender)
-    {
-        _previewRender->loadDataIntoTexture();
-        _previewRender->updateGL();
-    }
+    if(!(ui->FilterRadiusSlider->isSliderDown()))
+        _updatePreview();
+}
+void UserInterface::VolumeGLRenderRVEEditDialog::on_FilterRadiusSlider_sliderReleased()
+{
+    _updatePreview();
 }
 
 void UserInterface::VolumeGLRenderRVEEditDialog::on_ScaleFactorXSlider_valueChanged(int value)
@@ -109,11 +175,12 @@ void UserInterface::VolumeGLRenderRVEEditDialog::on_ScaleFactorXSlider_valueChan
     ui->ScileFactorXLineEdit->setText(QString::number(value / 100.0f));
     VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
     _parent->_FilterScaleFactorXBackup = value / 100.0f;
-    if(_previewRender)
-    {
-        _previewRender->loadDataIntoTexture();
-        _previewRender->updateGL();
-    }
+    if(!ui->ScaleFactorXSlider->isSliderDown())
+        _updatePreview();
+}
+void UserInterface::VolumeGLRenderRVEEditDialog::on_ScaleFactorXSlider_sliderReleased()
+{
+    _updatePreview();
 }
 
 void UserInterface::VolumeGLRenderRVEEditDialog::on_ScaleFactorYSlider_valueChanged(int value)
@@ -121,11 +188,12 @@ void UserInterface::VolumeGLRenderRVEEditDialog::on_ScaleFactorYSlider_valueChan
     ui->ScileFactorYLineEdit->setText(QString::number(value / 100.0f));
     VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
     _parent->_FilterScaleFactorYBackup = value / 100.0f;
-    if(_previewRender)
-    {
-        _previewRender->loadDataIntoTexture();
-        _previewRender->updateGL();
-    }
+    if(!ui->ScaleFactorYSlider->isSliderDown())
+        _updatePreview();
+}
+void UserInterface::VolumeGLRenderRVEEditDialog::on_ScaleFactorYSlider_sliderReleased()
+{
+    _updatePreview();
 }
 
 void UserInterface::VolumeGLRenderRVEEditDialog::on_ScaleFactorZSlider_valueChanged(int value)
@@ -133,40 +201,26 @@ void UserInterface::VolumeGLRenderRVEEditDialog::on_ScaleFactorZSlider_valueChan
     ui->ScileFactorZLineEdit->setText(QString::number(value / 100.0f));
     VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
     _parent->_FilterScaleFactorZBackup = value / 100.0f;
-    if(_previewRender)
-    {
-        _previewRender->loadDataIntoTexture();
-        _previewRender->updateGL();
-    }
+    if(!ui->ScaleFactorZSlider->isSliderDown())
+        _updatePreview();
 }
 
-void UserInterface::VolumeGLRenderRVEEditDialog::on_GenerateRandomFieldPushButton_clicked()
+void UserInterface::VolumeGLRenderRVEEditDialog::on_ScaleFactorZSlider_sliderReleased()
 {
-    this->setEnabled(false);
+    _updatePreview();
+}
 
-    ui->progressBar->setValue(0);
-    ui->progressBar->show();
+void UserInterface::VolumeGLRenderRVEEditDialog::on_ApplyGaussianFilterButton_clicked()
+{
+    _disableWigget();
 
-    Q_EMIT signal_applyGaussFltrRVE(
+    Q_EMIT signal_applyGaussianFilterRVE(
                 ui->FilterRadiusSlider->value(),
                 ui->ScaleFactorXSlider->value() / 100.0f,
                 ui->ScaleFactorYSlider->value() / 100.0f,
-                ui->ScaleFactorZSlider->value() / 100.0f);
-}
-
-void VolumeGLRenderRVEEditDialog::_applyGaussFltrRVEDone()
-{
-    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
-
-    _previewRender->doneCurrent();
-    _parent->makeCurrent();
-    _parent->_loadRVEDataIntoTexture();
-    _parent->updateGL();
-
-    ui->progressBar->setValue(100);
-    ui->progressBar->hide();
-
-    this->setEnabled(true);
+                ui->ScaleFactorZSlider->value() / 100.0f,
+                ui->UseDataAsIntensityCheckBox->checkState(),
+                ui->IntensityFactorLineEdit->text().toFloat());
 }
 
 float VolumeGLRenderRVEEditDialog::getFilterRadiusValue() const
@@ -185,3 +239,116 @@ float VolumeGLRenderRVEEditDialog::getFilterScaleFactorYValue() const {
 
 float VolumeGLRenderRVEEditDialog::getFilterScaleFactorZValue() const {
     return ui->ScaleFactorZSlider->value() / 100.0f;}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_UseDataAsIntensityCheckBox_stateChanged(
+        int arg1)
+{
+    if(arg1 == Qt::Unchecked)
+    {
+        ui->IntensityFactorLineEdit->setEnabled(false);
+        ui->IntensityFactorLabel->setEnabled(false);
+    }
+    else
+    {
+        ui->IntensityFactorLineEdit->setEnabled(true);
+        ui->IntensityFactorLabel->setEnabled(true);
+    }
+}
+
+void VolumeGLRenderRVEEditDialog::_disableWigget()
+{
+    this->setEnabled(false);
+
+    ui->progressBar->setValue(0);
+    ui->progressBar->show();
+    QApplication::processEvents();
+}
+
+void VolumeGLRenderRVEEditDialog::_enableWidget()
+{
+    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
+
+    _parent->makeCurrent();
+    _parent->_loadRVEDataIntoTexture();
+    _parent->updateGL();
+
+    ui->progressBar->setValue(100);
+    ui->progressBar->hide();
+
+    this->setEnabled(true);
+    QApplication::processEvents();
+}
+
+void VolumeGLRenderRVEEditDialog::_updatePreview()
+{
+    if(_previewRender)
+    {
+        /// \todo some bug - those lines calls twice slider mouse click event
+//        ui->progressBar->show();
+//        ui->progressBar->setValue(0);
+        this->setEnabled(false);
+        QApplication::processEvents();
+        _previewRender->loadDataIntoTexture();
+        _previewRender->updateGL();
+        this->setEnabled(true);
+//        ui->progressBar->setValue(100);
+//        ui->progressBar->hide();
+        QApplication::processEvents();
+    }
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_ClenRVEButton_clicked()
+{
+    _disableWigget();
+    Q_EMIT signal_cleanRVE();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_NormalizeRVEButton_clicked()
+{
+    _disableWigget();
+    Q_EMIT signal_normalizeUnMaskedRVE();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_InvertRVEButton_clicked()
+{
+    _disableWigget();
+    Q_EMIT signal_invertUnMaskedRVE();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_CleanMaskButton_clicked()
+{
+    _disableWigget();
+    Q_EMIT signal_cleanMaskRVE();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_CleanUnMaskedElementsButton_clicked()
+{
+    _disableWigget();
+    Q_EMIT signal_cleanUnMaskedRVE(ui->CleanUnMaskedElementsFillerLineEdit->text().toFloat());
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_ApplyTwoCutMaskInsideButton_clicked()
+{
+    _disableWigget();
+    Q_EMIT signal_applyTwoCutMaskInsideRVE(
+                ui->BottomCutLevelLineEdit->text().toFloat(),
+                ui->TopCutLevelLineEdit->text().toFloat());
+    ui->BottomCutLevelSlider->setValue(0);
+    ui->TopCutLevelSlider->setValue(1000);
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_ApplyTwoCutMaskOutsideButton_clicked()
+{
+    _disableWigget();
+    Q_EMIT signal_applyTwoCutMaskOutsideRVE(
+                ui->BottomCutLevelLineEdit->text().toFloat(),
+                ui->TopCutLevelLineEdit->text().toFloat());
+    ui->BottomCutLevelSlider->setValue(0);
+    ui->TopCutLevelSlider->setValue(1000);
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_addRandomNoiseButton_clicked()
+{
+    _disableWigget();
+    Q_EMIT signal_addRandomNoiseRVE();
+}

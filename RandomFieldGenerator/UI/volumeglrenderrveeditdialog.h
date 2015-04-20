@@ -24,16 +24,36 @@ namespace UserInterface
         void on_TopCutLevelSlider_valueChanged(int value);
 
         void on_FilterRadiusSlider_valueChanged(int value);
+        void on_FilterRadiusSlider_sliderReleased();
 
         void on_ScaleFactorXSlider_valueChanged(int value);
+        void on_ScaleFactorXSlider_sliderReleased();
 
         void on_ScaleFactorYSlider_valueChanged(int value);
+        void on_ScaleFactorYSlider_sliderReleased();
 
         void on_ScaleFactorZSlider_valueChanged(int value);
+        void on_ScaleFactorZSlider_sliderReleased();
 
-        void on_GenerateRandomFieldPushButton_clicked();
+        void on_ApplyGaussianFilterButton_clicked();
 
-    private: Q_SLOT void _applyGaussFltrRVEDone();
+        void on_UseDataAsIntensityCheckBox_stateChanged(int arg1);
+
+        void on_ClenRVEButton_clicked();
+
+        void on_NormalizeRVEButton_clicked();
+
+        void on_InvertRVEButton_clicked();
+
+        void on_CleanMaskButton_clicked();
+
+        void on_CleanUnMaskedElementsButton_clicked();
+
+        void on_ApplyTwoCutMaskInsideButton_clicked();
+
+        void on_ApplyTwoCutMaskOutsideButton_clicked();
+
+        void on_addRandomNoiseButton_clicked();
 
     private:
         Ui::VolumeGLRenderRVEEditDialog *ui;
@@ -48,11 +68,30 @@ namespace UserInterface
 
         float getFilterScaleFactorZValue() const;
 
-    public: Q_SIGNAL signal_applyGaussFltrRVE(
+    public: /// See UserInterfaceManager, there should be same transitive signals with suffix _T
+        Q_SIGNAL void signal_cleanRVE();
+        Q_SIGNAL void signal_normalizeUnMaskedRVE();
+        Q_SIGNAL void signal_invertUnMaskedRVE();
+
+        Q_SIGNAL void signal_cleanMaskRVE();
+        Q_SIGNAL void signal_cleanUnMaskedRVE(float filler);
+        Q_SIGNAL void signal_applyTwoCutMaskInsideRVE(float cutLevelA, float cutLevelB);
+        Q_SIGNAL void signal_applyTwoCutMaskOutsideRVE(float cutLevelA, float cutLevelB);
+
+        Q_SIGNAL void signal_addRandomNoiseRVE();
+
+        Q_SIGNAL void signal_applyGaussianFilterRVE(
                 int discreteRadius,
                 float ellipsoidScaleFactorX,
                 float ellipsoidScaleFactorY,
-                float ellipsoidScaleFactorZ);
+                float ellipsoidScaleFactorZ,
+                bool useDataAsIntensity,
+                float intensityFactor);
+
+    private:
+        void _disableWigget();
+        Q_SLOT void _enableWidget();
+        void _updatePreview();
     };
 }
 

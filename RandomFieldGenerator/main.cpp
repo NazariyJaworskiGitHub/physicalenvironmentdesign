@@ -36,6 +36,7 @@ int main(int argc, char *argv[])
 
 //    Log::Logger LogFile("logfile.txt", &_consoleRunner);
 
+    QLocale::setDefault(QLocale::C);
     UserInterface::UserInterfaceManager::instance().setConsoleRunnerLifetime(_consoleRunner);
 
 //    LogFile << "Setup done.";
@@ -91,13 +92,13 @@ int main(int argc, char *argv[])
 //    _RVE.cleanMask();
 
 //    _RVE.generateVoronoiRandomCells(500);
-    _RVE.generateVoronoiRandomCellsCL(500);
-    _RVE.applyTwoCutMaskOutside(0, 0.05f);
-    _RVE.cleanUnMaskedData(0.0f);
-    _RVE.applyTwoCutMaskInside(0, 0.05f);
-    _RVE.cleanUnMaskedData(1.0f);
-    _RVE.cleanMask();
-    _RVE.invertUnMasked();
+    _RVE.generateVoronoiRandomCellsCL(50);
+//    _RVE.applyTwoCutMaskOutside(0, 0.05f);
+//    _RVE.cleanUnMaskedData(0.0f);
+//    _RVE.applyTwoCutMaskInside(0, 0.05f);
+//    _RVE.cleanUnMaskedData(1.0f);
+//    _RVE.cleanMask();
+//    _RVE.invertUnMasked();
 
     std::chrono::steady_clock::time_point _t2 = std::chrono::steady_clock::now();
     std::chrono::duration<double> time_span =
@@ -153,7 +154,6 @@ int main(int argc, char *argv[])
 
     ///////////////////////////////////////////////////////////////////////////////////////
 
-//  //    QLocale::setDefault(QLocale::C);
 //    UserInterface::VolumeGLRender _render(
 //                _RVE.getSize(), _RVE.getData(), _RVE.getCuttedData(), NULL);
 //    _render.setBoundingBoxRepresentationSize(1e-3f);

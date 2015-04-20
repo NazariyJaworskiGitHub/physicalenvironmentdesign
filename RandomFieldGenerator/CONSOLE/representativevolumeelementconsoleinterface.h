@@ -44,13 +44,69 @@ class _EditRVECommand : public QObject, public ConsoleCommand
                 SIGNAL(signal_editRVEGUIFinish()),
                 this, SLOT(editRVEGUIFinish()));
 
+        ///
         connect(&UserInterface::UserInterfaceManager::instance(),
-                SIGNAL(signal_applyGaussFltrRVE_T(int,float,float,float)),
-                this, SLOT(applyGaussFltrRVE(int,float,float,float)));
-
-        connect(this, SIGNAL(signal_applyGaussFltrRVEDone()),
+                SIGNAL(signal_cleanRVE_T()),
+                this, SLOT(cleanRVE()));
+        connect(this, SIGNAL(signal_cleanRVEDone()),
                 &UserInterface::UserInterfaceManager::instance(),
-                SIGNAL(signal_applyGaussFltrRVEDone_T()));
+                SIGNAL(signal_cleanRVEDone_T()));
+
+        connect(&UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_normalizeUnMaskedRVE_T()),
+                this, SLOT(normalizeUnMaskedRVE()));
+        connect(this, SIGNAL(signal_normalizeUnMaskedRVEDone()),
+                &UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_normalizeUnMaskedRVEDone_T()));
+
+        connect(&UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_invertUnMaskedRVE_T()),
+                this, SLOT(invertUnMaskedRVE()));
+        connect(this, SIGNAL(signal_invertUnMaskedRVEDone()),
+                &UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_invertUnMaskedRVEDone_T()));
+
+        connect(&UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_cleanMaskRVE_T()),
+                this, SLOT(cleanMaskRVE()));
+        connect(this, SIGNAL(signal_cleanMaskRVEDone()),
+                &UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_cleanMaskRVEDone_T()));
+
+        connect(&UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_cleanUnMaskedRVE_T(float)),
+                this, SLOT(cleanUnMaskedRVE(float)));
+        connect(this, SIGNAL(signal_cleanUnMaskedRVEDone()),
+                &UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_cleanUnMaskedRVEDone_T()));
+
+        connect(&UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_applyTwoCutMaskInsideRVE_T(float,float)),
+                this, SLOT(applyTwoCutMaskInsideRVE(float,float)));
+        connect(this, SIGNAL(signal_applyTwoCutMaskInsideRVEDone()),
+                &UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_applyTwoCutMaskInsideRVEDone_T()));
+
+        connect(&UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_applyTwoCutMaskOutsideRVE_T(float,float)),
+                this, SLOT(applyTwoCutMaskOutsideRVE(float,float)));
+        connect(this, SIGNAL(signal_applyTwoCutMaskOutsideRVEDone()),
+                &UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_applyTwoCutMaskOutsideRVEDone_T()));
+
+        connect(&UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_addRandomNoiseRVE_T()),
+                this, SLOT(addRandomNoiseRVE()));
+        connect(this, SIGNAL(signal_addRandomNoiseRVEDone()),
+                &UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_addRandomNoiseRVEDone_T()));
+
+        connect(&UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_applyGaussianFilterRVE_T(int,float,float,float,bool,float)),
+                this, SLOT(applyGaussianFilterRVE(int,float,float,float,bool,float)));
+        connect(this, SIGNAL(signal_applyGaussianFilterRVEDone()),
+                &UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_applyGaussianFilterRVEDone_T()));
     }
     public: Q_SIGNAL void signal_editRVEGUIStart(RepresentativeVolumeElement* ptrToRVE);
     public: Q_SLOT void editRVEGUIFinish(){
@@ -58,12 +114,34 @@ class _EditRVECommand : public QObject, public ConsoleCommand
     public: Q_SLOT void editRVEGUIError(){
         getConsole().writeToOutput("Edit RVE GUI is already running.\n");}
 
-    public: Q_SLOT void applyGaussFltrRVE(
+    /// See UserInterfaceManager
+    public: Q_SLOT void cleanRVE();
+    public: Q_SIGNAL void signal_cleanRVEDone();
+    public: Q_SLOT void normalizeUnMaskedRVE();
+    public: Q_SIGNAL void signal_normalizeUnMaskedRVEDone();
+    public: Q_SLOT void invertUnMaskedRVE();
+    public: Q_SIGNAL void signal_invertUnMaskedRVEDone();
+
+    public: Q_SLOT void cleanMaskRVE();
+    public: Q_SIGNAL void signal_cleanMaskRVEDone();
+    public: Q_SLOT void cleanUnMaskedRVE(float filler);
+    public: Q_SIGNAL void signal_cleanUnMaskedRVEDone();
+    public: Q_SLOT void applyTwoCutMaskInsideRVE(float cutLevelA, float cutLevelB);
+    public: Q_SIGNAL void signal_applyTwoCutMaskInsideRVEDone();
+    public: Q_SLOT void applyTwoCutMaskOutsideRVE(float cutLevelA, float cutLevelB);
+    public: Q_SIGNAL void signal_applyTwoCutMaskOutsideRVEDone();
+
+    public: Q_SLOT void addRandomNoiseRVE();
+    public: Q_SIGNAL void signal_addRandomNoiseRVEDone();
+
+    public: Q_SLOT void applyGaussianFilterRVE(
             int discreteRadius,
             float ellipsoidScaleFactorX,
             float ellipsoidScaleFactorY,
-            float ellipsoidScaleFactorZ);
-    public: Q_SIGNAL void signal_applyGaussFltrRVEDone();
+            float ellipsoidScaleFactorZ,
+            bool useDataAsIntensity,
+            float intensityFactor);
+    public: Q_SIGNAL void signal_applyGaussianFilterRVEDone();
 
     public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
 };
@@ -168,7 +246,7 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
                 console),
                 _manager(manager){}
         public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
-    } *_commandUnMaskedCleanRVE = nullptr;
+    } *_commandCleanUnMaskedRVE = nullptr;
 
     /// cleanMaskRVE -------------------------------------------------------------------------
     public : std::string cleanMaskRVE(const std::string &name) noexcept;
@@ -399,7 +477,7 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
         _commandPrintRVE(new _PrintRVECommand(*this, console)),
         _commandEditRVE(new _EditRVECommand(*this, console)),
         _commandCleanRVE(new _cleanRVECommand(*this, console)),
-        _commandUnMaskedCleanRVE(new _cleanUnMaskedRVECommand(*this, console)),
+        _commandCleanUnMaskedRVE(new _cleanUnMaskedRVECommand(*this, console)),
         _commandCleanMaskRVE(new _cleanMaskRVECommand(*this, console)),
         _commandAddRandomNoiseRVE(new _addRandomNoiseRVECommandmmand(*this, console)),
         _commandNormalizeUnMaskedRVE(new _normalizeUnMaskedRVECommand(*this, console)),
@@ -424,7 +502,7 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
         delete _commandPrintRVE;
         delete _commandEditRVE;
         delete _commandCleanRVE;
-        delete _commandUnMaskedCleanRVE;
+        delete _commandCleanUnMaskedRVE;
         delete _commandCleanMaskRVE;
         delete _commandAddRandomNoiseRVE;
         delete _commandNormalizeUnMaskedRVE;

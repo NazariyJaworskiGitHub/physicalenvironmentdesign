@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>400</height>
+    <height>560</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,7 +20,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>370</y>
+     <y>530</y>
      <width>781</width>
      <height>21</height>
     </rect>
@@ -32,115 +32,19 @@
     <set>QDialogButtonBox::Close</set>
    </property>
   </widget>
-  <widget class="QLabel" name="BottomCutLevelLabel">
+  <widget class="QGroupBox" name="GaussianFilter">
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>10</y>
-     <width>111</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Bottom cut level</string>
-   </property>
-  </widget>
-  <widget class="QSlider" name="BottomCutLevelSlider">
-   <property name="geometry">
-    <rect>
-     <x>129</x>
-     <y>10</y>
-     <width>561</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="maximum">
-    <number>999</number>
-   </property>
-   <property name="orientation">
-    <enum>Qt::Horizontal</enum>
-   </property>
-  </widget>
-  <widget class="QLineEdit" name="BottomCutLevelLineEdit">
-   <property name="geometry">
-    <rect>
-     <x>700</x>
-     <y>10</y>
-     <width>91</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-   </property>
-   <property name="readOnly">
-    <bool>true</bool>
-   </property>
-  </widget>
-  <widget class="QLabel" name="TopCutLevelLabel">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>40</y>
-     <width>111</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Top cut level</string>
-   </property>
-  </widget>
-  <widget class="QSlider" name="TopCutLevelSlider">
-   <property name="geometry">
-    <rect>
-     <x>130</x>
-     <y>40</y>
-     <width>561</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="minimum">
-    <number>1</number>
-   </property>
-   <property name="maximum">
-    <number>1000</number>
-   </property>
-   <property name="value">
-    <number>1000</number>
-   </property>
-   <property name="orientation">
-    <enum>Qt::Horizontal</enum>
-   </property>
-  </widget>
-  <widget class="QLineEdit" name="TopCutLevelLineEdit">
-   <property name="geometry">
-    <rect>
-     <x>700</x>
-     <y>40</y>
-     <width>91</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-   </property>
-   <property name="readOnly">
-    <bool>true</bool>
-   </property>
-  </widget>
-  <widget class="QGroupBox" name="groupBox">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>70</y>
+     <y>230</y>
      <width>781</width>
      <height>291</height>
     </rect>
    </property>
    <property name="title">
-    <string>Gaussian Random Filed Generation</string>
+    <string>Gaussian Filter</string>
    </property>
-   <widget class="QPushButton" name="GenerateRandomFieldPushButton">
+   <widget class="QPushButton" name="ApplyGaussianFilterButton">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -150,7 +54,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Generate random field</string>
+     <string>Apply Gaussian filter</string>
     </property>
    </widget>
    <widget class="QLabel" name="FilterRadiusLabel">
@@ -180,6 +84,9 @@
     </property>
     <property name="maximum">
      <number>256</number>
+    </property>
+    <property name="tracking">
+     <bool>true</bool>
     </property>
     <property name="orientation">
      <enum>Qt::Horizontal</enum>
@@ -351,12 +258,60 @@
      <string>Scale factor Z</string>
     </property>
    </widget>
+   <widget class="QCheckBox" name="UseDataAsIntensityCheckBox">
+    <property name="geometry">
+     <rect>
+      <x>120</x>
+      <y>140</y>
+      <width>131</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Use data as intensity</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="IntensityFactorLabel">
+    <property name="geometry">
+     <rect>
+      <x>320</x>
+      <y>140</y>
+      <width>81</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Intensity factor</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="IntensityFactorLineEdit">
+    <property name="geometry">
+     <rect>
+      <x>410</x>
+      <y>140</y>
+      <width>91</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>1.0</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+    </property>
+    <property name="dragEnabled">
+     <bool>false</bool>
+    </property>
+    <property name="readOnly">
+     <bool>false</bool>
+    </property>
+   </widget>
   </widget>
   <widget class="QProgressBar" name="progressBar">
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>370</y>
+     <y>530</y>
      <width>701</width>
      <height>21</height>
     </rect>
@@ -370,6 +325,267 @@
    <property name="invertedAppearance">
     <bool>false</bool>
    </property>
+  </widget>
+  <widget class="QGroupBox" name="Masking">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>40</y>
+     <width>781</width>
+     <height>141</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Masking</string>
+   </property>
+   <widget class="QPushButton" name="CleanMaskButton">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>371</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Clean mask</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="CleanUnMaskedElementsButton">
+    <property name="geometry">
+     <rect>
+      <x>400</x>
+      <y>20</y>
+      <width>231</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Clean unmasked elements</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="TopCutLevelLineEdit">
+    <property name="geometry">
+     <rect>
+      <x>680</x>
+      <y>80</y>
+      <width>91</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="BottomCutLevelLineEdit">
+    <property name="geometry">
+     <rect>
+      <x>680</x>
+      <y>50</y>
+      <width>91</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="BottomCutLevelLabel">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>50</y>
+      <width>111</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Bottom cut level</string>
+    </property>
+   </widget>
+   <widget class="QSlider" name="BottomCutLevelSlider">
+    <property name="geometry">
+     <rect>
+      <x>129</x>
+      <y>50</y>
+      <width>541</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="maximum">
+     <number>999</number>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="TopCutLevelLabel">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>80</y>
+      <width>111</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Top cut level</string>
+    </property>
+   </widget>
+   <widget class="QSlider" name="TopCutLevelSlider">
+    <property name="geometry">
+     <rect>
+      <x>130</x>
+      <y>80</y>
+      <width>541</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="minimum">
+     <number>1</number>
+    </property>
+    <property name="maximum">
+     <number>1000</number>
+    </property>
+    <property name="value">
+     <number>1000</number>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="CleanUnMaskedElementsFillerLabel">
+    <property name="geometry">
+     <rect>
+      <x>640</x>
+      <y>20</y>
+      <width>31</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Filler</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="CleanUnMaskedElementsFillerLineEdit">
+    <property name="geometry">
+     <rect>
+      <x>680</x>
+      <y>20</y>
+      <width>91</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>0.0</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+    </property>
+    <property name="dragEnabled">
+     <bool>false</bool>
+    </property>
+    <property name="readOnly">
+     <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="ApplyTwoCutMaskInsideButton">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>110</y>
+      <width>371</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Apply two cut mask (inside)</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="ApplyTwoCutMaskOutsideButton">
+    <property name="geometry">
+     <rect>
+      <x>400</x>
+      <y>110</y>
+      <width>371</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Apply two cut mask (outside)</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QPushButton" name="InvertRVEButton">
+   <property name="geometry">
+    <rect>
+     <x>550</x>
+     <y>10</y>
+     <width>241</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Invert RVE</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="NormalizeRVEButton">
+   <property name="geometry">
+    <rect>
+     <x>280</x>
+     <y>10</y>
+     <width>241</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Normalize RVE</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="ClenRVEButton">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>241</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Clean RVE</string>
+   </property>
+  </widget>
+  <widget class="QGroupBox" name="RandomGenerator">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>180</y>
+     <width>781</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Random generator</string>
+   </property>
+   <widget class="QPushButton" name="addRandomNoiseButton">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>761</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Add random noise</string>
+    </property>
+   </widget>
   </widget>
  </widget>
  <resources/>

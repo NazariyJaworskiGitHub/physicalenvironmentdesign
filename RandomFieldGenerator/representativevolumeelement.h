@@ -11,6 +11,7 @@
 #include "node.h"
 
 /// It is discretized RVE
+/// Mask is _data < 0;
 /// \warning for correct usage of OpenCL functionality, the _size
 /// should be equal to some power of two.
 /// \warning it uses 3 * _size * _size * _size * sizeof(float) bytes of RAM memory
@@ -18,7 +19,6 @@ class RepresentativeVolumeElement
 {
     private: int _size;
     public : int getSize() const noexcept {return _size;}
-    /// mask is _data < 0;
     private: float * _data = nullptr;
     private: float * _cuttedData = nullptr; /// \todo
     private: int _discreteRadius = 1; /// \todo logic usage?
@@ -34,6 +34,7 @@ class RepresentativeVolumeElement
         _representationSize = newRepresentationSize;}
 
     /// OpenCL pointers, should be created oly once
+    /// \todo multiplie platforms
     private: static cl::Program *_programPtr;
     private: static cl::Kernel *_kernelXPtr;
     private: static cl::Kernel *_kernelYPtr;

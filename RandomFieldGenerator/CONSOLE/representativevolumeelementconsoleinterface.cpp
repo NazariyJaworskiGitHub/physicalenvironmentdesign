@@ -25,47 +25,131 @@ int _EditRVECommand::executeConsoleCommand(const std::vector<std::string> &argv)
     }
 }
 
-/// \todo send true command
-void _EditRVECommand::applyGaussFltrRVE(
+void Controller::_EditRVECommand::cleanRVE()
+{
+    std::stringstream _str;
+    _str << "cleanRVE " << _RVEName << "\n";
+
+    getConsole().writeToOutput(_str.str());
+
+    getConsole() << _str.str();
+
+    Q_EMIT signal_cleanRVEDone();
+}
+
+void Controller::_EditRVECommand::normalizeUnMaskedRVE()
+{
+    std::stringstream _str;
+    _str << "normalizeUnMaskedRVE " << _RVEName << "\n";
+
+    getConsole().writeToOutput(_str.str());
+
+    getConsole() << _str.str();
+
+    Q_EMIT signal_normalizeUnMaskedRVEDone();
+}
+
+void Controller::_EditRVECommand::invertUnMaskedRVE()
+{
+    std::stringstream _str;
+    _str << "invertUnMaskedRVE " << _RVEName << "\n";
+
+    getConsole().writeToOutput(_str.str());
+
+    getConsole() << _str.str();
+
+    Q_EMIT signal_invertUnMaskedRVEDone();
+}
+
+void Controller::_EditRVECommand::cleanMaskRVE()
+{
+    std::stringstream _str;
+    _str << "cleanMaskRVE " << _RVEName << "\n";
+
+    getConsole().writeToOutput(_str.str());
+
+    getConsole() << _str.str();
+
+    Q_EMIT signal_cleanMaskRVEDone();
+}
+
+void Controller::_EditRVECommand::cleanUnMaskedRVE(float filler)
+{
+    std::stringstream _str;
+    _str << "cleanUnMaskedRVE " << _RVEName << " " << filler << "\n";
+
+    getConsole().writeToOutput(_str.str());
+
+    getConsole() << _str.str();
+
+    Q_EMIT signal_cleanUnMaskedRVEDone();
+}
+
+void Controller::_EditRVECommand::applyTwoCutMaskInsideRVE(
+        float cutLevelA, float cutLevelB)
+{
+    std::stringstream _str;
+    _str << "applyTwoCutMaskInsideRVE " << _RVEName
+         << " " << cutLevelA << " "
+         << " " << cutLevelB << "\n";
+
+    getConsole().writeToOutput(_str.str());
+
+    getConsole() << _str.str();
+
+    Q_EMIT signal_applyTwoCutMaskInsideRVEDone();
+}
+
+void Controller::_EditRVECommand::applyTwoCutMaskOutsideRVE(
+        float cutLevelA, float cutLevelB)
+{
+    std::stringstream _str;
+    _str << "applyTwoCutMaskOutsideRVE " << _RVEName
+         << " " << cutLevelA << " "
+         << " " << cutLevelB << "\n";
+
+    getConsole().writeToOutput(_str.str());
+
+    getConsole() << _str.str();
+
+    Q_EMIT signal_applyTwoCutMaskOutsideRVEDone();
+}
+
+void Controller::_EditRVECommand::addRandomNoiseRVE()
+{
+    std::stringstream _str;
+    _str << "addRandomNoiseRVE " << _RVEName << "\n";
+
+    getConsole().writeToOutput(_str.str());
+
+    getConsole() << _str.str();
+
+    Q_EMIT signal_addRandomNoiseRVEDone();
+}
+
+void _EditRVECommand::applyGaussianFilterRVE(
         int discreteRadius,
         float ellipsoidScaleFactorX,
         float ellipsoidScaleFactorY,
-        float ellipsoidScaleFactorZ)
+        float ellipsoidScaleFactorZ,
+        bool useDataAsIntensity,
+        float intensityFactor)
 {
-    {
-        std::stringstream _str;
-        _str << "cleanRVE " << _RVEName << "\n";
-        getConsole().writeToOutput(_str.str());
-    }
-    getConsole().writeToOutput(_manager.cleanRVE(_RVEName));
+    std::stringstream _str;
+    _str << "applyGaussianFilterRVE " << _RVEName << " "
+         << discreteRadius << " "
+         << ellipsoidScaleFactorX << " "
+         << ellipsoidScaleFactorY << " "
+         << ellipsoidScaleFactorZ << " ";
+    if(useDataAsIntensity) _str << "true ";
+    else _str << "false ";
+    _str << intensityFactor << "\n";
 
-    {
-        std::stringstream _str;
-        _str << "addRandomNoiseRVE " << _RVEName << "\n";
-        getConsole().writeToOutput(_str.str());
-    }
-    getConsole().writeToOutput(_manager.addRandomNoiseRVE(_RVEName));
+    getConsole().writeToOutput(_str.str());
 
-    {
-        std::stringstream _str;
-        _str << "applyGaussianFilterRVE " << _RVEName << " "
-             << discreteRadius << " "
-             << ellipsoidScaleFactorX << " "
-             << ellipsoidScaleFactorY << " "
-             << ellipsoidScaleFactorZ << "\n";
-        getConsole().writeToOutput(_str.str());
-    }
-    /// \todo new arguments
-    getConsole().writeToOutput(_manager.applyGaussianFilterRVE(
-                                   _RVEName,
-                                   discreteRadius,
-                                   ellipsoidScaleFactorX,
-                                   ellipsoidScaleFactorY,
-                                   ellipsoidScaleFactorZ,
-                                   false,
-                                   1.0f));
+    getConsole() << _str.str();
 
-    Q_EMIT signal_applyGaussFltrRVEDone();
+    Q_EMIT signal_applyGaussianFilterRVEDone();
 }
 
 std::string RepresentativeVolumeElementConsoleInterface::createRVE(
