@@ -35,6 +35,15 @@ namespace UserInterface
         void on_ScaleFactorZSlider_valueChanged(int value);
         void on_ScaleFactorZSlider_sliderReleased();
 
+        void on_RotationOXSlider_valueChanged(int value);
+        void on_RotationOXSlider_sliderReleased();
+
+        void on_RotationOYSlider_valueChanged(int value);
+        void on_RotationOYSlider_sliderReleased();
+
+        void on_RotationOZSlider_valueChanged(int value);
+        void on_RotationOZSlider_sliderReleased();
+
         void on_ApplyGaussianFilterButton_clicked();
 
         void on_UseDataAsIntensityCheckBox_stateChanged(int arg1);
@@ -55,6 +64,8 @@ namespace UserInterface
 
         void on_addRandomNoiseButton_clicked();
 
+        void on_GenerateVoronoiCellsButton_clicked();
+
     private:
         Ui::VolumeGLRenderRVEEditDialog *ui;
         FilterPreviewGLRender *_previewRender = nullptr;
@@ -67,6 +78,12 @@ namespace UserInterface
         float getFilterScaleFactorYValue() const;
 
         float getFilterScaleFactorZValue() const;
+
+        float getFilterRotationOXValue() const;
+
+        float getFilterRotationOYValue() const;
+
+        float getFilterRotationOZValue() const;
 
     public: /// See UserInterfaceManager, there should be same transitive signals with suffix _T
         Q_SIGNAL void signal_cleanRVE();
@@ -85,8 +102,13 @@ namespace UserInterface
                 float ellipsoidScaleFactorX,
                 float ellipsoidScaleFactorY,
                 float ellipsoidScaleFactorZ,
+                float rotationOX,
+                float rotationOY,
+                float rotationOZ,
                 bool useDataAsIntensity,
                 float intensityFactor);
+
+        Q_SIGNAL void signal_generateVoronoiRandomCellsRVE(int cellNum);
 
     private:
         void _disableWigget();

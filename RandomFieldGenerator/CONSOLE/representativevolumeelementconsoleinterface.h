@@ -102,11 +102,18 @@ class _EditRVECommand : public QObject, public ConsoleCommand
                 SIGNAL(signal_addRandomNoiseRVEDone_T()));
 
         connect(&UserInterface::UserInterfaceManager::instance(),
-                SIGNAL(signal_applyGaussianFilterRVE_T(int,float,float,float,bool,float)),
-                this, SLOT(applyGaussianFilterRVE(int,float,float,float,bool,float)));
+                SIGNAL(signal_applyGaussianFilterRVE_T(int,float,float,float,float,float,float,bool,float)),
+                this, SLOT(applyGaussianFilterRVE(int,float,float,float,float,float,float,bool,float)));
         connect(this, SIGNAL(signal_applyGaussianFilterRVEDone()),
                 &UserInterface::UserInterfaceManager::instance(),
                 SIGNAL(signal_applyGaussianFilterRVEDone_T()));
+
+        connect(&UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_generateVoronoiRandomCellsRVE_T(int)),
+                this, SLOT(generateVoronoiRandomCellsRVE(int)));
+        connect(this, SIGNAL(signal_generateVoronoiRandomCellsRVEDone()),
+                &UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_generateVoronoiRandomCellsRVEDone_T()));
     }
     public: Q_SIGNAL void signal_editRVEGUIStart(RepresentativeVolumeElement* ptrToRVE);
     public: Q_SLOT void editRVEGUIFinish(){
@@ -139,9 +146,15 @@ class _EditRVECommand : public QObject, public ConsoleCommand
             float ellipsoidScaleFactorX,
             float ellipsoidScaleFactorY,
             float ellipsoidScaleFactorZ,
+            float rotationOX,
+            float rotationOY,
+            float rotationOZ,
             bool useDataAsIntensity,
             float intensityFactor);
     public: Q_SIGNAL void signal_applyGaussianFilterRVEDone();
+
+    public: Q_SLOT void generateVoronoiRandomCellsRVE(int cellNum);
+    public: Q_SIGNAL void signal_generateVoronoiRandomCellsRVEDone();
 
     public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
 };
@@ -160,13 +173,14 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
         public: _CreateRVECommand(
                 RepresentativeVolumeElementConsoleInterface &manager, Console &console) :
             ConsoleCommand(
+            //  "--------------------------------------------------------------------------------"
                 "createRVE",
                 "createRVE <Name> <size>\n"
                 "Creates Representative Volume Element (RVE) object in RAM memory.\n"
                 "Arguments:\n"
-                "[string] <Name> - the name of RVE in RAM memory,\n"
-                "[int]    <size> - the discrete size of RVE. "
-                "It should be equal to some power of two.\n",
+                "[string] <Name> - the name of RVE in RAM memory;\n"
+                "[int]    <size> - the discrete size of RVE, It should be equal to\n"
+                "           some power of two.\n",
                 console),
                 _manager(manager){}
         public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
@@ -180,6 +194,7 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
         public: _DeleteRVECommand(
                 RepresentativeVolumeElementConsoleInterface &manager, Console &console) :
             ConsoleCommand(
+            //  "--------------------------------------------------------------------------------"
                 "deleteRVE",
                 "deleteRVE <Name>\n"
                 "Deletes Representative Volume Element (RVE) object from RAM memory.\n"
@@ -198,6 +213,7 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
         public: _PrintRVECommand(
                 RepresentativeVolumeElementConsoleInterface &manager, Console &console) :
             ConsoleCommand(
+            //  "--------------------------------------------------------------------------------"
                 "printRVE",
                 "createRVE\n"
                 "Prints existing in RAM memory Representative Volume "
@@ -219,6 +235,7 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
         public: _cleanRVECommand(
                 RepresentativeVolumeElementConsoleInterface &manager, Console &console) :
             ConsoleCommand(
+            //  "--------------------------------------------------------------------------------"
                 "cleanRVE",
                 "cleanRVE <Name>\n"
                 "Clean RVE by set all it elements to 0.\n"
@@ -237,12 +254,13 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
         public: _cleanUnMaskedRVECommand(
                 RepresentativeVolumeElementConsoleInterface &manager, Console &console) :
             ConsoleCommand(
+            //  "--------------------------------------------------------------------------------"
                 "cleanUnMaskedRVE",
                 "cleanUnMaskedRVE <Name> <filler>\n"
                 "Clean un masked elements RVE by set them to <filler>.\n"
                 "Arguments:\n"
                 "[string] <Name> - the name of RVE in RAM memory;\n"
-                "[float]  <filler> - (optional) value to fill RVE elements (default = 0).\n",
+                "[float]  <filler> - (optional) value to fill RVE elements, default = 0.\n",
                 console),
                 _manager(manager){}
         public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
@@ -256,6 +274,7 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
         public: _cleanMaskRVECommand(
                 RepresentativeVolumeElementConsoleInterface &manager, Console &console) :
             ConsoleCommand(
+            //  "--------------------------------------------------------------------------------"
                 "cleanMaskRVE",
                 "cleanMaskRVE <Name>\n"
                 "Clean RVE mask.\n"
@@ -274,11 +293,11 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
         public: _addRandomNoiseRVECommandmmand(
                 RepresentativeVolumeElementConsoleInterface &manager, Console &console) :
             ConsoleCommand(
+            //  "--------------------------------------------------------------------------------"
                 "addRandomNoiseRVE",
                 "addRandomNoiseRVE <Name>\n"
                 "Add random noise to RVE elements that are not masked by RVE mask.\n"
-                "Note that RVE can be unnormalized after this call, "
-                "if it wasn't cleaned before.\n"
+                "Note that RVE can be unnormalized after this call, if it wasn't cleaned before.\n"
                 "Arguments:\n"
                 "[string] <Name> - the name of RVE in RAM memory.\n",
                 console),
@@ -294,6 +313,7 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
         public: _normalizeUnMaskedRVECommand(
                 RepresentativeVolumeElementConsoleInterface &manager, Console &console) :
             ConsoleCommand(
+            //  "--------------------------------------------------------------------------------"
                 "normalizeUnMaskedRVE",
                 "normalizeUnMaskedRVE <Name>\n"
                 "Normalize un msked RVE elements.\n"
@@ -312,6 +332,7 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
         public: _invertUnMaskedRVECommand(
                 RepresentativeVolumeElementConsoleInterface &manager, Console &console) :
             ConsoleCommand(
+            //  "--------------------------------------------------------------------------------"
                 "invertUnMaskedRVE",
                 "invertUnMaskedRVE <Name>\n"
                 "Invert normalized un masked RVE elements.\n"
@@ -329,6 +350,9 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
             float ellipsoidScaleFactorX,
             float ellipsoidScaleFactorY,
             float ellipsoidScaleFactorZ,
+            float rotationOX,
+            float rotationOY,
+            float rotationOZ,
             bool useDataAsIntensity,
             float intensityFactor);
     private: class _applyGaussianFilterRVECommand : public ConsoleCommand
@@ -337,24 +361,31 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
         public: _applyGaussianFilterRVECommand(
                 RepresentativeVolumeElementConsoleInterface &manager, Console &console) :
             ConsoleCommand(
+            //  "--------------------------------------------------------------------------------"
                 "applyGaussianFilterRVE",
-                "applyGaussianFilterRVE <Name> <Radius> <ScaleFactorX> "
-                "<ScaleFactorY> <ScaleFactorZ> <useDataAsIntensity> <intensityFactor>\n"
-                "Apply Gaussian blur filter to given Representative "
-                "Volume Element elements.\n"
+                "applyGaussianFilterRVE <Name> <Radius> <ScaleFactorX> <ScaleFactorY>\n"
+                "   <ScaleFactorZ> <rotationOX> <rotationOY> <rotationOZ> <useDataAsIntensity>\n"
+                "   <intensityFactor>\n"
+                "Apply Gaussian blur filter to given Representative Volume Element elements.\n"
                 "Arguments:\n"
                 "[string] <Name> - the name of RVE in RAM memory;\n"
                 "[int]    <Radius> - the radius of filter mask, should be > 0;\n"
-                "[float]  <ScaleFactorX> - (optional) the ellipsoid scale factor on X axis of "
-                "filter mask, should be > 0 and <= 1;\n"
-                "[float]  <ScaleFactorY> - (optional) the ellipsoid scale factor on Y axis of "
-                "filter mask, should be > 0 and <= 1;\n"
-                "[float]  <ScaleFactorZ> - (optional) the ellipsoid scale factor on Z axis of "
-                "filter mask, should be > 0 and <= 1;\n"
-                "[bool]   <useDataAsIntensity> - (optional) use RVE elements as intensity "
-                "'true' or 'false';\n"
-                "[float]  <intensityFactor> - (optional) if <useDataAsIntensity> equal 'true',"
-                "use intensity multiply factor.\n",
+                "[float]  <ScaleFactorX> - (optional) the ellipsoid scale factor on X axis of\n"
+                "               filter mask, should be > 0 and <= 1, default = 1;\n"
+                "[float]  <ScaleFactorY> - (optional) the ellipsoid scale factor on Y axis of\n"
+                "               filter mask, should be > 0 and <= 1, default = 1;\n"
+                "[float]  <ScaleFactorZ> - (optional) the ellipsoid scale factor on Z axis of\n"
+                "               filter mask, should be > 0 and <= 1, default = 1;\n"
+                "[float]  <rotationOX> - (optional) the ellipsoid rotation angle in degrees on\n"
+                "               X axis, should be >= 0 and <= 180 radians, default = 0;\n"
+                "[float]  <rotationOY> - (optional) the ellipsoid rotation angle in degrees on\n"
+                "               Y axis, should be >= 0 and <= 180 radians, default = 0;\n"
+                "[float]  <rotationOZ> - (optional) the ellipsoid rotation angle in degrees on\n"
+                "               Z axis, should be >= 0 and <= 180 radians, default = 0;\n"
+                "[bool]   <useDataAsIntensity> - (optional) use RVE elements as intensity 'true'\n"
+                "               or 'false', default = false;\n"
+                "[float]  <intensityFactor> - (optional) if <useDataAsIntensity> equal 'true',\n"
+                "               use intensity multiply factor, default = 1.\n",
                 console),
                 _manager(manager){}
         public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
@@ -371,6 +402,7 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
         public: _applyTwoCutMaskInsideRVECommand(
                 RepresentativeVolumeElementConsoleInterface &manager, Console &console) :
             ConsoleCommand(
+            //  "--------------------------------------------------------------------------------"
                 "applyTwoCutMaskInsideRVE",
                 "applyTwoCutMaskInsideRVE <Name> <cutLevelA> <cutLevelB>\n"
                 "Apply two-cut to mask (inside).\n"
@@ -395,6 +427,7 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
         public: _applyTwoCutMaskOutsideRVECommand(
                 RepresentativeVolumeElementConsoleInterface &manager, Console &console) :
             ConsoleCommand(
+            //  "--------------------------------------------------------------------------------"
                 "applyTwoCutMaskOutsideRVE",
                 "applyTwoCutMaskOutsideRVE <Name> <cutLevelA> <cutLevelB>\n"
                 "Apply two-cut to mask (outside).\n"
@@ -425,24 +458,26 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
         public: _generateOverlappingRandomEllipsoidsIntenseRVECommand(
                 RepresentativeVolumeElementConsoleInterface &manager, Console &console) :
             ConsoleCommand(
+            //  "--------------------------------------------------------------------------------"
                 "generateOverlappingRandomEllipsoidsIntenseRVE",
-                "generateOverlappingRandomEllipsoidsIntenseRVE <Name> <ellipsoidNum> "
-                "<minRadius> <maxRadius> <transitionLayerSize> <ScaleFactorX> "
-                "<ScaleFactorY> <ScaleFactorZ> <coreValue>\n"
+                "generateOverlappingRandomEllipsoidsIntenseRVE <Name> <ellipsoidNum> <minRadius>\n"
+                "   <maxRadius> <transitionLayerSize> <ScaleFactorX> <ScaleFactorY>\n"
+                "   <ScaleFactorZ> <coreValue>\n"
                 "Generate overlapping random ellipsoids at unmasked RVE elements\n"
                 "Arguments:\n"
                 "[string] <Name> - the name of RVE in RAM memory;\n"
                 "[int]    <ellipsoidNum> - number of ellipsoids;\n"
                 "[int]    <minRadius> - bottom boudn of radius deviation;\n"
                 "[int]    <maxRadius> - top bound of radius deviation;\n"
-                "[float]  <transitionLayerSize> - (optional) in range [0:1], relative to radius;\n"
-                "[float]  <ScaleFactorX> - (optional) the ellipsoid scale factor on X axis of "
-                "filter mask, should be > 0 and <= 1;\n"
-                "[float]  <ScaleFactorY> - (optional) the ellipsoid scale factor on Y axis of "
-                "filter mask, should be > 0 and <= 1;\n"
-                "[float]  <ScaleFactorZ> - (optional) the ellipsoid scale factor on Z axis of "
-                "filter mask, should be > 0 and <= 1;\n"
-                "[float]  <coreValue> - (optional) intensity value of core.\n",
+                "[float]  <transitionLayerSize> - (optional) in range [0:1], relative to radius,\n"
+                "               default = 1;\n"
+                "[float]  <ScaleFactorX> - (optional) the ellipsoid scale factor on X axis of\n"
+                "               filter mask, should be > 0 and <= 1, default = 1;\n"
+                "[float]  <ScaleFactorY> - (optional) the ellipsoid scale factor on Y axis of\n"
+                "               filter mask, should be > 0 and <= 1, default = 1;\n"
+                "[float]  <ScaleFactorZ> - (optional) the ellipsoid scale factor on Z axis of\n"
+                "               filter mask, should be > 0 and <= 1, default = 1;\n"
+                "[float]  <coreValue> - (optional) intensity value of core, default = 1.\n",
                 console),
                 _manager(manager){}
         public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
@@ -458,9 +493,10 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
         public: _generateVoronoiRandomCellsRVECommand(
                 RepresentativeVolumeElementConsoleInterface &manager, Console &console) :
             ConsoleCommand(
+            //  "--------------------------------------------------------------------------------"
                 "generateVoronoiRandomCellsRVE",
                 "generateVoronoiRandomCellsRVE <Name> <cellNum>\n"
-                "Generate Voronoi diagram random cells OpenCL version. It clears all "
+                "Generate Voronoi diagram random cells OpenCL version. It clears all\n"
                 "previous data\n"
                 "Arguments:\n"
                 "[string] <Name> - the name of RVE in RAM memory;\n"

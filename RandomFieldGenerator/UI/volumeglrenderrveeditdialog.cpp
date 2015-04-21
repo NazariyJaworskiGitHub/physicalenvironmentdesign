@@ -5,7 +5,8 @@
 
 #include "userinterfacemanager.h"
 
-#include "QDoubleValidator"
+#include <QDoubleValidator>
+#include <QIntValidator>
 
 using namespace UserInterface;
 
@@ -38,17 +39,30 @@ VolumeGLRenderRVEEditDialog::VolumeGLRenderRVEEditDialog(QWidget *parent) :
     ui->ScaleFactorZSlider->setValue(_parent->_FilterScaleFactorZBackup * 100);
     ui->ScileFactorZLineEdit->setText(QString::number(ui->ScaleFactorZSlider->value() / 100.0f));
 
+    ui->RotationOXSlider->setValue(_parent->_FilterRotationOXBackup);
+    ui->RotationOXLineEdit->setText(QString::number(ui->RotationOXSlider->value()));
+
+    ui->RotationOYSlider->setValue(_parent->_FilterRotationOYBackup);
+    ui->RotationOYLineEdit->setText(QString::number(ui->RotationOYSlider->value()));
+
+    ui->RotationOZSlider->setValue(_parent->_FilterRotationOZBackup);
+    ui->RotationOZLineEdit->setText(QString::number(ui->RotationOZSlider->value()));
+
     ui->UseDataAsIntensityCheckBox->setCheckState(Qt::Unchecked);
     ui->IntensityFactorLineEdit->setEnabled(false);
     ui->IntensityFactorLabel->setEnabled(false);
 
-    QDoubleValidator *_validator = new QDoubleValidator(this);
-    ui->IntensityFactorLineEdit->setValidator(_validator);
+    QDoubleValidator *_doubleValidator = new QDoubleValidator(this);
+    ui->IntensityFactorLineEdit->setValidator(_doubleValidator);
 
     _previewRender = new FilterPreviewGLRender(
                 _parent->_ptrToRVE, ui->GaussianFilter);
     _previewRender->resize(261,261);
     _previewRender->move(510, 20);
+
+    QIntValidator *_intValidator = new QIntValidator(this);
+    _intValidator->setBottom(2);
+    ui->NumberOfCellsLineEdit->setValidator(_intValidator);
 
     connect(this,SIGNAL(signal_cleanRVE()),
             &UserInterfaceManager::instance(),
@@ -106,11 +120,18 @@ VolumeGLRenderRVEEditDialog::VolumeGLRenderRVEEditDialog(QWidget *parent) :
     connect(&UserInterfaceManager::instance(), SIGNAL(signal_addRandomNoiseRVEDone_T()),
             this, SLOT(_enableWidget()), Qt::QueuedConnection);
 
-    connect(this,SIGNAL(signal_applyGaussianFilterRVE(int,float,float,float,bool,float)),
+    connect(this,SIGNAL(signal_applyGaussianFilterRVE(int,float,float,float,float,float,float,bool,float)),
             &UserInterfaceManager::instance(),
-            SIGNAL(signal_applyGaussianFilterRVE_T(int,float,float,float,bool,float)),
+            SIGNAL(signal_applyGaussianFilterRVE_T(int,float,float,float,float,float,float,bool,float)),
             Qt::QueuedConnection);
     connect(&UserInterfaceManager::instance(), SIGNAL(signal_applyGaussianFilterRVEDone_T()),
+            this, SLOT(_enableWidget()), Qt::QueuedConnection);
+
+    connect(this,SIGNAL(signal_generateVoronoiRandomCellsRVE(int)),
+            &UserInterfaceManager::instance(),
+            SIGNAL(signal_generateVoronoiRandomCellsRVE_T(int)),
+            Qt::QueuedConnection);
+    connect(&UserInterfaceManager::instance(), SIGNAL(signal_generateVoronoiRandomCellsRVEDone_T()),
             this, SLOT(_enableWidget()), Qt::QueuedConnection);
 
     ui->progressBar->setWindowModality(Qt::WindowModal);
@@ -210,6 +231,47 @@ void UserInterface::VolumeGLRenderRVEEditDialog::on_ScaleFactorZSlider_sliderRel
     _updatePreview();
 }
 
+void UserInterface::VolumeGLRenderRVEEditDialog::on_RotationOXSlider_valueChanged(int value)
+{
+    ui->RotationOXLineEdit->setText(QString::number(value));
+    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
+    _parent->_FilterRotationOXBackup = value;
+    if(!ui->RotationOXSlider->isSliderDown())
+        _updatePreview();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_RotationOXSlider_sliderReleased()
+{
+    _updatePreview();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_RotationOYSlider_valueChanged(int value)
+{
+    ui->RotationOYLineEdit->setText(QString::number(value));
+    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
+    _parent->_FilterRotationOYBackup = value;
+    if(!ui->RotationOYSlider->isSliderDown())
+        _updatePreview();
+}
+void UserInterface::VolumeGLRenderRVEEditDialog::on_RotationOYSlider_sliderReleased()
+{
+    _updatePreview();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_RotationOZSlider_valueChanged(int value)
+{
+    ui->RotationOZLineEdit->setText(QString::number(value));
+    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
+    _parent->_FilterRotationOZBackup = value;
+    if(!ui->RotationOZSlider->isSliderDown())
+        _updatePreview();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_RotationOZSlider_sliderReleased()
+{
+    _updatePreview();
+}
+
 void UserInterface::VolumeGLRenderRVEEditDialog::on_ApplyGaussianFilterButton_clicked()
 {
     _disableWigget();
@@ -219,6 +281,9 @@ void UserInterface::VolumeGLRenderRVEEditDialog::on_ApplyGaussianFilterButton_cl
                 ui->ScaleFactorXSlider->value() / 100.0f,
                 ui->ScaleFactorYSlider->value() / 100.0f,
                 ui->ScaleFactorZSlider->value() / 100.0f,
+                ui->RotationOXSlider->value(),
+                ui->RotationOYSlider->value(),
+                ui->RotationOZSlider->value(),
                 ui->UseDataAsIntensityCheckBox->checkState(),
                 ui->IntensityFactorLineEdit->text().toFloat());
 }
@@ -228,17 +293,23 @@ float VolumeGLRenderRVEEditDialog::getFilterRadiusValue() const
     return ui->FilterRadiusSlider->value();
 }
 
-
 float UserInterface::VolumeGLRenderRVEEditDialog::getFilterScaleFactorXValue() const {
     return ui->ScaleFactorXSlider->value() / 100.0f;}
-
 
 float VolumeGLRenderRVEEditDialog::getFilterScaleFactorYValue() const {
     return ui->ScaleFactorYSlider->value() / 100.0f;}
 
-
 float VolumeGLRenderRVEEditDialog::getFilterScaleFactorZValue() const {
     return ui->ScaleFactorZSlider->value() / 100.0f;}
+
+float VolumeGLRenderRVEEditDialog::getFilterRotationOXValue() const {
+    return ui->RotationOXSlider->value();}
+
+float VolumeGLRenderRVEEditDialog::getFilterRotationOYValue() const {
+    return ui->RotationOYSlider->value();}
+
+float VolumeGLRenderRVEEditDialog::getFilterRotationOZValue() const {
+    return ui->RotationOZSlider->value();}
 
 void UserInterface::VolumeGLRenderRVEEditDialog::on_UseDataAsIntensityCheckBox_stateChanged(
         int arg1)
@@ -351,4 +422,12 @@ void UserInterface::VolumeGLRenderRVEEditDialog::on_addRandomNoiseButton_clicked
 {
     _disableWigget();
     Q_EMIT signal_addRandomNoiseRVE();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_GenerateVoronoiCellsButton_clicked()
+{
+    _disableWigget();
+
+    Q_EMIT signal_generateVoronoiRandomCellsRVE(
+                ui->NumberOfCellsLineEdit->text().toInt());
 }

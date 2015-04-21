@@ -1,5 +1,7 @@
 #include "representativevolumeelement.h"
 
+#include "constants.h"
+
 cl::Program *RepresentativeVolumeElement::_programPtr = nullptr;
 cl::Kernel *RepresentativeVolumeElement::_kernelXPtr = nullptr;
 cl::Kernel *RepresentativeVolumeElement::_kernelYPtr = nullptr;
@@ -35,87 +37,117 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
     if(!_programPtr)
     {
         std::string _CLSource_applyGaussianFilter = "\
-            float _GaussianFilter(\
-                    float r,\
-                    float x, float y, float z,\
-                    float fx, float fy, float fz)\
+            void _rotateXYZ(\
+                float *x, float *y, float *z,\
+                float aox, float aoy, float aoz)\
             {\
+                float _x, _y, _z;\
+                \
+                _y = cos(aox)*(*y) - sin(aox)*(*z);\
+                _z = sin(aox)*(*y) + cos(aox)*(*z);\
+                \
+                _x = cos(aoy)*(*x) - sin(aoy)*_z;\
+                (*z) = sin(aoy)*(*x) + cos(aoy)*_z;\
+                \
+                (*x) = cos(aoz)*_x - sin(aoz)*_y;\
+                (*y) = sin(aoz)*_x + cos(aoz)*_y;\
+            }\
+            \
+            float _GaussianFilter(\
+                float r,\
+                float x, float y, float z,\
+                float fx, float fy, float fz,\
+                float aox, float aoy, float aoz)\
+            {\
+                _rotateXYZ(&x,&y,&z,aox,aoy,aoz);\
                 return exp(-(x*x/fx/fx + y*y/fy/fy + z*z/fz/fz) / ((r/2.0) * (r/2.0)));\
             }\
             \
             __kernel void applyGaussianFilterX(\
-                    int discreteRadius,\
-                    float ellipsoidScaleFactorX,\
-                    float ellipsoidScaleFactorY,\
-                    float ellipsoidScaleFactorZ,\
-                    __global float *_data,\
-                    __global float *_cuttedData,\
-                    int _size)\
+                int discreteRadius,\
+                float ellipsoidScaleFactorX,\
+                float ellipsoidScaleFactorY,\
+                float ellipsoidScaleFactorZ,\
+                float rotationOX,\
+                float rotationOY,\
+                float rotationOZ,\
+                __global float *_data,\
+                __global float *_cuttedData,\
+                int _size)\
             {\
                 long i = get_global_id(0);\
                 long j = get_global_id(1);\
                 long k = get_global_id(2);\
-            \
+                \
                 for( int p = -discreteRadius; p <= discreteRadius; ++p)\
-                    _cuttedData[(i * _size * _size) + (j * _size) + k] +=\
-                        _data[(((i+p)&(_size-1)) * _size * _size) +\
-                            (j * _size) + k] *\
-                        _GaussianFilter(\
-                            discreteRadius,\
-                            p, 0, 0,\
-                            ellipsoidScaleFactorX,\
-                            ellipsoidScaleFactorY,\
-                            ellipsoidScaleFactorZ);\
+                _cuttedData[(i * _size * _size) + (j * _size) + k] +=\
+                _data[(((i+p)&(_size-1)) * _size * _size) +\
+                (j * _size) + k] *\
+                _GaussianFilter(\
+                    discreteRadius,\
+                    p, 0, 0,\
+                    ellipsoidScaleFactorX,\
+                    ellipsoidScaleFactorY,\
+                    ellipsoidScaleFactorZ,\
+                    rotationOX, rotationOY, rotationOZ);\
             }\
             \
             __kernel void applyGaussianFilterY(\
-                    int discreteRadius,\
-                    float ellipsoidScaleFactorX,\
-                    float ellipsoidScaleFactorY,\
-                    float ellipsoidScaleFactorZ,\
-                    __global float *_data,\
-                    __global float *_cuttedData,\
-                    int _size)\
+                int discreteRadius,\
+                float ellipsoidScaleFactorX,\
+                float ellipsoidScaleFactorY,\
+                float ellipsoidScaleFactorZ,\
+                float rotationOX,\
+                float rotationOY,\
+                float rotationOZ,\
+                __global float *_data,\
+                __global float *_cuttedData,\
+                int _size)\
             {\
                 long i = get_global_id(0);\
                 long j = get_global_id(1);\
                 long k = get_global_id(2);\
-            \
+                \
                 for( int q = -discreteRadius; q <= discreteRadius; ++q)\
                     _cuttedData[(i * _size * _size) + (j * _size) + k] +=\
-                        _data[(i * _size * _size) +\
+                            _data[(i * _size * _size) +\
                             (((j+q)&(_size-1)) * _size) + k] *\
-                        _GaussianFilter(\
-                            discreteRadius,\
-                            0, q, 0,\
-                            ellipsoidScaleFactorX,\
-                            ellipsoidScaleFactorY,\
-                            ellipsoidScaleFactorZ);\
+                            _GaussianFilter(\
+                                discreteRadius,\
+                                0, q, 0,\
+                                ellipsoidScaleFactorX,\
+                                ellipsoidScaleFactorY,\
+                                ellipsoidScaleFactorZ,\
+                                rotationOX, rotationOY, rotationOZ);\
             }\
             \
             __kernel void applyGaussianFilterZ(\
-                    int discreteRadius,\
-                    float ellipsoidScaleFactorX,\
-                    float ellipsoidScaleFactorY,\
-                    float ellipsoidScaleFactorZ,\
-                    __global float *_data,\
-                    __global float *_cuttedData,\
-                    int _size)\
+                int discreteRadius,\
+                float ellipsoidScaleFactorX,\
+                float ellipsoidScaleFactorY,\
+                float ellipsoidScaleFactorZ,\
+                float rotationOX,\
+                float rotationOY,\
+                float rotationOZ,\
+                __global float *_data,\
+                __global float *_cuttedData,\
+                int _size)\
             {\
                 long i = get_global_id(0);\
                 long j = get_global_id(1);\
                 long k = get_global_id(2);\
-            \
+                \
                 for( int r = -discreteRadius; r <= discreteRadius; ++r)\
                     _cuttedData[(i * _size * _size) + (j * _size) + k] +=\
-                        _data[(i * _size * _size) + (j * _size) +\
+                            _data[(i * _size * _size) + (j * _size) +\
                             ((k+r)&(_size-1))] *\
-                        _GaussianFilter(\
-                            discreteRadius,\
-                            0, 0, r,\
-                            ellipsoidScaleFactorX,\
-                            ellipsoidScaleFactorY,\
-                            ellipsoidScaleFactorZ);\
+                            _GaussianFilter(\
+                                discreteRadius,\
+                                0, 0, r,\
+                                ellipsoidScaleFactorX,\
+                                ellipsoidScaleFactorY,\
+                                ellipsoidScaleFactorZ,\
+                                rotationOX, rotationOY, rotationOZ);\
             }\
             \
             void _distanceOnRepeatedSides(\
@@ -419,6 +451,9 @@ void RepresentativeVolumeElement::applyGaussianFilter(
         float ellipsoidScaleFactorX,
         float ellipsoidScaleFactorY,
         float ellipsoidScaleFactorZ,
+        float rotationOX,
+        float rotationOY,
+        float rotationOZ,
         bool useDataAsIntensity,
         float intensityFactor) throw (std::runtime_error)
 {
@@ -434,6 +469,15 @@ void RepresentativeVolumeElement::applyGaussianFilter(
     if(ellipsoidScaleFactorZ <= 0.0f || ellipsoidScaleFactorZ > 1.0f)
         throw(std::runtime_error("applyGaussianFilter(): ellipsoidScaleFactorZ "
                                  "<= 0 or > 1.\n"));
+//    if(rotationOX < 0.0f || rotationOX > M_PI*2)
+//        throw(std::runtime_error("applyGaussianFilter(): rotationOX "
+//                                 "< 0 or > 2*pi.\n"));
+//    if(rotationOY < 0.0f || rotationOY > M_PI*2)
+//        throw(std::runtime_error("applyGaussianFilter(): rotationOY "
+//                                 "< 0 or > 2*pi.\n"));
+//    if(rotationOZ < 0.0f || rotationOZ > M_PI*2)
+//        throw(std::runtime_error("applyGaussianFilter(): rotationOZ "
+//                                 "< 0 or > 2*pi.\n"));
 
     _discreteRadius = discreteRadius;
 
@@ -477,14 +521,15 @@ void RepresentativeVolumeElement::applyGaussianFilter(
                                 p, 0, 0,
                                 ellipsoidScaleFactorZ,
                                 ellipsoidScaleFactorY,
-                                ellipsoidScaleFactorX);
+                                ellipsoidScaleFactorX,
+                                rotationOZ, rotationOY, rotationOX);
                 }
             }
     }
     memcpy(_data, _cuttedData, sizeof(float) * _size * _size * _size);
     std::cout << " Done" << std::endl;
 
-    std::cout << "                ...phase 2...\n";
+/*    std::cout << "                ...phase 2...\n";
     memset(_cuttedData, 0, sizeof(float) * _size * _size * _size);
     for( long i = 0; i < _size; ++i)
     {
@@ -505,7 +550,8 @@ void RepresentativeVolumeElement::applyGaussianFilter(
                                 0, q, 0,
                                 ellipsoidScaleFactorZ,
                                 ellipsoidScaleFactorY,
-                                ellipsoidScaleFactorX);
+                                ellipsoidScaleFactorX,
+                                rotationOZ, rotationOY, rotationOX);
                 }
             }
     }
@@ -533,12 +579,13 @@ void RepresentativeVolumeElement::applyGaussianFilter(
                                 0, 0, r,
                                 ellipsoidScaleFactorZ,
                                 ellipsoidScaleFactorY,
-                                ellipsoidScaleFactorX);
+                                ellipsoidScaleFactorX,
+                                rotationOZ, rotationOY, rotationOX);
                 }
             }
     }
     memcpy(_data, _cuttedData, sizeof(float) * _size * _size * _size);
-    std::cout << " Done" << std::endl;
+    std::cout << " Done" << std::endl;*/
 
     if(useDataAsIntensity)
     {
@@ -605,6 +652,9 @@ void RepresentativeVolumeElement::applyGaussianFilterCL(
         float ellipsoidScaleFactorX,
         float ellipsoidScaleFactorY,
         float ellipsoidScaleFactorZ,
+        float rotationOX,
+        float rotationOY,
+        float rotationOZ,
         bool useDataAsIntensity,
         float intensityFactor) throw (std::runtime_error)
 {
@@ -620,6 +670,15 @@ void RepresentativeVolumeElement::applyGaussianFilterCL(
     if(ellipsoidScaleFactorZ <= 0.0f || ellipsoidScaleFactorZ > 1.0f)
         throw(std::runtime_error(
                 "applyGaussianFilterCL(): ellipsoidScaleFactorZ <= 0 or > 1.\n"));
+//    if(rotationOX < 0.0f || rotationOX > M_PI*2)
+//        throw(std::runtime_error("applyGaussianFilterCL(): rotationOX "
+//                                 "< 0 or > 2*pi.\n"));
+//    if(rotationOY < 0.0f || rotationOY > M_PI*2)
+//        throw(std::runtime_error("applyGaussianFilterCL(): rotationOY "
+//                                 "< 0 or > 2*pi.\n"));
+//    if(rotationOZ < 0.0f || rotationOZ > M_PI*2)
+//        throw(std::runtime_error("applyGaussianFilterCL(): rotationOZ "
+//                                 "< 0 or > 2*pi.\n"));
 
     _discreteRadius = discreteRadius;
 
@@ -660,25 +719,34 @@ void RepresentativeVolumeElement::applyGaussianFilterCL(
     _kernelXPtr->setArg(1, ellipsoidScaleFactorZ);
     _kernelXPtr->setArg(2, ellipsoidScaleFactorY);
     _kernelXPtr->setArg(3, ellipsoidScaleFactorX);
-    _kernelXPtr->setArg(4, _dataBuffer);
-    _kernelXPtr->setArg(5, _cuttedDataBuffer);
-    _kernelXPtr->setArg(6, _size);
+    _kernelXPtr->setArg(4, rotationOZ);
+    _kernelXPtr->setArg(5, rotationOY);
+    _kernelXPtr->setArg(6, rotationOX);
+    _kernelXPtr->setArg(7, _dataBuffer);
+    _kernelXPtr->setArg(8, _cuttedDataBuffer);
+    _kernelXPtr->setArg(9, _size);
 
     _kernelYPtr->setArg(0, _discreteRadius);
     _kernelYPtr->setArg(1, ellipsoidScaleFactorZ);
     _kernelYPtr->setArg(2, ellipsoidScaleFactorY);
     _kernelYPtr->setArg(3, ellipsoidScaleFactorX);
-    _kernelYPtr->setArg(4, _dataBuffer);
-    _kernelYPtr->setArg(5, _cuttedDataBuffer);
-    _kernelYPtr->setArg(6, _size);
+    _kernelYPtr->setArg(4, rotationOZ);
+    _kernelYPtr->setArg(5, rotationOY);
+    _kernelYPtr->setArg(6, rotationOX);
+    _kernelYPtr->setArg(7, _dataBuffer);
+    _kernelYPtr->setArg(8, _cuttedDataBuffer);
+    _kernelYPtr->setArg(9, _size);
 
     _kernelZPtr->setArg(0, _discreteRadius);
     _kernelZPtr->setArg(1, ellipsoidScaleFactorZ);
     _kernelZPtr->setArg(2, ellipsoidScaleFactorY);
     _kernelZPtr->setArg(3, ellipsoidScaleFactorX);
-    _kernelZPtr->setArg(4, _dataBuffer);
-    _kernelZPtr->setArg(5, _cuttedDataBuffer);
-    _kernelZPtr->setArg(6, _size);
+    _kernelZPtr->setArg(4, rotationOZ);
+    _kernelZPtr->setArg(5, rotationOY);
+    _kernelZPtr->setArg(6, rotationOX);
+    _kernelZPtr->setArg(7, _dataBuffer);
+    _kernelZPtr->setArg(8, _cuttedDataBuffer);
+    _kernelZPtr->setArg(9, _size);
 
     cl::CommandQueue &_queue = OpenCL::CLManager::instance().getCurrentCommandQueue();
     cl::Event _event;

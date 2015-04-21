@@ -3,6 +3,8 @@
 #include <iostream>
 #include <sstream>
 
+#include "constants.h"
+
 using namespace UserInterface;
 
 VolumeGLRenderBaseController::VolumeGLRenderBaseController(QWidget *pwgt) noexcept:
@@ -83,7 +85,6 @@ void VolumeGLRenderBaseController::_drawArrow(
         GLfloat x1, GLfloat y1, GLfloat z1,
         GLfloat x2, GLfloat y2, GLfloat z2) noexcept
 {
-    float constexpr PI = 3.14159265358979323846;
     float x = x2 - x1;
     float y = y2 - y1;
     float z = z2 - z1;
@@ -101,8 +102,8 @@ void VolumeGLRenderBaseController::_drawArrow(
         glTranslated(x1,y1,z1);
         if((x != 0.0f) || (y != 0.0f))
         {
-            glRotated(std::atan2(y, x) * 180 / PI, 0.0f, 0.0f, 1.0f);
-            glRotated(std::atan2(std::sqrt(x*x + y*y), z) * 180 / PI, 0.0f, 1.0f, 0.0f);
+            glRotated(std::atan2(y, x) * 180 / M_PI, 0.0f, 0.0f, 1.0f);
+            glRotated(std::atan2(std::sqrt(x*x + y*y), z) * 180 / M_PI, 0.0f, 1.0f, 0.0f);
         }
         else if(z < 0.0f)
             glRotated(180.0f, 1.0f, 0.0f, 0.0f);

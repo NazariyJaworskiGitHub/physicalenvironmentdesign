@@ -130,7 +130,8 @@ HEADERS += \
     UI/filterpreviewglrender.h \
     UI/volumeglrendereditdialog.h \
     UI/xyglrender.h \
-    UI/xyglrenderformatdialog.h
+    UI/xyglrenderformatdialog.h \
+    constants.h
 
 FORMS += \
     UI/volumeglrenderformatdialog.ui \

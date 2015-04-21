@@ -1,6 +1,7 @@
 #include "filterpreviewglrender.h"
 
 #include "UI/volumeglrenderrveeditdialog.h"
+#include "constants.h"
 
 using namespace UserInterface;
 
@@ -32,7 +33,10 @@ void FilterPreviewGLRender::loadDataIntoTexture() throw(std::runtime_error)
                     i / _size / _size - _size / 2,
                     _parent->getFilterScaleFactorXValue(),
                     _parent->getFilterScaleFactorYValue(),
-                    _parent->getFilterScaleFactorZValue()) * 255.0f;
+                    _parent->getFilterScaleFactorZValue(),
+                    _parent->getFilterRotationOXValue() * M_PI / 180,
+                    _parent->getFilterRotationOYValue() * M_PI / 180,
+                    _parent->getFilterRotationOZValue() * M_PI / 180) * 255.0f;
         _RGBABuff[i * 4 + 0] = 255;
         _RGBABuff[i * 4 + 1] = 255;
         _RGBABuff[i * 4 + 2] = 255;

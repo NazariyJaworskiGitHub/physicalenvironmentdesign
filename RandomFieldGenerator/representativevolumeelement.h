@@ -105,13 +105,34 @@ class RepresentativeVolumeElement
     /// Invert normalized un masked data
     public : void invertUnMasked() noexcept;
 
+    /// Rotate x,y,z on a reltive ox, oy, oz
+    /// \todo move to some math utils
+    public: static inline void rotateXYZ(
+            float &x, float &y, float &z,
+            const float &aox, const float &aoy, const float &aoz) noexcept
+    {
+        float _x, _y, _z;
+
+        _y = std::cos(aox)*y - std::sin(aox)*z;
+        _z = std::sin(aox)*y + std::cos(aox)*z;
+
+        _x = std::cos(aoy)*x - std::sin(aoy)*_z;
+        z = std::sin(aoy)*x + std::cos(aoy)*_z;
+
+        x = std::cos(aoz)*_x - std::sin(aoz)*_y;
+        y = std::sin(aoz)*_x + std::cos(aoz)*_y;
+    }
     /// Gaussian blur filter function, for external usage only
     /// Note, r, fx, fy, fz should be > 0;
     public: static inline float GaussianBlurFilter(
             float r,
             float x, float y, float z,
-            float fx, float fy, float fz) noexcept {
-        return std::exp(-(x*x/fx/fx + y*y/fy/fy + z*z/fz/fz) / ((r/2.0) * (r/2.0)));}
+            float fx, float fy, float fz,
+            float aox, float aoy, float aoz) noexcept
+    {
+        rotateXYZ(x,y,z,aox,aoy,aoz);
+        return std::exp(-(x*x/fx/fx + y*y/fy/fy + z*z/fz/fz) / ((r/2.0) * (r/2.0)));
+    }
 
     /// Apply Gaussian filter to previously generated random filed
     /// see (2002) Torguato - Random Heterogeneous Materials Microstructure
@@ -127,6 +148,9 @@ class RepresentativeVolumeElement
             float ellipsoidScaleFactorX = 1.0f,
             float ellipsoidScaleFactorY = 1.0f,
             float ellipsoidScaleFactorZ = 1.0f,
+            float rotationOX = 0.0f,
+            float rotationOY = 0.0f,
+            float rotationOZ = 0.0f,
             bool useDataAsIntensity = false,
             float intensityFactor = 1.0f) throw (std::runtime_error);
 
@@ -165,6 +189,9 @@ class RepresentativeVolumeElement
             float ellipsoidScaleFactorX = 1.0f,
             float ellipsoidScaleFactorY = 1.0f,
             float ellipsoidScaleFactorZ = 1.0f,
+            float rotationOX = 0.0f,
+            float rotationOY = 0.0f,
+            float rotationOZ = 0.0f,
             bool useDataAsIntensity = false,
             float intensityFactor = 1.0f) throw (std::runtime_error);
 

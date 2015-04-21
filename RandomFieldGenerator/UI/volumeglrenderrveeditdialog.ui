@@ -2,16 +2,22 @@
 <ui version="4.0">
  <class>VolumeGLRenderRVEEditDialog</class>
  <widget class="QDialog" name="VolumeGLRenderRVEEditDialog">
+  <property name="windowModality">
+   <enum>Qt::WindowModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>560</height>
+    <height>610</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Representative Volume Element Edit Dialog</string>
+  </property>
+  <property name="sizeGripEnabled">
+   <bool>false</bool>
   </property>
   <property name="modal">
    <bool>true</bool>
@@ -20,7 +26,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>530</y>
+     <y>580</y>
      <width>781</width>
      <height>21</height>
     </rect>
@@ -262,7 +268,7 @@
     <property name="geometry">
      <rect>
       <x>120</x>
-      <y>140</y>
+      <y>230</y>
       <width>131</width>
       <height>21</height>
      </rect>
@@ -275,7 +281,7 @@
     <property name="geometry">
      <rect>
       <x>320</x>
-      <y>140</y>
+      <y>230</y>
       <width>81</width>
       <height>21</height>
      </rect>
@@ -288,7 +294,7 @@
     <property name="geometry">
      <rect>
       <x>410</x>
-      <y>140</y>
+      <y>230</y>
       <width>91</width>
       <height>21</height>
      </rect>
@@ -306,12 +312,165 @@
      <bool>false</bool>
     </property>
    </widget>
+   <widget class="QLabel" name="RotationOXLabel">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>140</y>
+      <width>101</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Rotation OX</string>
+    </property>
+   </widget>
+   <widget class="QSlider" name="RotationOXSlider">
+    <property name="geometry">
+     <rect>
+      <x>120</x>
+      <y>139</y>
+      <width>281</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="minimum">
+     <number>0</number>
+    </property>
+    <property name="maximum">
+     <number>179</number>
+    </property>
+    <property name="value">
+     <number>0</number>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="RotationOXLineEdit">
+    <property name="geometry">
+     <rect>
+      <x>410</x>
+      <y>140</y>
+      <width>91</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="dragEnabled">
+     <bool>false</bool>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="RotationOYLabel">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>170</y>
+      <width>101</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Rotation OY</string>
+    </property>
+   </widget>
+   <widget class="QSlider" name="RotationOYSlider">
+    <property name="geometry">
+     <rect>
+      <x>120</x>
+      <y>169</y>
+      <width>281</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="minimum">
+     <number>0</number>
+    </property>
+    <property name="maximum">
+     <number>179</number>
+    </property>
+    <property name="value">
+     <number>0</number>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="RotationOYLineEdit">
+    <property name="geometry">
+     <rect>
+      <x>410</x>
+      <y>170</y>
+      <width>91</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="dragEnabled">
+     <bool>false</bool>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="RotationOZLineEdit">
+    <property name="geometry">
+     <rect>
+      <x>410</x>
+      <y>201</y>
+      <width>91</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="dragEnabled">
+     <bool>false</bool>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="RotationOZLabel">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>201</y>
+      <width>101</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Rotation OZ</string>
+    </property>
+   </widget>
+   <widget class="QSlider" name="RotationOZSlider">
+    <property name="geometry">
+     <rect>
+      <x>120</x>
+      <y>200</y>
+      <width>281</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="minimum">
+     <number>0</number>
+    </property>
+    <property name="maximum">
+     <number>179</number>
+    </property>
+    <property name="value">
+     <number>0</number>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
   </widget>
   <widget class="QProgressBar" name="progressBar">
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>530</y>
+     <y>580</y>
      <width>701</width>
      <height>21</height>
     </rect>
@@ -584,6 +743,67 @@
     </property>
     <property name="text">
      <string>Add random noise</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QGroupBox" name="VoronoiCells">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>520</y>
+     <width>781</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Voronoi cells</string>
+   </property>
+   <widget class="QPushButton" name="GenerateVoronoiCellsButton">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>571</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Generate Voronoi cells</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="NumberOfCellsLineEdit">
+    <property name="geometry">
+     <rect>
+      <x>680</x>
+      <y>20</y>
+      <width>91</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>2</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+    </property>
+    <property name="dragEnabled">
+     <bool>false</bool>
+    </property>
+    <property name="readOnly">
+     <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="NumberOfCellsLabel">
+    <property name="geometry">
+     <rect>
+      <x>590</x>
+      <y>20</y>
+      <width>81</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Number of cells</string>
     </property>
    </widget>
   </widget>
