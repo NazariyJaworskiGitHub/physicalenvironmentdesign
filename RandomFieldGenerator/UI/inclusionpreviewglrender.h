@@ -1,13 +1,13 @@
-#ifndef FILTERPREVIEWGLRENDER_H
-#define FILTERPREVIEWGLRENDER_H
+#ifndef INCLUSIONPREVIEWGLRENDER_H
+#define INCLUSIONPREVIEWGLRENDER_H
 
 #include "UI/volumeglrenderbasecontroller.h"
 #include "representativevolumeelement.h"
 
 namespace UserInterface
 {
-    /// \todo refactoring, see InclusionPreviewGLRender
-    class FilterPreviewGLRender : public VolumeGLRenderBaseController
+    /// \todo refactoring, see FilterPreviewGLRender
+    class InclusionPreviewGLRender : public VolumeGLRenderBaseController
     {
         private: const RepresentativeVolumeElement* _ptrToRVE;
 
@@ -20,11 +20,11 @@ namespace UserInterface
         public : virtual void initializeGLEW() throw(std::runtime_error);
         public : virtual void paintGL() override;
 
-        public: FilterPreviewGLRender(
+        public: InclusionPreviewGLRender(
                 const RepresentativeVolumeElement *RVE,
                 QWidget *pwgt) noexcept;
-        public: ~FilterPreviewGLRender();
+        public: ~InclusionPreviewGLRender();
     };
 }
 
-#endif // FILTERPREVIEWGLRENDER_H
+#endif // INCLUSIONPREVIEWGLRENDER_H

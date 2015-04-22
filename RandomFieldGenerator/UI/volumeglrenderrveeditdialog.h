@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include "filterpreviewglrender.h"
+#include "inclusionpreviewglrender.h"
 
 namespace Ui {
 class VolumeGLRenderRVEEditDialog;
@@ -68,24 +69,69 @@ namespace UserInterface
 
         void on_UseRotationsCheckBox_stateChanged(int arg1);
 
+        void on_MinRadiusSlider_valueChanged(int value);
+        void on_MinRadiusSlider_sliderReleased();
+
+        void on_MaxRadiusSlider_valueChanged(int value);
+        void on_MaxRadiusSlider_sliderReleased();
+
+        void on_TransitionLayerSlider_valueChanged(int value);
+        void on_TransitionLayerSlider_sliderReleased();
+
+        void on_ScaleFactorXSlider_Inclusion_valueChanged(int value);
+        void on_ScaleFactorXSlider_Inclusion_sliderReleased();
+
+        void on_ScaleFactorYSlider_Inclusion_valueChanged(int value);
+        void on_ScaleFactorYSlider_Inclusion_sliderReleased();
+
+        void on_ScaleFactorZSlider_Inclusion_valueChanged(int value);
+        void on_ScaleFactorZSlider_Inclusion_sliderReleased();
+
+        void on_UseRandomOrientationCheckBox_stateChanged(int arg1);
+
+        void on_RotationOXSlider_Inclusion_valueChanged(int value);
+        void on_RotationOXSlider_Inclusion_sliderReleased();
+
+        void on_RotationOYSlider_Inclusion_valueChanged(int value);
+        void on_RotationOYSlider_Inclusion_sliderReleased();
+
+        void on_RotationOZSlider_Inclusion_valueChanged(int value);
+        void on_RotationOZSlider_Inclusion_sliderReleased();
+
+        void on_CoreIntensitySlider_valueChanged(int value);
+
+        void on_CoreIntensitySlider_sliderReleased();
+
+        void on_GenerateInclusionsButton_clicked();
+
     private:
         Ui::VolumeGLRenderRVEEditDialog *ui;
         FilterPreviewGLRender *_previewRender = nullptr;
+        InclusionPreviewGLRender *_previewRender_Inclusion = nullptr;
 
     public:
         float getFilterRadiusValue() const;
 
         float getFilterScaleFactorXValue() const;
-
         float getFilterScaleFactorYValue() const;
-
         float getFilterScaleFactorZValue() const;
 
         float getFilterRotationOXValue() const;
-
         float getFilterRotationOYValue() const;
-
         float getFilterRotationOZValue() const;
+
+        float getMinRadiusValue() const;
+        float getMaxRadiusValue() const;
+
+        float getFilterScaleFactorXValue_Inclusion() const;
+        float getFilterScaleFactorYValue_Inclusion() const;
+        float getFilterScaleFactorZValue_Inclusion() const;
+
+        float getFilterRotationOXValue_Inclusion() const;
+        float getFilterRotationOYValue_Inclusion() const;
+        float getFilterRotationOZValue_Inclusion() const;
+
+        float getCoreIntensityValue() const;
 
     public: /// See UserInterfaceManager, there should be same transitive signals with suffix _T
         Q_SIGNAL void signal_cleanRVE();
@@ -111,12 +157,27 @@ namespace UserInterface
                 float rotationOY,
                 float rotationOZ);
 
+        Q_SIGNAL void signal_generateOverlappingRandomEllipsoidsIntenseRVE(
+                int ellipsoidNum,
+                int minRadius,
+                int maxRadius,
+                float transitionLayerSize,
+                float ellipsoidScaleFactorX,
+                float ellipsoidScaleFactorY,
+                float ellipsoidScaleFactorZ,
+                bool useRandomRotations,
+                float rotationOX,
+                float rotationOY,
+                float rotationOZ,
+                float coreValue);
+
         Q_SIGNAL void signal_generateVoronoiRandomCellsRVE(int cellNum);
 
     private:
         void _disableWigget();
         Q_SLOT void _enableWidget();
         void _updatePreview();
+        void _updatePreview_Inclusion();
     };
 }
 

@@ -68,6 +68,21 @@ namespace UserInterface
                 float rotationOZ);
             Q_SIGNAL void signal_applyGaussianFilterRVEDone_T();
 
+            Q_SIGNAL void signal_generateOverlappingRandomEllipsoidsIntenseRVE_T(
+                    int ellipsoidNum,
+                    int minRadius,
+                    int maxRadius,
+                    float transitionLayerSize,
+                    float ellipsoidScaleFactorX,
+                    float ellipsoidScaleFactorY,
+                    float ellipsoidScaleFactorZ,
+                    bool useRandomRotations,
+                    float rotationOX,
+                    float rotationOY,
+                    float rotationOZ,
+                    float coreValue);
+            Q_SIGNAL void signal_generateOverlappingRandomEllipsoidsIntenseRVEDone_T();
+
             Q_SIGNAL void signal_generateVoronoiRandomCellsRVE_T(int cellNum);
             Q_SIGNAL void signal_generateVoronoiRandomCellsRVEDone_T();
 

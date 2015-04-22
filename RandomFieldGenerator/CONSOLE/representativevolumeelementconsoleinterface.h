@@ -109,6 +109,13 @@ class _EditRVECommand : public QObject, public ConsoleCommand
                 SIGNAL(signal_applyGaussianFilterRVEDone_T()));
 
         connect(&UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_generateOverlappingRandomEllipsoidsIntenseRVE_T(int,int,int,float,float,float,float,bool,float,float,float,float)),
+                this, SLOT(generateOverlappingRandomEllipsoidsIntenseRVE(int,int,int,float,float,float,float,bool,float,float,float,float)));
+        connect(this, SIGNAL(signal_generateOverlappingRandomEllipsoidsIntenseRVEDone()),
+                &UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_generateOverlappingRandomEllipsoidsIntenseRVEDone_T()));
+
+        connect(&UserInterface::UserInterfaceManager::instance(),
                 SIGNAL(signal_generateVoronoiRandomCellsRVE_T(int)),
                 this, SLOT(generateVoronoiRandomCellsRVE(int)));
         connect(this, SIGNAL(signal_generateVoronoiRandomCellsRVEDone()),
@@ -153,6 +160,21 @@ class _EditRVECommand : public QObject, public ConsoleCommand
             float rotationOY,
             float rotationOZ);
     public: Q_SIGNAL void signal_applyGaussianFilterRVEDone();
+
+    public: Q_SLOT void generateOverlappingRandomEllipsoidsIntenseRVE(
+            int ellipsoidNum,
+            int minRadius,
+            int maxRadius,
+            float transitionLayerSize,
+            float ellipsoidScaleFactorX,
+            float ellipsoidScaleFactorY,
+            float ellipsoidScaleFactorZ,
+            bool useRandomRotations,
+            float rotationOX,
+            float rotationOY,
+            float rotationOZ,
+            float coreValue);
+    public: Q_SIGNAL void signal_generateOverlappingRandomEllipsoidsIntenseRVEDone();
 
     public: Q_SLOT void generateVoronoiRandomCellsRVE(int cellNum);
     public: Q_SIGNAL void signal_generateVoronoiRandomCellsRVEDone();

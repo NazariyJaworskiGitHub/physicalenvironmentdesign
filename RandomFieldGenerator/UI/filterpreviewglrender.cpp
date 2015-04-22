@@ -16,12 +16,13 @@ FilterPreviewGLRender::FilterPreviewGLRender(
 
 void FilterPreviewGLRender::loadDataIntoTexture() throw(std::runtime_error)
 {
+    // Dialog->TabWidget->StackWidget->GaussianFilter->this
     VolumeGLRenderRVEEditDialog* _parent = static_cast<
-            VolumeGLRenderRVEEditDialog*>(this->parent()->parent());
+            VolumeGLRenderRVEEditDialog*>(this->parent()->parent()->parent()->parent());
     int _size = _ptrToRVE->getSize();
     GLbyte *_RGBABuff = new GLbyte[_size * _size * _size * 4];
     if(!_RGBABuff)
-        throw(std::runtime_error("FATAL: _loadFieldIntoTexture(): "
+        throw(std::runtime_error("loadDataIntoTexture(): "
                                  "can't allocate memory for RVE"));
 
     for(long i = 0; i<_size * _size * _size; ++i)

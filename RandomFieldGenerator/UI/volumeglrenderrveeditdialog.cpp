@@ -69,11 +69,54 @@ VolumeGLRenderRVEEditDialog::VolumeGLRenderRVEEditDialog(QWidget *parent) :
     _previewRender = new FilterPreviewGLRender(
                 _parent->_ptrToRVE, ui->GaussianFilter);
     _previewRender->resize(261,261);
-    _previewRender->move(510, 20);
+    _previewRender->move(510, 10);
 
     QIntValidator *_intValidator = new QIntValidator(this);
     _intValidator->setBottom(2);
     ui->NumberOfCellsLineEdit->setValidator(_intValidator);
+
+    QIntValidator *_intValidator2 = new QIntValidator(this);
+    _intValidator->setBottom(1);
+    ui->NumberOfInclusionsLineEdit->setValidator(_intValidator2);
+
+    ui->MaxRadiusSlider->setMaximum(_parent->_ptrToRVE->getSize());
+    ui->MaxRadiusSlider->setValue(_parent->_MaxRadiusBackup);
+    ui->MaxRadiusLineEdit->setText(QString::number(ui->MaxRadiusSlider->value()));
+
+    ui->MinRadiusSlider->setMaximum(_parent->_ptrToRVE->getSize());
+    ui->MinRadiusSlider->setValue(_parent->_MinRadiusBackup);
+    ui->MinRadiusLineEdit->setText(QString::number(ui->MinRadiusSlider->value()));
+
+    ui->TransitionLayerSlider->setValue(_parent->_TransitionLayerBackup * 100);
+    ui->TransitionLayerLineEdit->setText(QString::number(ui->TransitionLayerSlider->value() / 100.0f));
+
+    ui->ScaleFactorXSlider_Inclusion->setValue(_parent->_FilterScaleFactorXBackup * 100);
+    ui->ScileFactorXLineEdit_Inclusion->setText(QString::number(ui->ScaleFactorXSlider_Inclusion->value() / 100.0f));
+
+    ui->ScaleFactorYSlider_Inclusion->setValue(_parent->_FilterScaleFactorYBackup * 100);
+    ui->ScileFactorYLineEdit_Inclusion->setText(QString::number(ui->ScaleFactorYSlider_Inclusion->value() / 100.0f));
+
+    ui->ScaleFactorZSlider_Inclusion->setValue(_parent->_FilterScaleFactorZBackup * 100);
+    ui->ScileFactorZLineEdit_Inclusion->setText(QString::number(ui->ScaleFactorZSlider_Inclusion->value() / 100.0f));
+
+    ui->UseRandomOrientationCheckBox->setCheckState(Qt::Unchecked);
+
+    ui->RotationOXSlider_Inclusion->setValue(_parent->_FilterRotationOXBackup);
+    ui->RotationOXLineEdit_Inclusion->setText(QString::number(ui->RotationOXSlider_Inclusion->value()));
+
+    ui->RotationOYSlider_Inclusion->setValue(_parent->_FilterRotationOYBackup);
+    ui->RotationOYLineEdit_Inclusion->setText(QString::number(ui->RotationOYSlider_Inclusion->value()));
+
+    ui->RotationOZSlider_Inclusion->setValue(_parent->_FilterRotationOZBackup);
+    ui->RotationOZLineEdit_Inclusion->setText(QString::number(ui->RotationOZSlider_Inclusion->value()));
+
+    ui->CoreIntensitySlider->setValue(_parent->_CoreIntensityBackup * 100);
+    ui->CoreIntensityLineEdit->setText(QString::number(ui->CoreIntensitySlider->value() / 100.0f));
+
+    _previewRender_Inclusion = new InclusionPreviewGLRender(
+                _parent->_ptrToRVE, ui->Inclusions);
+    _previewRender_Inclusion->resize(261,261);
+    _previewRender_Inclusion->move(510, 10);
 
     connect(this,SIGNAL(signal_cleanRVE()),
             &UserInterfaceManager::instance(),
@@ -136,6 +179,13 @@ VolumeGLRenderRVEEditDialog::VolumeGLRenderRVEEditDialog(QWidget *parent) :
             SIGNAL(signal_applyGaussianFilterRVE_T(int,float,float,float,bool,float,bool,float,float,float)),
             Qt::QueuedConnection);
     connect(&UserInterfaceManager::instance(), SIGNAL(signal_applyGaussianFilterRVEDone_T()),
+            this, SLOT(_enableWidget()), Qt::QueuedConnection);
+
+    connect(this,SIGNAL(signal_generateOverlappingRandomEllipsoidsIntenseRVE(int,int,int,float,float,float,float,bool,float,float,float,float)),
+            &UserInterfaceManager::instance(),
+            SIGNAL(signal_generateOverlappingRandomEllipsoidsIntenseRVE_T(int,int,int,float,float,float,float,bool,float,float,float,float)),
+            Qt::QueuedConnection);
+    connect(&UserInterfaceManager::instance(), SIGNAL(signal_generateOverlappingRandomEllipsoidsIntenseRVEDone_T()),
             this, SLOT(_enableWidget()), Qt::QueuedConnection);
 
     connect(this,SIGNAL(signal_generateVoronoiRandomCellsRVE(int)),
@@ -305,7 +355,7 @@ float VolumeGLRenderRVEEditDialog::getFilterRadiusValue() const
     return ui->FilterRadiusSlider->value();
 }
 
-float UserInterface::VolumeGLRenderRVEEditDialog::getFilterScaleFactorXValue() const {
+float VolumeGLRenderRVEEditDialog::getFilterScaleFactorXValue() const {
     return ui->ScaleFactorXSlider->value() / 100.0f;}
 
 float VolumeGLRenderRVEEditDialog::getFilterScaleFactorYValue() const {
@@ -322,6 +372,33 @@ float VolumeGLRenderRVEEditDialog::getFilterRotationOYValue() const {
 
 float VolumeGLRenderRVEEditDialog::getFilterRotationOZValue() const {
     return ui->RotationOZSlider->value();}
+
+float VolumeGLRenderRVEEditDialog::getMinRadiusValue() const{
+    return ui->MinRadiusSlider->value();}
+
+float VolumeGLRenderRVEEditDialog::getMaxRadiusValue() const{
+    return ui->MaxRadiusSlider->value();}
+
+float VolumeGLRenderRVEEditDialog::getFilterScaleFactorXValue_Inclusion() const {
+    return ui->ScaleFactorXSlider_Inclusion->value() / 100.0f;}
+
+float VolumeGLRenderRVEEditDialog::getFilterScaleFactorYValue_Inclusion() const {
+    return ui->ScaleFactorYSlider_Inclusion->value() / 100.0f;}
+
+float VolumeGLRenderRVEEditDialog::getFilterScaleFactorZValue_Inclusion() const {
+    return ui->ScaleFactorZSlider_Inclusion->value() / 100.0f;}
+
+float VolumeGLRenderRVEEditDialog::getFilterRotationOXValue_Inclusion() const {
+    return ui->RotationOXSlider_Inclusion->value();}
+
+float VolumeGLRenderRVEEditDialog::getFilterRotationOYValue_Inclusion() const {
+    return ui->RotationOYSlider_Inclusion->value();}
+
+float VolumeGLRenderRVEEditDialog::getFilterRotationOZValue_Inclusion() const {
+    return ui->RotationOZSlider_Inclusion->value();}
+
+float VolumeGLRenderRVEEditDialog::getCoreIntensityValue() const{
+    return ui->CoreIntensitySlider->value() / 100.0f;}
 
 void UserInterface::VolumeGLRenderRVEEditDialog::on_UseDataAsIntensityCheckBox_stateChanged(
         int arg1)
@@ -380,10 +457,30 @@ void VolumeGLRenderRVEEditDialog::_updatePreview()
     }
 }
 
+void VolumeGLRenderRVEEditDialog::_updatePreview_Inclusion()
+{
+    if(_previewRender_Inclusion)
+    {
+        /// \todo some bug - those lines calls twice slider mouse click event
+//        ui->progressBar->show();
+//        ui->progressBar->setValue(0);
+        this->setEnabled(false);
+        QApplication::processEvents();
+        _previewRender_Inclusion->loadDataIntoTexture();
+        _previewRender_Inclusion->updateGL();
+        this->setEnabled(true);
+//        ui->progressBar->setValue(100);
+//        ui->progressBar->hide();
+        QApplication::processEvents();
+    }
+}
+
 void UserInterface::VolumeGLRenderRVEEditDialog::on_ClenRVEButton_clicked()
 {
     _disableWigget();
     Q_EMIT signal_cleanRVE();
+    ui->BottomCutLevelSlider->setValue(0);
+    ui->TopCutLevelSlider->setValue(1000);
 }
 
 void UserInterface::VolumeGLRenderRVEEditDialog::on_NormalizeRVEButton_clicked()
@@ -475,4 +572,202 @@ void UserInterface::VolumeGLRenderRVEEditDialog::on_UseRotationsCheckBox_stateCh
         ui->RotationOZLineEdit->setEnabled(true);
         ui->RotationOZSlider->setEnabled(true);
     }
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_MinRadiusSlider_valueChanged(int value)
+{
+    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
+    _parent->_MinRadiusBackup = value;
+
+    if(value > ui->MaxRadiusSlider->value())
+        ui->MaxRadiusSlider->setValue(value);
+
+    ui->MinRadiusLineEdit->setText(QString::number(value));
+    if(!(ui->MinRadiusSlider->isSliderDown()))
+        _updatePreview_Inclusion();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_MinRadiusSlider_sliderReleased()
+{
+        _updatePreview_Inclusion();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_MaxRadiusSlider_valueChanged(int value)
+{
+    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
+    _parent->_MaxRadiusBackup = value;
+
+    if(value < ui->MinRadiusSlider->value())
+        ui->MinRadiusSlider->setValue(value);
+
+    ui->MaxRadiusLineEdit->setText(QString::number(value));
+    if(!(ui->MaxRadiusSlider->isSliderDown()))
+        _updatePreview_Inclusion();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_MaxRadiusSlider_sliderReleased()
+{
+        _updatePreview_Inclusion();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_TransitionLayerSlider_valueChanged(int value)
+{
+    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
+    _parent->_TransitionLayerBackup = value / 100.0f;
+
+    ui->TransitionLayerLineEdit->setText(QString::number(value / 100.0f));
+    if(!(ui->TransitionLayerSlider->isSliderDown()))
+        _updatePreview_Inclusion();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_TransitionLayerSlider_sliderReleased()
+{
+        _updatePreview_Inclusion();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_ScaleFactorXSlider_Inclusion_valueChanged(int value)
+{
+    ui->ScileFactorXLineEdit_Inclusion->setText(QString::number(value / 100.0f));
+    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
+    _parent->_FilterScaleFactorXBackup = value / 100.0f;
+    if(!ui->ScaleFactorXSlider_Inclusion->isSliderDown())
+        _updatePreview_Inclusion();
+}
+void UserInterface::VolumeGLRenderRVEEditDialog::on_ScaleFactorXSlider_Inclusion_sliderReleased()
+{
+    _updatePreview_Inclusion();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_ScaleFactorYSlider_Inclusion_valueChanged(int value)
+{
+    ui->ScileFactorYLineEdit_Inclusion->setText(QString::number(value / 100.0f));
+    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
+    _parent->_FilterScaleFactorYBackup = value / 100.0f;
+    if(!ui->ScaleFactorYSlider_Inclusion->isSliderDown())
+        _updatePreview_Inclusion();
+}
+void UserInterface::VolumeGLRenderRVEEditDialog::on_ScaleFactorYSlider_Inclusion_sliderReleased()
+{
+    _updatePreview_Inclusion();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_ScaleFactorZSlider_Inclusion_valueChanged(int value)
+{
+    ui->ScileFactorZLineEdit_Inclusion->setText(QString::number(value / 100.0f));
+    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
+    _parent->_FilterScaleFactorZBackup = value / 100.0f;
+    if(!ui->ScaleFactorZSlider_Inclusion->isSliderDown())
+        _updatePreview_Inclusion();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_ScaleFactorZSlider_Inclusion_sliderReleased()
+{
+    _updatePreview_Inclusion();
+}
+void UserInterface::VolumeGLRenderRVEEditDialog::on_UseRandomOrientationCheckBox_stateChanged(
+        int arg1)
+{
+    if(!(arg1 == Qt::Unchecked))
+    {
+        ui->RotationOXLabel_Inclusion->setEnabled(false);
+        ui->RotationOXLineEdit_Inclusion->setEnabled(false);
+        ui->RotationOXSlider_Inclusion->setEnabled(false);
+
+        ui->RotationOYLabel_Inclusion->setEnabled(false);
+        ui->RotationOYLineEdit_Inclusion->setEnabled(false);
+        ui->RotationOYSlider_Inclusion->setEnabled(false);
+
+        ui->RotationOZLabel_Inclusion->setEnabled(false);
+        ui->RotationOZLineEdit_Inclusion->setEnabled(false);
+        ui->RotationOZSlider_Inclusion->setEnabled(false);
+    }
+    else
+    {
+        ui->RotationOXLabel_Inclusion->setEnabled(true);
+        ui->RotationOXLineEdit_Inclusion->setEnabled(true);
+        ui->RotationOXSlider_Inclusion->setEnabled(true);
+
+        ui->RotationOYLabel_Inclusion->setEnabled(true);
+        ui->RotationOYLineEdit_Inclusion->setEnabled(true);
+        ui->RotationOYSlider_Inclusion->setEnabled(true);
+
+        ui->RotationOZLabel_Inclusion->setEnabled(true);
+        ui->RotationOZLineEdit_Inclusion->setEnabled(true);
+        ui->RotationOZSlider_Inclusion->setEnabled(true);
+    }
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_RotationOXSlider_Inclusion_valueChanged(int value)
+{
+    ui->RotationOXLineEdit_Inclusion->setText(QString::number(value));
+    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
+    _parent->_FilterRotationOXBackup = value;
+    if(!ui->RotationOXSlider_Inclusion->isSliderDown())
+        _updatePreview_Inclusion();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_RotationOXSlider_Inclusion_sliderReleased()
+{
+    _updatePreview_Inclusion();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_RotationOYSlider_Inclusion_valueChanged(int value)
+{
+    ui->RotationOYLineEdit_Inclusion->setText(QString::number(value));
+    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
+    _parent->_FilterRotationOYBackup = value;
+    if(!ui->RotationOYSlider_Inclusion->isSliderDown())
+        _updatePreview_Inclusion();
+}
+void UserInterface::VolumeGLRenderRVEEditDialog::on_RotationOYSlider_Inclusion_sliderReleased()
+{
+    _updatePreview_Inclusion();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_RotationOZSlider_Inclusion_valueChanged(int value)
+{
+    ui->RotationOZLineEdit_Inclusion->setText(QString::number(value));
+    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
+    _parent->_FilterRotationOZBackup = value;
+    if(!ui->RotationOZSlider_Inclusion->isSliderDown())
+        _updatePreview_Inclusion();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_RotationOZSlider_Inclusion_sliderReleased()
+{
+    _updatePreview_Inclusion();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_CoreIntensitySlider_valueChanged(int value)
+{
+    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
+    _parent->_CoreIntensityBackup = value / 100.0f;
+
+    ui->CoreIntensityLineEdit->setText(QString::number(value / 100.0f));
+    if(!(ui->CoreIntensitySlider->isSliderDown()))
+        _updatePreview_Inclusion();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_CoreIntensitySlider_sliderReleased()
+{
+    _updatePreview_Inclusion();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_GenerateInclusionsButton_clicked()
+{
+    _disableWigget();
+
+    Q_EMIT signal_generateOverlappingRandomEllipsoidsIntenseRVE(
+                ui->NumberOfInclusionsLineEdit->text().toInt(),
+                ui->MinRadiusSlider->value(),
+                ui->MaxRadiusSlider->value(),
+                ui->TransitionLayerSlider->value() / 100.0f,
+                ui->ScaleFactorXSlider_Inclusion->value() / 100.0f,
+                ui->ScaleFactorYSlider_Inclusion->value() / 100.0f,
+                ui->ScaleFactorZSlider_Inclusion->value() / 100.0f,
+                ui->UseRandomOrientationCheckBox->checkState(),
+                ui->RotationOXSlider_Inclusion->value(),
+                ui->RotationOYSlider_Inclusion->value(),
+                ui->RotationOZSlider_Inclusion->value(),
+                ui->CoreIntensitySlider->value() / 100.0f);
 }

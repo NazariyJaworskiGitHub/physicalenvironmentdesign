@@ -161,6 +161,43 @@ void _EditRVECommand::applyGaussianFilterRVE(
     Q_EMIT signal_applyGaussianFilterRVEDone();
 }
 
+void _EditRVECommand::generateOverlappingRandomEllipsoidsIntenseRVE(
+        int ellipsoidNum,
+        int minRadius,
+        int maxRadius,
+        float transitionLayerSize,
+        float ellipsoidScaleFactorX,
+        float ellipsoidScaleFactorY,
+        float ellipsoidScaleFactorZ,
+        bool useRandomRotations,
+        float rotationOX,
+        float rotationOY,
+        float rotationOZ,
+        float coreValue)
+{
+    std::stringstream _str;
+    _str << "generateOverlappingRandomEllipsoidsIntenseRVE " << _RVEName << " "
+         << ellipsoidNum << " "
+         << minRadius << " "
+         << maxRadius << " "
+         << transitionLayerSize << " "
+         << ellipsoidScaleFactorX << " "
+         << ellipsoidScaleFactorY << " "
+         << ellipsoidScaleFactorZ << " ";
+    if(useRandomRotations) _str << "true ";
+    else _str << "false ";
+    _str << rotationOX << " "
+         << rotationOY << " "
+         << rotationOZ << " "
+         << coreValue << "\n";
+
+    getConsole().writeToOutput(_str.str());
+
+    getConsole() << _str.str();
+
+    Q_EMIT signal_generateOverlappingRandomEllipsoidsIntenseRVEDone();
+}
+
 void _EditRVECommand::generateVoronoiRandomCellsRVE(int cellNum)
 {
     std::stringstream _str;
@@ -747,9 +784,9 @@ std::string RepresentativeVolumeElementConsoleInterface::generateOverlappingRand
                         ellipsoidScaleFactorY,
                         ellipsoidScaleFactorZ,
                         useRandomRotations,
-                        rotationOX,
-                        rotationOY,
-                        rotationOZ,
+                        rotationOX * M_PI / 180.0f,
+                        rotationOY * M_PI / 180.0f,
+                        rotationOZ * M_PI / 180.0f,
                         coreValue);
         return "Representative Volume Element " + name + " Overlapping Random Ellipsoids generated.\n";
     }

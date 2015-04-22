@@ -15,6 +15,9 @@ namespace UserInterface
 
         private: RepresentativeVolumeElement* _ptrToRVE;
 
+        private: int _MinRadiusBackup;
+        private: int _MaxRadiusBackup;
+
         private: float _FilterScaleFactorXBackup = 1.0f;
         private: float _FilterScaleFactorYBackup = 1.0f;
         private: float _FilterScaleFactorZBackup = 1.0f;
@@ -22,6 +25,9 @@ namespace UserInterface
         private: float _FilterRotationOXBackup = 0.0f;
         private: float _FilterRotationOYBackup = 0.0f;
         private: float _FilterRotationOZBackup = 0.0f;
+
+        private: float _TransitionLayerBackup = 0.5f;
+        private: float _CoreIntensityBackup = 1.0f;
 
         private: float _innerBottomCutLevel = 0.0f; // min
         public : float getInnerBottomCutLevel() const noexcept {return _innerBottomCutLevel;}

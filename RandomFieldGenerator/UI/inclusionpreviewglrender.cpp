@@ -1,43 +1,65 @@
-#include "volumeglrenderrve.h"
+#include "inclusionpreviewglrender.h"
+
+#include "UI/volumeglrenderrveeditdialog.h"
+#include "constants.h"
 
 using namespace UserInterface;
 
-VolumeGLRenderRVE::VolumeGLRenderRVE(
-        RepresentativeVolumeElement *RVE,
-        QWidget *pwgt) noexcept :
+InclusionPreviewGLRender::InclusionPreviewGLRender(
+        const RepresentativeVolumeElement *RVE,
+        QWidget *pwgt) noexcept:
     VolumeGLRenderBaseController(pwgt),
-    _ptrToRVE(RVE),
-    _actionEdit(new QAction("Edit...", this))
+    _ptrToRVE(RVE)
 {
-    _MinRadiusBackup = _ptrToRVE->getSize()/4;
-    if(_MinRadiusBackup == 0)_MinRadiusBackup = 1;
-    _MaxRadiusBackup = _ptrToRVE->getSize()/2;
-    if(_MaxRadiusBackup == 0)_MaxRadiusBackup = 1;
-
-    connect(_actionEdit, SIGNAL(triggered()), this, SLOT(slot_createEditDialog()));
-    _contextMenu->addAction(_actionEdit);
-    _contextMenu->addSeparator();
-
     initializeGLEW();
-    setWindowTitle("Volume render");    /// \todo change
 }
 
-void VolumeGLRenderRVE::_loadRVEDataIntoTexture() throw(std::runtime_error)
+void InclusionPreviewGLRender::loadDataIntoTexture() throw(std::runtime_error)
 {
+    // Dialog->TabWidget->StackWidget->GaussianFilter->this
+    VolumeGLRenderRVEEditDialog* _parent = static_cast<
+            VolumeGLRenderRVEEditDialog*>(this->parent()->parent()->parent()->parent());
     int _size = _ptrToRVE->getSize();
     GLbyte *_RGBABuff = new GLbyte[_size * _size * _size * 4];
     if(!_RGBABuff)
-        throw(std::runtime_error("FATAL: _loadFieldIntoTexture(): "
+        throw(std::runtime_error("loadDataIntoTexture(): "
                                  "can't allocate memory for RVE"));
 
     for(long i = 0; i<_size * _size * _size; ++i)
     {
-        float _val = _ptrToRVE->getData()[i];
-        _RGBABuff[i * 4 + 0] = _val * 255;  // Grayscale
-        _RGBABuff[i * 4 + 1] = _val * 255;
-        _RGBABuff[i * 4 + 2] = _val * 255;
-        _RGBABuff[i * 4 + 3] = ((_val >= _innerBottomCutLevel) &&
-                                (_val <= _innerTopCutLevel)) ? 255 : 0;
+        float _kk = i % _size % _size - _size / 2;
+        float _jj = i / _size % _size - _size / 2;
+        float _ii = i / _size / _size - _size / 2;
+        RepresentativeVolumeElement::rotateXYZ(
+                    _kk, _jj, _ii,
+                    _parent->getFilterRotationOXValue_Inclusion() * M_PI / 180,
+                    _parent->getFilterRotationOYValue_Inclusion() * M_PI / 180,
+                    _parent->getFilterRotationOZValue_Inclusion() * M_PI / 180);
+
+        float _curRadius = std::sqrt(_kk*_kk /
+                _parent->getFilterScaleFactorXValue_Inclusion() /
+                _parent->getFilterScaleFactorXValue_Inclusion() +
+                _jj*_jj /
+                _parent->getFilterScaleFactorYValue_Inclusion() /
+                _parent->getFilterScaleFactorYValue_Inclusion() +
+                _ii*_ii /
+                _parent->getFilterScaleFactorZValue_Inclusion() /
+                _parent->getFilterScaleFactorZValue_Inclusion());
+
+        if( _curRadius <= _parent->getMinRadiusValue())
+        {
+            _RGBABuff[i * 4 + 0] = _parent->getCoreIntensityValue() * 255.0f;
+            _RGBABuff[i * 4 + 1] = _parent->getCoreIntensityValue() * 255.0f;
+            _RGBABuff[i * 4 + 2] = _parent->getCoreIntensityValue() * 255.0f;
+            _RGBABuff[i * 4 + 3] = 255;
+        }
+        else if(_curRadius <= _parent->getMaxRadiusValue())
+        {
+            _RGBABuff[i * 4 + 0] = _parent->getCoreIntensityValue() * 127.0f;
+            _RGBABuff[i * 4 + 1] = _parent->getCoreIntensityValue() * 127.0f;
+            _RGBABuff[i * 4 + 2] = _parent->getCoreIntensityValue() * 127.0f;
+            _RGBABuff[i * 4 + 3] = 7;
+        }
     }
 
     glBindTexture(GL_TEXTURE_3D, _textureIDs[0]);
@@ -57,7 +79,7 @@ void VolumeGLRenderRVE::_loadRVEDataIntoTexture() throw(std::runtime_error)
     delete[] _RGBABuff;
 }
 
-void VolumeGLRenderRVE::_prepareRVEDataTextureDisplayList() noexcept
+void InclusionPreviewGLRender::_prepareDataTextureDisplayList() noexcept
 {
     glNewList(_displayListBaseID, GL_COMPILE);
     glEnable(GL_TEXTURE_3D);
@@ -67,10 +89,7 @@ void VolumeGLRenderRVE::_prepareRVEDataTextureDisplayList() noexcept
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-    glEnable(GL_LIGHTING);
-    glEnable(GL_DEPTH_TEST);
-    glDisable(GL_BLEND);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);  // material color (for lightning)
     glBegin(GL_QUADS);
     for (float _fIndx = 0.0f; _fIndx <= 1.0f; _fIndx += 1.0 / _ptrToRVE->getSize())
@@ -99,14 +118,11 @@ void VolumeGLRenderRVE::_prepareRVEDataTextureDisplayList() noexcept
         glTexCoord3f(_fIndx, 0.0f, 1.0f);   glVertex3f(_fIndx, 0.0f, 1.0f);
     }
     glEnd();
-    glEnable(GL_BLEND);
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_LIGHTING);
     glDisable(GL_TEXTURE_3D);
     glEndList();
 }
 
-void VolumeGLRenderRVE::initializeGLEW() throw(std::runtime_error)
+void InclusionPreviewGLRender::initializeGLEW() throw(std::runtime_error)
 {
     this->context()->makeCurrent();
     auto _res = glewInit();
@@ -115,11 +131,11 @@ void VolumeGLRenderRVE::initializeGLEW() throw(std::runtime_error)
                                      glewGetErrorString(_res))));
     glGenTextures(1, _textureIDs);
     _displayListBaseID = glGenLists(1);
-    _loadRVEDataIntoTexture();
-    _prepareRVEDataTextureDisplayList();
+    loadDataIntoTexture();
+    _prepareDataTextureDisplayList();
 }
 
-void VolumeGLRenderRVE::paintGL()
+void InclusionPreviewGLRender::paintGL()
 {
     glClearColor(
                 _BackgroundColor.redF(),
@@ -129,19 +145,11 @@ void VolumeGLRenderRVE::paintGL()
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    _drawOrigin();
-
     glMatrixMode(GL_MODELVIEW);
     glLoadMatrixf((_mWorld * _mControl).constData());
 
     glScalef(_Zoom, _Zoom, _Zoom);
     glTranslatef(-0.5f, -0.5f, -0.5f);
-
-    glPushMatrix();
-        glLoadMatrixf(_mWorld.constData());
-        GLfloat light0_position[] = {0.0f, 0.0f, 3.0f, 1.0f};
-        glLightfv(GL_LIGHT0, GL_POSITION, light0_position);
-    glPopMatrix();
 
     _drawBoundingBox();
 
@@ -149,25 +157,11 @@ void VolumeGLRenderRVE::paintGL()
     {
         glCallList(_displayListBaseID);
     }
-
-    glColor4f(
-            _TextColor.redF(),
-            _TextColor.greenF(),
-            _TextColor.blueF(),
-            _TextColor.alphaF());
-    _renderMultilineText(2, 0, _infoString, _TextFont);
 }
 
-VolumeGLRenderRVE::~VolumeGLRenderRVE()
+InclusionPreviewGLRender::~InclusionPreviewGLRender()
 {
     glDeleteLists(_displayListBaseID, 1);
     glDeleteTextures(1, _textureIDs);
-}
-
-void VolumeGLRenderRVE::slot_createEditDialog()
-{
-    UserInterface::VolumeGLRenderRVEEditDialog *_dialog =
-            new UserInterface::VolumeGLRenderRVEEditDialog(this);
-    _dialog->show();
 }
 

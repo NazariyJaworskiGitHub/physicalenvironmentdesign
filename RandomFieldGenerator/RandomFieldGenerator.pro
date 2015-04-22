@@ -102,7 +102,8 @@ SOURCES += main.cpp \
     UI/volumeglrendereditdialog.cpp \
     CONSOLE/representativevolumeelementconsoleinterface.cpp \
     UI/xyglrender.cpp \
-    UI/xyglrenderformatdialog.cpp
+    UI/xyglrenderformatdialog.cpp \
+    UI/inclusionpreviewglrender.cpp
 
 HEADERS += \
     CLMANAGER/clmanager.h \
@@ -131,7 +132,8 @@ HEADERS += \
     UI/volumeglrendereditdialog.h \
     UI/xyglrender.h \
     UI/xyglrenderformatdialog.h \
-    constants.h
+    constants.h \
+    UI/inclusionpreviewglrender.h
 
 FORMS += \
     UI/volumeglrenderformatdialog.ui \
