@@ -29,6 +29,8 @@
 
 #include "UI/xyglrender.h"
 
+#include "constants.h"
+
 int main(int argc, char *argv[])
 {
     Controller::ConsoleRunner _consoleRunner(std::cout, std::cin);
@@ -54,22 +56,20 @@ int main(int argc, char *argv[])
 //    viennacl::ocl::switch_context(0);
 //    viennacl::ocl::current_context().switch_device(1);
 
-//    std::chrono::steady_clock::time_point _t1 = std::chrono::steady_clock::now();
+    std::chrono::steady_clock::time_point _t1 = std::chrono::steady_clock::now();
 
     int size = 128;
     RepresentativeVolumeElement _RVE(size);
-//    _RVE.generateOverlappingRandomEllipsoids(1, 64, 64, 0.4f);
-//    _RVE.generateOverlappingRandomEllipsoidsSmoothed(75, size/2, size, 0.5f, 1, 0.1, 0.1);
-//    _RVE.generateOverlappingRandomEllipsoids(150, 16, 32, 0.5f, 1.0f, 0.5f, 0.5f);
-//    _RVE.generateOverlappingRandomEllipsoidsSmoothed(15, 16, 32, 0.25f);
-//    _RVE.generateRandomEllipsoidIntense(size/2, size/2, size/2, size/2, size/2, 0.25f,
-//                                        1.0f, 0.25f, 0.25f, 1.0f, 0.0f, 0.0f, 3.14159/4);
+//    _RVE.generateOverlappingRandomEllipsoidsIntenseCL(
+//                100, size/16, size/2, 0.5f, 1.0f, 0.1f, 0.1f, true, 0.0f, 0.0f, M_PI/4);
+//    _RVE.generateRandomEllipsoidIntense(size/4, size/4, 0, size/2, size/2, 0.5f,
+//                                        1.0f, 0.25f, 0.25f, 0.0f, 0.0f, M_PI/4);
 
-    std::chrono::steady_clock::time_point _t1 = std::chrono::steady_clock::now();
+//    std::chrono::steady_clock::time_point _t1 = std::chrono::steady_clock::now();
 
 //    _RVE.applyTwoCutMaskOutside(0.001f, 0.999f);
 //    _RVE.cleanUnMaskedData();
-    _RVE.addRandomNoise();
+//    _RVE.addRandomNoise();
 //    _RVE.applyGaussianFilter(size/4);
 //    _RVE.applyGaussianFilter(size/16,1,1,1,true,0.25f);
 //    _RVE.applyGaussianFilter(size/64,1,1,1,true,2);
@@ -87,8 +87,8 @@ int main(int argc, char *argv[])
 //    _RVE.applyGaussianFilterCL(size/32, 1.0f, 1.0f, 1.0f, true, 5.0f);
 
 //    _RVE.applyRelativeRandomNoise(0.75f, 0.0f);
-//    _RVE.applyGaussianFilter(size/2, 1, 0.1f, 0.1f, 0, 0, 3.14159f/4);
-//    _RVE.applyGaussianFilterCL(size/32);
+//    _RVE.applyGaussianFilter(size/32, 1, 0.1f, 0.1f, false, 1.0f, true, 0, 0, 3.14159f/4);
+//    _RVE.applyGaussianFilterCL(size/32, 1, 0.1f, 0.1f, false, 1.0f, true, 0, 0, 3.14159f/4);
 
 //    _RVE.cleanMask();
 

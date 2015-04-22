@@ -55,6 +55,17 @@ VolumeGLRenderRVEEditDialog::VolumeGLRenderRVEEditDialog(QWidget *parent) :
     QDoubleValidator *_doubleValidator = new QDoubleValidator(this);
     ui->IntensityFactorLineEdit->setValidator(_doubleValidator);
 
+    ui->UseRotationsCheckBox->setCheckState(Qt::Unchecked);
+    ui->RotationOXLabel->setEnabled(false);
+    ui->RotationOXLineEdit->setEnabled(false);
+    ui->RotationOXSlider->setEnabled(false);
+    ui->RotationOYLabel->setEnabled(false);
+    ui->RotationOYLineEdit->setEnabled(false);
+    ui->RotationOYSlider->setEnabled(false);
+    ui->RotationOZLabel->setEnabled(false);
+    ui->RotationOZLineEdit->setEnabled(false);
+    ui->RotationOZSlider->setEnabled(false);
+
     _previewRender = new FilterPreviewGLRender(
                 _parent->_ptrToRVE, ui->GaussianFilter);
     _previewRender->resize(261,261);
@@ -120,9 +131,9 @@ VolumeGLRenderRVEEditDialog::VolumeGLRenderRVEEditDialog(QWidget *parent) :
     connect(&UserInterfaceManager::instance(), SIGNAL(signal_addRandomNoiseRVEDone_T()),
             this, SLOT(_enableWidget()), Qt::QueuedConnection);
 
-    connect(this,SIGNAL(signal_applyGaussianFilterRVE(int,float,float,float,float,float,float,bool,float)),
+    connect(this,SIGNAL(signal_applyGaussianFilterRVE(int,float,float,float,bool,float,bool,float,float,float)),
             &UserInterfaceManager::instance(),
-            SIGNAL(signal_applyGaussianFilterRVE_T(int,float,float,float,float,float,float,bool,float)),
+            SIGNAL(signal_applyGaussianFilterRVE_T(int,float,float,float,bool,float,bool,float,float,float)),
             Qt::QueuedConnection);
     connect(&UserInterfaceManager::instance(), SIGNAL(signal_applyGaussianFilterRVEDone_T()),
             this, SLOT(_enableWidget()), Qt::QueuedConnection);
@@ -281,11 +292,12 @@ void UserInterface::VolumeGLRenderRVEEditDialog::on_ApplyGaussianFilterButton_cl
                 ui->ScaleFactorXSlider->value() / 100.0f,
                 ui->ScaleFactorYSlider->value() / 100.0f,
                 ui->ScaleFactorZSlider->value() / 100.0f,
+                ui->UseDataAsIntensityCheckBox->checkState(),
+                ui->IntensityFactorLineEdit->text().toFloat(),
+                ui->UseRotationsCheckBox->checkState(),
                 ui->RotationOXSlider->value(),
                 ui->RotationOYSlider->value(),
-                ui->RotationOZSlider->value(),
-                ui->UseDataAsIntensityCheckBox->checkState(),
-                ui->IntensityFactorLineEdit->text().toFloat());
+                ui->RotationOZSlider->value());
 }
 
 float VolumeGLRenderRVEEditDialog::getFilterRadiusValue() const
@@ -430,4 +442,37 @@ void UserInterface::VolumeGLRenderRVEEditDialog::on_GenerateVoronoiCellsButton_c
 
     Q_EMIT signal_generateVoronoiRandomCellsRVE(
                 ui->NumberOfCellsLineEdit->text().toInt());
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_UseRotationsCheckBox_stateChanged(
+        int arg1)
+{
+    if(arg1 == Qt::Unchecked)
+    {
+        ui->RotationOXLabel->setEnabled(false);
+        ui->RotationOXLineEdit->setEnabled(false);
+        ui->RotationOXSlider->setEnabled(false);
+
+        ui->RotationOYLabel->setEnabled(false);
+        ui->RotationOYLineEdit->setEnabled(false);
+        ui->RotationOYSlider->setEnabled(false);
+
+        ui->RotationOZLabel->setEnabled(false);
+        ui->RotationOZLineEdit->setEnabled(false);
+        ui->RotationOZSlider->setEnabled(false);
+    }
+    else
+    {
+        ui->RotationOXLabel->setEnabled(true);
+        ui->RotationOXLineEdit->setEnabled(true);
+        ui->RotationOXSlider->setEnabled(true);
+
+        ui->RotationOYLabel->setEnabled(true);
+        ui->RotationOYLineEdit->setEnabled(true);
+        ui->RotationOYSlider->setEnabled(true);
+
+        ui->RotationOZLabel->setEnabled(true);
+        ui->RotationOZLineEdit->setEnabled(true);
+        ui->RotationOZSlider->setEnabled(true);
+    }
 }

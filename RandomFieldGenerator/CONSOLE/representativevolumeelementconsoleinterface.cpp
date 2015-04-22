@@ -132,24 +132,27 @@ void _EditRVECommand::applyGaussianFilterRVE(
         float ellipsoidScaleFactorX,
         float ellipsoidScaleFactorY,
         float ellipsoidScaleFactorZ,
+        bool useDataAsIntensity,
+        float intensityFactor,
+        bool useRotations,
         float rotationOX,
         float rotationOY,
-        float rotationOZ,
-        bool useDataAsIntensity,
-        float intensityFactor)
+        float rotationOZ)
 {
     std::stringstream _str;
     _str << "applyGaussianFilterRVE " << _RVEName << " "
          << discreteRadius << " "
          << ellipsoidScaleFactorX << " "
          << ellipsoidScaleFactorY << " "
-         << ellipsoidScaleFactorZ << " "
-         << rotationOX << " "
-         << rotationOY << " "
-         << rotationOZ << " ";
+         << ellipsoidScaleFactorZ << " ";
     if(useDataAsIntensity) _str << "true ";
     else _str << "false ";
-    _str << intensityFactor << "\n";
+    _str << intensityFactor << " ";
+    if(useRotations) _str << "true ";
+    else _str << "false ";
+    _str << rotationOX << " "
+         << rotationOY << " "
+         << rotationOZ << "\n";
 
     getConsole().writeToOutput(_str.str());
 
@@ -475,11 +478,12 @@ std::string RepresentativeVolumeElementConsoleInterface::applyGaussianFilterRVE(
         float ellipsoidScaleFactorX,
         float ellipsoidScaleFactorY,
         float ellipsoidScaleFactorZ,
+        bool useDataAsIntensity,
+        float intensityFactor,
+        bool useRotations,
         float rotationOX,
         float rotationOY,
-        float rotationOZ,
-        bool useDataAsIntensity,
-        float intensityFactor)
+        float rotationOZ)
 {
     try
     {
@@ -492,11 +496,12 @@ std::string RepresentativeVolumeElementConsoleInterface::applyGaussianFilterRVE(
                         ellipsoidScaleFactorX,
                         ellipsoidScaleFactorY,
                         ellipsoidScaleFactorZ,
+                        useDataAsIntensity,
+                        intensityFactor,
+                        useRotations,
                         rotationOX * M_PI / 180.0f,
                         rotationOY * M_PI / 180.0f,
-                        rotationOZ * M_PI / 180.0f,
-                        useDataAsIntensity,
-                        intensityFactor);
+                        rotationOZ * M_PI / 180.0f);
         return "Representative Volume Element " + name + " Gaussian blur filter applying done.\n";
     }
     catch(std::exception &e)
@@ -508,7 +513,7 @@ std::string RepresentativeVolumeElementConsoleInterface::applyGaussianFilterRVE(
 int RepresentativeVolumeElementConsoleInterface::_applyGaussianFilterRVECommand::executeConsoleCommand(
         const std::vector<std::string> &argv)
 {
-    if(argv.size() < 2 || argv.size() > 10)
+    if(argv.size() < 2 || argv.size() > 11)
     {
         getConsole().writeToOutput("Error: wrong number of arguments.\n");
         return -1;
@@ -525,47 +530,55 @@ int RepresentativeVolumeElementConsoleInterface::_applyGaussianFilterRVECommand:
     float ellipsoidScaleFactorX = 1.0f;
     float ellipsoidScaleFactorY = 1.0f;
     float ellipsoidScaleFactorZ = 1.0f;
+    bool useDataAsIntensity = false;
+    float intensityFactor = 1.0f;
+    bool useRotations = false;
     float rotationOX = 0.0f;
     float rotationOY = 0.0f;
     float rotationOZ = 0.0f;
-    bool useDataAsIntensity = false;
-    float intensityFactor = 1.0f;
     switch(argv.size())
     {
-    case 10:{std::stringstream _str{argv[9]};
-            if(!(_str >> intensityFactor))
-            {
-                getConsole().writeToOutput("wrong <intensityFactor> argument.\n");
-                return -1;
-            }
-        }
-    case 9: if(argv[8].compare("true") == 0) useDataAsIntensity = true;
-        else if(argv[8].compare("false") == 0) useDataAsIntensity = false;
-        else
-        {
-            getConsole().writeToOutput("wrong <useDataAsIntensity> argument.\n");
-            return -1;
-        }
-    case 8: {std::stringstream _str{argv[7]};
+    case 11: {std::stringstream _str{argv[10]};
             if(!(_str >> rotationOZ))
             {
                 getConsole().writeToOutput("wrong <rotationOZ> argument.\n");
                 return -1;
             }
         }
-    case 7: {std::stringstream _str{argv[6]};
+    case 10: {std::stringstream _str{argv[9]};
             if(!(_str >> rotationOY))
             {
                 getConsole().writeToOutput("wrong <rotationOY> argument.\n");
                 return -1;
             }
         }
-    case 6: {std::stringstream _str{argv[5]};
+    case 9: {std::stringstream _str{argv[8]};
             if(!(_str >> rotationOX))
             {
                 getConsole().writeToOutput("wrong <rotationOX> argument.\n");
                 return -1;
             }
+        }
+    case 8: if(argv[7].compare("true") == 0) useRotations = true;
+        else if(argv[7].compare("false") == 0) useRotations = false;
+        else
+        {
+            getConsole().writeToOutput("wrong <useRotations> argument.\n");
+            return -1;
+        }
+    case 7:{std::stringstream _str{argv[6]};
+            if(!(_str >> intensityFactor))
+            {
+                getConsole().writeToOutput("wrong <intensityFactor> argument.\n");
+                return -1;
+            }
+        }
+    case 6: if(argv[5].compare("true") == 0) useDataAsIntensity = true;
+        else if(argv[5].compare("false") == 0) useDataAsIntensity = false;
+        else
+        {
+            getConsole().writeToOutput("wrong <useDataAsIntensity> argument.\n");
+            return -1;
         }
     case 5: {std::stringstream _str{argv[4]};
             if(!(_str >> ellipsoidScaleFactorZ))
@@ -596,11 +609,12 @@ int RepresentativeVolumeElementConsoleInterface::_applyGaussianFilterRVECommand:
             ellipsoidScaleFactorX,
             ellipsoidScaleFactorY,
             ellipsoidScaleFactorZ,
+            useDataAsIntensity,
+            intensityFactor,
+            useRotations,
             rotationOX,
             rotationOY,
-            rotationOZ,
-            useDataAsIntensity,
-            intensityFactor));
+            rotationOZ));
 
     return 0;
 }
@@ -712,6 +726,10 @@ std::string RepresentativeVolumeElementConsoleInterface::generateOverlappingRand
         float ellipsoidScaleFactorX,
         float ellipsoidScaleFactorY,
         float ellipsoidScaleFactorZ,
+        bool useRandomRotations,
+        float rotationOX,
+        float rotationOY,
+        float rotationOZ,
         float coreValue) noexcept
 {
     try
@@ -720,7 +738,7 @@ std::string RepresentativeVolumeElementConsoleInterface::generateOverlappingRand
         if(_pos == RVEs.end())
             return "Error: Representative Volume Element " + name + " doesn't exist.\n";
         else
-            _pos->second->generateOverlappingRandomEllipsoidsIntense(
+            _pos->second->generateOverlappingRandomEllipsoidsIntenseCL(
                         ellipsoidNum,
                         minRadius,
                         maxRadius,
@@ -728,6 +746,10 @@ std::string RepresentativeVolumeElementConsoleInterface::generateOverlappingRand
                         ellipsoidScaleFactorX,
                         ellipsoidScaleFactorY,
                         ellipsoidScaleFactorZ,
+                        useRandomRotations,
+                        rotationOX,
+                        rotationOY,
+                        rotationOZ,
                         coreValue);
         return "Representative Volume Element " + name + " Overlapping Random Ellipsoids generated.\n";
     }
@@ -740,7 +762,7 @@ std::string RepresentativeVolumeElementConsoleInterface::generateOverlappingRand
 int RepresentativeVolumeElementConsoleInterface::_generateOverlappingRandomEllipsoidsIntenseRVECommand::executeConsoleCommand(
         const std::vector<std::string> &argv)
 {
-    if(argv.size() < 2 || argv.size() > 9)
+    if(argv.size() < 2 || argv.size() > 13)
     {
         getConsole().writeToOutput("Error: wrong number of arguments.\n");
         return -1;
@@ -776,15 +798,47 @@ int RepresentativeVolumeElementConsoleInterface::_generateOverlappingRandomEllip
     float ellipsoidScaleFactorX = 1.0f;
     float ellipsoidScaleFactorY = 1.0f;
     float ellipsoidScaleFactorZ = 1.0f;
+    bool useRandomRotations = false;
+    float rotationOX = 0.0f;
+    float rotationOY = 0.0f;
+    float rotationOZ = 0.0f;
     float coreValue = 1.0f;
     switch(argv.size())
     {
-    case 9:{std::stringstream _str{argv[8]};
+    case 13:{std::stringstream _str{argv[12]};
             if(!(_str >> coreValue))
             {
                 getConsole().writeToOutput("wrong <coreValue> argument.\n");
                 return -1;
             }
+        }
+    case 12: {std::stringstream _str{argv[11]};
+            if(!(_str >> rotationOZ))
+            {
+                getConsole().writeToOutput("wrong <rotationOZ> argument.\n");
+                return -1;
+            }
+        }
+    case 11: {std::stringstream _str{argv[10]};
+            if(!(_str >> rotationOY))
+            {
+                getConsole().writeToOutput("wrong <rotationOY> argument.\n");
+                return -1;
+            }
+        }
+    case 10: {std::stringstream _str{argv[9]};
+            if(!(_str >> rotationOX))
+            {
+                getConsole().writeToOutput("wrong <rotationOX> argument.\n");
+                return -1;
+            }
+        }
+    case 9: if(argv[8].compare("true") == 0) useRandomRotations = true;
+        else if(argv[8].compare("false") == 0) useRandomRotations = false;
+        else
+        {
+            getConsole().writeToOutput("wrong <useRandomRotations> argument.\n");
+            return -1;
         }
     case 8: {std::stringstream _str{argv[7]};
             if(!(_str >> ellipsoidScaleFactorZ))
@@ -825,6 +879,10 @@ int RepresentativeVolumeElementConsoleInterface::_generateOverlappingRandomEllip
                                ellipsoidScaleFactorX,
                                ellipsoidScaleFactorY,
                                ellipsoidScaleFactorZ,
+                               useRandomRotations,
+                               rotationOX,
+                               rotationOY,
+                               rotationOZ,
                                coreValue));
 
     return 0;

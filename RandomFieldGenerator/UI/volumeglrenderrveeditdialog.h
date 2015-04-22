@@ -66,6 +66,8 @@ namespace UserInterface
 
         void on_GenerateVoronoiCellsButton_clicked();
 
+        void on_UseRotationsCheckBox_stateChanged(int arg1);
+
     private:
         Ui::VolumeGLRenderRVEEditDialog *ui;
         FilterPreviewGLRender *_previewRender = nullptr;
@@ -102,11 +104,12 @@ namespace UserInterface
                 float ellipsoidScaleFactorX,
                 float ellipsoidScaleFactorY,
                 float ellipsoidScaleFactorZ,
+                bool useDataAsIntensity,
+                float intensityFactor,
+                bool useRotations,
                 float rotationOX,
                 float rotationOY,
-                float rotationOZ,
-                bool useDataAsIntensity,
-                float intensityFactor);
+                float rotationOZ);
 
         Q_SIGNAL void signal_generateVoronoiRandomCellsRVE(int cellNum);
 

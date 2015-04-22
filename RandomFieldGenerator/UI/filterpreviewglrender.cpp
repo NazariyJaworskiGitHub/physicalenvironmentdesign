@@ -26,17 +26,20 @@ void FilterPreviewGLRender::loadDataIntoTexture() throw(std::runtime_error)
 
     for(long i = 0; i<_size * _size * _size; ++i)
     {
-        int _val = RepresentativeVolumeElement::GaussianBlurFilter(
-                    _parent->getFilterRadiusValue(),
-                    i % _size % _size - _size / 2,
-                    i / _size % _size - _size / 2,
-                    i / _size / _size - _size / 2,
-                    _parent->getFilterScaleFactorXValue(),
-                    _parent->getFilterScaleFactorYValue(),
-                    _parent->getFilterScaleFactorZValue(),
+        float _x = i % _size % _size - _size / 2;
+        float _y = i / _size % _size - _size / 2;
+        float _z = i / _size / _size - _size / 2;
+        RepresentativeVolumeElement::rotateXYZ(
+                    _x, _y, _z,
                     _parent->getFilterRotationOXValue() * M_PI / 180,
                     _parent->getFilterRotationOYValue() * M_PI / 180,
-                    _parent->getFilterRotationOZValue() * M_PI / 180) * 255.0f;
+                    _parent->getFilterRotationOZValue() * M_PI / 180);
+        int _val = RepresentativeVolumeElement::GaussianBlurFilter(
+                    _parent->getFilterRadiusValue(),
+                    _x, _y, _z,
+                    _parent->getFilterScaleFactorXValue(),
+                    _parent->getFilterScaleFactorYValue(),
+                    _parent->getFilterScaleFactorZValue()) * 255.0f;
         _RGBABuff[i * 4 + 0] = 255;
         _RGBABuff[i * 4 + 1] = 255;
         _RGBABuff[i * 4 + 2] = 255;

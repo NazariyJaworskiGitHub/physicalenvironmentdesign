@@ -102,8 +102,8 @@ class _EditRVECommand : public QObject, public ConsoleCommand
                 SIGNAL(signal_addRandomNoiseRVEDone_T()));
 
         connect(&UserInterface::UserInterfaceManager::instance(),
-                SIGNAL(signal_applyGaussianFilterRVE_T(int,float,float,float,float,float,float,bool,float)),
-                this, SLOT(applyGaussianFilterRVE(int,float,float,float,float,float,float,bool,float)));
+                SIGNAL(signal_applyGaussianFilterRVE_T(int,float,float,float,bool,float,bool,float,float,float)),
+                this, SLOT(applyGaussianFilterRVE(int,float,float,float,bool,float,bool,float,float,float)));
         connect(this, SIGNAL(signal_applyGaussianFilterRVEDone()),
                 &UserInterface::UserInterfaceManager::instance(),
                 SIGNAL(signal_applyGaussianFilterRVEDone_T()));
@@ -146,11 +146,12 @@ class _EditRVECommand : public QObject, public ConsoleCommand
             float ellipsoidScaleFactorX,
             float ellipsoidScaleFactorY,
             float ellipsoidScaleFactorZ,
+            bool useDataAsIntensity,
+            float intensityFactor,
+            bool useRotations,
             float rotationOX,
             float rotationOY,
-            float rotationOZ,
-            bool useDataAsIntensity,
-            float intensityFactor);
+            float rotationOZ);
     public: Q_SIGNAL void signal_applyGaussianFilterRVEDone();
 
     public: Q_SLOT void generateVoronoiRandomCellsRVE(int cellNum);
@@ -350,11 +351,12 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
             float ellipsoidScaleFactorX,
             float ellipsoidScaleFactorY,
             float ellipsoidScaleFactorZ,
+            bool useDataAsIntensity,
+            float intensityFactor,
+            bool useRotations,
             float rotationOX,
             float rotationOY,
-            float rotationOZ,
-            bool useDataAsIntensity,
-            float intensityFactor);
+            float rotationOZ);
     private: class _applyGaussianFilterRVECommand : public ConsoleCommand
     {
         private: RepresentativeVolumeElementConsoleInterface &_manager;
@@ -364,8 +366,8 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
             //  "--------------------------------------------------------------------------------"
                 "applyGaussianFilterRVE",
                 "applyGaussianFilterRVE <Name> <Radius> <ScaleFactorX> <ScaleFactorY>\n"
-                "   <ScaleFactorZ> <rotationOX> <rotationOY> <rotationOZ> <useDataAsIntensity>\n"
-                "   <intensityFactor>\n"
+                "   <ScaleFactorZ> <useDataAsIntensity> <intensityFactor>\n"
+                "   <useRotations> <rotationOX> <rotationOY> <rotationOZ>\n"
                 "Apply Gaussian blur filter to given Representative Volume Element elements.\n"
                 "Arguments:\n"
                 "[string] <Name> - the name of RVE in RAM memory;\n"
@@ -376,16 +378,19 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
                 "               filter mask, should be > 0 and <= 1, default = 1;\n"
                 "[float]  <ScaleFactorZ> - (optional) the ellipsoid scale factor on Z axis of\n"
                 "               filter mask, should be > 0 and <= 1, default = 1;\n"
+                "[bool]   <useDataAsIntensity> - (optional) use RVE elements as intensity 'true'\n"
+                "               or 'false', default = false;\n"
+                "[float]  <intensityFactor> - (optional) if <useDataAsIntensity> equal 'true',\n"
+                "               use intensity multiply factor, default = 1;\n"
+                "[bool]   <useRotations> - (optional) use filter rotations 'true'\n"
+                "               or 'false', default = false. Warning! It change filtering\n"
+                "               algorithm and could take a long time;\n"
                 "[float]  <rotationOX> - (optional) the ellipsoid rotation angle in degrees on\n"
                 "               X axis, should be >= 0 and <= 180 radians, default = 0;\n"
                 "[float]  <rotationOY> - (optional) the ellipsoid rotation angle in degrees on\n"
                 "               Y axis, should be >= 0 and <= 180 radians, default = 0;\n"
                 "[float]  <rotationOZ> - (optional) the ellipsoid rotation angle in degrees on\n"
-                "               Z axis, should be >= 0 and <= 180 radians, default = 0;\n"
-                "[bool]   <useDataAsIntensity> - (optional) use RVE elements as intensity 'true'\n"
-                "               or 'false', default = false;\n"
-                "[float]  <intensityFactor> - (optional) if <useDataAsIntensity> equal 'true',\n"
-                "               use intensity multiply factor, default = 1.\n",
+                "               Z axis, should be >= 0 and <= 180 radians, default = 0.\n",
                 console),
                 _manager(manager){}
         public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
@@ -451,6 +456,10 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
             float ellipsoidScaleFactorX,
             float ellipsoidScaleFactorY,
             float ellipsoidScaleFactorZ,
+            bool useRandomRotations,
+            float rotationOX,
+            float rotationOY,
+            float rotationOZ,
             float coreValue) noexcept;
     private: class _generateOverlappingRandomEllipsoidsIntenseRVECommand : public ConsoleCommand
     {
@@ -462,7 +471,8 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
                 "generateOverlappingRandomEllipsoidsIntenseRVE",
                 "generateOverlappingRandomEllipsoidsIntenseRVE <Name> <ellipsoidNum> <minRadius>\n"
                 "   <maxRadius> <transitionLayerSize> <ScaleFactorX> <ScaleFactorY>\n"
-                "   <ScaleFactorZ> <coreValue>\n"
+                "   <ScaleFactorZ> <useRandomRotations> <rotationOX> <rotationOY> <rotationOZ>\n"
+                "   <coreValue>\n"
                 "Generate overlapping random ellipsoids at unmasked RVE elements\n"
                 "Arguments:\n"
                 "[string] <Name> - the name of RVE in RAM memory;\n"
@@ -477,6 +487,14 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
                 "               filter mask, should be > 0 and <= 1, default = 1;\n"
                 "[float]  <ScaleFactorZ> - (optional) the ellipsoid scale factor on Z axis of\n"
                 "               filter mask, should be > 0 and <= 1, default = 1;\n"
+                "[bool]   <useRandomRotations> - (optional) use random ellipsoid rotations 'true'\n"
+                "               or 'false', default = false - next arguments are used;\n"
+                "[float]  <rotationOX> - (optional) the ellipsoid rotation angle in degrees on\n"
+                "               X axis, should be >= 0 and <= 180 radians, default = 0;\n"
+                "[float]  <rotationOY> - (optional) the ellipsoid rotation angle in degrees on\n"
+                "               Y axis, should be >= 0 and <= 180 radians, default = 0;\n"
+                "[float]  <rotationOZ> - (optional) the ellipsoid rotation angle in degrees on\n"
+                "               Z axis, should be >= 0 and <= 180 radians, default = 0;\n"
                 "[float]  <coreValue> - (optional) intensity value of core, default = 1.\n",
                 console),
                 _manager(manager){}

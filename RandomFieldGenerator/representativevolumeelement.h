@@ -39,6 +39,8 @@ class RepresentativeVolumeElement
     private: static cl::Kernel *_kernelXPtr;
     private: static cl::Kernel *_kernelYPtr;
     private: static cl::Kernel *_kernelZPtr;
+    private: static cl::Kernel *_kernelXYZPtr;
+    private: static cl::Kernel *_kernelRandomEllipsoidsPtr;
     private: static cl::Kernel *_kernelVoronoiPtr;
 
     /// Constructor
@@ -127,10 +129,8 @@ class RepresentativeVolumeElement
     public: static inline float GaussianBlurFilter(
             float r,
             float x, float y, float z,
-            float fx, float fy, float fz,
-            float aox, float aoy, float aoz) noexcept
+            float fx, float fy, float fz) noexcept
     {
-        rotateXYZ(x,y,z,aox,aoy,aoz);
         return std::exp(-(x*x/fx/fx + y*y/fy/fy + z*z/fz/fz) / ((r/2.0) * (r/2.0)));
     }
 
@@ -148,11 +148,12 @@ class RepresentativeVolumeElement
             float ellipsoidScaleFactorX = 1.0f,
             float ellipsoidScaleFactorY = 1.0f,
             float ellipsoidScaleFactorZ = 1.0f,
+            bool useDataAsIntensity = false,
+            float intensityFactor = 1.0f,
+            bool useRotations = false,
             float rotationOX = 0.0f,
             float rotationOY = 0.0f,
-            float rotationOZ = 0.0f,
-            bool useDataAsIntensity = false,
-            float intensityFactor = 1.0f) throw (std::runtime_error);
+            float rotationOZ = 0.0f) throw (std::runtime_error);
 
     private: inline void _CLGaussianBlurFilterPhase(
             cl::Buffer &_dataBuffer,
@@ -189,11 +190,12 @@ class RepresentativeVolumeElement
             float ellipsoidScaleFactorX = 1.0f,
             float ellipsoidScaleFactorY = 1.0f,
             float ellipsoidScaleFactorZ = 1.0f,
+            bool useDataAsIntensity = false,
+            float intensityFactor = 1.0f,
+            bool useRotations = false,
             float rotationOX = 0.0f,
             float rotationOY = 0.0f,
-            float rotationOZ = 0.0f,
-            bool useDataAsIntensity = false,
-            float intensityFactor = 1.0f) throw (std::runtime_error);
+            float rotationOZ = 0.0f) throw (std::runtime_error);
 
     /// Apply two-cut to mask (inside)
     /// (i.e. set all _data elements, that are within cut levels, equal to (-_data elements)).
@@ -228,29 +230,13 @@ class RepresentativeVolumeElement
             const float ellipsoidScaleFactorX = 1.0f,
             const float ellipsoidScaleFactorY = 1.0f,
             const float ellipsoidScaleFactorZ = 1.0f,
+            const float rotationOX = 0.0f,
+            const float rotationOY = 0.0f,
+            const float rotationOZ = 0.0f,
             const float coreValue = 1.0f) throw (std::runtime_error);
 
     /// Generate overlapping random ellipsoids at unmasked _data elements
     /// (i.e. where _data elements >=0),
-    /// \todo move to device
-    /// \todo random orientation
-    /// \todo refactoring
-    public : void generateOverlappingRandomEllipsoids(
-            const int ellipsoidNum,
-            const int minRadius,
-            const int maxRadius,
-            const float transitionLayerSize = 0.0f,
-            const float ellipsoidScaleFactorX = 1.0f,
-            const float ellipsoidScaleFactorY = 1.0f,
-            const float ellipsoidScaleFactorZ = 1.0f,
-            const float coreValue = 1.0f,
-            const float transitionLayerValue = 0.5f) throw (std::runtime_error);
-
-    /// Generate overlapping random ellipsoids at unmasked _data elements
-    /// (i.e. where _data elements >=0),
-    /// \todo move to device
-    /// \todo random orientation
-    /// \todo refactoring
     public : void generateOverlappingRandomEllipsoidsIntense(
             const int ellipsoidNum,
             const int minRadius,
@@ -259,15 +245,33 @@ class RepresentativeVolumeElement
             const float ellipsoidScaleFactorX = 1.0f,
             const float ellipsoidScaleFactorY = 1.0f,
             const float ellipsoidScaleFactorZ = 1.0f,
+            const bool useRandomRotations = false,
+            float rotationOX = 0.0f,
+            float rotationOY = 0.0f,
+            float rotationOZ = 0.0f,
+            const float coreValue = 1.0f) throw (std::runtime_error);
+
+    /// Generate overlapping random ellipsoids at unmasked _data elements
+    /// (i.e. where _data elements >=0),
+    public : void generateOverlappingRandomEllipsoidsIntenseCL(
+            const int ellipsoidNum,
+            const int minRadius,
+            const int maxRadius,
+            const float transitionLayerSize = 1.0f,
+            const float ellipsoidScaleFactorX = 1.0f,
+            const float ellipsoidScaleFactorY = 1.0f,
+            const float ellipsoidScaleFactorZ = 1.0f,
+            const bool useRandomRotations = false,
+            float rotationOX = 0.0f,
+            float rotationOY = 0.0f,
+            float rotationOZ = 0.0f,
             const float coreValue = 1.0f) throw (std::runtime_error);
 
     /// Generate Voronoi diagram random cells
-    /// It clears all previous data
     public : void generateVoronoiRandomCells(
             const int cellNum) throw (std::runtime_error);
 
     /// Generate Voronoi diagram random cells OpenCL version
-    /// It clears all previous data
     public : void generateVoronoiRandomCellsCL(
             const int cellNum) throw (std::runtime_error);
 

@@ -60,11 +60,12 @@ namespace UserInterface
                 float ellipsoidScaleFactorX,
                 float ellipsoidScaleFactorY,
                 float ellipsoidScaleFactorZ,
+                bool useDataAsIntensity,
+                float intensityFactor,
+                bool useRotations,
                 float rotationOX,
                 float rotationOY,
-                float rotationOZ,
-                bool useDataAsIntensity,
-                float intensityFactor);
+                float rotationOZ);
             Q_SIGNAL void signal_applyGaussianFilterRVEDone_T();
 
             Q_SIGNAL void signal_generateVoronoiRandomCellsRVE_T(int cellNum);

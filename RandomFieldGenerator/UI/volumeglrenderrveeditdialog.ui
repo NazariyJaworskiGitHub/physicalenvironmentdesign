@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>610</height>
+    <height>640</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -26,7 +26,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>580</y>
+     <y>610</y>
      <width>781</width>
      <height>21</height>
     </rect>
@@ -44,7 +44,7 @@
      <x>10</x>
      <y>230</y>
      <width>781</width>
-     <height>291</height>
+     <height>321</height>
     </rect>
    </property>
    <property name="title">
@@ -54,8 +54,8 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>260</y>
-      <width>491</width>
+      <y>290</y>
+      <width>761</width>
       <height>21</height>
      </rect>
     </property>
@@ -267,8 +267,8 @@
    <widget class="QCheckBox" name="UseDataAsIntensityCheckBox">
     <property name="geometry">
      <rect>
-      <x>120</x>
-      <y>230</y>
+      <x>10</x>
+      <y>140</y>
       <width>131</width>
       <height>21</height>
      </rect>
@@ -281,7 +281,7 @@
     <property name="geometry">
      <rect>
       <x>320</x>
-      <y>230</y>
+      <y>140</y>
       <width>81</width>
       <height>21</height>
      </rect>
@@ -294,7 +294,7 @@
     <property name="geometry">
      <rect>
       <x>410</x>
-      <y>230</y>
+      <y>140</y>
       <width>91</width>
       <height>21</height>
      </rect>
@@ -316,7 +316,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>140</y>
+      <y>200</y>
       <width>101</width>
       <height>21</height>
      </rect>
@@ -329,7 +329,7 @@
     <property name="geometry">
      <rect>
       <x>120</x>
-      <y>139</y>
+      <y>199</y>
       <width>281</width>
       <height>21</height>
      </rect>
@@ -351,7 +351,7 @@
     <property name="geometry">
      <rect>
       <x>410</x>
-      <y>140</y>
+      <y>200</y>
       <width>91</width>
       <height>21</height>
      </rect>
@@ -367,7 +367,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>170</y>
+      <y>230</y>
       <width>101</width>
       <height>21</height>
      </rect>
@@ -380,7 +380,7 @@
     <property name="geometry">
      <rect>
       <x>120</x>
-      <y>169</y>
+      <y>229</y>
       <width>281</width>
       <height>21</height>
      </rect>
@@ -402,7 +402,7 @@
     <property name="geometry">
      <rect>
       <x>410</x>
-      <y>170</y>
+      <y>230</y>
       <width>91</width>
       <height>21</height>
      </rect>
@@ -418,7 +418,7 @@
     <property name="geometry">
      <rect>
       <x>410</x>
-      <y>201</y>
+      <y>260</y>
       <width>91</width>
       <height>21</height>
      </rect>
@@ -434,7 +434,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>201</y>
+      <y>260</y>
       <width>101</width>
       <height>21</height>
      </rect>
@@ -447,7 +447,7 @@
     <property name="geometry">
      <rect>
       <x>120</x>
-      <y>200</y>
+      <y>259</y>
       <width>281</width>
       <height>21</height>
      </rect>
@@ -465,12 +465,25 @@
      <enum>Qt::Horizontal</enum>
     </property>
    </widget>
+   <widget class="QCheckBox" name="UseRotationsCheckBox">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>170</y>
+      <width>491</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Use rotation (Warning! It change filtering algorithm and could take a long time)</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QProgressBar" name="progressBar">
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>580</y>
+     <y>610</y>
      <width>701</width>
      <height>21</height>
     </rect>
@@ -750,7 +763,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>520</y>
+     <y>550</y>
      <width>781</width>
      <height>51</height>
     </rect>

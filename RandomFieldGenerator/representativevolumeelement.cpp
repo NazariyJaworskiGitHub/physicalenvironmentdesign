@@ -6,6 +6,8 @@ cl::Program *RepresentativeVolumeElement::_programPtr = nullptr;
 cl::Kernel *RepresentativeVolumeElement::_kernelXPtr = nullptr;
 cl::Kernel *RepresentativeVolumeElement::_kernelYPtr = nullptr;
 cl::Kernel *RepresentativeVolumeElement::_kernelZPtr = nullptr;
+cl::Kernel *RepresentativeVolumeElement::_kernelXYZPtr = nullptr;
+cl::Kernel *RepresentativeVolumeElement::_kernelRandomEllipsoidsPtr = nullptr;
 cl::Kernel *RepresentativeVolumeElement::_kernelVoronoiPtr = nullptr;
 
 #define _MASK_EPS_ 1.0f
@@ -37,184 +39,237 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
     if(!_programPtr)
     {
         std::string _CLSource_applyGaussianFilter = "\
-            void _rotateXYZ(\
-                float *x, float *y, float *z,\
-                float aox, float aoy, float aoz)\
-            {\
-                float _x, _y, _z;\
-                \
-                _y = cos(aox)*(*y) - sin(aox)*(*z);\
-                _z = sin(aox)*(*y) + cos(aox)*(*z);\
-                \
-                _x = cos(aoy)*(*x) - sin(aoy)*_z;\
-                (*z) = sin(aoy)*(*x) + cos(aoy)*_z;\
-                \
-                (*x) = cos(aoz)*_x - sin(aoz)*_y;\
-                (*y) = sin(aoz)*_x + cos(aoz)*_y;\
-            }\
-            \
-            float _GaussianFilter(\
-                float r,\
-                float x, float y, float z,\
-                float fx, float fy, float fz,\
-                float aox, float aoy, float aoz)\
-            {\
-                _rotateXYZ(&x,&y,&z,aox,aoy,aoz);\
-                return exp(-(x*x/fx/fx + y*y/fy/fy + z*z/fz/fz) / ((r/2.0) * (r/2.0)));\
-            }\
-            \
-            __kernel void applyGaussianFilterX(\
-                int discreteRadius,\
-                float ellipsoidScaleFactorX,\
-                float ellipsoidScaleFactorY,\
-                float ellipsoidScaleFactorZ,\
-                float rotationOX,\
-                float rotationOY,\
-                float rotationOZ,\
-                __global float *_data,\
-                __global float *_cuttedData,\
-                int _size)\
-            {\
-                long i = get_global_id(0);\
-                long j = get_global_id(1);\
-                long k = get_global_id(2);\
-                \
-                for( int p = -discreteRadius; p <= discreteRadius; ++p)\
+        void _rotateXYZ(\
+                    float *x, float *y, float *z,\
+                    float aox, float aoy, float aoz)\
+        {\
+            float _x, _y, _z;\
+            _y = cos(aox)*(*y) - sin(aox)*(*z);\
+            _z = sin(aox)*(*y) + cos(aox)*(*z);\
+            _x = cos(aoy)*(*x) - sin(aoy)*_z;\
+            (*z) = sin(aoy)*(*x) + cos(aoy)*_z;\
+            (*x) = cos(aoz)*_x - sin(aoz)*_y;\
+            (*y) = sin(aoz)*_x + cos(aoz)*_y;\
+        }\
+        float _GaussianFilter(\
+                    float r,\
+                    float x, float y, float z,\
+                    float fx, float fy, float fz)\
+        {\
+            return exp(-(x*x/fx/fx + y*y/fy/fy + z*z/fz/fz) / ((r/2.0) * (r/2.0)));\
+        }\
+        __kernel void applyGaussianFilterX(\
+                    int discreteRadius,\
+                    float ellipsoidScaleFactorX,\
+                    float ellipsoidScaleFactorY,\
+                    float ellipsoidScaleFactorZ,\
+                    __global float *_data,\
+                    __global float *_cuttedData,\
+                    int _size)\
+        {\
+            long i = get_global_id(0);\
+            long j = get_global_id(1);\
+            long k = get_global_id(2);\
+            for( int p = -discreteRadius; p <= discreteRadius; ++p)\
                 _cuttedData[(i * _size * _size) + (j * _size) + k] +=\
-                _data[(((i+p)&(_size-1)) * _size * _size) +\
-                (j * _size) + k] *\
-                _GaussianFilter(\
-                    discreteRadius,\
-                    p, 0, 0,\
-                    ellipsoidScaleFactorX,\
-                    ellipsoidScaleFactorY,\
-                    ellipsoidScaleFactorZ,\
-                    rotationOX, rotationOY, rotationOZ);\
-            }\
-            \
-            __kernel void applyGaussianFilterY(\
-                int discreteRadius,\
-                float ellipsoidScaleFactorX,\
-                float ellipsoidScaleFactorY,\
-                float ellipsoidScaleFactorZ,\
-                float rotationOX,\
-                float rotationOY,\
-                float rotationOZ,\
-                __global float *_data,\
-                __global float *_cuttedData,\
-                int _size)\
-            {\
-                long i = get_global_id(0);\
-                long j = get_global_id(1);\
-                long k = get_global_id(2);\
-                \
+                        _data[(((i+p)&(_size-1)) * _size * _size) +\
+                        (j * _size) + k] *\
+                        _GaussianFilter(\
+                            discreteRadius,\
+                            p, 0, 0,\
+                            ellipsoidScaleFactorX,\
+                            ellipsoidScaleFactorY,\
+                            ellipsoidScaleFactorZ);\
+        }\
+        __kernel void applyGaussianFilterY(\
+                    int discreteRadius,\
+                    float ellipsoidScaleFactorX,\
+                    float ellipsoidScaleFactorY,\
+                    float ellipsoidScaleFactorZ,\
+                    __global float *_data,\
+                    __global float *_cuttedData,\
+                    int _size)\
+        {\
+            long i = get_global_id(0);\
+            long j = get_global_id(1);\
+            long k = get_global_id(2);\
+            for( int q = -discreteRadius; q <= discreteRadius; ++q)\
+                _cuttedData[(i * _size * _size) + (j * _size) + k] +=\
+                        _data[(i * _size * _size) +\
+                        (((j+q)&(_size-1)) * _size) + k] *\
+                        _GaussianFilter(\
+                            discreteRadius,\
+                            0, q, 0,\
+                            ellipsoidScaleFactorX,\
+                            ellipsoidScaleFactorY,\
+                            ellipsoidScaleFactorZ);\
+        }\
+        __kernel void applyGaussianFilterZ(\
+                    int discreteRadius,\
+                    float ellipsoidScaleFactorX,\
+                    float ellipsoidScaleFactorY,\
+                    float ellipsoidScaleFactorZ,\
+                    __global float *_data,\
+                    __global float *_cuttedData,\
+                    int _size)\
+        {\
+            long i = get_global_id(0);\
+            long j = get_global_id(1);\
+            long k = get_global_id(2);\
+            for( int r = -discreteRadius; r <= discreteRadius; ++r)\
+                _cuttedData[(i * _size * _size) + (j * _size) + k] +=\
+                        _data[(i * _size * _size) + (j * _size) +\
+                        ((k+r)&(_size-1))] *\
+                        _GaussianFilter(\
+                            discreteRadius,\
+                            0, 0, r,\
+                            ellipsoidScaleFactorX,\
+                            ellipsoidScaleFactorY,\
+                            ellipsoidScaleFactorZ);\
+        }\
+        __kernel void applyGaussianFilterXYZ(\
+                    int discreteRadius,\
+                    float ellipsoidScaleFactorX,\
+                    float ellipsoidScaleFactorY,\
+                    float ellipsoidScaleFactorZ,\
+                    float rotationOX,\
+                    float rotationOY,\
+                    float rotationOZ,\
+                    __global float *_data,\
+                    __global float *_cuttedData,\
+                    int _size)\
+        {\
+            long i = get_global_id(0);\
+            long j = get_global_id(1);\
+            long k = get_global_id(2);\
+            for( int p = -discreteRadius; p <= discreteRadius; ++p)\
                 for( int q = -discreteRadius; q <= discreteRadius; ++q)\
-                    _cuttedData[(i * _size * _size) + (j * _size) + k] +=\
-                            _data[(i * _size * _size) +\
-                            (((j+q)&(_size-1)) * _size) + k] *\
-                            _GaussianFilter(\
-                                discreteRadius,\
-                                0, q, 0,\
-                                ellipsoidScaleFactorX,\
-                                ellipsoidScaleFactorY,\
-                                ellipsoidScaleFactorZ,\
-                                rotationOX, rotationOY, rotationOZ);\
-            }\
-            \
-            __kernel void applyGaussianFilterZ(\
-                int discreteRadius,\
-                float ellipsoidScaleFactorX,\
-                float ellipsoidScaleFactorY,\
-                float ellipsoidScaleFactorZ,\
-                float rotationOX,\
-                float rotationOY,\
-                float rotationOZ,\
-                __global float *_data,\
-                __global float *_cuttedData,\
-                int _size)\
-            {\
-                long i = get_global_id(0);\
-                long j = get_global_id(1);\
-                long k = get_global_id(2);\
-                \
-                for( int r = -discreteRadius; r <= discreteRadius; ++r)\
-                    _cuttedData[(i * _size * _size) + (j * _size) + k] +=\
-                            _data[(i * _size * _size) + (j * _size) +\
-                            ((k+r)&(_size-1))] *\
-                            _GaussianFilter(\
-                                discreteRadius,\
-                                0, 0, r,\
-                                ellipsoidScaleFactorX,\
-                                ellipsoidScaleFactorY,\
-                                ellipsoidScaleFactorZ,\
-                                rotationOX, rotationOY, rotationOZ);\
-            }\
-            \
-            void _distanceOnRepeatedSides(\
+                    for( int r = -discreteRadius; r <= discreteRadius; ++r)\
+                    {\
+                        float _pp = p;\
+                        float _qq = q;\
+                        float _rr = r;\
+                        _rotateXYZ(&_pp, &_qq, &_rr, rotationOX, rotationOY, rotationOZ);\
+                        _cuttedData[(i * _size * _size) + (j * _size) + k] +=\
+                                _data[(((i+p)&(_size-1)) * _size * _size) +\
+                                (((j+q)&(_size-1)) * _size) + ((k+r)&(_size-1))] *\
+                                _GaussianFilter(\
+                                    discreteRadius,\
+                                    _pp, _qq, _rr,\
+                                    ellipsoidScaleFactorX,\
+                                    ellipsoidScaleFactorY,\
+                                    ellipsoidScaleFactorZ);\
+                    }\
+        }\
+        void _distanceOnRepeatedSides(\
                     float ax, float ay, float az,\
                     float bx, float by, float bz,\
                     float *kk, float *jj, float *ii,\
                     int _size)\
+        {\
+            (*kk) = ax-bx;\
+            float _tmpijk = ax-_size-bx;\
+            if(_tmpijk*_tmpijk < (*kk)*(*kk)) (*kk) = _tmpijk;\
+            else _tmpijk = ax+_size-bx;\
+            if(_tmpijk*_tmpijk < (*kk)*(*kk)) (*kk) = _tmpijk;\
+            (*jj) = ay-by;\
+            _tmpijk = ay-_size-by;\
+            if(_tmpijk*_tmpijk < (*jj)*(*jj)) (*jj) = _tmpijk;\
+            else _tmpijk = ay+_size-by;\
+            if(_tmpijk*_tmpijk < (*jj)*(*jj)) (*jj) = _tmpijk;\
+            (*ii) = az-bz;\
+            _tmpijk = az-_size-bz;\
+            if(_tmpijk*_tmpijk < (*ii)*(*ii)) (*ii) = _tmpijk;\
+            else _tmpijk = az+_size-bz;\
+            if(_tmpijk*_tmpijk < (*ii)*(*ii)) (*ii) = _tmpijk;\
+        }\
+        __kernel void randomEllipsoids(\
+                    __global float *_initialPoints,\
+                    int ellipsoidNum,\
+                    __global float *_data,\
+                    float transitionLayerSize,\
+                    float ellipsoidScaleFactorX,\
+                    float ellipsoidScaleFactorY,\
+                    float ellipsoidScaleFactorZ,\
+                    float coreValue,\
+                    int _size)\
+        {\
+            int i = get_global_id(0);\
+            int j = get_global_id(1);\
+            int k = get_global_id(2);\
+            if(_data[(i * _size * _size) + (j * _size) + k] >= 0)\
             {\
-                *kk = (ax-bx)*(ax-bx);\
-                float _tmpijk = (ax-_size-bx)*(ax-_size-bx);\
-                if(_tmpijk <*kk) *kk = _tmpijk;\
-                else _tmpijk = (ax+_size-bx)*(ax+_size-bx);\
-                if(_tmpijk <*kk) *kk = _tmpijk;\
-            \
-                *jj = (ay-by)*(ay-by);\
-                _tmpijk = (ay-_size-by)*(ay-_size-by);\
-                if(_tmpijk <*jj) *jj = _tmpijk;\
-                else _tmpijk = (ay+_size-by)*(ay+_size-by);\
-                if(_tmpijk <*jj) *jj = _tmpijk;\
-            \
-                *ii = (az-bz)*(az-bz);\
-                _tmpijk = (az-_size-bz)*(az-_size-bz);\
-                if(_tmpijk <*ii) *ii = _tmpijk;\
-                else _tmpijk = (az+_size-bz)*(az+_size-bz);\
-                if(_tmpijk <*ii) *ii = _tmpijk;\
+                for( int c = 0; c<ellipsoidNum; ++c)\
+                {\
+                    float _kk, _jj, _ii;\
+                    _distanceOnRepeatedSides(\
+                                _initialPoints[c*7+0], \
+                            _initialPoints[c*7+1], \
+                            _initialPoints[c*7+2],\
+                            k, j, i, &_kk, &_jj, &_ii, _size);\
+                    _rotateXYZ(&_kk, &_jj, &_ii, \
+                               _initialPoints[c*7+3], _initialPoints[c*7+4], _initialPoints[c*7+5]);\
+                    _kk *= _kk; _jj *= _jj; _ii *= _ii;\
+                    float _curRadius = _kk/ellipsoidScaleFactorX/ellipsoidScaleFactorX +\
+                            _jj/ellipsoidScaleFactorY/ellipsoidScaleFactorY +\
+                            _ii/ellipsoidScaleFactorZ/ellipsoidScaleFactorZ;\
+                    float _sphereRadius = _initialPoints[c*7+6];\
+                    if( _curRadius <= _sphereRadius*(1.0f-transitionLayerSize)*\
+                            _sphereRadius*(1.0f-transitionLayerSize))\
+                        _data[(i * _size * _size) + (j * _size) + k] = coreValue;\
+                    else if(_curRadius <= _sphereRadius*_sphereRadius &&\
+                            _curRadius > _sphereRadius*(1.0f-transitionLayerSize)*\
+                            _sphereRadius*(1.0f-transitionLayerSize))\
+                    {\
+                        float _newVal = (_sphereRadius - sqrt(_curRadius))/\
+                                _sphereRadius / transitionLayerSize * coreValue;\
+                        if(_data[(i * _size * _size) + (j * _size) + k] < _newVal)\
+                            _data[(i * _size * _size) + (j * _size) + k] = _newVal;\
+                    }\
+                }\
             }\
-            \
-            __kernel void voronoi(\
+        }\
+        __kernel void voronoi(\
                     __global float *_initialPoints,\
                     int cellNum,\
                     __global float *_data,\
                     int _size)\
+        {\
+            int i = get_global_id(0);\
+            int j = get_global_id(1);\
+            int k = get_global_id(2);\
+            if(_data[(i * _size * _size) + (j * _size) + k] >= 0)\
             {\
-                int i = get_global_id(0);\
-                int j = get_global_id(1);\
-                int k = get_global_id(2);\
-                \
                 float _kk, _jj, _ii;\
                 _distanceOnRepeatedSides(\
-                    _initialPoints[0],\
-                    _initialPoints[1],\
-                    _initialPoints[2],\
-                    k, j, i, &_kk, &_jj, &_ii, _size);\
+                            _initialPoints[0],\
+                        _initialPoints[1],\
+                        _initialPoints[2],\
+                        k, j, i, &_kk, &_jj, &_ii, _size);\
+                _kk *= _kk; _jj *= _jj; _ii *= _ii;\
                 float _minDist1 = sqrt(_kk + _jj + _ii);\
                 _distanceOnRepeatedSides(\
-                    _initialPoints[3+0],\
-                    _initialPoints[3+1],\
-                    _initialPoints[3+2],\
-                    k, j, i, &_kk, &_jj, &_ii, _size);\
+                            _initialPoints[3+0],\
+                        _initialPoints[3+1],\
+                        _initialPoints[3+2],\
+                        k, j, i, &_kk, &_jj, &_ii, _size);\
+                _kk *= _kk; _jj *= _jj; _ii *= _ii;\
                 float _minDist2 = sqrt(_kk + _jj + _ii);\
-                \
                 if(_minDist1 > _minDist2)\
                 {\
                     float tmp = _minDist1;\
                     _minDist1 = _minDist2;\
                     _minDist2 = tmp;\
                 }\
-                \
                 for(int c=2; c<cellNum; ++c)\
                 {\
                     _distanceOnRepeatedSides(\
-                        _initialPoints[c*3+0],\
-                        _initialPoints[c*3+1],\
-                        _initialPoints[c*3+2],\
-                        k, j, i, &_kk, &_jj, &_ii, _size);\
+                                _initialPoints[c*3+0],\
+                            _initialPoints[c*3+1],\
+                            _initialPoints[c*3+2],\
+                            k, j, i, &_kk, &_jj, &_ii, _size);\
+                    _kk *= _kk; _jj *= _jj; _ii *= _ii;\
                     float _curDist = sqrt(_kk + _jj + _ii);\
-                    \
                     if(_curDist < _minDist1)\
                     {\
                         _minDist2 = _minDist1;\
@@ -222,10 +277,10 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
                     }\
                     else if(_curDist < _minDist2)\
                         _minDist2 = _curDist;\
-                    \
                 }\
                 _data[(i * _size * _size) + (j * _size) + k] = _minDist2-_minDist1;\
-            }";
+            }\
+        }";
 
         /// Don't worry, CLManager will destroy this objects at the end of application
         /// \todo different platforms
@@ -242,6 +297,12 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
 
         _kernelZPtr = &OpenCL::CLManager::instance().createKernel(
                     *_programPtr, "applyGaussianFilterZ");
+
+        _kernelXYZPtr = &OpenCL::CLManager::instance().createKernel(
+                    *_programPtr, "applyGaussianFilterXYZ");
+
+        _kernelRandomEllipsoidsPtr = &OpenCL::CLManager::instance().createKernel(
+                    *_programPtr, "randomEllipsoids");
 
         _kernelVoronoiPtr = &OpenCL::CLManager::instance().createKernel(
                     *_programPtr, "voronoi");
@@ -451,11 +512,12 @@ void RepresentativeVolumeElement::applyGaussianFilter(
         float ellipsoidScaleFactorX,
         float ellipsoidScaleFactorY,
         float ellipsoidScaleFactorZ,
+        bool useDataAsIntensity,
+        float intensityFactor,
+        bool useRotations,
         float rotationOX,
         float rotationOY,
-        float rotationOZ,
-        bool useDataAsIntensity,
-        float intensityFactor) throw (std::runtime_error)
+        float rotationOZ) throw (std::runtime_error)
 {
     std::cout << "applyGaussianFilter() call:" << std::endl;
     if(discreteRadius <= 0)
@@ -469,15 +531,15 @@ void RepresentativeVolumeElement::applyGaussianFilter(
     if(ellipsoidScaleFactorZ <= 0.0f || ellipsoidScaleFactorZ > 1.0f)
         throw(std::runtime_error("applyGaussianFilter(): ellipsoidScaleFactorZ "
                                  "<= 0 or > 1.\n"));
-//    if(rotationOX < 0.0f || rotationOX > M_PI*2)
-//        throw(std::runtime_error("applyGaussianFilter(): rotationOX "
-//                                 "< 0 or > 2*pi.\n"));
-//    if(rotationOY < 0.0f || rotationOY > M_PI*2)
-//        throw(std::runtime_error("applyGaussianFilter(): rotationOY "
-//                                 "< 0 or > 2*pi.\n"));
-//    if(rotationOZ < 0.0f || rotationOZ > M_PI*2)
-//        throw(std::runtime_error("applyGaussianFilter(): rotationOZ "
-//                                 "< 0 or > 2*pi.\n"));
+    if(rotationOX < 0.0f || rotationOX > M_PI*2)
+        throw(std::runtime_error("applyGaussianFilter(): rotationOX "
+                                 "< 0 or > 2*pi.\n"));
+    if(rotationOY < 0.0f || rotationOY > M_PI*2)
+        throw(std::runtime_error("applyGaussianFilter(): rotationOY "
+                                 "< 0 or > 2*pi.\n"));
+    if(rotationOZ < 0.0f || rotationOZ > M_PI*2)
+        throw(std::runtime_error("applyGaussianFilter(): rotationOZ "
+                                 "< 0 or > 2*pi.\n"));
 
     _discreteRadius = discreteRadius;
 
@@ -500,92 +562,126 @@ void RepresentativeVolumeElement::applyGaussianFilter(
                 }
     }
 
-    std::cout << "  Applying filter, phase 1...\n";
     memset(_cuttedData, 0, sizeof(float) * _size * _size * _size);
-    for( long i = 0; i < _size; ++i)
+
+    if(!useRotations)
     {
-        std::cout
-                << "\b\b\b\b"
-                << (int)(i * 100.0 / (_size-1))
-                << "%";
-        for( long j = 0; j < _size; ++j)
-            for( long k = 0; k < _size; ++k)
-            {
-                for( int p = -_discreteRadius; p <= _discreteRadius; ++p)
+        std::cout << "  Applying filter, phase 1...\n";
+        for( long i = 0; i < _size; ++i)
+        {
+            std::cout
+                    << "\b\b\b\b"
+                    << (int)(i * 100.0 / (_size-1))
+                    << "%";
+            for( long j = 0; j < _size; ++j)
+                for( long k = 0; k < _size; ++k)
                 {
-                    _cuttedData[(i * _size * _size) + (j * _size) + k] +=
-                            _data[(((i+p)&(_size-1)) * _size * _size) +
-                            (j * _size) + k] *
-                            GaussianBlurFilter(
-                                _discreteRadius,
-                                p, 0, 0,
-                                ellipsoidScaleFactorZ,
-                                ellipsoidScaleFactorY,
-                                ellipsoidScaleFactorX,
-                                rotationOZ, rotationOY, rotationOX);
+                    for( int p = -_discreteRadius; p <= _discreteRadius; ++p)
+                    {
+                        _cuttedData[(i * _size * _size) + (j * _size) + k] +=
+                                _data[(((i+p)&(_size-1)) * _size * _size) +
+                                (j * _size) + k] *
+                                GaussianBlurFilter(
+                                    _discreteRadius,
+                                    p, 0, 0,
+                                    ellipsoidScaleFactorZ,
+                                    ellipsoidScaleFactorY,
+                                    ellipsoidScaleFactorX);
+                    }
                 }
-            }
+        }
+        memcpy(_data, _cuttedData, sizeof(float) * _size * _size * _size);
+        std::cout << " Done" << std::endl;
+
+        std::cout << "                ...phase 2...\n";
+        memset(_cuttedData, 0, sizeof(float) * _size * _size * _size);
+        for( long i = 0; i < _size; ++i)
+        {
+            std::cout
+                    << "\b\b\b\b"
+                    << (int)(i * 100.0 / (_size-1))
+                    << "%";
+            for( long j = 0; j < _size; ++j)
+                for( long k = 0; k < _size; ++k)
+                {
+                    for( int q = -_discreteRadius; q <= _discreteRadius; ++q)
+                    {
+                        _cuttedData[(i * _size * _size) + (j * _size) + k] +=
+                                _data[(i * _size * _size) +
+                                (((j+q)&(_size-1)) * _size) + k] *
+                                GaussianBlurFilter(
+                                    _discreteRadius,
+                                    0, q, 0,
+                                    ellipsoidScaleFactorZ,
+                                    ellipsoidScaleFactorY,
+                                    ellipsoidScaleFactorX);
+                    }
+                }
+        }
+        memcpy(_data, _cuttedData, sizeof(float) * _size * _size * _size);
+        std::cout << " Done" << std::endl;
+
+        std::cout << "                ...phase 3...\n";
+        memset(_cuttedData, 0, sizeof(float) * _size * _size * _size);
+        for( long i = 0; i < _size; ++i)
+        {
+            std::cout
+                    << "\b\b\b\b"
+                    << (int)(i * 100.0 / (_size-1))
+                    << "%";
+            for( long j = 0; j < _size; ++j)
+                for( long k = 0; k < _size; ++k)
+                {
+                    for( int r = -_discreteRadius; r <= _discreteRadius; ++r)
+                    {
+                        _cuttedData[(i * _size * _size) + (j * _size) + k] +=
+                                _data[(i * _size * _size) + (j * _size) +
+                                ((k+r)&(_size-1))] *
+                                GaussianBlurFilter(
+                                    _discreteRadius,
+                                    0, 0, r,
+                                    ellipsoidScaleFactorZ,
+                                    ellipsoidScaleFactorY,
+                                    ellipsoidScaleFactorX);
+                    }
+                }
+        }
+    }
+    else
+    {
+        std::cout << "  Applying non separable filter ...\n";
+        for( long i = 0; i < _size; ++i)
+        {
+            std::cout
+                    << "\b\b\b\b"
+                    << (int)(i * 100.0 / (_size-1))
+                    << "%";
+            for( long j = 0; j < _size; ++j)
+                for( long k = 0; k < _size; ++k)
+                {
+                    for( int p = -_discreteRadius; p <= _discreteRadius; ++p)
+                        for( int q = -_discreteRadius; q <= _discreteRadius; ++q)
+                            for( int r = -_discreteRadius; r <= _discreteRadius; ++r)
+                    {
+                                float _pp = p;
+                                float _qq = q;
+                                float _rr = r;
+                                rotateXYZ(_pp, _qq, _rr, -rotationOZ, -rotationOY, -rotationOX);
+                        _cuttedData[(i * _size * _size) + (j * _size) + k] +=
+                                _data[(((i+p)&(_size-1)) * _size * _size) +
+                                (((j+q)&(_size-1)) * _size) + ((k+r)&(_size-1))] *
+                                GaussianBlurFilter(
+                                    _discreteRadius,
+                                    _pp, _qq, _rr,
+                                    ellipsoidScaleFactorZ,
+                                    ellipsoidScaleFactorY,
+                                    ellipsoidScaleFactorX);
+                    }
+                }
+        }
     }
     memcpy(_data, _cuttedData, sizeof(float) * _size * _size * _size);
     std::cout << " Done" << std::endl;
-
-/*    std::cout << "                ...phase 2...\n";
-    memset(_cuttedData, 0, sizeof(float) * _size * _size * _size);
-    for( long i = 0; i < _size; ++i)
-    {
-        std::cout
-                << "\b\b\b\b"
-                << (int)(i * 100.0 / (_size-1))
-                << "%";
-        for( long j = 0; j < _size; ++j)
-            for( long k = 0; k < _size; ++k)
-            {
-                for( int q = -_discreteRadius; q <= _discreteRadius; ++q)
-                {
-                    _cuttedData[(i * _size * _size) + (j * _size) + k] +=
-                            _data[(i * _size * _size) +
-                            (((j+q)&(_size-1)) * _size) + k] *
-                            GaussianBlurFilter(
-                                _discreteRadius,
-                                0, q, 0,
-                                ellipsoidScaleFactorZ,
-                                ellipsoidScaleFactorY,
-                                ellipsoidScaleFactorX,
-                                rotationOZ, rotationOY, rotationOX);
-                }
-            }
-    }
-    memcpy(_data, _cuttedData, sizeof(float) * _size * _size * _size);
-    std::cout << " Done" << std::endl;
-
-    std::cout << "                ...phase 3...\n";
-    memset(_cuttedData, 0, sizeof(float) * _size * _size * _size);
-    for( long i = 0; i < _size; ++i)
-    {
-        std::cout
-                << "\b\b\b\b"
-                << (int)(i * 100.0 / (_size-1))
-                << "%";
-        for( long j = 0; j < _size; ++j)
-            for( long k = 0; k < _size; ++k)
-            {
-                for( int r = -_discreteRadius; r <= _discreteRadius; ++r)
-                {
-                    _cuttedData[(i * _size * _size) + (j * _size) + k] +=
-                            _data[(i * _size * _size) + (j * _size) +
-                            ((k+r)&(_size-1))] *
-                            GaussianBlurFilter(
-                                _discreteRadius,
-                                0, 0, r,
-                                ellipsoidScaleFactorZ,
-                                ellipsoidScaleFactorY,
-                                ellipsoidScaleFactorX,
-                                rotationOZ, rotationOY, rotationOX);
-                }
-            }
-    }
-    memcpy(_data, _cuttedData, sizeof(float) * _size * _size * _size);
-    std::cout << " Done" << std::endl;*/
 
     if(useDataAsIntensity)
     {
@@ -652,11 +748,12 @@ void RepresentativeVolumeElement::applyGaussianFilterCL(
         float ellipsoidScaleFactorX,
         float ellipsoidScaleFactorY,
         float ellipsoidScaleFactorZ,
+        bool useDataAsIntensity,
+        float intensityFactor,
+        bool useRotations,
         float rotationOX,
         float rotationOY,
-        float rotationOZ,
-        bool useDataAsIntensity,
-        float intensityFactor) throw (std::runtime_error)
+        float rotationOZ) throw (std::runtime_error)
 {
     std::cout << "applyGaussianFilterCL() call:" << std::endl;
     if(discreteRadius <= 0)
@@ -670,15 +767,15 @@ void RepresentativeVolumeElement::applyGaussianFilterCL(
     if(ellipsoidScaleFactorZ <= 0.0f || ellipsoidScaleFactorZ > 1.0f)
         throw(std::runtime_error(
                 "applyGaussianFilterCL(): ellipsoidScaleFactorZ <= 0 or > 1.\n"));
-//    if(rotationOX < 0.0f || rotationOX > M_PI*2)
-//        throw(std::runtime_error("applyGaussianFilterCL(): rotationOX "
-//                                 "< 0 or > 2*pi.\n"));
-//    if(rotationOY < 0.0f || rotationOY > M_PI*2)
-//        throw(std::runtime_error("applyGaussianFilterCL(): rotationOY "
-//                                 "< 0 or > 2*pi.\n"));
-//    if(rotationOZ < 0.0f || rotationOZ > M_PI*2)
-//        throw(std::runtime_error("applyGaussianFilterCL(): rotationOZ "
-//                                 "< 0 or > 2*pi.\n"));
+    if(rotationOX < 0.0f || rotationOX > M_PI*2)
+        throw(std::runtime_error("applyGaussianFilterCL(): rotationOX "
+                                 "< 0 or > 2*pi.\n"));
+    if(rotationOY < 0.0f || rotationOY > M_PI*2)
+        throw(std::runtime_error("applyGaussianFilterCL(): rotationOY "
+                                 "< 0 or > 2*pi.\n"));
+    if(rotationOZ < 0.0f || rotationOZ > M_PI*2)
+        throw(std::runtime_error("applyGaussianFilterCL(): rotationOZ "
+                                 "< 0 or > 2*pi.\n"));
 
     _discreteRadius = discreteRadius;
 
@@ -714,39 +811,46 @@ void RepresentativeVolumeElement::applyGaussianFilterCL(
                 sizeof(float) * _size * _size * _size,
                 _cuttedData);
 
-    /// \todo X and Z are replaced
-    _kernelXPtr->setArg(0, _discreteRadius);
-    _kernelXPtr->setArg(1, ellipsoidScaleFactorZ);
-    _kernelXPtr->setArg(2, ellipsoidScaleFactorY);
-    _kernelXPtr->setArg(3, ellipsoidScaleFactorX);
-    _kernelXPtr->setArg(4, rotationOZ);
-    _kernelXPtr->setArg(5, rotationOY);
-    _kernelXPtr->setArg(6, rotationOX);
-    _kernelXPtr->setArg(7, _dataBuffer);
-    _kernelXPtr->setArg(8, _cuttedDataBuffer);
-    _kernelXPtr->setArg(9, _size);
+    if(!useRotations)
+    {
+        /// \todo X and Z are replaced
+        _kernelXPtr->setArg(0, _discreteRadius);
+        _kernelXPtr->setArg(1, ellipsoidScaleFactorZ);
+        _kernelXPtr->setArg(2, ellipsoidScaleFactorY);
+        _kernelXPtr->setArg(3, ellipsoidScaleFactorX);
+        _kernelXPtr->setArg(4, _dataBuffer);
+        _kernelXPtr->setArg(5, _cuttedDataBuffer);
+        _kernelXPtr->setArg(6, _size);
 
-    _kernelYPtr->setArg(0, _discreteRadius);
-    _kernelYPtr->setArg(1, ellipsoidScaleFactorZ);
-    _kernelYPtr->setArg(2, ellipsoidScaleFactorY);
-    _kernelYPtr->setArg(3, ellipsoidScaleFactorX);
-    _kernelYPtr->setArg(4, rotationOZ);
-    _kernelYPtr->setArg(5, rotationOY);
-    _kernelYPtr->setArg(6, rotationOX);
-    _kernelYPtr->setArg(7, _dataBuffer);
-    _kernelYPtr->setArg(8, _cuttedDataBuffer);
-    _kernelYPtr->setArg(9, _size);
+        _kernelYPtr->setArg(0, _discreteRadius);
+        _kernelYPtr->setArg(1, ellipsoidScaleFactorZ);
+        _kernelYPtr->setArg(2, ellipsoidScaleFactorY);
+        _kernelYPtr->setArg(3, ellipsoidScaleFactorX);
+        _kernelYPtr->setArg(4, _dataBuffer);
+        _kernelYPtr->setArg(5, _cuttedDataBuffer);
+        _kernelYPtr->setArg(6, _size);
 
-    _kernelZPtr->setArg(0, _discreteRadius);
-    _kernelZPtr->setArg(1, ellipsoidScaleFactorZ);
-    _kernelZPtr->setArg(2, ellipsoidScaleFactorY);
-    _kernelZPtr->setArg(3, ellipsoidScaleFactorX);
-    _kernelZPtr->setArg(4, rotationOZ);
-    _kernelZPtr->setArg(5, rotationOY);
-    _kernelZPtr->setArg(6, rotationOX);
-    _kernelZPtr->setArg(7, _dataBuffer);
-    _kernelZPtr->setArg(8, _cuttedDataBuffer);
-    _kernelZPtr->setArg(9, _size);
+        _kernelZPtr->setArg(0, _discreteRadius);
+        _kernelZPtr->setArg(1, ellipsoidScaleFactorZ);
+        _kernelZPtr->setArg(2, ellipsoidScaleFactorY);
+        _kernelZPtr->setArg(3, ellipsoidScaleFactorX);
+        _kernelZPtr->setArg(4, _dataBuffer);
+        _kernelZPtr->setArg(5, _cuttedDataBuffer);
+        _kernelZPtr->setArg(6, _size);
+    }
+    else
+    {
+        _kernelXYZPtr->setArg(0, _discreteRadius);
+        _kernelXYZPtr->setArg(1, ellipsoidScaleFactorZ);
+        _kernelXYZPtr->setArg(2, ellipsoidScaleFactorY);
+        _kernelXYZPtr->setArg(3, ellipsoidScaleFactorX);
+        _kernelXYZPtr->setArg(4, -rotationOZ);
+        _kernelXYZPtr->setArg(5, -rotationOY);
+        _kernelXYZPtr->setArg(6, -rotationOX);
+        _kernelXYZPtr->setArg(7, _dataBuffer);
+        _kernelXYZPtr->setArg(8, _cuttedDataBuffer);
+        _kernelXYZPtr->setArg(9, _size);
+    }
 
     cl::CommandQueue &_queue = OpenCL::CLManager::instance().getCurrentCommandQueue();
     cl::Event _event;
@@ -765,20 +869,56 @@ void RepresentativeVolumeElement::applyGaussianFilterCL(
 
     cl::NDRange _localThreads(_size/_n, _size/_n, _size/_n);
 
-    std::cout << "  Applying filter, phase 1...";
-    _CLGaussianBlurFilterPhase(_dataBuffer, _cuttedDataBuffer, _queue,
-                               _localThreads, _event, *_kernelXPtr);
-    std::cout << " Done" << std::endl;
+    if(!useRotations)
+    {
+        std::cout << "  Applying filter, phase 1...";
+        _CLGaussianBlurFilterPhase(_dataBuffer, _cuttedDataBuffer, _queue,
+                                   _localThreads, _event, *_kernelXPtr);
+        std::cout << " Done" << std::endl;
 
-    std::cout << "                ...phase 2...";
-    _CLGaussianBlurFilterPhase(_dataBuffer, _cuttedDataBuffer, _queue,
-                               _localThreads, _event, *_kernelYPtr);
-    std::cout << " Done" << std::endl;
+        std::cout << "                ...phase 2...";
+        _CLGaussianBlurFilterPhase(_dataBuffer, _cuttedDataBuffer, _queue,
+                                   _localThreads, _event, *_kernelYPtr);
+        std::cout << " Done" << std::endl;
 
-    std::cout << "                ...phase 3...";
-    _CLGaussianBlurFilterPhase(_dataBuffer, _cuttedDataBuffer, _queue,
-                               _localThreads, _event, *_kernelZPtr);
-    std::cout << " Done" << std::endl;
+        std::cout << "                ...phase 3...";
+        _CLGaussianBlurFilterPhase(_dataBuffer, _cuttedDataBuffer, _queue,
+                                   _localThreads, _event, *_kernelZPtr);
+        std::cout << " Done" << std::endl;
+    }
+    else
+    {
+        std::cout << "  Applying non separable filter ...\n";
+
+        _queue.enqueueFillBuffer<cl_float>(
+                    _cuttedDataBuffer,
+                    0,
+                    0,
+                    sizeof(float) * _size * _size * _size,
+                    NULL,
+                    &_event);
+        _event.wait();
+        _queue.enqueueNDRangeKernel(
+                    *_kernelXYZPtr,
+                    cl::NullRange,
+                    cl::NDRange(_size, _size, _size),
+                    _localThreads,
+                    NULL,
+                    &_event);
+        _event.wait();
+        /// \todo remove
+        _queue.enqueueCopyBuffer(
+                    _cuttedDataBuffer,
+                    _dataBuffer,
+                    0,
+                    0,
+                    sizeof(float) * _size * _size * _size,
+                    NULL,
+                    &_event);
+        _event.wait();
+
+        std::cout << " Done" << std::endl;
+    }
 
     _queue.enqueueReadBuffer(
                 _cuttedDataBuffer,
@@ -871,6 +1011,9 @@ void RepresentativeVolumeElement::generateRandomEllipsoidIntense(
         const float ellipsoidScaleFactorX,
         const float ellipsoidScaleFactorY,
         const float ellipsoidScaleFactorZ,
+        const float rotationOX,
+        const float rotationOY,
+        const float rotationOZ,
         const float coreValue) throw (std::runtime_error)
 {
     if(x < 0 || x >= _size)
@@ -913,7 +1056,15 @@ void RepresentativeVolumeElement::generateRandomEllipsoidIntense(
                 "generateRandomEllipsoidSmoothed(): "
                 "coreValue < 0.0f || coreValue > 1.0f.\n"));
 
-    MathUtils::Node<3,float> _sphereCenter(x,y,z);
+    if(rotationOX < 0.0f || rotationOX > M_PI*2)
+        throw(std::runtime_error("generateRandomEllipsoidIntense(): rotationOX "
+                                 "< 0 or > 2*pi.\n"));
+    if(rotationOY < 0.0f || rotationOY > M_PI*2)
+        throw(std::runtime_error("generateRandomEllipsoidIntense(): rotationOY "
+                                 "< 0 or > 2*pi.\n"));
+    if(rotationOZ < 0.0f || rotationOZ > M_PI*2)
+        throw(std::runtime_error("generateRandomEllipsoidIntense(): rotationOZ "
+                                 "< 0 or > 2*pi.\n"));
 
     float _sphereRadius = MathUtils::rand<float>(minRadius, maxRadius);
 
@@ -927,10 +1078,10 @@ void RepresentativeVolumeElement::generateRandomEllipsoidIntense(
                     // Also check from other side of RVE, to get identical opposite sides
                     float _kk, _jj, _ii;
                     _distanceOnRepeatedSides(
-                                _sphereCenter[0],
-                            _sphereCenter[1],
-                            _sphereCenter[2],
-                            k,j,i,_kk, _jj, _ii);
+                                x, y, z,
+                                k, j, i, _kk, _jj, _ii);
+                    rotateXYZ(_kk, _jj, _ii, rotationOX, rotationOY, rotationOZ);
+                    _kk *= _kk; _jj *= _jj; _ii *= _ii;
 
                     float _curRadius = _kk/ellipsoidScaleFactorX/ellipsoidScaleFactorX +
                             _jj/ellipsoidScaleFactorY/ellipsoidScaleFactorY +
@@ -952,96 +1103,6 @@ void RepresentativeVolumeElement::generateRandomEllipsoidIntense(
             }
 }
 
-void RepresentativeVolumeElement::generateOverlappingRandomEllipsoids(
-        const int ellipsoidNum,
-        const int minRadius,
-        const int maxRadius,
-        const float transitionLayerSize,
-        const float ellipsoidScaleFactorX,
-        const float ellipsoidScaleFactorY,
-        const float ellipsoidScaleFactorZ,
-        const float coreValue,
-        const float transitionLayerValue) throw (std::runtime_error)
-{
-    if(ellipsoidNum <= 0)
-        throw(std::runtime_error("generateOverlappingRandomEllipsoids(): "
-                                 "ellopsoidNum <= 0.\n"));
-    if(minRadius <= 0)
-        throw(std::runtime_error("generateOverlappingRandomEllipsoids(): "
-                                 "minRadius <= 0.\n"));
-    if(maxRadius <= 0)
-        throw(std::runtime_error("generateOverlappingRandomEllipsoids(): "
-                                 "maxRadius <= 0.\n"));
-    if(maxRadius < minRadius)
-        throw(std::runtime_error("generateOverlappingRandomEllipsoids(): "
-                                 "maxRadius < minRadius.\n"));
-    if(transitionLayerSize < 0.0f || transitionLayerSize > 1.0f)
-        throw(std::runtime_error(
-                "generateOverlappingRandomEllipsoids(): transitionLayerSize < 0.0f || "
-                "transitionLayerSize > 1.0f.\n"));
-    if(ellipsoidScaleFactorX <= 0.0f || ellipsoidScaleFactorX > 1.0f)
-        throw(std::runtime_error(
-                "generateOverlappingRandomEllipsoids(): ellipsoidScaleFactorX "
-                "<= 0 or > 1.\n"));
-    if(ellipsoidScaleFactorY <= 0.0f || ellipsoidScaleFactorY > 1.0f)
-        throw(std::runtime_error(
-                "generateOverlappingRandomEllipsoids(): ellipsoidScaleFactorY "
-                "<= 0 or > 1.\n"));
-    if(ellipsoidScaleFactorZ <= 0.0f || ellipsoidScaleFactorZ > 1.0f)
-        throw(std::runtime_error(
-                "generateOverlappingRandomEllipsoids(): ellipsoidScaleFactorZ "
-                "<= 0 or > 1.\n"));
-    if(coreValue < 0.0f || coreValue > 1.0f)
-        throw(std::runtime_error(
-                "generateOverlappingRandomEllipsoids(): "
-                "coreValue < 0.0f || coreValue > 1.0f.\n"));
-    if(transitionLayerValue >= coreValue)
-        throw(std::runtime_error(
-                "generateOverlappingRandomEllipsoids(): "
-                "transitionLayerValue >= coreValue.\n"));
-
-    for(int i=0; i<ellipsoidNum; ++i)
-    {
-        MathUtils::Node<3,float> _sphereCenter(
-                    MathUtils::rand<int>(0, _size-1),
-                    MathUtils::rand<int>(0, _size-1),
-                    MathUtils::rand<int>(0, _size-1));
-
-
-        float _sphereRadius = MathUtils::rand<float>(minRadius, maxRadius);
-
-        for( long i = 0; i<_size; ++i)
-            for( long j = 0; j<_size; ++j)
-                for( long k = 0; k<_size; ++k)
-                {
-                    float &_val = _data[(i * _size * _size) + (j * _size) + k];
-                    if(_val >= 0)
-                    {
-                        // Also check from other side of RVE, to get identical opposite sides
-                        float _kk, _jj, _ii;
-                        _distanceOnRepeatedSides(
-                                    _sphereCenter[0],
-                                _sphereCenter[1],
-                                _sphereCenter[2],
-                                k,j,i,_kk, _jj, _ii);
-
-                        float _curRadius = _kk/ellipsoidScaleFactorX/ellipsoidScaleFactorX +
-                                _jj/ellipsoidScaleFactorY/ellipsoidScaleFactorY +
-                                _ii/ellipsoidScaleFactorZ/ellipsoidScaleFactorZ;
-
-                        if( _curRadius <= _sphereRadius*(1.0f-transitionLayerSize)*
-                                _sphereRadius*(1.0f-transitionLayerSize))
-                            _val = coreValue;
-                        else if(_curRadius <= _sphereRadius*_sphereRadius &&
-                                _curRadius > _sphereRadius*(1.0f-transitionLayerSize)*
-                                _sphereRadius*(1.0f-transitionLayerSize)&&
-                                _val < transitionLayerValue)
-                            _val = transitionLayerValue;
-                    }
-                }
-    }
-}
-
 void RepresentativeVolumeElement::generateOverlappingRandomEllipsoidsIntense(
         const int ellipsoidNum,
         const int minRadius,
@@ -1050,6 +1111,10 @@ void RepresentativeVolumeElement::generateOverlappingRandomEllipsoidsIntense(
         const float ellipsoidScaleFactorX,
         const float ellipsoidScaleFactorY,
         const float ellipsoidScaleFactorZ,
+        const bool useRandomRotations,
+        float rotationOX,
+        float rotationOY,
+        float rotationOZ,
         const float coreValue) throw (std::runtime_error)
 {
     if(ellipsoidNum <= 0)
@@ -1085,12 +1150,28 @@ void RepresentativeVolumeElement::generateOverlappingRandomEllipsoidsIntense(
                 "generateOverlappingRandomEllipsoidsSmoothed(): "
                 "coreValue < 0.0f || coreValue > 1.0f.\n"));
 
+    if(rotationOX < 0.0f || rotationOX > M_PI*2)
+        throw(std::runtime_error("generateOverlappingRandomEllipsoidsIntense(): rotationOX "
+                                 "< 0 or > 2*pi.\n"));
+    if(rotationOY < 0.0f || rotationOY > M_PI*2)
+        throw(std::runtime_error("generateOverlappingRandomEllipsoidsIntense(): rotationOY "
+                                 "< 0 or > 2*pi.\n"));
+    if(rotationOZ < 0.0f || rotationOZ > M_PI*2)
+        throw(std::runtime_error("generateOverlappingRandomEllipsoidsIntense(): rotationOZ "
+                                 "< 0 or > 2*pi.\n"));
+
     for(int i=0; i<ellipsoidNum; ++i)
     {
-        MathUtils::Node<3,float> _sphereCenter(
-                    MathUtils::rand<int>(0, _size-1),
-                    MathUtils::rand<int>(0, _size-1),
-                    MathUtils::rand<int>(0, _size-1));
+        float _x = MathUtils::rand<int>(0, _size-1);
+        float _y = MathUtils::rand<int>(0, _size-1);
+        float _z = MathUtils::rand<int>(0, _size-1);
+
+        if(useRandomRotations)
+        {
+            rotationOX = MathUtils::rand<float>(0.0f, M_PI);
+            rotationOY = MathUtils::rand<float>(0.0f, M_PI);
+            rotationOZ = MathUtils::rand<float>(0.0f, M_PI);
+        }
 
         float _sphereRadius = MathUtils::rand<float>(minRadius, maxRadius);
 
@@ -1104,10 +1185,10 @@ void RepresentativeVolumeElement::generateOverlappingRandomEllipsoidsIntense(
                         // Also check from other side of RVE, to get identical opposite sides
                         float _kk, _jj, _ii;
                         _distanceOnRepeatedSides(
-                                    _sphereCenter[0],
-                                _sphereCenter[1],
-                                _sphereCenter[2],
-                                k,j,i,_kk, _jj, _ii);
+                                _x, _y, _z,
+                                k, j, i, _kk, _jj, _ii);
+                        rotateXYZ(_kk, _jj, _ii, rotationOX, rotationOY, rotationOZ);
+                        _kk *= _kk; _jj *= _jj; _ii *= _ii;
 
                         float _curRadius = _kk/ellipsoidScaleFactorX/ellipsoidScaleFactorX +
                                 _jj/ellipsoidScaleFactorY/ellipsoidScaleFactorY +
@@ -1130,14 +1211,151 @@ void RepresentativeVolumeElement::generateOverlappingRandomEllipsoidsIntense(
     }
 }
 
+void RepresentativeVolumeElement::generateOverlappingRandomEllipsoidsIntenseCL(
+        const int ellipsoidNum,
+        const int minRadius,
+        const int maxRadius,
+        const float transitionLayerSize,
+        const float ellipsoidScaleFactorX,
+        const float ellipsoidScaleFactorY,
+        const float ellipsoidScaleFactorZ,
+        const bool useRandomRotations,
+        float rotationOX,
+        float rotationOY,
+        float rotationOZ,
+        const float coreValue) throw (std::runtime_error)
+{
+    if(ellipsoidNum <= 0)
+        throw(std::runtime_error("generateOverlappingRandomEllipsoidsIntenseCL(): "
+                                 "ellopsoidNum <= 0.\n"));
+    if(minRadius <= 0)
+        throw(std::runtime_error("generateOverlappingRandomEllipsoidsSmoothedCL(): "
+                                 "minRadius <= 0.\n"));
+    if(maxRadius <= 0)
+        throw(std::runtime_error("generateOverlappingRandomEllipsoidsSmoothedCL(): "
+                                 "maxRadius <= 0.\n"));
+    if(maxRadius < minRadius)
+        throw(std::runtime_error("generateOverlappingRandomEllipsoidsSmoothedCL(): "
+                                 "maxRadius < minRadius.\n"));
+    if(transitionLayerSize <= 0.0f || transitionLayerSize > 1.0f)
+        throw(std::runtime_error(
+                "generateOverlappingRandomEllipsoidsSmoothedCL(): "
+                "transitionLayerSize <= 0.0f || "
+                "transitionLayerSize > 1.0f.\n"));
+    if(ellipsoidScaleFactorX <= 0.0f || ellipsoidScaleFactorX > 1.0f)
+        throw(std::runtime_error(
+                "generateOverlappingRandomEllipsoidsSmoothedCL(): "
+                "ellipsoidScaleFactorX <= 0 or > 1.\n"));
+    if(ellipsoidScaleFactorY <= 0.0f || ellipsoidScaleFactorY > 1.0f)
+        throw(std::runtime_error(
+                "generateOverlappingRandomEllipsoidsSmoothedCL(): "
+                "ellipsoidScaleFactorY <= 0 or > 1.\n"));
+    if(ellipsoidScaleFactorZ <= 0.0f || ellipsoidScaleFactorZ > 1.0f)
+        throw(std::runtime_error(
+                "generateOverlappingRandomEllipsoidsSmoothedCL(): "
+                "ellipsoidScaleFactorZ <= 0 or > 1.\n"));
+    if(coreValue < 0.0f || coreValue > 1.0f)
+        throw(std::runtime_error(
+                "generateOverlappingRandomEllipsoidsSmoothedCL(): "
+                "coreValue < 0.0f || coreValue > 1.0f.\n"));
+
+    if(rotationOX < 0.0f || rotationOX > M_PI*2)
+        throw(std::runtime_error("generateOverlappingRandomEllipsoidsIntenseCL(): rotationOX "
+                                 "< 0 or > 2*pi.\n"));
+    if(rotationOY < 0.0f || rotationOY > M_PI*2)
+        throw(std::runtime_error("generateOverlappingRandomEllipsoidsIntenseCL(): rotationOY "
+                                 "< 0 or > 2*pi.\n"));
+    if(rotationOZ < 0.0f || rotationOZ > M_PI*2)
+        throw(std::runtime_error("generateOverlappingRandomEllipsoidsIntenseCL(): rotationOZ "
+                                 "< 0 or > 2*pi.\n"));
+
+    // Generate initial points
+    float *_initialPoints = new float[ellipsoidNum*7]; // x,y,z,rOX,rOY,rOZ,radius
+    if(!_initialPoints)
+        throw(std::runtime_error("generateOverlappingRandomEllipsoidsIntenseCL():"
+                                 "can't allocate memory for temporary storage.\n"));
+    for(int c=0; c<ellipsoidNum; ++c)
+    {
+        _initialPoints[c*7+0] = MathUtils::rand<int>(0,_size-1);
+        _initialPoints[c*7+1] = MathUtils::rand<int>(0,_size-1);
+        _initialPoints[c*7+2] = MathUtils::rand<int>(0,_size-1);
+        if(useRandomRotations)
+        {
+            _initialPoints[c*7+3] = MathUtils::rand<float>(0.0f, M_PI);
+            _initialPoints[c*7+4] = MathUtils::rand<float>(0.0f, M_PI);
+            _initialPoints[c*7+5] = MathUtils::rand<float>(0.0f, M_PI);
+        }
+        else
+        {
+            _initialPoints[c*7+3] = rotationOX;
+            _initialPoints[c*7+4] = rotationOY;
+            _initialPoints[c*7+5] = rotationOZ;
+        }
+        _initialPoints[c*7+6] = MathUtils::rand<float>(minRadius, maxRadius);
+    }
+
+    cl::Buffer _dataBuffer(
+                OpenCL::CLManager::instance().getCurrentContext(),
+                CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+                sizeof(float) * _size * _size * _size,
+                _data);
+
+    cl::Buffer _initialPointsBuffer(
+                OpenCL::CLManager::instance().getCurrentContext(),
+                CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+                sizeof(float) * ellipsoidNum * 7,
+                _initialPoints);
+
+    _kernelRandomEllipsoidsPtr->setArg(0, _initialPointsBuffer);
+    _kernelRandomEllipsoidsPtr->setArg(1, ellipsoidNum);
+    _kernelRandomEllipsoidsPtr->setArg(2, _dataBuffer);
+    _kernelRandomEllipsoidsPtr->setArg(3, transitionLayerSize);
+    _kernelRandomEllipsoidsPtr->setArg(4, ellipsoidScaleFactorX);
+    _kernelRandomEllipsoidsPtr->setArg(5, ellipsoidScaleFactorY);
+    _kernelRandomEllipsoidsPtr->setArg(6, ellipsoidScaleFactorZ);
+    _kernelRandomEllipsoidsPtr->setArg(7, coreValue);
+    _kernelRandomEllipsoidsPtr->setArg(8, _size);
+
+    cl::CommandQueue &_queue = OpenCL::CLManager::instance().getCurrentCommandQueue();
+    cl::Event _event;
+
+    size_t _kernelMaxWorkGroupSize;
+    OpenCL::CLManager::instance().getCurrentDevice().getInfo(
+                CL_DEVICE_MAX_WORK_GROUP_SIZE, &_kernelMaxWorkGroupSize);
+
+    unsigned _n = 1;
+    for(; (_size/_n)*(_size/_n)*(_size/_n) > _kernelMaxWorkGroupSize; _n *= 2);
+
+    cl::NDRange _localThreads(_size/_n, _size/_n, _size/_n);
+
+    _queue.enqueueNDRangeKernel(
+                *_kernelRandomEllipsoidsPtr,
+                cl::NullRange,
+                cl::NDRange(_size, _size, _size),
+                _localThreads,
+                NULL,
+                &_event);
+    _event.wait();
+
+    _queue.enqueueReadBuffer(
+                _dataBuffer,
+                CL_FALSE,
+                0,
+                sizeof(float) * _size * _size * _size,
+                _data,
+                NULL,
+                &_event);
+    _event.wait();
+
+    delete [] _initialPoints;
+}
+
 void RepresentativeVolumeElement::generateVoronoiRandomCells(
         const int cellNum) throw (std::runtime_error)
 {
     if(cellNum < 2)
         throw(std::runtime_error("generateVoronoiRandomCells(): "
                                  "cellNum < 2.\n"));
-
-    cleanData();
 
     // Generate initial points
     std::vector<MathUtils::Node<3,float>> _initialPoints;
@@ -1150,6 +1368,7 @@ void RepresentativeVolumeElement::generateVoronoiRandomCells(
     for( long i = 0; i<_size; ++i)
         for( long j = 0; j<_size; ++j)
             for( long k = 0; k<_size; ++k)
+                if(_data[(i * _size * _size) + (j * _size) + k] >= 0)
             {
                 float _kk, _jj, _ii;
 
@@ -1158,6 +1377,9 @@ void RepresentativeVolumeElement::generateVoronoiRandomCells(
                         _initialPoints[0][1],
                         _initialPoints[0][2],
                         k,j,i,_kk, _jj, _ii);
+                _kk *= _kk;
+                _jj *= _jj;
+                _ii *= _ii;
                 float _minDist1 = std::sqrt(_kk + _jj + _ii);
 
                 _distanceOnRepeatedSides(
@@ -1165,6 +1387,9 @@ void RepresentativeVolumeElement::generateVoronoiRandomCells(
                         _initialPoints[1][1],
                         _initialPoints[1][2],
                         k,j,i,_kk, _jj, _ii);
+                _kk *= _kk;
+                _jj *= _jj;
+                _ii *= _ii;
                 float _minDist2 = std::sqrt(_kk + _jj + _ii);
 
                 if(_minDist1 > _minDist2)
@@ -1181,6 +1406,9 @@ void RepresentativeVolumeElement::generateVoronoiRandomCells(
                             _initialPoints[c][1],
                             _initialPoints[c][2],
                             k,j,i,_kk, _jj, _ii);
+                    _kk *= _kk;
+                    _jj *= _jj;
+                    _ii *= _ii;
                     float _curDist = std::sqrt(_kk + _jj + _ii);
 
                     if(_curDist < _minDist1)
@@ -1202,15 +1430,13 @@ void RepresentativeVolumeElement::generateVoronoiRandomCellsCL(
         const int cellNum) throw (std::runtime_error)
 {
     if(cellNum < 2)
-        throw(std::runtime_error("generateVoronoiRandomCells(): "
+        throw(std::runtime_error("generateVoronoiRandomCellsCL(): "
                                  "cellNum < 2.\n"));
-
-    cleanData();
 
     // Generate initial points
     float *_initialPoints = new float[cellNum*3];
     if(!_initialPoints)
-        throw(std::runtime_error("generateVoronoiRandomCells():"
+        throw(std::runtime_error("generateVoronoiRandomCellsCL():"
                                  "can't allocate memory for temporary storage.\n"));
     for(int c=0; c<cellNum; ++c)
     {
@@ -1300,21 +1526,21 @@ void RepresentativeVolumeElement::_distanceOnRepeatedSides(
         float &jj,
         float &ii) noexcept
 {
-    kk = (ax-bx)*(ax-bx);
-    float _tmpijk = (ax-_size-bx)*(ax-_size-bx);
-    if(_tmpijk <kk) kk = _tmpijk;
-    else _tmpijk = (ax+_size-bx)*(ax+_size-bx);
-    if(_tmpijk <kk) kk = _tmpijk;
+    kk = ax-bx;
+    float _tmpijk = ax-_size-bx;
+    if(_tmpijk*_tmpijk < kk*kk) kk = _tmpijk;
+    else _tmpijk = ax+_size-bx;
+    if(_tmpijk*_tmpijk < kk*kk) kk = _tmpijk;
 
-    jj = (ay-by)*(ay-by);
-    _tmpijk = (ay-_size-by)*(ay-_size-by);
-    if(_tmpijk <jj) jj = _tmpijk;
-    else _tmpijk = (ay+_size-by)*(ay+_size-by);
-    if(_tmpijk <jj) jj = _tmpijk;
+    jj = ay-by;
+    _tmpijk = ay-_size-by;
+    if(_tmpijk*_tmpijk < jj*jj) jj = _tmpijk;
+    else _tmpijk = ay+_size-by;
+    if(_tmpijk*_tmpijk < jj*jj) jj = _tmpijk;
 
-    ii = (az-bz)*(az-bz);
-    _tmpijk = (az-_size-bz)*(az-_size-bz);
-    if(_tmpijk <ii) ii = _tmpijk;
-    else _tmpijk = (az+_size-bz)*(az+_size-bz);
-    if(_tmpijk <ii) ii = _tmpijk;
+    ii = az-bz;
+    _tmpijk = az-_size-bz;
+    if(_tmpijk*_tmpijk < ii*ii) ii = _tmpijk;
+    else _tmpijk = az+_size-bz;
+    if(_tmpijk*_tmpijk < ii*ii) ii = _tmpijk;
 }
