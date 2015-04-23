@@ -11,6 +11,8 @@ FilterPreviewGLRender::FilterPreviewGLRender(
     VolumeGLRenderBaseController(pwgt),
     _ptrToRVE(RVE)
 {
+    setBoundingBoxRepresentationSize(_ptrToRVE->getRepresentationSize());
+
     initializeGLEW();
 }
 

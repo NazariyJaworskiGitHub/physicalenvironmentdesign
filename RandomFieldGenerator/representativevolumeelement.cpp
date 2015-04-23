@@ -2,6 +2,8 @@
 
 #include "constants.h"
 
+#include <fstream>
+
 cl::Program *RepresentativeVolumeElement::_programPtr = nullptr;
 cl::Kernel *RepresentativeVolumeElement::_kernelXPtr = nullptr;
 cl::Kernel *RepresentativeVolumeElement::_kernelYPtr = nullptr;
@@ -12,6 +14,66 @@ cl::Kernel *RepresentativeVolumeElement::_kernelVoronoiPtr = nullptr;
 
 #define _MASK_EPS_ 1.0f
 
+void RepresentativeVolumeElement::saveRVEToFile(const std::string &fileName) const
+{
+    std::ofstream _RVEFileStream;
+    _RVEFileStream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    _RVEFileStream.open(fileName, std::ios::out | std::ios::trunc | std::ios::binary);
+    if (_RVEFileStream.is_open())
+    {
+        _RVEFileStream.seekp(0, std::ios::beg);
+        _RVEFileStream.write((const char*)&_size, sizeof(int));
+        _RVEFileStream.write((const char*)&_representationSize, sizeof(float));
+        _RVEFileStream.write((const char*)_data,
+                             _size*_size*_size*sizeof(float));
+        _RVEFileStream.flush();
+        _RVEFileStream.close();
+    }
+}
+
+void RepresentativeVolumeElement::loadRVEFromFile(const std::string &fileName)
+{
+    std::ifstream _RVEFileStream;
+    _RVEFileStream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    _RVEFileStream.open(fileName, std::ios::in | std::ios::binary);
+    if (_RVEFileStream.is_open())
+    {
+        _RVEFileStream.seekg(0, std::ios::beg);
+        int _newSize;
+        _RVEFileStream.read((char*)&_newSize, sizeof(int));
+
+        if(!((_newSize >= 2) && ((_newSize & (_newSize - 1)) == 0))) // check power o two
+            throw(std::runtime_error("loadRVEFromFile():"
+                                     "Cant load Representative Volume Element, "
+                                     "bad size.\n"));
+
+        float _newRepresentationSize;
+        _RVEFileStream.read((char*)&_newRepresentationSize, sizeof(float));
+
+        float *_newData = new float[_newSize * _newSize * _newSize];
+
+        if(!_newData)
+            throw(std::runtime_error("loadRVEFromFile():"
+                                     "can't allocate memory for RVE.\n"));
+        try
+        {
+            _RVEFileStream.read((char*)_newData, _newSize*_newSize*_newSize*sizeof(float));
+        }
+        catch(std::exception &e)
+        {
+            delete [] _newData;
+            _RVEFileStream.close();
+            throw(e);
+        }
+
+        _size = _newSize;
+        _representationSize = _newRepresentationSize;
+        delete [] _data;
+        _data = _newData;
+        _RVEFileStream.close();
+    }
+}
+
 RepresentativeVolumeElement::RepresentativeVolumeElement(
         const int discreteSize,
         const float representationSize) throw (std::runtime_error) :
@@ -19,21 +81,19 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
     _representationSize(representationSize)
 {
     if(!((_size >= 2) && ((_size & (_size - 1)) == 0))) // check power o two
-        throw(std::runtime_error("Error: RepresentativeVolumeElement():"
+        throw(std::runtime_error("RepresentativeVolumeElement():"
                                  "Cant create Representative Volume Element "
                                  "with given size.\n"));
 
     // Prepare memory
     _data = new float[_size * _size * _size];
-    _cuttedData = new float[_size * _size * _size];
 
-    if(!_data || !_cuttedData)
-        throw(std::runtime_error("Error: RepresentativeVolumeElement():"
+    if(!_data)
+        throw(std::runtime_error("RepresentativeVolumeElement():"
                                  "can't allocate memory for RVE.\n"));
 
     // Clean all storages
     cleanData();
-    cleanMask();
 
     // Prepare OpenCL usage
     if(!_programPtr)
@@ -64,14 +124,14 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
                     float ellipsoidScaleFactorY,\
                     float ellipsoidScaleFactorZ,\
                     __global float *_data,\
-                    __global float *_cuttedData,\
+                    __global float *_buffer,\
                     int _size)\
         {\
             long i = get_global_id(0);\
             long j = get_global_id(1);\
             long k = get_global_id(2);\
             for( int p = -discreteRadius; p <= discreteRadius; ++p)\
-                _cuttedData[(i * _size * _size) + (j * _size) + k] +=\
+                _buffer[(i * _size * _size) + (j * _size) + k] +=\
                         _data[(((i+p)&(_size-1)) * _size * _size) +\
                         (j * _size) + k] *\
                         _GaussianFilter(\
@@ -87,14 +147,14 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
                     float ellipsoidScaleFactorY,\
                     float ellipsoidScaleFactorZ,\
                     __global float *_data,\
-                    __global float *_cuttedData,\
+                    __global float *_buffer,\
                     int _size)\
         {\
             long i = get_global_id(0);\
             long j = get_global_id(1);\
             long k = get_global_id(2);\
             for( int q = -discreteRadius; q <= discreteRadius; ++q)\
-                _cuttedData[(i * _size * _size) + (j * _size) + k] +=\
+                _buffer[(i * _size * _size) + (j * _size) + k] +=\
                         _data[(i * _size * _size) +\
                         (((j+q)&(_size-1)) * _size) + k] *\
                         _GaussianFilter(\
@@ -110,14 +170,14 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
                     float ellipsoidScaleFactorY,\
                     float ellipsoidScaleFactorZ,\
                     __global float *_data,\
-                    __global float *_cuttedData,\
+                    __global float *_buffer,\
                     int _size)\
         {\
             long i = get_global_id(0);\
             long j = get_global_id(1);\
             long k = get_global_id(2);\
             for( int r = -discreteRadius; r <= discreteRadius; ++r)\
-                _cuttedData[(i * _size * _size) + (j * _size) + k] +=\
+                _buffer[(i * _size * _size) + (j * _size) + k] +=\
                         _data[(i * _size * _size) + (j * _size) +\
                         ((k+r)&(_size-1))] *\
                         _GaussianFilter(\
@@ -136,7 +196,7 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
                     float rotationOY,\
                     float rotationOZ,\
                     __global float *_data,\
-                    __global float *_cuttedData,\
+                    __global float *_buffer,\
                     int _size)\
         {\
             long i = get_global_id(0);\
@@ -150,7 +210,7 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
                         float _qq = q;\
                         float _rr = r;\
                         _rotateXYZ(&_pp, &_qq, &_rr, rotationOX, rotationOY, rotationOZ);\
-                        _cuttedData[(i * _size * _size) + (j * _size) + k] +=\
+                        _buffer[(i * _size * _size) + (j * _size) + k] +=\
                                 _data[(((i+p)&(_size-1)) * _size * _size) +\
                                 (((j+q)&(_size-1)) * _size) + ((k+r)&(_size-1))] *\
                                 _GaussianFilter(\
@@ -330,18 +390,6 @@ void RepresentativeVolumeElement::cleanMask() noexcept
                 float &_val = _data[(i * _size * _size) + (j * _size) + k];
                 if(_val < 0)
                     _val = -_val - _MASK_EPS_;
-            }
-}
-
-void RepresentativeVolumeElement::_copyMaskedCuttedDataToData() noexcept
-{
-    for( long i = 0; i<_size; ++i)
-        for( long j = 0; j<_size; ++j)
-            for( long k = 0; k<_size; ++k)
-            {
-                long _index = (i * _size * _size) + (j * _size) + k;
-                if(_data[_index] < 0)
-                    _data[_index] = _cuttedData[_index];
             }
 }
 
@@ -541,9 +589,13 @@ void RepresentativeVolumeElement::applyGaussianFilter(
         throw(std::runtime_error("applyGaussianFilter(): rotationOZ "
                                  "< 0 or > 2*pi.\n"));
 
-    _discreteRadius = discreteRadius;
+    float *_buffer = nullptr;
+    _buffer = new float[_size * _size * _size];
+    if(!_buffer)
+        throw(std::runtime_error("applyGaussianFilterCL():"
+                                 "can't allocate memory for temporary storage.\n"));
 
-    float *_dataTmpStorage = nullptr;
+    float *_dataTmpStorage = nullptr; 
     if(useDataAsIntensity)
     {
         _dataTmpStorage = new float[_size * _size * _size];
@@ -562,7 +614,7 @@ void RepresentativeVolumeElement::applyGaussianFilter(
                 }
     }
 
-    memset(_cuttedData, 0, sizeof(float) * _size * _size * _size);
+    memset(_buffer, 0, sizeof(float) * _size * _size * _size);
 
     if(!useRotations)
     {
@@ -576,13 +628,13 @@ void RepresentativeVolumeElement::applyGaussianFilter(
             for( long j = 0; j < _size; ++j)
                 for( long k = 0; k < _size; ++k)
                 {
-                    for( int p = -_discreteRadius; p <= _discreteRadius; ++p)
+                    for( int p = -discreteRadius; p <= discreteRadius; ++p)
                     {
-                        _cuttedData[(i * _size * _size) + (j * _size) + k] +=
+                        _buffer[(i * _size * _size) + (j * _size) + k] +=
                                 _data[(((i+p)&(_size-1)) * _size * _size) +
                                 (j * _size) + k] *
                                 GaussianBlurFilter(
-                                    _discreteRadius,
+                                    discreteRadius,
                                     p, 0, 0,
                                     ellipsoidScaleFactorZ,
                                     ellipsoidScaleFactorY,
@@ -590,11 +642,11 @@ void RepresentativeVolumeElement::applyGaussianFilter(
                     }
                 }
         }
-        memcpy(_data, _cuttedData, sizeof(float) * _size * _size * _size);
+        memcpy(_data, _buffer, sizeof(float) * _size * _size * _size);
         std::cout << " Done" << std::endl;
 
         std::cout << "                ...phase 2...\n";
-        memset(_cuttedData, 0, sizeof(float) * _size * _size * _size);
+        memset(_buffer, 0, sizeof(float) * _size * _size * _size);
         for( long i = 0; i < _size; ++i)
         {
             std::cout
@@ -604,13 +656,13 @@ void RepresentativeVolumeElement::applyGaussianFilter(
             for( long j = 0; j < _size; ++j)
                 for( long k = 0; k < _size; ++k)
                 {
-                    for( int q = -_discreteRadius; q <= _discreteRadius; ++q)
+                    for( int q = -discreteRadius; q <= discreteRadius; ++q)
                     {
-                        _cuttedData[(i * _size * _size) + (j * _size) + k] +=
+                        _buffer[(i * _size * _size) + (j * _size) + k] +=
                                 _data[(i * _size * _size) +
                                 (((j+q)&(_size-1)) * _size) + k] *
                                 GaussianBlurFilter(
-                                    _discreteRadius,
+                                    discreteRadius,
                                     0, q, 0,
                                     ellipsoidScaleFactorZ,
                                     ellipsoidScaleFactorY,
@@ -618,11 +670,11 @@ void RepresentativeVolumeElement::applyGaussianFilter(
                     }
                 }
         }
-        memcpy(_data, _cuttedData, sizeof(float) * _size * _size * _size);
+        memcpy(_data, _buffer, sizeof(float) * _size * _size * _size);
         std::cout << " Done" << std::endl;
 
         std::cout << "                ...phase 3...\n";
-        memset(_cuttedData, 0, sizeof(float) * _size * _size * _size);
+        memset(_buffer, 0, sizeof(float) * _size * _size * _size);
         for( long i = 0; i < _size; ++i)
         {
             std::cout
@@ -632,13 +684,13 @@ void RepresentativeVolumeElement::applyGaussianFilter(
             for( long j = 0; j < _size; ++j)
                 for( long k = 0; k < _size; ++k)
                 {
-                    for( int r = -_discreteRadius; r <= _discreteRadius; ++r)
+                    for( int r = -discreteRadius; r <= discreteRadius; ++r)
                     {
-                        _cuttedData[(i * _size * _size) + (j * _size) + k] +=
+                        _buffer[(i * _size * _size) + (j * _size) + k] +=
                                 _data[(i * _size * _size) + (j * _size) +
                                 ((k+r)&(_size-1))] *
                                 GaussianBlurFilter(
-                                    _discreteRadius,
+                                    discreteRadius,
                                     0, 0, r,
                                     ellipsoidScaleFactorZ,
                                     ellipsoidScaleFactorY,
@@ -659,19 +711,19 @@ void RepresentativeVolumeElement::applyGaussianFilter(
             for( long j = 0; j < _size; ++j)
                 for( long k = 0; k < _size; ++k)
                 {
-                    for( int p = -_discreteRadius; p <= _discreteRadius; ++p)
-                        for( int q = -_discreteRadius; q <= _discreteRadius; ++q)
-                            for( int r = -_discreteRadius; r <= _discreteRadius; ++r)
+                    for( int p = -discreteRadius; p <= discreteRadius; ++p)
+                        for( int q = -discreteRadius; q <= discreteRadius; ++q)
+                            for( int r = -discreteRadius; r <= discreteRadius; ++r)
                     {
                                 float _pp = p;
                                 float _qq = q;
                                 float _rr = r;
                                 rotateXYZ(_pp, _qq, _rr, -rotationOZ, -rotationOY, -rotationOX);
-                        _cuttedData[(i * _size * _size) + (j * _size) + k] +=
+                        _buffer[(i * _size * _size) + (j * _size) + k] +=
                                 _data[(((i+p)&(_size-1)) * _size * _size) +
                                 (((j+q)&(_size-1)) * _size) + ((k+r)&(_size-1))] *
                                 GaussianBlurFilter(
-                                    _discreteRadius,
+                                    discreteRadius,
                                     _pp, _qq, _rr,
                                     ellipsoidScaleFactorZ,
                                     ellipsoidScaleFactorY,
@@ -680,8 +732,10 @@ void RepresentativeVolumeElement::applyGaussianFilter(
                 }
         }
     }
-    memcpy(_data, _cuttedData, sizeof(float) * _size * _size * _size);
+    memcpy(_data, _buffer, sizeof(float) * _size * _size * _size);
     std::cout << " Done" << std::endl;
+
+    delete [] _buffer;
 
     if(useDataAsIntensity)
     {
@@ -710,14 +764,14 @@ void RepresentativeVolumeElement::applyGaussianFilter(
 
 void RepresentativeVolumeElement::_CLGaussianBlurFilterPhase(
         cl::Buffer &_dataBuffer,
-        cl::Buffer &_cuttedDataBuffer,
+        cl::Buffer &_bufferBuffer,
         cl::CommandQueue &_queue,
         cl::NDRange &_localThreads,
         cl::Event &_event,
         cl::Kernel &_phaseKernel)
 {
     _queue.enqueueFillBuffer<cl_float>(
-                _cuttedDataBuffer,
+                _bufferBuffer,
                 0,
                 0,
                 sizeof(float) * _size * _size * _size,
@@ -733,7 +787,7 @@ void RepresentativeVolumeElement::_CLGaussianBlurFilterPhase(
                 &_event);
     _event.wait();
     _queue.enqueueCopyBuffer(
-                _cuttedDataBuffer,
+                _bufferBuffer,
                 _dataBuffer,
                 0,
                 0,
@@ -777,8 +831,6 @@ void RepresentativeVolumeElement::applyGaussianFilterCL(
         throw(std::runtime_error("applyGaussianFilterCL(): rotationOZ "
                                  "< 0 or > 2*pi.\n"));
 
-    _discreteRadius = discreteRadius;
-
     float *_dataTmpStorage = nullptr;
     if(useDataAsIntensity)
     {
@@ -805,42 +857,41 @@ void RepresentativeVolumeElement::applyGaussianFilterCL(
                 CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
                 sizeof(float) * _size * _size * _size,
                 _data);
-    cl::Buffer _cuttedDataBuffer(
+    cl::Buffer _bufferBuffer(
                 OpenCL::CLManager::instance().getCurrentContext(),
-                CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-                sizeof(float) * _size * _size * _size,
-                _cuttedData);
+                CL_MEM_READ_WRITE,
+                sizeof(float) * _size * _size * _size);
 
     if(!useRotations)
     {
         /// \todo X and Z are replaced
-        _kernelXPtr->setArg(0, _discreteRadius);
+        _kernelXPtr->setArg(0, discreteRadius);
         _kernelXPtr->setArg(1, ellipsoidScaleFactorZ);
         _kernelXPtr->setArg(2, ellipsoidScaleFactorY);
         _kernelXPtr->setArg(3, ellipsoidScaleFactorX);
         _kernelXPtr->setArg(4, _dataBuffer);
-        _kernelXPtr->setArg(5, _cuttedDataBuffer);
+        _kernelXPtr->setArg(5, _bufferBuffer);
         _kernelXPtr->setArg(6, _size);
 
-        _kernelYPtr->setArg(0, _discreteRadius);
+        _kernelYPtr->setArg(0, discreteRadius);
         _kernelYPtr->setArg(1, ellipsoidScaleFactorZ);
         _kernelYPtr->setArg(2, ellipsoidScaleFactorY);
         _kernelYPtr->setArg(3, ellipsoidScaleFactorX);
         _kernelYPtr->setArg(4, _dataBuffer);
-        _kernelYPtr->setArg(5, _cuttedDataBuffer);
+        _kernelYPtr->setArg(5, _bufferBuffer);
         _kernelYPtr->setArg(6, _size);
 
-        _kernelZPtr->setArg(0, _discreteRadius);
+        _kernelZPtr->setArg(0, discreteRadius);
         _kernelZPtr->setArg(1, ellipsoidScaleFactorZ);
         _kernelZPtr->setArg(2, ellipsoidScaleFactorY);
         _kernelZPtr->setArg(3, ellipsoidScaleFactorX);
         _kernelZPtr->setArg(4, _dataBuffer);
-        _kernelZPtr->setArg(5, _cuttedDataBuffer);
+        _kernelZPtr->setArg(5, _bufferBuffer);
         _kernelZPtr->setArg(6, _size);
     }
     else
     {
-        _kernelXYZPtr->setArg(0, _discreteRadius);
+        _kernelXYZPtr->setArg(0, discreteRadius);
         _kernelXYZPtr->setArg(1, ellipsoidScaleFactorZ);
         _kernelXYZPtr->setArg(2, ellipsoidScaleFactorY);
         _kernelXYZPtr->setArg(3, ellipsoidScaleFactorX);
@@ -848,41 +899,32 @@ void RepresentativeVolumeElement::applyGaussianFilterCL(
         _kernelXYZPtr->setArg(5, -rotationOY);
         _kernelXYZPtr->setArg(6, -rotationOX);
         _kernelXYZPtr->setArg(7, _dataBuffer);
-        _kernelXYZPtr->setArg(8, _cuttedDataBuffer);
+        _kernelXYZPtr->setArg(8, _bufferBuffer);
         _kernelXYZPtr->setArg(9, _size);
     }
 
     cl::CommandQueue &_queue = OpenCL::CLManager::instance().getCurrentCommandQueue();
     cl::Event _event;
 
-    size_t _kernelMaxWorkGroupSize;
-    OpenCL::CLManager::instance().getCurrentDevice().getInfo(
-                CL_DEVICE_MAX_WORK_GROUP_SIZE, &_kernelMaxWorkGroupSize);
-
-    unsigned _n = 1;
-    for(; (_size/_n)*(_size/_n)*(_size/_n) > _kernelMaxWorkGroupSize; _n *= 2);
-
+    cl::NDRange _localThreads = OpenCL::CLManager::instance().getMaxLocalThreads(_size);
     std::cout << " Done" << std::endl;
-
     std::cout << "  WorkGroupSize: "
-              << _size/_n << "x" << _size/_n << "x" << _size/_n << std::endl;
-
-    cl::NDRange _localThreads(_size/_n, _size/_n, _size/_n);
+              << _localThreads[0] << "x" << _localThreads[1] << "x" << _localThreads[2] << std::endl;
 
     if(!useRotations)
     {
         std::cout << "  Applying filter, phase 1...";
-        _CLGaussianBlurFilterPhase(_dataBuffer, _cuttedDataBuffer, _queue,
+        _CLGaussianBlurFilterPhase(_dataBuffer, _bufferBuffer, _queue,
                                    _localThreads, _event, *_kernelXPtr);
         std::cout << " Done" << std::endl;
 
         std::cout << "                ...phase 2...";
-        _CLGaussianBlurFilterPhase(_dataBuffer, _cuttedDataBuffer, _queue,
+        _CLGaussianBlurFilterPhase(_dataBuffer, _bufferBuffer, _queue,
                                    _localThreads, _event, *_kernelYPtr);
         std::cout << " Done" << std::endl;
 
         std::cout << "                ...phase 3...";
-        _CLGaussianBlurFilterPhase(_dataBuffer, _cuttedDataBuffer, _queue,
+        _CLGaussianBlurFilterPhase(_dataBuffer, _bufferBuffer, _queue,
                                    _localThreads, _event, *_kernelZPtr);
         std::cout << " Done" << std::endl;
     }
@@ -891,7 +933,7 @@ void RepresentativeVolumeElement::applyGaussianFilterCL(
         std::cout << "  Applying non separable filter ...\n";
 
         _queue.enqueueFillBuffer<cl_float>(
-                    _cuttedDataBuffer,
+                    _bufferBuffer,
                     0,
                     0,
                     sizeof(float) * _size * _size * _size,
@@ -906,31 +948,18 @@ void RepresentativeVolumeElement::applyGaussianFilterCL(
                     NULL,
                     &_event);
         _event.wait();
-        /// \todo remove
-        _queue.enqueueCopyBuffer(
-                    _cuttedDataBuffer,
-                    _dataBuffer,
-                    0,
-                    0,
-                    sizeof(float) * _size * _size * _size,
-                    NULL,
-                    &_event);
-        _event.wait();
-
         std::cout << " Done" << std::endl;
     }
 
     _queue.enqueueReadBuffer(
-                _cuttedDataBuffer,
+                _bufferBuffer,
                 CL_FALSE,
                 0,
                 sizeof(float) * _size * _size * _size,
-                _cuttedData,
+                _data,
                 NULL,
                 &_event);
     _event.wait();
-
-    memcpy(_data, _cuttedData, sizeof(float) * _size * _size * _size);    
 
     if(useDataAsIntensity)
     {
@@ -1319,14 +1348,7 @@ void RepresentativeVolumeElement::generateOverlappingRandomEllipsoidsIntenseCL(
     cl::CommandQueue &_queue = OpenCL::CLManager::instance().getCurrentCommandQueue();
     cl::Event _event;
 
-    size_t _kernelMaxWorkGroupSize;
-    OpenCL::CLManager::instance().getCurrentDevice().getInfo(
-                CL_DEVICE_MAX_WORK_GROUP_SIZE, &_kernelMaxWorkGroupSize);
-
-    unsigned _n = 1;
-    for(; (_size/_n)*(_size/_n)*(_size/_n) > _kernelMaxWorkGroupSize; _n *= 2);
-
-    cl::NDRange _localThreads(_size/_n, _size/_n, _size/_n);
+    cl::NDRange _localThreads = OpenCL::CLManager::instance().getMaxLocalThreads(_size);
 
     _queue.enqueueNDRangeKernel(
                 *_kernelRandomEllipsoidsPtr,
@@ -1465,14 +1487,7 @@ void RepresentativeVolumeElement::generateVoronoiRandomCellsCL(
     cl::CommandQueue &_queue = OpenCL::CLManager::instance().getCurrentCommandQueue();
     cl::Event _event;
 
-    size_t _kernelMaxWorkGroupSize;
-    OpenCL::CLManager::instance().getCurrentDevice().getInfo(
-                CL_DEVICE_MAX_WORK_GROUP_SIZE, &_kernelMaxWorkGroupSize);
-
-    unsigned _n = 1;
-    for(; (_size/_n)*(_size/_n)*(_size/_n) > _kernelMaxWorkGroupSize; _n *= 2);
-
-    cl::NDRange _localThreads(_size/_n, _size/_n, _size/_n);
+    cl::NDRange _localThreads = OpenCL::CLManager::instance().getMaxLocalThreads(_size);
 
     _queue.enqueueNDRangeKernel(
                 *_kernelVoronoiPtr,

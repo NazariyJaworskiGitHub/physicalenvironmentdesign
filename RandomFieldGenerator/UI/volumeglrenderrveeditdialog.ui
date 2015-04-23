@@ -60,9 +60,9 @@
   <widget class="QPushButton" name="InvertRVEButton">
    <property name="geometry">
     <rect>
-     <x>550</x>
+     <x>650</x>
      <y>10</y>
-     <width>241</width>
+     <width>141</width>
      <height>23</height>
     </rect>
    </property>
@@ -73,9 +73,9 @@
   <widget class="QPushButton" name="NormalizeRVEButton">
    <property name="geometry">
     <rect>
-     <x>280</x>
+     <x>500</x>
      <y>10</y>
-     <width>241</width>
+     <width>141</width>
      <height>23</height>
     </rect>
    </property>
@@ -86,9 +86,9 @@
   <widget class="QPushButton" name="ClenRVEButton">
    <property name="geometry">
     <rect>
-     <x>10</x>
+     <x>350</x>
      <y>10</y>
-     <width>241</width>
+     <width>141</width>
      <height>23</height>
     </rect>
    </property>
@@ -1373,6 +1373,32 @@
      </property>
     </widget>
    </widget>
+  </widget>
+  <widget class="QPushButton" name="LoadRVEButton">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>141</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Load RVE</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="SaveRVEButton">
+   <property name="geometry">
+    <rect>
+     <x>160</x>
+     <y>10</y>
+     <width>141</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Save RVE</string>
+   </property>
   </widget>
  </widget>
  <resources/>

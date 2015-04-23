@@ -20,18 +20,20 @@ class RepresentativeVolumeElement
     private: int _size;
     public : int getSize() const noexcept {return _size;}
     private: float * _data = nullptr;
-    private: float * _cuttedData = nullptr; /// \todo
-    private: int _discreteRadius = 1; /// \todo logic usage?
     public : float * getData() noexcept {return _data;}
     public : const float * getData() const noexcept {return _data;}
-    public : float * getCuttedData() noexcept {return _cuttedData;}
-    public : const float * getCuttedData() const noexcept {return _cuttedData;}
-    public : int getDiscreteRadius() const noexcept {return _discreteRadius;}
-
+    public : void setData(float * newData) noexcept {
+        memcpy(_data, newData, sizeof(float) * _size * _size * _size);}
     private: float _representationSize = 1.0f;
     public : float getRepresentationSize() const noexcept {return _representationSize;}
     public : void setRepresentationSize(const float newRepresentationSize) noexcept {
         _representationSize = newRepresentationSize;}
+
+    /// Save current RVE to file (recommended extension *.RVE)
+    public : void saveRVEToFile(const std::string &fileName) const;
+
+    /// Load RVE from file (recommended extension *.RVE)
+    public : void loadRVEFromFile(const std::string &fileName);
 
     /// OpenCL pointers, should be created oly once
     /// \todo multiplie platforms
@@ -60,11 +62,6 @@ class RepresentativeVolumeElement
     /// Clean mask
     /// (set all _data elements < 0 equal to -(_data elements)
     public : void cleanMask() noexcept;
-
-    private : inline void _copyDataToCuttedData() noexcept {
-        memcpy(_cuttedData, _data, sizeof(float) * _size * _size * _size);}
-
-    private : void _copyMaskedCuttedDataToData() noexcept;
 
     /// Add random noise to _data elements that are not masked by_mask
     /// (i.e. to _data elements >= 0),
@@ -294,7 +291,6 @@ class RepresentativeVolumeElement
     public : ~RepresentativeVolumeElement()
     {
         delete [] _data;
-        delete [] _cuttedData;
     }
 };
 

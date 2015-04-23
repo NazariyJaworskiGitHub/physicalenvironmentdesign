@@ -104,6 +104,10 @@ namespace UserInterface
 
         void on_GenerateInclusionsButton_clicked();
 
+        void on_SaveRVEButton_clicked();
+
+        void on_LoadRVEButton_clicked();
+
     private:
         Ui::VolumeGLRenderRVEEditDialog *ui;
         FilterPreviewGLRender *_previewRender = nullptr;
@@ -123,6 +127,8 @@ namespace UserInterface
         float getMinRadiusValue() const;
         float getMaxRadiusValue() const;
 
+        float getTransitionLayerValue() const;
+
         float getFilterScaleFactorXValue_Inclusion() const;
         float getFilterScaleFactorYValue_Inclusion() const;
         float getFilterScaleFactorZValue_Inclusion() const;
@@ -134,6 +140,9 @@ namespace UserInterface
         float getCoreIntensityValue() const;
 
     public: /// See UserInterfaceManager, there should be same transitive signals with suffix _T
+        Q_SIGNAL void signal_loadRVE(QString fileName);
+        Q_SIGNAL void signal_saveRVE(QString fileName);
+
         Q_SIGNAL void signal_cleanRVE();
         Q_SIGNAL void signal_normalizeUnMaskedRVE();
         Q_SIGNAL void signal_invertUnMaskedRVE();

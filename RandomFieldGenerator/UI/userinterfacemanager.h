@@ -36,6 +36,10 @@ namespace UserInterface
 
         /// Transitive from widgets to some console
         public :
+            Q_SIGNAL void signal_loadRVE_T(QString fileName);
+            Q_SIGNAL void signal_loadRVEDone_T();
+            Q_SIGNAL void signal_saveRVE_T(QString fileName);
+            Q_SIGNAL void signal_saveRVEDone_T();
             Q_SIGNAL void signal_cleanRVE_T();
             Q_SIGNAL void signal_cleanRVEDone_T();
             Q_SIGNAL void signal_normalizeUnMaskedRVE_T();

@@ -25,6 +25,30 @@ int _EditRVECommand::executeConsoleCommand(const std::vector<std::string> &argv)
     }
 }
 
+void _EditRVECommand::loadRVE(QString fileName)
+{
+    std::stringstream _str;
+    _str << "loadRVE " << _RVEName << " " << fileName.toLocal8Bit().constData() << "\n";
+
+    getConsole().writeToOutput(_str.str());
+
+    getConsole() << _str.str();
+
+    Q_EMIT signal_loadRVEDone();
+}
+
+void _EditRVECommand::saveRVE(QString fileName)
+{
+    std::stringstream _str;
+    _str << "saveRVE " << _RVEName << " " << fileName.toLocal8Bit().constData() << "\n";
+
+    getConsole().writeToOutput(_str.str());
+
+    getConsole() << _str.str();
+
+    Q_EMIT signal_saveRVEDone();
+}
+
 void Controller::_EditRVECommand::cleanRVE()
 {
     std::stringstream _str;
@@ -211,7 +235,7 @@ void _EditRVECommand::generateVoronoiRandomCellsRVE(int cellNum)
 }
 
 std::string RepresentativeVolumeElementConsoleInterface::createRVE(
-        const std::string &name, int size) noexcept
+        const std::string &name, int size, float representationSize) noexcept
 {
     try
     {
@@ -219,7 +243,7 @@ std::string RepresentativeVolumeElementConsoleInterface::createRVE(
             return "Error: Representative Volume Element " + name + " already exists.\n";
         else if((size >= 2) && ((size & (size - 1)) == 0)) // check power o two
         {
-            RVEs.emplace(name, new RepresentativeVolumeElement(size));
+            RVEs.emplace(name, new RepresentativeVolumeElement(size, representationSize));
         }
         else return "Error: Cant create Representative Volume Element with given size.\n";
         return "Representative Volume Element " + name + " created.\n";
@@ -234,15 +258,22 @@ std::string RepresentativeVolumeElementConsoleInterface::createRVE(
 int RepresentativeVolumeElementConsoleInterface::_CreateRVECommand::executeConsoleCommand(
         const std::vector<std::string> &argv)
 {
-    if(argv.size() != 2)
+    if(argv.size() < 2 || argv.size() > 3)
     {
         getConsole().writeToOutput("Error: wrong number of arguments.\n");
         return -1;
     }
     int _size;
+    float representationSize = 1.0f;
+    if(argv.size() == 3)
+    {
+        std::stringstream _str{argv[2]};
+        if(!(_str >> representationSize))
+            getConsole().writeToOutput("wrong <representationSize> argument.\n");
+    }
     std::stringstream _str{argv[1]};
     if(_str >> _size)
-        getConsole().writeToOutput(_manager.createRVE(argv[0], _size));
+        getConsole().writeToOutput(_manager.createRVE(argv[0], _size, representationSize));
     else
     {
         getConsole().writeToOutput("Error: wrong <size> argument.\n");
@@ -270,7 +301,6 @@ std::string RepresentativeVolumeElementConsoleInterface::deleteRVE(
     }
 }
 
-
 int RepresentativeVolumeElementConsoleInterface::_DeleteRVECommand::executeConsoleCommand(
         const std::vector<std::string> &argv)
 {
@@ -283,6 +313,63 @@ int RepresentativeVolumeElementConsoleInterface::_DeleteRVECommand::executeConso
     return 0;
 }
 
+std::string RepresentativeVolumeElementConsoleInterface::saveRVE(
+        const std::string &name, const std::string &fileName) noexcept
+{
+    try
+    {
+        auto _pos = RVEs.find(name);
+        if(_pos == RVEs.end())
+            return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+        else
+            _pos->second->saveRVEToFile(fileName);
+        return "Representative Volume Element " + name + " is saved to " + fileName +"\n";
+    }
+    catch(std::exception &e)
+    {
+        return e.what();
+    }
+}
+int RepresentativeVolumeElementConsoleInterface::_SaveRVECommand::executeConsoleCommand(
+        const std::vector<std::string> &argv)
+{
+    if(argv.size() != 2)
+    {
+        getConsole().writeToOutput("Error: wrong number of arguments.\n");
+        return -1;
+    }
+    getConsole().writeToOutput(_manager.saveRVE(argv[0], argv[1]));
+    return 0;
+}
+
+std::string RepresentativeVolumeElementConsoleInterface::loadRVE(
+        const std::string &name, const std::string &fileName) noexcept
+{
+    try
+    {
+        auto _pos = RVEs.find(name);
+        if(_pos == RVEs.end())
+            return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+        else
+            _pos->second->loadRVEFromFile(fileName);
+        return "Representative Volume Element " + name + " is loaded from " + fileName +"\n";
+    }
+    catch(std::exception &e)
+    {
+        return e.what();
+    }
+}
+int RepresentativeVolumeElementConsoleInterface::_LoadRVECommand::executeConsoleCommand(
+        const std::vector<std::string> &argv)
+{
+    if(argv.size() != 2)
+    {
+        getConsole().writeToOutput("Error: wrong number of arguments.\n");
+        return -1;
+    }
+    getConsole().writeToOutput(_manager.loadRVE(argv[0], argv[1]));
+    return 0;
+}
 
 std::string Controller::RepresentativeVolumeElementConsoleInterface::printRVE() noexcept
 {
@@ -295,7 +382,8 @@ std::string Controller::RepresentativeVolumeElementConsoleInterface::printRVE() 
         int _i = 0;
         for(auto _rve: RVEs)
             _str << " [" << _i++ << "]: " << _rve.first << " "
-                 <<  _rve.second->getSize() << std::endl;
+                 <<  _rve.second->getSize() << " "
+                 << _rve.second->getRepresentationSize() << std::endl;
         return _str.str();
     }
     catch(std::exception &e)

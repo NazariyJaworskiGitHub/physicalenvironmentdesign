@@ -15,6 +15,8 @@ namespace UserInterface
 
         private: RepresentativeVolumeElement* _ptrToRVE;
 
+        private: int _FilterRadiusBackup = 1;
+
         private: int _MinRadiusBackup;
         private: int _MaxRadiusBackup;
 

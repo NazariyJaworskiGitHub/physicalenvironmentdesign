@@ -11,6 +11,8 @@ InclusionPreviewGLRender::InclusionPreviewGLRender(
     VolumeGLRenderBaseController(pwgt),
     _ptrToRVE(RVE)
 {
+    setBoundingBoxRepresentationSize(_ptrToRVE->getRepresentationSize());
+
     initializeGLEW();
 }
 
@@ -46,19 +48,33 @@ void InclusionPreviewGLRender::loadDataIntoTexture() throw(std::runtime_error)
                 _parent->getFilterScaleFactorZValue_Inclusion() /
                 _parent->getFilterScaleFactorZValue_Inclusion());
 
-        if( _curRadius <= _parent->getMinRadiusValue())
+        if(_curRadius <= _parent->getMinRadiusValue() * (1.0f-_parent->getTransitionLayerValue()))
         {
             _RGBABuff[i * 4 + 0] = _parent->getCoreIntensityValue() * 255.0f;
             _RGBABuff[i * 4 + 1] = _parent->getCoreIntensityValue() * 255.0f;
             _RGBABuff[i * 4 + 2] = _parent->getCoreIntensityValue() * 255.0f;
             _RGBABuff[i * 4 + 3] = 255;
         }
-        else if(_curRadius <= _parent->getMaxRadiusValue())
+        else if(_curRadius <= _parent->getMinRadiusValue())
+        {
+            _RGBABuff[i * 4 + 0] = _parent->getCoreIntensityValue() * 191.0f;
+            _RGBABuff[i * 4 + 1] = _parent->getCoreIntensityValue() * 191.0f;
+            _RGBABuff[i * 4 + 2] = _parent->getCoreIntensityValue() * 191.0f;
+            _RGBABuff[i * 4 + 3] = 15;
+        }
+        else if(_curRadius <= _parent->getMaxRadiusValue() * (1.0f-_parent->getTransitionLayerValue()))
         {
             _RGBABuff[i * 4 + 0] = _parent->getCoreIntensityValue() * 127.0f;
             _RGBABuff[i * 4 + 1] = _parent->getCoreIntensityValue() * 127.0f;
             _RGBABuff[i * 4 + 2] = _parent->getCoreIntensityValue() * 127.0f;
             _RGBABuff[i * 4 + 3] = 7;
+        }
+        else if(_curRadius <= _parent->getMaxRadiusValue())
+        {
+            _RGBABuff[i * 4 + 0] = _parent->getCoreIntensityValue() * 63.0f;
+            _RGBABuff[i * 4 + 1] = _parent->getCoreIntensityValue() * 63.0f;
+            _RGBABuff[i * 4 + 2] = _parent->getCoreIntensityValue() * 63.0f;
+            _RGBABuff[i * 4 + 3] = 3;
         }
     }
 

@@ -46,6 +46,20 @@ class _EditRVECommand : public QObject, public ConsoleCommand
 
         ///
         connect(&UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_loadRVE_T(QString)),
+                this, SLOT(loadRVE(QString)));
+        connect(this, SIGNAL(signal_loadRVEDone()),
+                &UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_loadRVEDone_T()));
+
+        connect(&UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_saveRVE_T(QString)),
+                this, SLOT(saveRVE(QString)));
+        connect(this, SIGNAL(signal_saveRVEDone()),
+                &UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_saveRVEDone_T()));
+
+        connect(&UserInterface::UserInterfaceManager::instance(),
                 SIGNAL(signal_cleanRVE_T()),
                 this, SLOT(cleanRVE()));
         connect(this, SIGNAL(signal_cleanRVEDone()),
@@ -129,6 +143,10 @@ class _EditRVECommand : public QObject, public ConsoleCommand
         getConsole().writeToOutput("Edit RVE GUI is already running.\n");}
 
     /// See UserInterfaceManager
+    public: Q_SLOT void loadRVE(QString fileName);
+    public: Q_SIGNAL void signal_loadRVEDone();
+    public: Q_SLOT void saveRVE(QString fileName);
+    public: Q_SIGNAL void signal_saveRVEDone();
     public: Q_SLOT void cleanRVE();
     public: Q_SIGNAL void signal_cleanRVEDone();
     public: Q_SLOT void normalizeUnMaskedRVE();
@@ -189,7 +207,7 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
     public : std::map<std::string, RepresentativeVolumeElement*> RVEs;
 
     /// createRVE ----------------------------------------------------------------------------
-    public : std::string createRVE(const std::string &name, int size) noexcept;
+    public : std::string createRVE(const std::string &name, int size, float representationSize) noexcept;
     private: class _CreateRVECommand : public ConsoleCommand
     {
         private: RepresentativeVolumeElementConsoleInterface &_manager;
@@ -198,12 +216,14 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
             ConsoleCommand(
             //  "--------------------------------------------------------------------------------"
                 "createRVE",
-                "createRVE <Name> <size>\n"
+                "createRVE <Name> <size> <representationSize>\n"
                 "Creates Representative Volume Element (RVE) object in RAM memory.\n"
                 "Arguments:\n"
                 "[string] <Name> - the name of RVE in RAM memory;\n"
                 "[int]    <size> - the discrete size of RVE, It should be equal to\n"
-                "           some power of two.\n",
+                "           some power of two;\n"
+                "[float]  <representationSize> - (optional) represenation size of given RVE,\n"
+                "           default = 1.\n",
                 console),
                 _manager(manager){}
         public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
@@ -228,6 +248,46 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
         public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
     } *_commandDeleteRVE = nullptr;
 
+    /// saveRVE ----------------------------------------------------------------------------
+    public : std::string saveRVE(const std::string &name, const std::string &fileName) noexcept;
+    private: class _SaveRVECommand : public ConsoleCommand
+    {
+        private: RepresentativeVolumeElementConsoleInterface &_manager;
+        public: _SaveRVECommand(
+                RepresentativeVolumeElementConsoleInterface &manager, Console &console) :
+            ConsoleCommand(
+            //  "--------------------------------------------------------------------------------"
+                "saveRVE",
+                "saveRVE <Name> <fileName>\n"
+                "Save Representative Volume Element (RVE) object into <filename>.\n"
+                "Arguments:\n"
+                "[string] <Name> - the name of RVE in RAM memory;\n"
+                "[string] <fileName> - the name of the file (recommended extension *.RVE).\n",
+                console),
+                _manager(manager){}
+        public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
+    } *_commandSaveRVE = nullptr;
+
+    /// loadRVE ----------------------------------------------------------------------------
+    public : std::string loadRVE(const std::string &name, const std::string &fileName) noexcept;
+    private: class _LoadRVECommand : public ConsoleCommand
+    {
+        private: RepresentativeVolumeElementConsoleInterface &_manager;
+        public: _LoadRVECommand(
+                RepresentativeVolumeElementConsoleInterface &manager, Console &console) :
+            ConsoleCommand(
+            //  "--------------------------------------------------------------------------------"
+                "loadRVE",
+                "loadRVE <Name> <fileName>\n"
+                "Load Representative Volume Element (RVE) object from <filename>.\n"
+                "Arguments:\n"
+                "[string] <Name> - the name of RVE in RAM memory;\n"
+                "[string] <fileName> - the name of the file (recommended extension *.RVE).\n",
+                console),
+                _manager(manager){}
+        public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
+    } *_commandLoadRVE = nullptr;
+
     /// printRVE -----------------------------------------------------------------------------
     public : std::string printRVE() noexcept;
     private: class _PrintRVECommand : public ConsoleCommand
@@ -241,7 +301,7 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
                 "createRVE\n"
                 "Prints existing in RAM memory Representative Volume "
                 "Element (RVE) objects in\n"
-                "format: [<index>]: <name> <size>.\n"
+                "format: [<index>]: <name> <size> <representationSize>.\n"
                 "Takes no arguments.\n",
                 console),
                 _manager(manager){}
@@ -550,6 +610,8 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
     public : RepresentativeVolumeElementConsoleInterface(Console &console):
         _commandCreateRVE(new _CreateRVECommand(*this, console)),
         _commandDeleteRVE(new _DeleteRVECommand(*this, console)),
+        _commandSaveRVE(new _SaveRVECommand(*this, console)),
+        _commandLoadRVE(new _LoadRVECommand(*this, console)),
         _commandPrintRVE(new _PrintRVECommand(*this, console)),
         _commandEditRVE(new _EditRVECommand(*this, console)),
         _commandCleanRVE(new _cleanRVECommand(*this, console)),
@@ -575,6 +637,8 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
             delete _rve.second;
         delete _commandCreateRVE;
         delete _commandDeleteRVE;
+        delete _commandSaveRVE;
+        delete _commandLoadRVE;
         delete _commandPrintRVE;
         delete _commandEditRVE;
         delete _commandCleanRVE;

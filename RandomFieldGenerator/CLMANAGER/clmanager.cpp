@@ -255,6 +255,17 @@ cl::Kernel &CLManager::createKernel(const cl::Program &program, const std::strin
     return _kernels.back();
 }
 
+cl::NDRange CLManager::getMaxLocalThreads(const int size)
+{
+    size_t _kernelMaxWorkGroupSize;
+    getCurrentDevice().getInfo(CL_DEVICE_MAX_WORK_GROUP_SIZE, &_kernelMaxWorkGroupSize);
+
+    unsigned _n = 1;
+    for(; (size/_n)*(size/_n)*(size/_n) > _kernelMaxWorkGroupSize; _n *= 2);
+
+    return cl::NDRange(size/_n, size/_n, size/_n);
+}
+
 CLManager::CLManager()
 {
     // Get all avaliable platforms (Intel, AMD, NVidia, etc.)

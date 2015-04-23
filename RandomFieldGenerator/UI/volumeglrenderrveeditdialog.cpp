@@ -7,6 +7,7 @@
 
 #include <QDoubleValidator>
 #include <QIntValidator>
+#include <QFileDialog>
 
 using namespace UserInterface;
 
@@ -27,7 +28,7 @@ VolumeGLRenderRVEEditDialog::VolumeGLRenderRVEEditDialog(QWidget *parent) :
                 QString::number(ui->TopCutLevelSlider->value() / 1000.0f));
 
     ui->FilterRadiusSlider->setMaximum(_parent->_ptrToRVE->getSize());
-    ui->FilterRadiusSlider->setValue(_parent->_ptrToRVE->getDiscreteRadius());
+    ui->FilterRadiusSlider->setValue(_parent->_FilterRadiusBackup);
     ui->FilterRadiusLineEdit->setText(QString::number(ui->FilterRadiusSlider->value()));
 
     ui->ScaleFactorXSlider->setValue(_parent->_FilterScaleFactorXBackup * 100);
@@ -117,6 +118,20 @@ VolumeGLRenderRVEEditDialog::VolumeGLRenderRVEEditDialog(QWidget *parent) :
                 _parent->_ptrToRVE, ui->Inclusions);
     _previewRender_Inclusion->resize(261,261);
     _previewRender_Inclusion->move(510, 10);
+
+    connect(this,SIGNAL(signal_loadRVE(QString)),
+            &UserInterfaceManager::instance(),
+            SIGNAL(signal_loadRVE_T(QString)),
+            Qt::QueuedConnection);
+    connect(&UserInterfaceManager::instance(), SIGNAL(signal_loadRVEDone_T()),
+            this, SLOT(_enableWidget()), Qt::QueuedConnection);
+
+    connect(this,SIGNAL(signal_saveRVE(QString)),
+            &UserInterfaceManager::instance(),
+            SIGNAL(signal_saveRVE_T(QString)),
+            Qt::QueuedConnection);
+    connect(&UserInterfaceManager::instance(), SIGNAL(signal_saveRVEDone_T()),
+            this, SLOT(_enableWidget()), Qt::QueuedConnection);
 
     connect(this,SIGNAL(signal_cleanRVE()),
             &UserInterfaceManager::instance(),
@@ -244,6 +259,8 @@ void VolumeGLRenderRVEEditDialog::on_TopCutLevelSlider_valueChanged(int value)
 void UserInterface::VolumeGLRenderRVEEditDialog::on_FilterRadiusSlider_valueChanged(int value)
 {
     ui->FilterRadiusLineEdit->setText(QString::number(value));
+    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
+    _parent->_FilterRadiusBackup = value;
     if(!(ui->FilterRadiusSlider->isSliderDown()))
         _updatePreview();
 }
@@ -378,6 +395,9 @@ float VolumeGLRenderRVEEditDialog::getMinRadiusValue() const{
 
 float VolumeGLRenderRVEEditDialog::getMaxRadiusValue() const{
     return ui->MaxRadiusSlider->value();}
+
+float UserInterface::VolumeGLRenderRVEEditDialog::getTransitionLayerValue() const{
+    return ui->TransitionLayerSlider->value() / 100.0f; }
 
 float VolumeGLRenderRVEEditDialog::getFilterScaleFactorXValue_Inclusion() const {
     return ui->ScaleFactorXSlider_Inclusion->value() / 100.0f;}
@@ -770,4 +790,22 @@ void UserInterface::VolumeGLRenderRVEEditDialog::on_GenerateInclusionsButton_cli
                 ui->RotationOYSlider_Inclusion->value(),
                 ui->RotationOZSlider_Inclusion->value(),
                 ui->CoreIntensitySlider->value() / 100.0f);
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_LoadRVEButton_clicked()
+{
+    _disableWigget();
+
+    Q_EMIT signal_loadRVE(
+                QFileDialog::getOpenFileName(
+                    this, tr("Load RVE"), tr(""), tr("RVE Files (*.RVE)")));
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_SaveRVEButton_clicked()
+{
+    _disableWigget();
+
+    Q_EMIT signal_saveRVE(
+                QFileDialog::getSaveFileName(
+                    this, tr("Save RVE"), tr(""), tr("RVE Files (*.RVE)")));
 }

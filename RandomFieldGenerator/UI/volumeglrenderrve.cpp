@@ -14,6 +14,8 @@ VolumeGLRenderRVE::VolumeGLRenderRVE(
     _MaxRadiusBackup = _ptrToRVE->getSize()/2;
     if(_MaxRadiusBackup == 0)_MaxRadiusBackup = 1;
 
+    setBoundingBoxRepresentationSize(_ptrToRVE->getRepresentationSize());
+
     connect(_actionEdit, SIGNAL(triggered()), this, SLOT(slot_createEditDialog()));
     _contextMenu->addAction(_actionEdit);
     _contextMenu->addSeparator();

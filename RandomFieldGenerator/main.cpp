@@ -148,7 +148,6 @@ int main(int argc, char *argv[])
     ///////////////////////////////////////////////////////////////////////////////////////
 
     UserInterface::VolumeGLRenderRVE _renderRVE(&_RVE, NULL);
-    _renderRVE.setBoundingBoxRepresentationSize(1e-3f);
     _renderRVE.setInfoString("");
     _renderRVE.resize(800,600);
     _renderRVE.show();

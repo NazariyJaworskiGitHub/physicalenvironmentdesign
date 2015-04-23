@@ -93,6 +93,8 @@ namespace OpenCL
                 const cl::Program &program,
                 const std::string &programName);
 
+        public : cl::NDRange getMaxLocalThreads(const int size);
+
         /// Constructor
         private: CLManager();
 
