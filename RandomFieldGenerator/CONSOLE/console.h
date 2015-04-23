@@ -5,6 +5,7 @@
 #include <sstream>
 #include <map>
 #include <vector>
+#include <fstream>
 
 #include "CONSOLE/consolecommand.h"
 
@@ -13,11 +14,18 @@ namespace Controller
 class Console
 {
     protected: std::ostream &_outputStream;
-//    public : std::ostream &getOutputStream() noexcept {return _outputStream;}
+    /// \warning this usage don't does the logging
+    public : std::ostream &getOutputStream() noexcept {return _outputStream;}
     protected: std::istream &_inputStream;
 //    public : std::istream &getInputStream() noexcept {return _inputStream;}
     private: std::map<std::string, ConsoleCommand*> _commands;
     private: volatile bool _isRuning = false;
+
+    /// bad, when wrong command is given or when executeConsoleCommand() returns != 0
+    private: bool _badLastCommand = false;
+    public : bool isLastCommandBad() const noexcept {return _badLastCommand;}
+    /// for manual usage
+    public : void setLastCommandBadState(bool isBad) noexcept {_badLastCommand = isBad;}
 
     public : void addCommand(ConsoleCommand *command) noexcept
     {
@@ -45,11 +53,6 @@ class Console
         return _str.str();
     }
 
-    public : Console(std::ostream &outputStream, std::istream &inputStream) noexcept :
-        _outputStream(outputStream), _inputStream(inputStream){}
-
-    public : ~Console(){}
-
     public : virtual void writeToOutput(const std::string &str) noexcept
     {
         _outputStream << str;
@@ -64,6 +67,7 @@ class Console
     {
         echoInput(str);
 
+        _badLastCommand = false;
         std::stringstream _output;
 
         std::istringstream _strStreamWrap{str};
@@ -77,7 +81,8 @@ class Console
             std::vector<std::string> _args;
             while(_strStreamWrap >> _commandName)
                 _args.push_back(_commandName);
-            _curCommand->second->executeConsoleCommand(_args);
+            if(_curCommand->second->executeConsoleCommand(_args))
+                _badLastCommand = true;
         }
         else if(_commandName.compare("help") == 0 || _commandName.compare("\\?") == 0)
         {
@@ -89,7 +94,10 @@ class Console
                     _output << _curCommand->second->getCommandHelp();
                 }
                 else
+                {
                     _output << _wrongCommandMsg(_commandName);
+                    _badLastCommand = true;
+                }
             }
             else
             {
@@ -103,10 +111,12 @@ class Console
         else
         {
             _output << _wrongCommandMsg(_commandName);
+            _badLastCommand = true;
         }
-        _output << '>';
+        _outputStream << ">";
 
-        writeToOutput(_output.str());
+        if(!_output.str().empty())
+            writeToOutput(_output.str());
     }
 
     public: void runMainLoop()
@@ -120,6 +130,76 @@ class Console
             std::string _str(_c);
             (*this) << _str;
         }
+    }
+
+    /// executeScript --------------------------------------------------------------------------
+    public : std::string executeScript(const std::string &fileName) noexcept
+    {
+        std::ifstream _scriptFileStream;
+        try
+        {
+            _scriptFileStream.exceptions(std::ifstream::badbit);
+            _scriptFileStream.open(fileName, std::ios::in);
+            if(_scriptFileStream.is_open())
+            {
+                _scriptFileStream.seekg(0, std::ios::beg);
+                std::string _scriptLine;
+                while(getline(_scriptFileStream, _scriptLine))
+                {
+                    _outputStream << _scriptLine << "\n";
+                    (*this) << _scriptLine;
+                    if(_badLastCommand)
+                        throw(std::runtime_error("Fail to execute script"));
+                }
+                _scriptFileStream.close();
+            }
+            return "Script from " + fileName + " executed.\n";
+        }
+        catch(std::exception &e)
+        {
+            if(_scriptFileStream.is_open())
+                _scriptFileStream.close();
+            std::stringstream _str;
+            _str << "Error: " << e.what() << "\n";
+            if(_scriptFileStream.fail() || _scriptFileStream.eof() || _scriptFileStream.bad())
+            _str << "  failbit: " << _scriptFileStream.fail() <<"\n"
+                 << "  eofbit: " << _scriptFileStream.eof() <<"\n"
+                 << "  badbit: " << _scriptFileStream.bad() <<"\n";
+            return _str.str();
+        }
+    }
+    private: class _executeScriptCommand : public ConsoleCommand
+    {
+        public: _executeScriptCommand(Console &console) :
+            ConsoleCommand(
+            //  "--------------------------------------------------------------------------------"
+                "executeScript",
+                "executeScript <fileName>\n"
+                "Execute a command script saved in <filename>.\n"
+                "Arguments:\n"
+                "[string] <fileName> - the name of the file (recommended extension *.scr).\n",
+                console){}
+        public: int executeConsoleCommand(const std::vector<std::string> &argv) override
+        {
+            if(argv.size() != 1)
+            {
+                getConsole().writeToOutput("Error: wrong number of arguments.\n");
+                return -1;
+            }
+            getConsole().writeToOutput(getConsole().executeScript(argv[0]));
+            return 0;
+        }
+    } *_executeScript = nullptr;
+
+    public : Console(std::ostream &outputStream, std::istream &inputStream) noexcept :
+        _outputStream(outputStream),
+        _inputStream(inputStream),
+        _executeScript(new _executeScriptCommand(*this))
+    {}
+
+    public : ~Console()
+    {
+        delete _executeScript;
     }
 };
 }

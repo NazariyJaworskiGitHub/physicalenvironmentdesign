@@ -29,8 +29,16 @@ namespace Log
                            << std::setfill('0') << std::setw(2) << _timeInfo.tm_min
                            << ":"
                            << std::setfill('0') << std::setw(2) << _timeInfo.tm_sec
-                           << "] "
-                           << msg.toStdString() << std::endl;
+                           << "] ";
+            // for asynchron GUI messages: '\r' + msg + '>'
+            if(*msg.begin() != '\r') _logFileStream << msg.toStdString();
+            else
+            {
+                QString _copy(msg);
+                _copy.remove(_copy.length()-1,1);   // '>'
+                _copy.remove(0,1);                  // '\r'
+                _logFileStream << _copy.toStdString();
+            }
 //            _myMutex.unlock();
         }
 

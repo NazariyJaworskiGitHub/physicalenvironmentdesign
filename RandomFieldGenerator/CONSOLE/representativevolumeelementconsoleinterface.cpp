@@ -28,9 +28,10 @@ int _EditRVECommand::executeConsoleCommand(const std::vector<std::string> &argv)
 void _EditRVECommand::loadRVE(QString fileName)
 {
     std::stringstream _str;
-    _str << "loadRVE " << _RVEName << " " << fileName.toLocal8Bit().constData() << "\n";
+    _str << "loadRVE " << _RVEName << " " << fileName.toLocal8Bit().constData();
 
-    getConsole().writeToOutput(_str.str());
+    // echo to console output without logging
+    getConsole().getOutputStream() << _str.str() << "\n";
 
     getConsole() << _str.str();
 
@@ -40,9 +41,10 @@ void _EditRVECommand::loadRVE(QString fileName)
 void _EditRVECommand::saveRVE(QString fileName)
 {
     std::stringstream _str;
-    _str << "saveRVE " << _RVEName << " " << fileName.toLocal8Bit().constData() << "\n";
+    _str << "saveRVE " << _RVEName << " " << fileName.toLocal8Bit().constData();
 
-    getConsole().writeToOutput(_str.str());
+    // echo to console output without logging
+    getConsole().getOutputStream() << _str.str() << "\n";
 
     getConsole() << _str.str();
 
@@ -52,9 +54,10 @@ void _EditRVECommand::saveRVE(QString fileName)
 void Controller::_EditRVECommand::cleanRVE()
 {
     std::stringstream _str;
-    _str << "cleanRVE " << _RVEName << "\n";
+    _str << "cleanRVE " << _RVEName;
 
-    getConsole().writeToOutput(_str.str());
+    // echo to console output without logging
+    getConsole().getOutputStream() << _str.str() << "\n";
 
     getConsole() << _str.str();
 
@@ -64,9 +67,10 @@ void Controller::_EditRVECommand::cleanRVE()
 void Controller::_EditRVECommand::normalizeUnMaskedRVE()
 {
     std::stringstream _str;
-    _str << "normalizeUnMaskedRVE " << _RVEName << "\n";
+    _str << "normalizeUnMaskedRVE " << _RVEName;
 
-    getConsole().writeToOutput(_str.str());
+    // echo to console output without logging
+    getConsole().getOutputStream() << _str.str() << "\n";
 
     getConsole() << _str.str();
 
@@ -76,9 +80,10 @@ void Controller::_EditRVECommand::normalizeUnMaskedRVE()
 void Controller::_EditRVECommand::invertUnMaskedRVE()
 {
     std::stringstream _str;
-    _str << "invertUnMaskedRVE " << _RVEName << "\n";
+    _str << "invertUnMaskedRVE " << _RVEName;
 
-    getConsole().writeToOutput(_str.str());
+    // echo to console output without logging
+    getConsole().getOutputStream() << _str.str() << "\n";
 
     getConsole() << _str.str();
 
@@ -88,9 +93,10 @@ void Controller::_EditRVECommand::invertUnMaskedRVE()
 void Controller::_EditRVECommand::cleanMaskRVE()
 {
     std::stringstream _str;
-    _str << "cleanMaskRVE " << _RVEName << "\n";
+    _str << "cleanMaskRVE " << _RVEName;
 
-    getConsole().writeToOutput(_str.str());
+    // echo to console output without logging
+    getConsole().getOutputStream() << _str.str() << "\n";
 
     getConsole() << _str.str();
 
@@ -100,9 +106,10 @@ void Controller::_EditRVECommand::cleanMaskRVE()
 void Controller::_EditRVECommand::cleanUnMaskedRVE(float filler)
 {
     std::stringstream _str;
-    _str << "cleanUnMaskedRVE " << _RVEName << " " << filler << "\n";
+    _str << "cleanUnMaskedRVE " << _RVEName << " " << filler;
 
-    getConsole().writeToOutput(_str.str());
+    // echo to console output without logging
+    getConsole().getOutputStream() << _str.str() << "\n";
 
     getConsole() << _str.str();
 
@@ -115,9 +122,10 @@ void Controller::_EditRVECommand::applyTwoCutMaskInsideRVE(
     std::stringstream _str;
     _str << "applyTwoCutMaskInsideRVE " << _RVEName
          << " " << cutLevelA << " "
-         << " " << cutLevelB << "\n";
+         << " " << cutLevelB;
 
-    getConsole().writeToOutput(_str.str());
+    // echo to console output without logging
+    getConsole().getOutputStream() << _str.str() << "\n";
 
     getConsole() << _str.str();
 
@@ -130,9 +138,10 @@ void Controller::_EditRVECommand::applyTwoCutMaskOutsideRVE(
     std::stringstream _str;
     _str << "applyTwoCutMaskOutsideRVE " << _RVEName
          << " " << cutLevelA << " "
-         << " " << cutLevelB << "\n";
+         << " " << cutLevelB;
 
-    getConsole().writeToOutput(_str.str());
+    // echo to console output without logging
+    getConsole().getOutputStream() << _str.str() << "\n";
 
     getConsole() << _str.str();
 
@@ -142,9 +151,10 @@ void Controller::_EditRVECommand::applyTwoCutMaskOutsideRVE(
 void Controller::_EditRVECommand::addRandomNoiseRVE()
 {
     std::stringstream _str;
-    _str << "addRandomNoiseRVE " << _RVEName << "\n";
+    _str << "addRandomNoiseRVE " << _RVEName;
 
-    getConsole().writeToOutput(_str.str());
+    // echo to console output without logging
+    getConsole().getOutputStream() << _str.str() << "\n";
 
     getConsole() << _str.str();
 
@@ -176,9 +186,10 @@ void _EditRVECommand::applyGaussianFilterRVE(
     else _str << "false ";
     _str << rotationOX << " "
          << rotationOY << " "
-         << rotationOZ << "\n";
+         << rotationOZ;
 
-    getConsole().writeToOutput(_str.str());
+    // echo to console output without logging
+    getConsole().getOutputStream() << _str.str() << "\n";
 
     getConsole() << _str.str();
 
@@ -213,9 +224,10 @@ void _EditRVECommand::generateOverlappingRandomEllipsoidsIntenseRVE(
     _str << rotationOX << " "
          << rotationOY << " "
          << rotationOZ << " "
-         << coreValue << "\n";
+         << coreValue;
 
-    getConsole().writeToOutput(_str.str());
+    // echo to console output without logging
+    getConsole().getOutputStream() << _str.str() << "\n";
 
     getConsole() << _str.str();
 
@@ -225,9 +237,10 @@ void _EditRVECommand::generateOverlappingRandomEllipsoidsIntenseRVE(
 void _EditRVECommand::generateVoronoiRandomCellsRVE(int cellNum)
 {
     std::stringstream _str;
-    _str << "generateVoronoiRandomCellsRVE " << _RVEName << " " << cellNum <<"\n";
+    _str << "generateVoronoiRandomCellsRVE " << _RVEName << " " << cellNum;
 
-    getConsole().writeToOutput(_str.str());
+    // echo to console output without logging
+    getConsole().getOutputStream() << _str.str() << "\n";
 
     getConsole() << _str.str();
 
@@ -240,17 +253,24 @@ std::string RepresentativeVolumeElementConsoleInterface::createRVE(
     try
     {
         if(RVEs.find(name) != RVEs.end())
+        {
+            _refToConsole.setLastCommandBadState(true);
             return "Error: Representative Volume Element " + name + " already exists.\n";
+        }
         else if((size >= 2) && ((size & (size - 1)) == 0)) // check power o two
         {
             RVEs.emplace(name, new RepresentativeVolumeElement(size, representationSize));
         }
-        else return "Error: Cant create Representative Volume Element with given size.\n";
+        else
+        {
+            _refToConsole.setLastCommandBadState(true);
+            return "Error: Cant create Representative Volume Element with given size.\n";
+        }
         return "Representative Volume Element " + name + " created.\n";
     }
     catch(std::exception &e)
     {
-        return e.what();
+        return "Error: " + std::string(e.what());
     }
 }
 
@@ -269,7 +289,10 @@ int RepresentativeVolumeElementConsoleInterface::_CreateRVECommand::executeConso
     {
         std::stringstream _str{argv[2]};
         if(!(_str >> representationSize))
+        {
             getConsole().writeToOutput("wrong <representationSize> argument.\n");
+            return -1;
+        }
     }
     std::stringstream _str{argv[1]};
     if(_str >> _size)
@@ -290,14 +313,17 @@ std::string RepresentativeVolumeElementConsoleInterface::deleteRVE(
     {
         auto _pos = RVEs.find(name);
         if(_pos == RVEs.end())
+        {
+            _refToConsole.setLastCommandBadState(true);
             return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+        }
         else
             RVEs.erase(_pos);
         return "Representative Volume Element " + name + " deleted.\n";
     }
     catch(std::exception &e)
     {
-        return e.what();
+        return "Error: " + std::string(e.what());
     }
 }
 
@@ -320,14 +346,17 @@ std::string RepresentativeVolumeElementConsoleInterface::saveRVE(
     {
         auto _pos = RVEs.find(name);
         if(_pos == RVEs.end())
+        {
+            _refToConsole.setLastCommandBadState(true);
             return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+        }
         else
             _pos->second->saveRVEToFile(fileName);
         return "Representative Volume Element " + name + " is saved to " + fileName +"\n";
     }
     catch(std::exception &e)
     {
-        return e.what();
+        return "Error: " + std::string(e.what());
     }
 }
 int RepresentativeVolumeElementConsoleInterface::_SaveRVECommand::executeConsoleCommand(
@@ -349,14 +378,17 @@ std::string RepresentativeVolumeElementConsoleInterface::loadRVE(
     {
         auto _pos = RVEs.find(name);
         if(_pos == RVEs.end())
+        {
+            _refToConsole.setLastCommandBadState(true);
             return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+        }
         else
             _pos->second->loadRVEFromFile(fileName);
         return "Representative Volume Element " + name + " is loaded from " + fileName +"\n";
     }
     catch(std::exception &e)
     {
-        return e.what();
+        return "Error: " + std::string(e.what());
     }
 }
 int RepresentativeVolumeElementConsoleInterface::_LoadRVECommand::executeConsoleCommand(
@@ -388,7 +420,7 @@ std::string Controller::RepresentativeVolumeElementConsoleInterface::printRVE() 
     }
     catch(std::exception &e)
     {
-        return e.what();
+        return "Error: " + std::string(e.what());
     }
 }
 
@@ -411,14 +443,17 @@ std::string RepresentativeVolumeElementConsoleInterface::cleanRVE(
     {
         auto _pos = RVEs.find(name);
         if(_pos == RVEs.end())
+        {
+            _refToConsole.setLastCommandBadState(true);
             return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+        }
         else
             _pos->second->cleanData();
         return "Representative Volume Element " + name + " cleaned.\n";
     }
     catch(std::exception &e)
     {
-        return e.what();
+        return "Error: " + std::string(e.what());
     }
 }
 
@@ -441,14 +476,17 @@ std::string RepresentativeVolumeElementConsoleInterface::cleanUnMaskedRVE(
     {
         auto _pos = RVEs.find(name);
         if(_pos == RVEs.end())
+        {
+            _refToConsole.setLastCommandBadState(true);
             return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+        }
         else
             _pos->second->cleanUnMaskedData(filler);
         return "Representative Volume Element " + name + " cleaned.\n";
     }
     catch(std::exception &e)
     {
-        return e.what();
+        return "Error: " + std::string(e.what());
     }
 }
 
@@ -484,14 +522,17 @@ std::string RepresentativeVolumeElementConsoleInterface::cleanMaskRVE(
     {
         auto _pos = RVEs.find(name);
         if(_pos == RVEs.end())
+        {
+            _refToConsole.setLastCommandBadState(true);
             return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+        }
         else
             _pos->second->cleanMask();
         return "Representative Volume Element " + name + " mask cleaned.\n";
     }
     catch(std::exception &e)
     {
-        return e.what();
+        return "Error: " + std::string(e.what());
     }
 }
 
@@ -514,14 +555,17 @@ std::string RepresentativeVolumeElementConsoleInterface::addRandomNoiseRVE(
     {
         auto _pos = RVEs.find(name);
         if(_pos == RVEs.end())
+        {
+            _refToConsole.setLastCommandBadState(true);
             return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+        }
         else
             _pos->second->addRandomNoise();
         return "Representative Volume Element " + name + " random noise generation done.\n";
     }
     catch(std::exception &e)
     {
-        return e.what();
+        return "Error: " + std::string(e.what());
     }
 }
 
@@ -544,14 +588,17 @@ std::string RepresentativeVolumeElementConsoleInterface::normalizeUnMaskedRVE(
     {
         auto _pos = RVEs.find(name);
         if(_pos == RVEs.end())
+        {
+            _refToConsole.setLastCommandBadState(true);
             return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+        }
         else
             _pos->second->normalizeUnMasked();
         return "Representative Volume Element " + name + " normalized.\n";
     }
     catch(std::exception &e)
     {
-        return e.what();
+        return "Error: " + std::string(e.what());
     }
 }
 
@@ -574,14 +621,17 @@ std::string RepresentativeVolumeElementConsoleInterface::invertUnMaskedRVE(
     {
         auto _pos = RVEs.find(name);
         if(_pos == RVEs.end())
+        {
+            _refToConsole.setLastCommandBadState(true);
             return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+        }
         else
             _pos->second->invertUnMasked();
         return "Representative Volume Element " + name + " inverted.\n";
     }
     catch(std::exception &e)
     {
-        return e.what();
+        return "Error: " + std::string(e.what());
     }
 }
 
@@ -614,7 +664,10 @@ std::string RepresentativeVolumeElementConsoleInterface::applyGaussianFilterRVE(
     {
         auto _pos = RVEs.find(name);
         if(_pos == RVEs.end())
+        {
+            _refToConsole.setLastCommandBadState(true);
             return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+        }
         else
             _pos->second->applyGaussianFilterCL(
                         discreteRadius,
@@ -631,7 +684,7 @@ std::string RepresentativeVolumeElementConsoleInterface::applyGaussianFilterRVE(
     }
     catch(std::exception &e)
     {
-        return e.what();
+        return "Error: " + std::string(e.what());
     }
 }
 
@@ -751,14 +804,17 @@ std::string RepresentativeVolumeElementConsoleInterface::applyTwoCutMaskInsideRV
     {
         auto _pos = RVEs.find(name);
         if(_pos == RVEs.end())
+        {
+            _refToConsole.setLastCommandBadState(true);
             return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+        }
         else
             _pos->second->applyTwoCutMaskInside(cutLevelA, cutLevelB);
         return "Representative Volume Element " + name + " mask is set.\n";
     }
     catch(std::exception &e)
     {
-        return e.what();
+        return "Error: " + std::string(e.what());
     }
 }
 
@@ -800,14 +856,17 @@ std::string RepresentativeVolumeElementConsoleInterface::applyTwoCutMaskOutsideR
     {
         auto _pos = RVEs.find(name);
         if(_pos == RVEs.end())
+        {
+            _refToConsole.setLastCommandBadState(true);
             return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+        }
         else
             _pos->second->applyTwoCutMaskOutside(cutLevelA, cutLevelB);
         return "Representative Volume Element " + name + " mask is set.\n";
     }
     catch(std::exception &e)
     {
-        return e.what();
+        return "Error: " + std::string(e.what());
     }
 }
 
@@ -861,7 +920,10 @@ std::string RepresentativeVolumeElementConsoleInterface::generateOverlappingRand
     {
         auto _pos = RVEs.find(name);
         if(_pos == RVEs.end())
+        {
+            _refToConsole.setLastCommandBadState(true);
             return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+        }
         else
             _pos->second->generateOverlappingRandomEllipsoidsIntenseCL(
                         ellipsoidNum,
@@ -880,7 +942,7 @@ std::string RepresentativeVolumeElementConsoleInterface::generateOverlappingRand
     }
     catch(std::exception &e)
     {
-        return e.what();
+        return "Error: " + std::string(e.what());
     }
 }
 
@@ -1020,14 +1082,17 @@ std::string RepresentativeVolumeElementConsoleInterface::generateVoronoiRandomCe
     {
         auto _pos = RVEs.find(name);
         if(_pos == RVEs.end())
+        {
+            _refToConsole.setLastCommandBadState(true);
             return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+        }
         else
             _pos->second->generateVoronoiRandomCellsCL(cellNum);
         return "Representative Volume Element " + name + " Voronoi random cells generated.\n";
     }
     catch(std::exception &e)
     {
-        return e.what();
+        return "Error: " + std::string(e.what());
     }
 }
 

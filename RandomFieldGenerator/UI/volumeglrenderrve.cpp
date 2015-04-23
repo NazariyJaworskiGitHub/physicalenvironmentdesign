@@ -1,5 +1,7 @@
 #include "volumeglrenderrve.h"
 
+#include "sstream"
+
 using namespace UserInterface;
 
 VolumeGLRenderRVE::VolumeGLRenderRVE(
@@ -14,7 +16,7 @@ VolumeGLRenderRVE::VolumeGLRenderRVE(
     _MaxRadiusBackup = _ptrToRVE->getSize()/2;
     if(_MaxRadiusBackup == 0)_MaxRadiusBackup = 1;
 
-    setBoundingBoxRepresentationSize(_ptrToRVE->getRepresentationSize());
+    updateInfoStringAndRepresentationSize();
 
     connect(_actionEdit, SIGNAL(triggered()), this, SLOT(slot_createEditDialog()));
     _contextMenu->addAction(_actionEdit);
@@ -158,6 +160,19 @@ void VolumeGLRenderRVE::paintGL()
             _TextColor.blueF(),
             _TextColor.alphaF());
     _renderMultilineText(2, 0, _infoString, _TextFont);
+}
+
+void VolumeGLRenderRVE::updateInfoStringAndRepresentationSize() noexcept
+{
+    std::stringstream _str;
+    _str << "RVE: "
+         << _ptrToRVE->getSize() << "x"
+         << _ptrToRVE->getSize() << "x"
+         << _ptrToRVE->getSize() << " elements\n"
+         << "representation size: "
+         << _ptrToRVE->getRepresentationSize() << "m";
+    setInfoString(_str.str().data());
+    setBoundingBoxRepresentationSize(_ptrToRVE->getRepresentationSize());
 }
 
 VolumeGLRenderRVE::~VolumeGLRenderRVE()

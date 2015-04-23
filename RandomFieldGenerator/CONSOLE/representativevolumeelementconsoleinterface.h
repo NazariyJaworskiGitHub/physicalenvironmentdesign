@@ -138,9 +138,9 @@ class _EditRVECommand : public QObject, public ConsoleCommand
     }
     public: Q_SIGNAL void signal_editRVEGUIStart(RepresentativeVolumeElement* ptrToRVE);
     public: Q_SLOT void editRVEGUIFinish(){
-        getConsole().writeToOutput("Edit RVE GUI finish.\n");}
+        getConsole().writeToOutput("\rEdit RVE GUI finish.\n>");}
     public: Q_SLOT void editRVEGUIError(){
-        getConsole().writeToOutput("Edit RVE GUI is already running.\n");}
+        getConsole().writeToOutput("\rEdit RVE GUI is already running.\n>");}
 
     /// See UserInterfaceManager
     public: Q_SLOT void loadRVE(QString fileName);
@@ -205,6 +205,7 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
     Q_OBJECT
 
     public : std::map<std::string, RepresentativeVolumeElement*> RVEs;
+    private: Console &_refToConsole;
 
     /// createRVE ----------------------------------------------------------------------------
     public : std::string createRVE(const std::string &name, int size, float representationSize) noexcept;
@@ -608,6 +609,7 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
 
     /// Constructor --------------------------------------------------------------------------
     public : RepresentativeVolumeElementConsoleInterface(Console &console):
+        _refToConsole(console),
         _commandCreateRVE(new _CreateRVECommand(*this, console)),
         _commandDeleteRVE(new _DeleteRVECommand(*this, console)),
         _commandSaveRVE(new _SaveRVECommand(*this, console)),

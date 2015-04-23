@@ -450,6 +450,7 @@ void VolumeGLRenderRVEEditDialog::_enableWidget()
 
     _parent->makeCurrent();
     _parent->_loadRVEDataIntoTexture();
+    _parent->updateInfoStringAndRepresentationSize();
     _parent->updateGL();
 
     ui->progressBar->setValue(100);

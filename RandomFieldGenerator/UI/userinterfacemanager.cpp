@@ -1,5 +1,5 @@
 #include "userinterfacemanager.h"
-
+#include <QFileDialog>
 #include <iostream>
 #include "CLMANAGER/viennaclmanager.h"
 #include "CONSOLE/consolerunner.h"
@@ -50,8 +50,6 @@ void UserInterface::UserInterfaceManager::editRVEGUIStart(
     {
         _editRVEForm = new UserInterface::VolumeGLRenderRVE(ptrToRVE, NULL);
         _editRVEForm->setAttribute(Qt::WA_DeleteOnClose);
-        //_editRVEForm->setBoundingBoxRepresentationSize(1e-3f);
-        //_editRVEForm->setInfoString("");
         _editRVEForm->resize(800,600);
 
         connect(_editRVEForm, SIGNAL(destroyed()),
@@ -66,6 +64,19 @@ void UserInterface::UserInterfaceManager::editRVEGUIFinish()
 {
     _editRVEForm = nullptr;
     Q_EMIT signal_editRVEGUIFinish();
+}
+
+void UserInterfaceManager::executeScriptGUIStart()
+{
+    if(!_isExecuteScriptGUIRunnign)
+    {
+        _isExecuteScriptGUIRunnign = true;
+        QString fileName = QFileDialog::getOpenFileName(
+                        NULL, tr("Open script"), tr(""), tr("Script Files (*.scr)"));
+        _isExecuteScriptGUIRunnign = false;
+        Q_EMIT signal_executeScriptGUIFinish(fileName);
+    }
+    else Q_EMIT signal_executeScriptGUIError();
 }
 
 UserInterface::UserInterfaceManager &UserInterface::UserInterfaceManager::instance()

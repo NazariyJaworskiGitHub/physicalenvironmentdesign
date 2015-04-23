@@ -2,6 +2,7 @@
 
 #include "constants.h"
 
+#include <sstream>
 #include <fstream>
 
 cl::Program *RepresentativeVolumeElement::_programPtr = nullptr;
@@ -17,60 +18,89 @@ cl::Kernel *RepresentativeVolumeElement::_kernelVoronoiPtr = nullptr;
 void RepresentativeVolumeElement::saveRVEToFile(const std::string &fileName) const
 {
     std::ofstream _RVEFileStream;
-    _RVEFileStream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    _RVEFileStream.open(fileName, std::ios::out | std::ios::trunc | std::ios::binary);
-    if (_RVEFileStream.is_open())
+    try
     {
-        _RVEFileStream.seekp(0, std::ios::beg);
-        _RVEFileStream.write((const char*)&_size, sizeof(int));
-        _RVEFileStream.write((const char*)&_representationSize, sizeof(float));
-        _RVEFileStream.write((const char*)_data,
-                             _size*_size*_size*sizeof(float));
-        _RVEFileStream.flush();
-        _RVEFileStream.close();
+        _RVEFileStream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+        _RVEFileStream.open(fileName, std::ios::out | std::ios::trunc | std::ios::binary);
+        if (_RVEFileStream.is_open())
+        {
+            _RVEFileStream.seekp(0, std::ios::beg);
+            _RVEFileStream.write((const char*)&_size, sizeof(int));
+            _RVEFileStream.write((const char*)&_representationSize, sizeof(float));
+            _RVEFileStream.write((const char*)_data,
+                                 _size*_size*_size*sizeof(float));
+            _RVEFileStream.flush();
+            _RVEFileStream.close();
+        }
+    }
+    catch(std::exception &e)
+    {
+        if(_RVEFileStream.is_open())
+            _RVEFileStream.close();
+        std::stringstream _str;
+        _str << e.what() << "\n"
+             << "  failbit: " << _RVEFileStream.fail() <<"\n"
+             << "  eofbit: " << _RVEFileStream.eof() <<"\n"
+             << "  badbit: " << _RVEFileStream.bad() <<"\n";
+        throw(std::runtime_error(_str.str()));
     }
 }
 
 void RepresentativeVolumeElement::loadRVEFromFile(const std::string &fileName)
 {
     std::ifstream _RVEFileStream;
-    _RVEFileStream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    _RVEFileStream.open(fileName, std::ios::in | std::ios::binary);
-    if (_RVEFileStream.is_open())
+    try
     {
-        _RVEFileStream.seekg(0, std::ios::beg);
-        int _newSize;
-        _RVEFileStream.read((char*)&_newSize, sizeof(int));
-
-        if(!((_newSize >= 2) && ((_newSize & (_newSize - 1)) == 0))) // check power o two
-            throw(std::runtime_error("loadRVEFromFile():"
-                                     "Cant load Representative Volume Element, "
-                                     "bad size.\n"));
-
-        float _newRepresentationSize;
-        _RVEFileStream.read((char*)&_newRepresentationSize, sizeof(float));
-
-        float *_newData = new float[_newSize * _newSize * _newSize];
-
-        if(!_newData)
-            throw(std::runtime_error("loadRVEFromFile():"
-                                     "can't allocate memory for RVE.\n"));
-        try
+        _RVEFileStream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+        _RVEFileStream.open(fileName, std::ios::in | std::ios::binary);
+        if (_RVEFileStream.is_open())
         {
-            _RVEFileStream.read((char*)_newData, _newSize*_newSize*_newSize*sizeof(float));
-        }
-        catch(std::exception &e)
-        {
-            delete [] _newData;
+            _RVEFileStream.seekg(0, std::ios::beg);
+            int _newSize;
+            _RVEFileStream.read((char*)&_newSize, sizeof(int));
+
+            if(!((_newSize >= 2) && ((_newSize & (_newSize - 1)) == 0))) // check power o two
+                throw(std::runtime_error("loadRVEFromFile():"
+                                         "Cant load Representative Volume Element, "
+                                         "bad size"));
+
+            float _newRepresentationSize;
+            _RVEFileStream.read((char*)&_newRepresentationSize, sizeof(float));
+
+            float *_newData = new float[_newSize * _newSize * _newSize];
+
+            if(!_newData)
+                throw(std::runtime_error("loadRVEFromFile():"
+                                         "can't allocate memory for RVE"));
+            try
+            {
+                _RVEFileStream.read((char*)_newData, _newSize*_newSize*_newSize*sizeof(float));
+            }
+            catch(std::exception &e)
+            {
+                delete [] _newData;
+                _RVEFileStream.close();
+                throw(e);
+            }
+
+            _size = _newSize;
+            _representationSize = _newRepresentationSize;
+            delete [] _data;
+            _data = _newData;
             _RVEFileStream.close();
-            throw(e);
         }
-
-        _size = _newSize;
-        _representationSize = _newRepresentationSize;
-        delete [] _data;
-        _data = _newData;
-        _RVEFileStream.close();
+    }
+    catch(std::exception &e)
+    {
+        if(_RVEFileStream.is_open())
+            _RVEFileStream.close();
+        std::stringstream _str;
+        _str << e.what() << "\n";
+        if(_RVEFileStream.fail() || _RVEFileStream.eof() || _RVEFileStream.bad())
+            _str << "  failbit: " << _RVEFileStream.fail() <<"\n"
+                 << "  eofbit: " << _RVEFileStream.eof() <<"\n"
+                 << "  badbit: " << _RVEFileStream.bad() <<"\n";
+        throw(std::runtime_error(_str.str()));
     }
 }
 

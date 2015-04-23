@@ -33,9 +33,9 @@ class _OCLSetupGUICommand : public QObject, public ConsoleCommand
     }
     public: Q_SIGNAL void signal_OCLSetupGUIStart();
     public: Q_SLOT void OCLSetupGUIFinish(){
-        getConsole().writeToOutput("OpenCL Setup GUI finish.\n");}
+        getConsole().writeToOutput("\rOpenCL Setup GUI finish.\n>");}
     public: Q_SLOT void OCLSetupGUIError(){
-        getConsole().writeToOutput("OpenCL Setup GUI is already running.\n");}
+        getConsole().writeToOutput("\rOpenCL Setup GUI is already running.\n>");}
 
     public: int executeConsoleCommand(const std::vector<std::string> &argv) override
     {

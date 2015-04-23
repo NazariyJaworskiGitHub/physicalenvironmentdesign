@@ -34,6 +34,11 @@ namespace UserInterface
         public : Q_SLOT void editRVEGUIStart(RepresentativeVolumeElement *ptrToRVE);
         public : Q_SLOT void editRVEGUIFinish();
 
+        private: bool _isExecuteScriptGUIRunnign = false;
+        public: Q_SLOT void executeScriptGUIStart();
+        public: Q_SIGNAL void signal_executeScriptGUIError();
+        public: Q_SIGNAL void signal_executeScriptGUIFinish(QString fileName);
+
         /// Transitive from widgets to some console
         public :
             Q_SIGNAL void signal_loadRVE_T(QString fileName);

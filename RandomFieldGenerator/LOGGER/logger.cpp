@@ -18,10 +18,10 @@ void Logger::run()
     connect(this, SIGNAL(signal_sendMsgToLogger(const QString &)),
             &_writer, SLOT(_writeMsgToLog(const QString &)));
 
-    _writer._writeMsgToLog("Logging is started.");
+    _writer._writeMsgToLog("Logging is started.\n");
     _isEventLoopRunning = true;
     exec();
-    _writer._writeMsgToLog("Logging is finished.");
+    _writer._writeMsgToLog("Logging is finished.\n");
 }
 
 Logger::Logger(const std::string &logFileName, QObject *parent):

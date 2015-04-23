@@ -50,6 +50,8 @@ namespace UserInterface
         public : virtual void initializeGLEW() throw(std::runtime_error);
         public : virtual void paintGL() override;
 
+        public : void updateInfoStringAndRepresentationSize() noexcept;
+
         private: QAction* _actionEdit;
 
         public : VolumeGLRenderRVE(
