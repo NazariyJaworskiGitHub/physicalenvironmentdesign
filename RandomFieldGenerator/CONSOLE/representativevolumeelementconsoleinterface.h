@@ -299,7 +299,7 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
             ConsoleCommand(
             //  "--------------------------------------------------------------------------------"
                 "printRVE",
-                "createRVE\n"
+                "printRVE\n"
                 "Prints existing in RAM memory Representative Volume "
                 "Element (RVE) objects in\n"
                 "format: [<index>]: <name> <size> <representationSize>.\n"

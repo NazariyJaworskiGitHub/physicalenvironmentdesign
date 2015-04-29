@@ -5,10 +5,11 @@
 #include <cmath>
 #include <iostream>
 
-#include <FUNCTIONS/rand.h>
 #include "CLMANAGER/clmanager.h"
 
-#include "node.h"
+#include <FUNCTIONS/rand.h>
+#include <FUNCTIONS/factorial.h>
+#include <node.h>
 
 /// It is discretized RVE
 /// Mask is _data < 0;
@@ -263,6 +264,100 @@ class RepresentativeVolumeElement
             float rotationOY = 0.0f,
             float rotationOZ = 0.0f,
             const float coreValue = 1.0f) throw (std::runtime_error);
+
+    private : inline float _BernsteinBasis(int n, int i, float t)
+    {
+        return MathUtils::factorial(n)*std::pow(t,i)*std::pow(1.0f-t,n-i)/
+                MathUtils::factorial(i)/MathUtils::factorial(n-i);
+    }
+
+    private: inline float _BezierCurve(
+            int coordinate,
+            int &curveOrder,
+            float *controlPolygonPoints,
+            int currentSample,
+            int &curveSamples)
+    {
+        float _sum = 0.0f;
+        for(int i=0; i<curveOrder; ++i)
+            _sum += controlPolygonPoints[i*3 + coordinate] *
+                    _BernsteinBasis(curveOrder-1, i, currentSample/(curveSamples-1.0f));
+        return _sum;
+    }
+
+    private: inline float _distanceToBezierSamplePoint(
+            float x,
+            float y,
+            float z,
+            int &curveOrder,
+            float *controlPolygonPoints,
+            int currentSample,
+            int &curveSamples)
+    {
+        return
+                    std::pow(x-_BezierCurve(0, curveOrder, controlPolygonPoints,
+                                            currentSample, curveSamples), 2.0f) +
+                    std::pow(y-_BezierCurve(1, curveOrder, controlPolygonPoints,
+                                            currentSample, curveSamples), 2.0f) +
+                    std::pow(z-_BezierCurve(2, curveOrder, controlPolygonPoints,
+                                            currentSample, curveSamples), 2.0f);
+    }
+
+    private: inline float _projectionLength(
+            float x, float y, float z,
+            float Ax, float Ay, float Az,
+            float Bx, float By, float Bz)
+    {
+        return ((x-Ax)*(Bx-Ax) + (y-Ay)*(By-Ay) + (z-Az)*(Bz-Az))/
+                std::sqrt((Ax-Bx)*(Ax-Bx) + (Ay-By)*(Ay-By) + (Az-Bz)*(Az-Bz));
+    }
+
+    private: inline float _distanceToLine(
+            float x, float y, float z,
+            float Ax, float Ay, float Az,
+            float Bx, float By, float Bz)
+    {
+        return
+                    (x-Ax)*(x-Ax) + (y-Ay)*(y-Ay) + (z-Az)*(z-Az) -
+                    ((x-Ax)*(Bx-Ax) + (y-Ay)*(By-Ay) + (z-Az)*(Bz-Az)) *
+                    ((x-Ax)*(Bx-Ax) + (y-Ay)*(By-Ay) + (z-Az)*(Bz-Az)) /
+                    ((Ax-Bx)*(Ax-Bx) + (Ay-By)*(Ay-By) + (Az-Bz)*(Az-Bz));
+    }
+
+    /// Generate Bezier curve at unmasked _data elements
+    /// (i.e. where _data elements >=0),
+    public : void generateBezierCurveIntense(
+            int x,
+            int y,
+            int z,
+            int curveOrder,
+            int curveSamples,
+            int discreteLength,
+            int curveRadius,
+            float radiusDeviation,
+            float transitionLayerSize = 1.0f,
+            float rotationOX = 0.0f,
+            float rotationOY = 0.0f,
+            float rotationOZ = 0.0f,
+            float coreValue = 1.0f) throw (std::runtime_error);
+
+    /// Generate overlapping random ellipsoids at unmasked _data elements
+    /// (i.e. where _data elements >=0),
+    public : void generateOverlappingRandomBezierCurveIntense(
+            const int curveNum,
+            int curveOrder,
+            int curveSamples,
+            int discreteLength,
+            float minScale,
+            float maxScale,
+            int curveRadius,
+            float radiusDeviation,
+            float transitionLayerSize = 1.0f,
+            bool useRandomRotations = false,
+            float rotationOX = 0.0f,
+            float rotationOY = 0.0f,
+            float rotationOZ = 0.0f,
+            float coreValue = 1.0f) throw (std::runtime_error);
 
     /// Generate Voronoi diagram random cells
     public : void generateVoronoiRandomCells(

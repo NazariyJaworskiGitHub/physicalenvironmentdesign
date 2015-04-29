@@ -57,17 +57,17 @@ CONFIG(debug, release|debug):DEFINES += _DEBUG_MODE
 #    calculateCircumSphereCenterByCayleyMengerDeterminant::Eigen::DynamicMatrix::lu().solve
 #    at least under MinGW 4.8.0 and Eigen 3.2.0
 QMAKE_CXXFLAGS_RELEASE -= -O1
-#QMAKE_CXXFLAGS_RELEASE -= -O2
-#QMAKE_CXXFLAGS_RELEASE *= -O3
-QMAKE_CXXFLAGS_RELEASE += -O2 \ #Equivalent to -O3 (MinGW 4.8.0)
-    -finline-functions \        #includes all, except -fipa-cp-clone
-    -funswitch-loops \
-    -frename-registers \
-    -fpredictive-commoning \
-    -fgcse-after-reload \
-    -ftree-slp-vectorize \
-    -fvect-cost-model \
-    -ftree-partial-pre
+QMAKE_CXXFLAGS_RELEASE -= -O2
+QMAKE_CXXFLAGS_RELEASE *= -O3
+#QMAKE_CXXFLAGS_RELEASE += -O2 \ #Equivalent to -O3 (MinGW 4.8.0)
+#    -finline-functions \        #includes all, except -fipa-cp-clone
+#    -funswitch-loops \
+#    -frename-registers \
+#    -fpredictive-commoning \
+#    -fgcse-after-reload \
+#    -ftree-slp-vectorize \
+#    -fvect-cost-model \
+#    -ftree-partial-pre
 
 #QMAKE_CXXFLAGS_DEBUG -= -O1
 ##QMAKE_CXXFLAGS_DEBUG -= -O2

@@ -1402,6 +1402,160 @@ void RepresentativeVolumeElement::generateOverlappingRandomEllipsoidsIntenseCL(
     delete [] _initialPoints;
 }
 
+void RepresentativeVolumeElement::generateBezierCurveIntense(
+        int x,
+        int y,
+        int z,
+        int curveOrder,
+        int curveSamples,
+        int discreteLength,
+        int curveRadius,
+        float radiusDeviation,
+        float transitionLayerSize,
+        float rotationOX,
+        float rotationOY,
+        float rotationOZ,
+        float coreValue) throw (std::runtime_error)
+{
+    float *_controlPolygonPoints = new float[curveOrder*3];
+    for(int k=0; k<curveOrder; ++k)
+    {
+        _controlPolygonPoints[k*3+0] = (-0.5f + k/(curveOrder-1.0f)) * discreteLength;
+        _controlPolygonPoints[k*3+1] = MathUtils::rand<float>(
+                    -radiusDeviation, radiusDeviation) * discreteLength;
+        _controlPolygonPoints[k*3+2] = MathUtils::rand<float>(
+                    -radiusDeviation, radiusDeviation) * discreteLength;
+    }
+
+    for(long i = 0; i<_size; ++i)
+        for(long j = 0; j<_size; ++j)
+            for(long k = 0; k<_size; ++k)
+            {
+                float &_val = _data[(i * _size * _size) + (j * _size) + k];
+                if(_val >= 0)
+                {
+                    float _kk, _jj, _ii;
+                    _kk = k-x; _jj = j-y; _ii = i-z;
+                    _distanceOnRepeatedSides(
+                            x, y, z,
+                            k, j, i, _kk, _jj, _ii);
+                    rotateXYZ(_kk, _jj, _ii, rotationOX, rotationOY, rotationOZ);
+
+                    float _newVal = 0.0f;
+                    float _minDist = _distanceToBezierSamplePoint(
+                                _kk, _jj, _ii,
+                                curveOrder, _controlPolygonPoints,
+                                0, curveSamples);
+                    int _sampleIndexA = 0;
+                    int _sampleIndexB = 1;
+                    for(int s=1; s<curveSamples; ++s)
+                    {
+                        float _curDist = _distanceToBezierSamplePoint(
+                                    _kk, _jj, _ii,
+                                    curveOrder, _controlPolygonPoints,
+                                    s, curveSamples);
+                        if(_curDist < _minDist)
+                        {
+                            _minDist = _curDist;
+                            _sampleIndexA = s;
+                        }
+                    }
+                    if(_sampleIndexA != 0 && _sampleIndexA != curveSamples-1)
+                    {
+                        float _minDistLeft = _distanceToBezierSamplePoint(
+                                    _kk, _jj, _ii,
+                                    curveOrder, _controlPolygonPoints,
+                                    _sampleIndexA-1, curveSamples);
+                        float _minDistRight = _distanceToBezierSamplePoint(
+                                    _kk, _jj, _ii,
+                                    curveOrder, _controlPolygonPoints,
+                                    _sampleIndexA+1, curveSamples);
+                        if(_minDistLeft < _minDistRight)
+                            _sampleIndexB = _sampleIndexA-1;
+                        else _sampleIndexB = _sampleIndexA+1;
+                    }
+                    else if(_sampleIndexA == 0) _sampleIndexB = 1;
+                    else  _sampleIndexB = _sampleIndexA-1;
+                    float Ax = _BezierCurve(0, curveOrder, _controlPolygonPoints,
+                                            _sampleIndexA, curveSamples);
+                    float Ay = _BezierCurve(1, curveOrder, _controlPolygonPoints,
+                                            _sampleIndexA, curveSamples);
+                    float Az = _BezierCurve(2, curveOrder, _controlPolygonPoints,
+                                            _sampleIndexA, curveSamples);
+                    float Bx = _BezierCurve(0, curveOrder, _controlPolygonPoints,
+                                            _sampleIndexB, curveSamples);
+                    float By = _BezierCurve(1, curveOrder, _controlPolygonPoints,
+                                            _sampleIndexB, curveSamples);
+                    float Bz = _BezierCurve(2, curveOrder, _controlPolygonPoints,
+                                            _sampleIndexB, curveSamples);
+                    if(!((_sampleIndexA == 0 || _sampleIndexA == curveSamples-1) &&
+                            _projectionLength(
+                                _kk, _jj, _ii,
+                                Ax, Ay, Az, Bx, By, Bz) < 0.0f))
+                    {
+                        _minDist = _distanceToLine(
+                                    _kk, _jj, _ii,
+                                    Ax, Ay, Az, Bx, By, Bz);
+                    }
+                    if(_minDist <= curveRadius*(1.0f-transitionLayerSize)*
+                            curveRadius*(1.0f-transitionLayerSize))
+                        _newVal = coreValue;
+                    else if(_minDist <= curveRadius*curveRadius)
+                        _newVal = (curveRadius - std::sqrt(_minDist))/curveRadius
+                                / transitionLayerSize * coreValue;
+                    if(_val < _newVal)
+                        _val = _newVal;
+                }
+            }
+    delete [] _controlPolygonPoints;
+}
+
+void RepresentativeVolumeElement::generateOverlappingRandomBezierCurveIntense(
+        const int curveNum,
+        int curveOrder,
+        int curveSamples,
+        int discreteLength,
+        float minScale,
+        float maxScale,
+        int curveRadius,
+        float radiusDeviation,
+        float transitionLayerSize,
+        bool useRandomRotations,
+        float rotationOX,
+        float rotationOY,
+        float rotationOZ,
+        float coreValue) throw (std::runtime_error)
+{
+    for(int i=0; i<curveNum; ++i)
+    {
+        std::cout
+                << "\b\b\b\b"
+                << (int)(i * 100.0 / (curveNum-1))
+                << "%";
+
+        float _x = MathUtils::rand<int>(0, _size-1);
+        float _y = MathUtils::rand<int>(0, _size-1);
+        float _z = MathUtils::rand<int>(0, _size-1);
+
+        if(useRandomRotations)
+        {
+            rotationOX = MathUtils::rand<float>(0.0f, M_PI);
+            rotationOY = MathUtils::rand<float>(0.0f, M_PI);
+            rotationOZ = MathUtils::rand<float>(0.0f, M_PI);
+        }
+
+        float _curveScale = MathUtils::rand<float>(minScale, maxScale);
+
+        generateBezierCurveIntense(
+                    _x, _y, _z,
+                    curveOrder, curveSamples,
+                    discreteLength * _curveScale,
+                    curveRadius * _curveScale,
+                    radiusDeviation, transitionLayerSize,
+                    rotationOX, rotationOY, rotationOZ, coreValue);
+    }
+}
+
 void RepresentativeVolumeElement::generateVoronoiRandomCells(
         const int cellNum) throw (std::runtime_error)
 {
