@@ -44,6 +44,7 @@ class RepresentativeVolumeElement
     private: static cl::Kernel *_kernelZPtr;
     private: static cl::Kernel *_kernelXYZPtr;
     private: static cl::Kernel *_kernelRandomEllipsoidsPtr;
+    private: static cl::Kernel *_kernelRandomBezierCurvesPtr;
     private: static cl::Kernel *_kernelVoronoiPtr;
 
     /// Constructor
@@ -285,6 +286,7 @@ class RepresentativeVolumeElement
         return _sum;
     }
 
+    /// \warning it is without sqrt
     private: inline float _distanceToBezierSamplePoint(
             float x,
             float y,
@@ -310,6 +312,7 @@ class RepresentativeVolumeElement
                 std::sqrt((Ax-Bx)*(Ax-Bx) + (Ay-By)*(Ay-By) + (Az-Bz)*(Az-Bz));
     }
 
+    /// \warning it is without sqrt
     private: inline float _distanceToLine(
             float x, float y, float z,
             float Ax, float Ay, float Az,
@@ -340,9 +343,24 @@ class RepresentativeVolumeElement
             float coreValue = 1.0f) throw (std::runtime_error);
 
     /// Generate overlapping random ellipsoids at unmasked _data elements
-    /// (i.e. where _data elements >=0),
     public : void generateOverlappingRandomBezierCurveIntense(
-            const int curveNum,
+            int curveNum,
+            int curveOrder,
+            int curveSamples,
+            int discreteLength,
+            float minScale,
+            int curveRadius,
+            float radiusDeviation,
+            float transitionLayerSize = 1.0f,
+            bool useRandomRotations = false,
+            float rotationOX = 0.0f,
+            float rotationOY = 0.0f,
+            float rotationOZ = 0.0f,
+            float coreValue = 1.0f) throw (std::runtime_error);
+
+    /// Generate overlapping random ellipsoids at unmasked _data elements OpenCL version
+    public : void generateOverlappingRandomBezierCurveIntenseCL(
+            int curveNum,
             int curveOrder,
             int curveSamples,
             int discreteLength,

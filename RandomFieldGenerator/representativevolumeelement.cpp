@@ -11,6 +11,7 @@ cl::Kernel *RepresentativeVolumeElement::_kernelYPtr = nullptr;
 cl::Kernel *RepresentativeVolumeElement::_kernelZPtr = nullptr;
 cl::Kernel *RepresentativeVolumeElement::_kernelXYZPtr = nullptr;
 cl::Kernel *RepresentativeVolumeElement::_kernelRandomEllipsoidsPtr = nullptr;
+cl::Kernel *RepresentativeVolumeElement::_kernelRandomBezierCurvesPtr = nullptr;
 cl::Kernel *RepresentativeVolumeElement::_kernelVoronoiPtr = nullptr;
 
 #define _MASK_EPS_ 1.0f
@@ -129,7 +130,7 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
     if(!_programPtr)
     {
         std::string _CLSource_applyGaussianFilter = "\
-        void _rotateXYZ(\
+        inline void _rotateXYZ(\
                     float *x, float *y, float *z,\
                     float aox, float aoy, float aoz)\
         {\
@@ -141,12 +142,12 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
             (*x) = cos(aoz)*_x - sin(aoz)*_y;\
             (*y) = sin(aoz)*_x + cos(aoz)*_y;\
         }\
-        float _GaussianFilter(\
+        inline float _GaussianFilter(\
                     float r,\
                     float x, float y, float z,\
                     float fx, float fy, float fz)\
         {\
-            return exp(-(x*x/fx/fx + y*y/fy/fy + z*z/fz/fz) / ((r/2.0) * (r/2.0)));\
+            return exp(-(x*x/fx/fx + y*y/fy/fy + z*z/fz/fz) / ((r/2.0f) * (r/2.0f)));\
         }\
         __kernel void applyGaussianFilterX(\
                     int discreteRadius,\
@@ -157,9 +158,9 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
                     __global float *_buffer,\
                     int _size)\
         {\
-            long i = get_global_id(0);\
-            long j = get_global_id(1);\
-            long k = get_global_id(2);\
+            int i = get_global_id(0);\
+            int j = get_global_id(1);\
+            int k = get_global_id(2);\
             for( int p = -discreteRadius; p <= discreteRadius; ++p)\
                 _buffer[(i * _size * _size) + (j * _size) + k] +=\
                         _data[(((i+p)&(_size-1)) * _size * _size) +\
@@ -180,9 +181,9 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
                     __global float *_buffer,\
                     int _size)\
         {\
-            long i = get_global_id(0);\
-            long j = get_global_id(1);\
-            long k = get_global_id(2);\
+            int i = get_global_id(0);\
+            int j = get_global_id(1);\
+            int k = get_global_id(2);\
             for( int q = -discreteRadius; q <= discreteRadius; ++q)\
                 _buffer[(i * _size * _size) + (j * _size) + k] +=\
                         _data[(i * _size * _size) +\
@@ -203,9 +204,9 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
                     __global float *_buffer,\
                     int _size)\
         {\
-            long i = get_global_id(0);\
-            long j = get_global_id(1);\
-            long k = get_global_id(2);\
+            int i = get_global_id(0);\
+            int j = get_global_id(1);\
+            int k = get_global_id(2);\
             for( int r = -discreteRadius; r <= discreteRadius; ++r)\
                 _buffer[(i * _size * _size) + (j * _size) + k] +=\
                         _data[(i * _size * _size) + (j * _size) +\
@@ -229,9 +230,9 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
                     __global float *_buffer,\
                     int _size)\
         {\
-            long i = get_global_id(0);\
-            long j = get_global_id(1);\
-            long k = get_global_id(2);\
+            int i = get_global_id(0);\
+            int j = get_global_id(1);\
+            int k = get_global_id(2);\
             for( int p = -discreteRadius; p <= discreteRadius; ++p)\
                 for( int q = -discreteRadius; q <= discreteRadius; ++q)\
                     for( int r = -discreteRadius; r <= discreteRadius; ++r)\
@@ -370,6 +371,134 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
                 }\
                 _data[(i * _size * _size) + (j * _size) + k] = _minDist2-_minDist1;\
             }\
+        }\
+        inline int factorial(int n)\
+        {\
+            int  _factorial = 1;\
+            for(int  i=2; i<=n;++i)\
+                _factorial*=i;\
+            return _factorial;\
+        }\
+        inline float _distanceToBezierSamplePoint(\
+                    float x,\
+                    float y,\
+                    float z,\
+                    int currentSample,\
+                    long offset,\
+                    __global float *curveAproximation)\
+        {\
+            return ((x-curveAproximation[offset + currentSample*3 + 0]) *\
+                    (x-curveAproximation[offset + currentSample*3 + 0]) +\
+                    (y-curveAproximation[offset + currentSample*3 + 1]) *\
+                    (y-curveAproximation[offset + currentSample*3 + 1]) +\
+                    (z-curveAproximation[offset + currentSample*3 + 2]) *\
+                    (z-curveAproximation[offset + currentSample*3 + 2]));\
+        }\
+        inline float _projectionLength(\
+                    float x, float y, float z,\
+                    float Ax, float Ay, float Az,\
+                    float Bx, float By, float Bz)\
+        {\
+            return ((x-Ax)*(Bx-Ax) + (y-Ay)*(By-Ay) + (z-Az)*(Bz-Az))/\
+                    sqrt((Ax-Bx)*(Ax-Bx) + (Ay-By)*(Ay-By) + (Az-Bz)*(Az-Bz));\
+        }\
+        inline float _distanceToLine(\
+                    float x, float y, float z,\
+                    float Ax, float Ay, float Az,\
+                    float Bx, float By, float Bz)\
+        {\
+            return ((x-Ax)*(x-Ax) + (y-Ay)*(y-Ay) + (z-Az)*(z-Az) -\
+                    ((x-Ax)*(Bx-Ax) + (y-Ay)*(By-Ay) + (z-Az)*(Bz-Az)) *\
+                    ((x-Ax)*(Bx-Ax) + (y-Ay)*(By-Ay) + (z-Az)*(Bz-Az)) /\
+                    ((Ax-Bx)*(Ax-Bx) + (Ay-By)*(Ay-By) + (Az-Bz)*(Az-Bz)));\
+        }\
+        __kernel void BezierCurves(\
+                    __global float *_curveAproximation,\
+                    __global float *_curveParameters,\
+                    __global float *_data,\
+                    int curveNum,\
+                    int curveSamples,\
+                    float transitionLayerSize,\
+                    float coreValue,\
+                    int _size)\
+        {\
+            int i = get_global_id(0);\
+            int j = get_global_id(1);\
+            int k = get_global_id(2);\
+            if(_data[(i * _size * _size) + (j * _size) + k] >= 0)\
+            {\
+                for( int c = 0; c<curveNum; ++c)\
+                {\
+                    long offset = c*curveSamples*3;\
+                    float _kk, _jj, _ii;\
+                    _distanceOnRepeatedSides(\
+                                _curveParameters[c*7 + 0],\
+                            _curveParameters[c*7 + 1],\
+                            _curveParameters[c*7 + 2],\
+                            k, j, i, &_kk, &_jj, &_ii, _size);\
+                    _rotateXYZ(\
+                                &_kk, &_jj, &_ii,\
+                                _curveParameters[c*7 + 3],\
+                            _curveParameters[c*7 + 4],\
+                            _curveParameters[c*7 + 5]);\
+                    float _minDist = _distanceToBezierSamplePoint(\
+                                _kk, _jj, _ii, 0, offset, _curveAproximation);\
+                    int _sampleIndexA = 0;\
+                    int _sampleIndexB = 1;\
+                    for(int s=1; s<curveSamples; ++s)\
+                    {\
+                        float _curDist = _distanceToBezierSamplePoint(\
+                                    _kk, _jj, _ii, s, offset, _curveAproximation);\
+                        if(_curDist < _minDist)\
+                        {\
+                            _minDist = _curDist;\
+                            _sampleIndexA = s;\
+                        }\
+                    }\
+                    if(_sampleIndexA != 0 && _sampleIndexA != curveSamples-1)\
+                    {\
+                        float _minDistLeft = _distanceToBezierSamplePoint(\
+                                    _kk, _jj, _ii, _sampleIndexA-1, offset, _curveAproximation);\
+                        float _minDistRight = _distanceToBezierSamplePoint(\
+                                    _kk, _jj, _ii, _sampleIndexA+1, offset, _curveAproximation);\
+                        if(_minDistLeft < _minDistRight)\
+                            _sampleIndexB = _sampleIndexA-1;\
+                        else _sampleIndexB = _sampleIndexA+1;\
+                    }\
+                    else if(_sampleIndexA == 0) _sampleIndexB = 1;\
+                    else _sampleIndexB = _sampleIndexA-1;\
+                    if(!((_sampleIndexA == 0 || _sampleIndexA == curveSamples-1) &&\
+                         _projectionLength(\
+                             _kk, _jj, _ii,\
+                             _curveAproximation[offset + _sampleIndexA*3 + 0],\
+                             _curveAproximation[offset + _sampleIndexA*3 + 1],\
+                             _curveAproximation[offset + _sampleIndexA*3 + 2],\
+                             _curveAproximation[offset + _sampleIndexB*3 + 0],\
+                             _curveAproximation[offset + _sampleIndexB*3 + 1],\
+                             _curveAproximation[offset + _sampleIndexB*3 + 2]) < 0.0f))\
+                    {\
+                        _minDist = _distanceToLine(\
+                                    _kk, _jj, _ii,\
+                                    _curveAproximation[offset + _sampleIndexA*3 + 0],\
+                                _curveAproximation[offset + _sampleIndexA*3 + 1],\
+                                _curveAproximation[offset + _sampleIndexA*3 + 2],\
+                                _curveAproximation[offset + _sampleIndexB*3 + 0],\
+                                _curveAproximation[offset + _sampleIndexB*3 + 1],\
+                                _curveAproximation[offset + _sampleIndexB*3 + 2]);\
+                    }\
+                    float _curveRadius = _curveParameters[c*7+6];\
+                    if(_minDist <= _curveRadius*(1.0f-transitionLayerSize)*\
+                            _curveRadius*(1.0f-transitionLayerSize))\
+                        _data[(i * _size * _size) + (j * _size) + k] = coreValue;\
+                    else if(_minDist <= _curveRadius*_curveRadius)\
+                    {\
+                        float _newVal = (_curveRadius - sqrt(_minDist)) /\
+                                _curveRadius / transitionLayerSize * coreValue;\
+                        if(_data[(i * _size * _size) + (j * _size) + k] < _newVal) \
+                            _data[(i * _size * _size) + (j * _size) + k] = _newVal;\
+                    }\
+                }\
+            }\
         }";
 
         /// Don't worry, CLManager will destroy this objects at the end of application
@@ -393,6 +522,9 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
 
         _kernelRandomEllipsoidsPtr = &OpenCL::CLManager::instance().createKernel(
                     *_programPtr, "randomEllipsoids");
+
+        _kernelRandomBezierCurvesPtr = &OpenCL::CLManager::instance().createKernel(
+                    *_programPtr, "BezierCurves");
 
         _kernelVoronoiPtr = &OpenCL::CLManager::instance().createKernel(
                     *_programPtr, "voronoi");
@@ -1373,6 +1505,9 @@ void RepresentativeVolumeElement::generateBezierCurveIntense(
         float coreValue) throw (std::runtime_error)
 {
     float *_controlPolygonPoints = new float[curveOrder*3];
+    if(!_controlPolygonPoints)
+        throw(std::runtime_error("generateBezierCurveIntense():"
+                                 "can't allocate memory for temporary storage.\n"));
     for(int k=0; k<curveOrder; ++k)
     {
         _controlPolygonPoints[k*3+0] = (-0.5f + k/(curveOrder-1.0f)) * discreteLength;
@@ -1383,6 +1518,9 @@ void RepresentativeVolumeElement::generateBezierCurveIntense(
     }
 
     float *_curveAproximation = new float[curveSamples*3];
+    if(!_curveAproximation)
+        throw(std::runtime_error("generateBezierCurveIntense():"
+                                 "can't allocate memory for temporary storage.\n"));
     for(int k=0; k<curveSamples; ++k)
     {
         _curveAproximation[k*3+0] = _BezierCurve(0, curveOrder, _controlPolygonPoints,
@@ -1401,7 +1539,6 @@ void RepresentativeVolumeElement::generateBezierCurveIntense(
                 if(_val >= 0)
                 {
                     float _kk, _jj, _ii;
-                    _kk = k-x; _jj = j-y; _ii = i-z;
                     _distanceOnRepeatedSides(
                             x, y, z,
                             k, j, i, _kk, _jj, _ii);
@@ -1468,7 +1605,7 @@ void RepresentativeVolumeElement::generateBezierCurveIntense(
 }
 
 void RepresentativeVolumeElement::generateOverlappingRandomBezierCurveIntense(
-        const int curveNum,
+        int curveNum,
         int curveOrder,
         int curveSamples,
         int discreteLength,
@@ -1550,6 +1687,170 @@ void RepresentativeVolumeElement::generateOverlappingRandomBezierCurveIntense(
                     radiusDeviation, transitionLayerSize,
                     rotationOX, rotationOY, rotationOZ, coreValue);
     }
+}
+
+void RepresentativeVolumeElement::generateOverlappingRandomBezierCurveIntenseCL(
+        int curveNum,
+        int curveOrder,
+        int curveSamples,
+        int discreteLength,
+        float minScale,
+        int curveRadius,
+        float radiusDeviation,
+        float transitionLayerSize,
+        bool useRandomRotations,
+        float rotationOX,
+        float rotationOY,
+        float rotationOZ,
+        float coreValue) throw (std::runtime_error)
+{
+    if(curveNum <= 0)
+        throw(std::runtime_error("generateOverlappingRandomBezierCurveIntenseCL(): "
+                                 "curveNum <= 0.\n"));
+    if(curveOrder <= 0 || curveOrder >= 10)
+        throw(std::runtime_error("generateOverlappingRandomBezierCurveIntenseCL(): "
+                                 "curveOrder <= 0 || curveOrder >= 10.\n"));
+    if(curveSamples <= 1 || curveSamples >= 100)
+        throw(std::runtime_error("generateOverlappingRandomBezierCurveIntenseCL(): "
+                                 "curveSamples <= 1 || curveSamples >= 100.\n"));
+    if(discreteLength <= 0 || discreteLength > _size)
+        throw(std::runtime_error("generateOverlappingRandomBezierCurveIntenseCL(): "
+                                 "discreteLength <= 0 || discreteLength > _size.\n"));
+    if(minScale <= 0.0f || minScale > 1.0f)
+        throw(std::runtime_error("generateOverlappingRandomBezierCurveIntenseCL(): "
+                                 "minScale <= 0.0f || minScale > 1.0f.\n"));
+    if(curveRadius <= 0 || curveRadius > _size)
+        throw(std::runtime_error("generateOverlappingRandomBezierCurveIntenseCL(): "
+                                 "curveRadius <= 0 || curveRadius > _size.\n"));
+    if(radiusDeviation < 0.0f || radiusDeviation > 1.0f)
+        throw(std::runtime_error("generateOverlappingRandomBezierCurveIntenseCL(): "
+                                 "radiusDeviation < 0.0f || radiusDeviation > 1.0f.\n"));
+    if(transitionLayerSize <= 0.0f || transitionLayerSize > 1.0f)
+        throw(std::runtime_error(
+                "generateOverlappingRandomBezierCurveIntenseCL(): "
+                "transitionLayerSize <= 0.0f || "
+                "transitionLayerSize > 1.0f.\n"));
+    if(coreValue < 0.0f || coreValue > 1.0f)
+        throw(std::runtime_error(
+                "generateOverlappingRandomBezierCurveIntenseCL(): "
+                "coreValue < 0.0f || coreValue > 1.0f.\n"));
+    if(rotationOX < 0.0f || rotationOX > M_PI*2)
+        throw(std::runtime_error("generateOverlappingRandomBezierCurveIntenseCL(): rotationOX "
+                                 "< 0 or > 2*pi.\n"));
+    if(rotationOY < 0.0f || rotationOY > M_PI*2)
+        throw(std::runtime_error("generateOverlappingRandomBezierCurveIntenseCL(): rotationOY "
+                                 "< 0 or > 2*pi.\n"));
+    if(rotationOZ < 0.0f || rotationOZ > M_PI*2)
+        throw(std::runtime_error("generateOverlappingRandomBezierCurveIntenseCL(): rotationOZ "
+                                 "< 0 or > 2*pi.\n"));
+
+    float *_curveAproximation = new float[curveNum*curveSamples*3];
+    if(!_curveAproximation)
+        throw(std::runtime_error("generateOverlappingRandomBezierCurveIntenseCL():"
+                                 "can't allocate memory for temporary storage.\n"));
+    // x,y,z,rox,roy,roz,radius
+    float *_curveParameters = new float[curveNum*7];
+    if(!_curveParameters)
+        throw(std::runtime_error("generateOverlappingRandomBezierCurveIntenseCL():"
+                                 "can't allocate memory for temporary storage.\n"));
+    float *_controlPolygonPoints = new float[curveOrder*3];
+    if(!_controlPolygonPoints)
+        throw(std::runtime_error("generateBezierCurveIntense():"
+                                 "can't allocate memory for temporary storage.\n"));
+
+    for(int c=0; c<curveNum; ++c)
+    {
+        for(int k=0; k<curveOrder; ++k)
+        {
+            _controlPolygonPoints[k*3+0] = (-0.5f + k/(curveOrder-1.0f)) * discreteLength;
+            _controlPolygonPoints[k*3+1] = MathUtils::rand<float>(
+                        -radiusDeviation, radiusDeviation) * discreteLength;
+            _controlPolygonPoints[k*3+2] = MathUtils::rand<float>(
+                        -radiusDeviation, radiusDeviation) * discreteLength;
+        }
+
+        for(int k=0; k<curveSamples; ++k)
+        {
+            _curveAproximation[c*curveSamples*3 + k*3 + 0] =
+                    _BezierCurve(0, curveOrder, _controlPolygonPoints, k, curveSamples);
+            _curveAproximation[c*curveSamples*3 + k*3 + 1] =
+                    _BezierCurve(1, curveOrder, _controlPolygonPoints, k, curveSamples);
+            _curveAproximation[c*curveSamples*3 + k*3 + 2] =
+                    _BezierCurve(2, curveOrder, _controlPolygonPoints, k, curveSamples);
+        }
+
+        _curveParameters[c*7 + 0] = MathUtils::rand<int>(0, _size-1);
+        _curveParameters[c*7 + 1] = MathUtils::rand<int>(0, _size-1);
+        _curveParameters[c*7 + 2] = MathUtils::rand<int>(0, _size-1);
+        if(useRandomRotations)
+        {
+            _curveParameters[c*7 + 3] = MathUtils::rand<float>(0.0f, M_PI);
+            _curveParameters[c*7 + 4] = MathUtils::rand<float>(0.0f, M_PI);
+            _curveParameters[c*7 + 5] = MathUtils::rand<float>(0.0f, M_PI);
+        }
+        else
+        {
+            _curveParameters[c*7 + 3] = rotationOX;
+            _curveParameters[c*7 + 4] = rotationOY;
+            _curveParameters[c*7 + 5] = rotationOZ;
+        }
+        _curveParameters[c*7 + 6] = curveRadius * MathUtils::rand<float>(minScale, 1.0f);
+    }
+
+    cl::Buffer _dataBuffer(
+                OpenCL::CLManager::instance().getCurrentContext(),
+                CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+                sizeof(float) * _size * _size * _size,
+                _data);
+
+    cl::Buffer _curveAproximationBuffer(
+                OpenCL::CLManager::instance().getCurrentContext(),
+                CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+                sizeof(float) * curveNum * curveSamples * 3,
+                _curveAproximation);
+
+    cl::Buffer _curveParametersBuffer(
+                OpenCL::CLManager::instance().getCurrentContext(),
+                CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+                sizeof(float) * curveNum * 7,
+                _curveParameters);
+
+    _kernelRandomBezierCurvesPtr->setArg(0, _curveAproximationBuffer);
+    _kernelRandomBezierCurvesPtr->setArg(1, _curveParametersBuffer);
+    _kernelRandomBezierCurvesPtr->setArg(2, _dataBuffer);
+    _kernelRandomBezierCurvesPtr->setArg(3, curveNum);
+    _kernelRandomBezierCurvesPtr->setArg(4, curveSamples);
+    _kernelRandomBezierCurvesPtr->setArg(5, transitionLayerSize);
+    _kernelRandomBezierCurvesPtr->setArg(6, coreValue);
+    _kernelRandomBezierCurvesPtr->setArg(7, _size);
+
+    cl::CommandQueue &_queue = OpenCL::CLManager::instance().getCurrentCommandQueue();
+    cl::Event _event;
+
+    cl::NDRange _localThreads = OpenCL::CLManager::instance().getMaxLocalThreads(_size);
+
+    _queue.enqueueNDRangeKernel(
+                *_kernelRandomBezierCurvesPtr,
+                cl::NullRange,
+                cl::NDRange(_size, _size, _size),
+                _localThreads,
+                NULL,
+                &_event);
+    _event.wait();
+
+    _queue.enqueueReadBuffer(
+                _dataBuffer,
+                CL_FALSE,
+                0,
+                sizeof(float) * _size * _size * _size,
+                _data,
+                NULL,
+                &_event);
+    _event.wait();
+
+    delete [] _controlPolygonPoints;
+    delete [] _curveParameters;
+    delete [] _curveAproximation;
 }
 
 void RepresentativeVolumeElement::generateVoronoiRandomCells(
