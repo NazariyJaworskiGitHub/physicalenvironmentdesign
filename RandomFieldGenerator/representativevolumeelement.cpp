@@ -1075,56 +1075,6 @@ void RepresentativeVolumeElement::generateRandomEllipsoidIntense(
         const float rotationOZ,
         const float coreValue) throw (std::runtime_error)
 {
-    if(x < 0 || x >= _size)
-        throw(std::runtime_error("generateRandomEllipsoidSmoothed(): "
-                                 "x < 0 || x >= _size.\n"));
-    if(y < 0 || y >= _size)
-        throw(std::runtime_error("generateRandomEllipsoidSmoothed(): "
-                                 "y < 0 || y >= _size.\n"));
-    if(z < 0 || z >= _size)
-        throw(std::runtime_error("generateRandomEllipsoidSmoothed(): "
-                                 "z < 0 || z >= _size.\n"));
-
-    if(minRadius <= 0)
-        throw(std::runtime_error("generateRandomEllipsoidSmoothed(): "
-                                 "minRadius <= 0.\n"));
-    if(maxRadius <= 0)
-        throw(std::runtime_error("generateRandomEllipsoidSmoothed(): "
-                                 "maxRadius <= 0.\n"));
-    if(maxRadius < minRadius)
-        throw(std::runtime_error("generateRandomEllipsoidSmoothed(): "
-                                 "maxRadius < minRadius.\n"));
-    if(transitionLayerSize <= 0.0f || transitionLayerSize > 1.0f)
-        throw(std::runtime_error(
-                "generateRandomEllipsoidSmoothed(): transitionLayerSize <= 0.0f || "
-                "transitionLayerSize > 1.0f.\n"));
-    if(ellipsoidScaleFactorX <= 0.0f || ellipsoidScaleFactorX > 1.0f)
-        throw(std::runtime_error(
-                "generateRandomEllipsoidSmoothed(): "
-                "ellipsoidScaleFactorX <= 0 or > 1.\n"));
-    if(ellipsoidScaleFactorY <= 0.0f || ellipsoidScaleFactorY > 1.0f)
-        throw(std::runtime_error(
-                "generateRandomEllipsoidSmoothed(): "
-                "ellipsoidScaleFactorY <= 0 or > 1.\n"));
-    if(ellipsoidScaleFactorZ <= 0.0f || ellipsoidScaleFactorZ > 1.0f)
-        throw(std::runtime_error(
-                "generateRandomEllipsoidSmoothed(): "
-                "ellipsoidScaleFactorZ <= 0 or > 1.\n"));
-    if(coreValue < 0.0f || coreValue > 1.0f)
-        throw(std::runtime_error(
-                "generateRandomEllipsoidSmoothed(): "
-                "coreValue < 0.0f || coreValue > 1.0f.\n"));
-
-    if(rotationOX < 0.0f || rotationOX > M_PI*2)
-        throw(std::runtime_error("generateRandomEllipsoidIntense(): rotationOX "
-                                 "< 0 or > 2*pi.\n"));
-    if(rotationOY < 0.0f || rotationOY > M_PI*2)
-        throw(std::runtime_error("generateRandomEllipsoidIntense(): rotationOY "
-                                 "< 0 or > 2*pi.\n"));
-    if(rotationOZ < 0.0f || rotationOZ > M_PI*2)
-        throw(std::runtime_error("generateRandomEllipsoidIntense(): rotationOZ "
-                                 "< 0 or > 2*pi.\n"));
-
     float _sphereRadius = MathUtils::rand<float>(minRadius, maxRadius);
 
     for( long i = 0; i<_size; ++i)
@@ -1177,36 +1127,36 @@ void RepresentativeVolumeElement::generateOverlappingRandomEllipsoidsIntense(
         const float coreValue) throw (std::runtime_error)
 {
     if(ellipsoidNum <= 0)
-        throw(std::runtime_error("generateOverlappingRandomEllipsoidsSmoothed(): "
+        throw(std::runtime_error("generateOverlappingRandomEllipsoidsIntense(): "
                                  "ellopsoidNum <= 0.\n"));
     if(minRadius <= 0)
-        throw(std::runtime_error("generateOverlappingRandomEllipsoidsSmoothed(): "
+        throw(std::runtime_error("generateOverlappingRandomEllipsoidsIntense(): "
                                  "minRadius <= 0.\n"));
     if(maxRadius <= 0)
-        throw(std::runtime_error("generateOverlappingRandomEllipsoidsSmoothed(): "
+        throw(std::runtime_error("generateOverlappingRandomEllipsoidsIntense(): "
                                  "maxRadius <= 0.\n"));
     if(maxRadius < minRadius)
-        throw(std::runtime_error("generateOverlappingRandomEllipsoidsSmoothed(): "
+        throw(std::runtime_error("generateOverlappingRandomEllipsoidsIntense(): "
                                  "maxRadius < minRadius.\n"));
     if(transitionLayerSize <= 0.0f || transitionLayerSize > 1.0f)
         throw(std::runtime_error(
-                "generateOverlappingRandomEllipsoidsSmoothed(): transitionLayerSize <= 0.0f || "
+                "generateOverlappingRandomEllipsoidsIntense(): transitionLayerSize <= 0.0f || "
                 "transitionLayerSize > 1.0f.\n"));
     if(ellipsoidScaleFactorX <= 0.0f || ellipsoidScaleFactorX > 1.0f)
         throw(std::runtime_error(
-                "generateOverlappingRandomEllipsoidsSmoothed(): "
+                "generateOverlappingRandomEllipsoidsIntense(): "
                 "ellipsoidScaleFactorX <= 0 or > 1.\n"));
     if(ellipsoidScaleFactorY <= 0.0f || ellipsoidScaleFactorY > 1.0f)
         throw(std::runtime_error(
-                "generateOverlappingRandomEllipsoidsSmoothed(): "
+                "generateOverlappingRandomEllipsoidsIntense(): "
                 "ellipsoidScaleFactorY <= 0 or > 1.\n"));
     if(ellipsoidScaleFactorZ <= 0.0f || ellipsoidScaleFactorZ > 1.0f)
         throw(std::runtime_error(
-                "generateOverlappingRandomEllipsoidsSmoothed(): "
+                "generateOverlappingRandomEllipsoidsIntense(): "
                 "ellipsoidScaleFactorZ <= 0 or > 1.\n"));
     if(coreValue < 0.0f || coreValue > 1.0f)
         throw(std::runtime_error(
-                "generateOverlappingRandomEllipsoidsSmoothed(): "
+                "generateOverlappingRandomEllipsoidsIntense(): "
                 "coreValue < 0.0f || coreValue > 1.0f.\n"));
 
     if(rotationOX < 0.0f || rotationOX > M_PI*2)
@@ -1221,6 +1171,11 @@ void RepresentativeVolumeElement::generateOverlappingRandomEllipsoidsIntense(
 
     for(int i=0; i<ellipsoidNum; ++i)
     {
+        std::cout
+                << "\b\b\b\b"
+                << (int)(i * 100.0 / (ellipsoidNum-1))
+                << "%";
+
         float _x = MathUtils::rand<int>(0, _size-1);
         float _y = MathUtils::rand<int>(0, _size-1);
         float _z = MathUtils::rand<int>(0, _size-1);
@@ -1288,34 +1243,34 @@ void RepresentativeVolumeElement::generateOverlappingRandomEllipsoidsIntenseCL(
         throw(std::runtime_error("generateOverlappingRandomEllipsoidsIntenseCL(): "
                                  "ellopsoidNum <= 0.\n"));
     if(minRadius <= 0)
-        throw(std::runtime_error("generateOverlappingRandomEllipsoidsSmoothedCL(): "
+        throw(std::runtime_error("generateOverlappingRandomEllipsoidsIntenseCL(): "
                                  "minRadius <= 0.\n"));
     if(maxRadius <= 0)
-        throw(std::runtime_error("generateOverlappingRandomEllipsoidsSmoothedCL(): "
+        throw(std::runtime_error("generateOverlappingRandomEllipsoidsIntenseCL(): "
                                  "maxRadius <= 0.\n"));
     if(maxRadius < minRadius)
-        throw(std::runtime_error("generateOverlappingRandomEllipsoidsSmoothedCL(): "
+        throw(std::runtime_error("generateOverlappingRandomEllipsoidsIntenseCL(): "
                                  "maxRadius < minRadius.\n"));
     if(transitionLayerSize <= 0.0f || transitionLayerSize > 1.0f)
         throw(std::runtime_error(
-                "generateOverlappingRandomEllipsoidsSmoothedCL(): "
+                "generateOverlappingRandomEllipsoidsIntenseCL(): "
                 "transitionLayerSize <= 0.0f || "
                 "transitionLayerSize > 1.0f.\n"));
     if(ellipsoidScaleFactorX <= 0.0f || ellipsoidScaleFactorX > 1.0f)
         throw(std::runtime_error(
-                "generateOverlappingRandomEllipsoidsSmoothedCL(): "
+                "generateOverlappingRandomEllipsoidsIntenseCL(): "
                 "ellipsoidScaleFactorX <= 0 or > 1.\n"));
     if(ellipsoidScaleFactorY <= 0.0f || ellipsoidScaleFactorY > 1.0f)
         throw(std::runtime_error(
-                "generateOverlappingRandomEllipsoidsSmoothedCL(): "
+                "generateOverlappingRandomEllipsoidsIntenseCL(): "
                 "ellipsoidScaleFactorY <= 0 or > 1.\n"));
     if(ellipsoidScaleFactorZ <= 0.0f || ellipsoidScaleFactorZ > 1.0f)
         throw(std::runtime_error(
-                "generateOverlappingRandomEllipsoidsSmoothedCL(): "
+                "generateOverlappingRandomEllipsoidsIntenseCL(): "
                 "ellipsoidScaleFactorZ <= 0 or > 1.\n"));
     if(coreValue < 0.0f || coreValue > 1.0f)
         throw(std::runtime_error(
-                "generateOverlappingRandomEllipsoidsSmoothedCL(): "
+                "generateOverlappingRandomEllipsoidsIntenseCL(): "
                 "coreValue < 0.0f || coreValue > 1.0f.\n"));
 
     if(rotationOX < 0.0f || rotationOX > M_PI*2)
@@ -1427,6 +1382,17 @@ void RepresentativeVolumeElement::generateBezierCurveIntense(
                     -radiusDeviation, radiusDeviation) * discreteLength;
     }
 
+    float *_curveAproximation = new float[curveSamples*3];
+    for(int k=0; k<curveSamples; ++k)
+    {
+        _curveAproximation[k*3+0] = _BezierCurve(0, curveOrder, _controlPolygonPoints,
+                                                 k, curveSamples);
+        _curveAproximation[k*3+1] = _BezierCurve(1, curveOrder, _controlPolygonPoints,
+                                                 k, curveSamples);
+        _curveAproximation[k*3+2] = _BezierCurve(2, curveOrder, _controlPolygonPoints,
+                                                 k, curveSamples);
+    }
+
     for(long i = 0; i<_size; ++i)
         for(long j = 0; j<_size; ++j)
             for(long k = 0; k<_size; ++k)
@@ -1443,17 +1409,13 @@ void RepresentativeVolumeElement::generateBezierCurveIntense(
 
                     float _newVal = 0.0f;
                     float _minDist = _distanceToBezierSamplePoint(
-                                _kk, _jj, _ii,
-                                curveOrder, _controlPolygonPoints,
-                                0, curveSamples);
+                                _kk, _jj, _ii, 0, _curveAproximation);
                     int _sampleIndexA = 0;
                     int _sampleIndexB = 1;
                     for(int s=1; s<curveSamples; ++s)
                     {
                         float _curDist = _distanceToBezierSamplePoint(
-                                    _kk, _jj, _ii,
-                                    curveOrder, _controlPolygonPoints,
-                                    s, curveSamples);
+                                    _kk, _jj, _ii, s, _curveAproximation);
                         if(_curDist < _minDist)
                         {
                             _minDist = _curDist;
@@ -1463,39 +1425,33 @@ void RepresentativeVolumeElement::generateBezierCurveIntense(
                     if(_sampleIndexA != 0 && _sampleIndexA != curveSamples-1)
                     {
                         float _minDistLeft = _distanceToBezierSamplePoint(
-                                    _kk, _jj, _ii,
-                                    curveOrder, _controlPolygonPoints,
-                                    _sampleIndexA-1, curveSamples);
+                                    _kk, _jj, _ii, _sampleIndexA-1, _curveAproximation);
                         float _minDistRight = _distanceToBezierSamplePoint(
-                                    _kk, _jj, _ii,
-                                    curveOrder, _controlPolygonPoints,
-                                    _sampleIndexA+1, curveSamples);
+                                    _kk, _jj, _ii, _sampleIndexA+1, _curveAproximation);
                         if(_minDistLeft < _minDistRight)
                             _sampleIndexB = _sampleIndexA-1;
                         else _sampleIndexB = _sampleIndexA+1;
                     }
                     else if(_sampleIndexA == 0) _sampleIndexB = 1;
                     else  _sampleIndexB = _sampleIndexA-1;
-                    float Ax = _BezierCurve(0, curveOrder, _controlPolygonPoints,
-                                            _sampleIndexA, curveSamples);
-                    float Ay = _BezierCurve(1, curveOrder, _controlPolygonPoints,
-                                            _sampleIndexA, curveSamples);
-                    float Az = _BezierCurve(2, curveOrder, _controlPolygonPoints,
-                                            _sampleIndexA, curveSamples);
-                    float Bx = _BezierCurve(0, curveOrder, _controlPolygonPoints,
-                                            _sampleIndexB, curveSamples);
-                    float By = _BezierCurve(1, curveOrder, _controlPolygonPoints,
-                                            _sampleIndexB, curveSamples);
-                    float Bz = _BezierCurve(2, curveOrder, _controlPolygonPoints,
-                                            _sampleIndexB, curveSamples);
                     if(!((_sampleIndexA == 0 || _sampleIndexA == curveSamples-1) &&
-                            _projectionLength(
-                                _kk, _jj, _ii,
-                                Ax, Ay, Az, Bx, By, Bz) < 0.0f))
+                         _projectionLength(
+                             _kk, _jj, _ii,
+                             _curveAproximation[_sampleIndexA*3 + 0],
+                             _curveAproximation[_sampleIndexA*3 + 1],
+                             _curveAproximation[_sampleIndexA*3 + 2],
+                             _curveAproximation[_sampleIndexB*3 + 0],
+                             _curveAproximation[_sampleIndexB*3 + 1],
+                             _curveAproximation[_sampleIndexB*3 + 2]) < 0.0f))
                     {
                         _minDist = _distanceToLine(
                                     _kk, _jj, _ii,
-                                    Ax, Ay, Az, Bx, By, Bz);
+                                    _curveAproximation[_sampleIndexA*3 + 0],
+                                _curveAproximation[_sampleIndexA*3 + 1],
+                                _curveAproximation[_sampleIndexA*3 + 2],
+                                _curveAproximation[_sampleIndexB*3 + 0],
+                                _curveAproximation[_sampleIndexB*3 + 1],
+                                _curveAproximation[_sampleIndexB*3 + 2]);
                     }
                     if(_minDist <= curveRadius*(1.0f-transitionLayerSize)*
                             curveRadius*(1.0f-transitionLayerSize))
@@ -1507,6 +1463,7 @@ void RepresentativeVolumeElement::generateBezierCurveIntense(
                         _val = _newVal;
                 }
             }
+    delete [] _curveAproximation;
     delete [] _controlPolygonPoints;
 }
 
@@ -1516,7 +1473,6 @@ void RepresentativeVolumeElement::generateOverlappingRandomBezierCurveIntense(
         int curveSamples,
         int discreteLength,
         float minScale,
-        float maxScale,
         int curveRadius,
         float radiusDeviation,
         float transitionLayerSize,
@@ -1526,6 +1482,46 @@ void RepresentativeVolumeElement::generateOverlappingRandomBezierCurveIntense(
         float rotationOZ,
         float coreValue) throw (std::runtime_error)
 {
+    if(curveNum <= 0)
+        throw(std::runtime_error("generateOverlappingRandomBezierCurveIntense(): "
+                                 "curveNum <= 0.\n"));
+    if(curveOrder <= 0 || curveOrder >= 10)
+        throw(std::runtime_error("generateOverlappingRandomBezierCurveIntense(): "
+                                 "curveOrder <= 0 || curveOrder >= 10.\n"));
+    if(curveSamples <= 1 || curveSamples >= 100)
+        throw(std::runtime_error("generateOverlappingRandomBezierCurveIntense(): "
+                                 "curveSamples <= 1 || curveSamples >= 100.\n"));
+    if(discreteLength <= 0 || discreteLength > _size)
+        throw(std::runtime_error("generateOverlappingRandomBezierCurveIntense(): "
+                                 "discreteLength <= 0 || discreteLength > _size.\n"));
+    if(minScale <= 0.0f || minScale > 1.0f)
+        throw(std::runtime_error("generateOverlappingRandomBezierCurveIntense(): "
+                                 "minScale <= 0.0f || minScale > 1.0f.\n"));
+    if(curveRadius <= 0 || curveRadius > _size)
+        throw(std::runtime_error("generateOverlappingRandomBezierCurveIntense(): "
+                                 "curveRadius <= 0 || curveRadius > _size.\n"));
+    if(radiusDeviation < 0.0f || radiusDeviation > 1.0f)
+        throw(std::runtime_error("generateOverlappingRandomBezierCurveIntense(): "
+                                 "radiusDeviation < 0.0f || radiusDeviation > 1.0f.\n"));
+    if(transitionLayerSize <= 0.0f || transitionLayerSize > 1.0f)
+        throw(std::runtime_error(
+                "generateOverlappingRandomBezierCurveIntense(): "
+                "transitionLayerSize <= 0.0f || "
+                "transitionLayerSize > 1.0f.\n"));
+    if(coreValue < 0.0f || coreValue > 1.0f)
+        throw(std::runtime_error(
+                "generateOverlappingRandomBezierCurveIntense(): "
+                "coreValue < 0.0f || coreValue > 1.0f.\n"));
+    if(rotationOX < 0.0f || rotationOX > M_PI*2)
+        throw(std::runtime_error("generateOverlappingRandomBezierCurveIntense(): rotationOX "
+                                 "< 0 or > 2*pi.\n"));
+    if(rotationOY < 0.0f || rotationOY > M_PI*2)
+        throw(std::runtime_error("generateOverlappingRandomBezierCurveIntense(): rotationOY "
+                                 "< 0 or > 2*pi.\n"));
+    if(rotationOZ < 0.0f || rotationOZ > M_PI*2)
+        throw(std::runtime_error("generateOverlappingRandomBezierCurveIntense(): rotationOZ "
+                                 "< 0 or > 2*pi.\n"));
+
     for(int i=0; i<curveNum; ++i)
     {
         std::cout
@@ -1544,7 +1540,7 @@ void RepresentativeVolumeElement::generateOverlappingRandomBezierCurveIntense(
             rotationOZ = MathUtils::rand<float>(0.0f, M_PI);
         }
 
-        float _curveScale = MathUtils::rand<float>(minScale, maxScale);
+        float _curveScale = MathUtils::rand<float>(minScale, 1.0f);
 
         generateBezierCurveIntense(
                     _x, _y, _z,

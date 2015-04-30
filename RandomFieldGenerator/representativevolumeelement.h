@@ -289,18 +289,16 @@ class RepresentativeVolumeElement
             float x,
             float y,
             float z,
-            int &curveOrder,
-            float *controlPolygonPoints,
             int currentSample,
-            int &curveSamples)
+            float *curveAproximation)
     {
         return
-                    std::pow(x-_BezierCurve(0, curveOrder, controlPolygonPoints,
-                                            currentSample, curveSamples), 2.0f) +
-                    std::pow(y-_BezierCurve(1, curveOrder, controlPolygonPoints,
-                                            currentSample, curveSamples), 2.0f) +
-                    std::pow(z-_BezierCurve(2, curveOrder, controlPolygonPoints,
-                                            currentSample, curveSamples), 2.0f);
+                (x-curveAproximation[currentSample*3 + 0]) *
+                (x-curveAproximation[currentSample*3 + 0]) +
+                (y-curveAproximation[currentSample*3 + 1]) *
+                (y-curveAproximation[currentSample*3 + 1]) +
+                (z-curveAproximation[currentSample*3 + 2]) *
+                (z-curveAproximation[currentSample*3 + 2]);
     }
 
     private: inline float _projectionLength(
@@ -349,7 +347,6 @@ class RepresentativeVolumeElement
             int curveSamples,
             int discreteLength,
             float minScale,
-            float maxScale,
             int curveRadius,
             float radiusDeviation,
             float transitionLayerSize = 1.0f,

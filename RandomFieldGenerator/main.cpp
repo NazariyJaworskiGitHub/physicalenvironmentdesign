@@ -58,12 +58,12 @@ int main(int argc, char *argv[])
 
     std::chrono::steady_clock::time_point _t1 = std::chrono::steady_clock::now();
 
-    int size = 128;
+    int size = 256;
     RepresentativeVolumeElement _RVE(size);
 //    _RVE.generateBezierCurveIntense(
-//                size/2, size/2, size/2, 3, 5, size*0.8, size/8, 0.2f, 0.5f, 0.0f, 0.0f, M_PI/4);
+//                size/2, size/2, size/2, 5, 10, size*0.8, size/8, 0.2f, 0.5f, 0.0f, 0.0f, M_PI/4);
     _RVE.generateOverlappingRandomBezierCurveIntense(
-                50, 5, 10, size*0.9, 0.9, 1.0, size/16, 0.1f, 0.5, false);
+                100, 5, 10, size*0.9, 0.9, size/24, 0.25f, 0.5, false);
 //    _RVE.generateOverlappingRandomEllipsoidsIntenseCL(
 //                100, size/16, size/2, 0.5f, 1.0f, 0.1f, 0.1f, true, 0.0f, 0.0f, M_PI/4);
 //    _RVE.generateRandomEllipsoidIntense(size/4, size/4, 0, size/2, size/2, 0.5f,
