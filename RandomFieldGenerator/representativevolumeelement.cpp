@@ -1622,7 +1622,7 @@ void RepresentativeVolumeElement::generateOverlappingRandomBezierCurveIntense(
     if(curveNum <= 0)
         throw(std::runtime_error("generateOverlappingRandomBezierCurveIntense(): "
                                  "curveNum <= 0.\n"));
-    if(curveOrder <= 0 || curveOrder >= 10)
+    if(curveOrder <= 0 || curveOrder >= 8)
         throw(std::runtime_error("generateOverlappingRandomBezierCurveIntense(): "
                                  "curveOrder <= 0 || curveOrder >= 10.\n"));
     if(curveSamples <= 1 || curveSamples >= 100)
@@ -1707,7 +1707,7 @@ void RepresentativeVolumeElement::generateOverlappingRandomBezierCurveIntenseCL(
     if(curveNum <= 0)
         throw(std::runtime_error("generateOverlappingRandomBezierCurveIntenseCL(): "
                                  "curveNum <= 0.\n"));
-    if(curveOrder <= 0 || curveOrder >= 10)
+    if(curveOrder <= 0 || curveOrder >= 8)
         throw(std::runtime_error("generateOverlappingRandomBezierCurveIntenseCL(): "
                                  "curveOrder <= 0 || curveOrder >= 10.\n"));
     if(curveSamples <= 1 || curveSamples >= 100)

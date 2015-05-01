@@ -56,14 +56,14 @@ int main(int argc, char *argv[])
 //    viennacl::ocl::switch_context(0);
 //    viennacl::ocl::current_context().switch_device(1);
 
-    std::chrono::steady_clock::time_point _t1 = std::chrono::steady_clock::now();
+//    std::chrono::steady_clock::time_point _t1 = std::chrono::steady_clock::now();
 
-    int size = 256;
-    RepresentativeVolumeElement _RVE(size);
+//    int size = 256;
+//    RepresentativeVolumeElement _RVE(size);
 //    _RVE.generateBezierCurveIntense(
 //                size/2, size/2, size/2, 5, 10, size*0.9, size/24, 0.25f, 0.5f, 0.0f, 0.0f, M_PI/4);
-    _RVE.generateOverlappingRandomBezierCurveIntenseCL(
-                100, 5, 10, size*0.9, 0.9, size/24, 0.25f, 0.5, true);
+//    _RVE.generateOverlappingRandomBezierCurveIntenseCL(
+//                100, 5, 10, size*0.9, 0.9, size/24, 0.25f, 0.5, true);
 //    _RVE.generateOverlappingRandomEllipsoidsIntenseCL(
 //                100, size/16, size/2, 0.5f, 1.0f, 0.1f, 0.1f, true, 0.0f, 0.0f, M_PI/4);
 //    _RVE.generateRandomEllipsoidIntense(size/4, size/4, 0, size/2, size/2, 0.5f,
@@ -105,10 +105,10 @@ int main(int argc, char *argv[])
 //    _RVE.cleanMask();
 //    _RVE.invertUnMasked();
 
-    std::chrono::steady_clock::time_point _t2 = std::chrono::steady_clock::now();
-    std::chrono::duration<double> time_span =
-            std::chrono::duration_cast<std::chrono::duration<double>>(_t2 - _t1);
-    std::cout << time_span.count() << " seconds" << std::endl;
+//    std::chrono::steady_clock::time_point _t2 = std::chrono::steady_clock::now();
+//    std::chrono::duration<double> time_span =
+//            std::chrono::duration_cast<std::chrono::duration<double>>(_t2 - _t1);
+//    std::cout << time_span.count() << " seconds" << std::endl;
 
     ///////////////////////////////////////////////////////////////////////////////////////
 ////    OpenCL::CLManager::instance().setCurrentPlatform(0);
@@ -151,10 +151,10 @@ int main(int argc, char *argv[])
 
     ///////////////////////////////////////////////////////////////////////////////////////
 
-    UserInterface::VolumeGLRenderRVE _renderRVE(&_RVE, NULL);
-    _renderRVE.setInfoString("");
-    _renderRVE.resize(800,600);
-    _renderRVE.show();
+//    UserInterface::VolumeGLRenderRVE _renderRVE(&_RVE, NULL);
+//    _renderRVE.setInfoString("");
+//    _renderRVE.resize(800,600);
+//    _renderRVE.show();
 
     ///////////////////////////////////////////////////////////////////////////////////////
 

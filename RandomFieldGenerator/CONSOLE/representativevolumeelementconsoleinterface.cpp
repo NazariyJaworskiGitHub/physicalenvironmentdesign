@@ -949,7 +949,7 @@ std::string RepresentativeVolumeElementConsoleInterface::generateOverlappingRand
 int RepresentativeVolumeElementConsoleInterface::_generateOverlappingRandomEllipsoidsIntenseRVECommand::executeConsoleCommand(
         const std::vector<std::string> &argv)
 {
-    if(argv.size() < 2 || argv.size() > 13)
+    if(argv.size() < 4 || argv.size() > 13)
     {
         getConsole().writeToOutput("Error: wrong number of arguments.\n");
         return -1;
@@ -1072,6 +1072,194 @@ int RepresentativeVolumeElementConsoleInterface::_generateOverlappingRandomEllip
                                rotationOZ,
                                coreValue));
 
+    return 0;
+}
+
+std::string RepresentativeVolumeElementConsoleInterface::generateOverlappingRandomBezierCurveIntenseRVE(
+        const std::string &name,
+        int curveNum,
+        int curveOrder,
+        int curveSamples,
+        int discreteLength,
+        float minScale,
+        int curveRadius,
+        float radiusDeviation,
+        float transitionLayerSize,
+        bool useRandomRotations,
+        float rotationOX,
+        float rotationOY,
+        float rotationOZ,
+        float coreValue) noexcept
+{
+    try
+    {
+        auto _pos = RVEs.find(name);
+        if(_pos == RVEs.end())
+        {
+            _refToConsole.setLastCommandBadState(true);
+            return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+        }
+        else
+            _pos->second->generateOverlappingRandomBezierCurveIntenseCL(
+                        curveNum,
+                        curveOrder,
+                        curveSamples,
+                        discreteLength,
+                        minScale,
+                        curveRadius,
+                        radiusDeviation,
+                        transitionLayerSize,
+                        useRandomRotations,
+                        rotationOX * M_PI / 180.0f,
+                        rotationOY * M_PI / 180.0f,
+                        rotationOZ * M_PI / 180.0f,
+                        coreValue);
+        return "Representative Volume Element " + name + " Overlapping Bezier curves generated.\n";
+    }
+    catch(std::exception &e)
+    {
+        return "Error: " + std::string(e.what());
+    }
+}
+
+int RepresentativeVolumeElementConsoleInterface::_generateOverlappingRandomBezierCurveIntenseRVECommand::executeConsoleCommand(
+        const std::vector<std::string> &argv)
+{
+    if(argv.size() < 8 || argv.size() > 14)
+    {
+        getConsole().writeToOutput("Error: wrong number of arguments.\n");
+        return -1;
+    }
+    int curveNum;
+    {
+        std::stringstream _str{argv[1]};
+        if(!(_str >> curveNum))
+        {
+            getConsole().writeToOutput("wrong <curveNum> argument.\n");
+            return -1;
+        }
+    }
+    int curveOrder;
+    {
+        std::stringstream _str{argv[2]};
+        if(!(_str >> curveOrder))
+        {
+            getConsole().writeToOutput("wrong <curveOrder> argument.\n");
+            return -1;
+        }
+    }
+    int curveSamples;
+    {
+        std::stringstream _str{argv[3]};
+        if(!(_str >> curveSamples))
+        {
+            getConsole().writeToOutput("wrong <curveSamples> argument.\n");
+            return -1;
+        }
+    }
+    int discreteLength;
+    {
+        std::stringstream _str{argv[4]};
+        if(!(_str >> discreteLength))
+        {
+            getConsole().writeToOutput("wrong <discreteLength> argument.\n");
+            return -1;
+        }
+    }
+    float minScale;
+    {
+        std::stringstream _str{argv[5]};
+        if(!(_str >> minScale))
+        {
+            getConsole().writeToOutput("wrong <minScale> argument.\n");
+            return -1;
+        }
+    }
+    int curveRadius;
+    {
+        std::stringstream _str{argv[6]};
+        if(!(_str >> curveRadius))
+        {
+            getConsole().writeToOutput("wrong <curveRadius> argument.\n");
+            return -1;
+        }
+    }
+    float radiusDeviation;
+    {
+        std::stringstream _str{argv[7]};
+        if(!(_str >> radiusDeviation))
+        {
+            getConsole().writeToOutput("wrong <radiusDeviation> argument.\n");
+            return -1;
+        }
+    }
+    float transitionLayerSize = 1.0f;
+    bool useRandomRotations = false;
+    float rotationOX = 0.0f;
+    float rotationOY = 0.0f;
+    float rotationOZ = 0.0f;
+    float coreValue = 1.0f;
+    switch(argv.size())
+    {
+    case 14:{std::stringstream _str{argv[13]};
+            if(!(_str >> coreValue))
+            {
+                getConsole().writeToOutput("wrong <coreValue> argument.\n");
+                return -1;
+            }
+        }
+    case 13: {std::stringstream _str{argv[12]};
+            if(!(_str >> rotationOZ))
+            {
+                getConsole().writeToOutput("wrong <rotationOZ> argument.\n");
+                return -1;
+            }
+        }
+    case 12: {std::stringstream _str{argv[11]};
+            if(!(_str >> rotationOY))
+            {
+                getConsole().writeToOutput("wrong <rotationOY> argument.\n");
+                return -1;
+            }
+        }
+    case 11: {std::stringstream _str{argv[10]};
+            if(!(_str >> rotationOX))
+            {
+                getConsole().writeToOutput("wrong <rotationOX> argument.\n");
+                return -1;
+            }
+        }
+    case 10: if(argv[9].compare("true") == 0) useRandomRotations = true;
+        else if(argv[9].compare("false") == 0) useRandomRotations = false;
+        else
+        {
+            getConsole().writeToOutput("wrong <useRandomRotations> argument.\n");
+            return -1;
+        }
+    case 9: {std::stringstream _str{argv[8]};
+            if(!(_str >> transitionLayerSize))
+            {
+                getConsole().writeToOutput("wrong <transitionLayerSize> argument.\n");
+                return -1;
+            }
+        }
+    }
+
+    getConsole().writeToOutput(_manager.generateOverlappingRandomBezierCurveIntenseRVE(
+                                   argv[0],
+                               curveNum,
+                               curveOrder,
+                               curveSamples,
+                               discreteLength,
+                               minScale,
+                               curveRadius,
+                               radiusDeviation,
+                               transitionLayerSize,
+                               useRandomRotations,
+                               rotationOX,
+                               rotationOY,
+                               rotationOZ,
+                               coreValue));
     return 0;
 }
 

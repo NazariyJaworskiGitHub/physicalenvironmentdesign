@@ -562,7 +562,7 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
                 "[int]    <ellipsoidNum> - number of ellipsoids;\n"
                 "[int]    <minRadius> - bottom boudn of radius deviation;\n"
                 "[int]    <maxRadius> - top bound of radius deviation;\n"
-                "[float]  <transitionLayerSize> - (optional) in range [0:1], relative to radius,\n"
+                "[float]  <transitionLayerSize> - (optional) in range (0:1], relative to radius,\n"
                 "               default = 1;\n"
                 "[float]  <ScaleFactorX> - (optional) the ellipsoid scale factor on X axis of\n"
                 "               filter mask, should be > 0 and <= 1, default = 1;\n"
@@ -573,16 +573,70 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
                 "[bool]   <useRandomRotations> - (optional) use random ellipsoid rotations 'true'\n"
                 "               or 'false', default = false - next arguments are used;\n"
                 "[float]  <rotationOX> - (optional) the ellipsoid rotation angle in degrees on\n"
-                "               X axis, should be >= 0 and <= 180 radians, default = 0;\n"
+                "               X axis, should be >= 0 and <= 180 degrees, default = 0;\n"
                 "[float]  <rotationOY> - (optional) the ellipsoid rotation angle in degrees on\n"
-                "               Y axis, should be >= 0 and <= 180 radians, default = 0;\n"
+                "               Y axis, should be >= 0 and <= 180 degrees, default = 0;\n"
                 "[float]  <rotationOZ> - (optional) the ellipsoid rotation angle in degrees on\n"
-                "               Z axis, should be >= 0 and <= 180 radians, default = 0;\n"
+                "               Z axis, should be >= 0 and <= 180 degrees, default = 0;\n"
                 "[float]  <coreValue> - (optional) intensity value of core, default = 1.\n",
                 console),
                 _manager(manager){}
         public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
     } *_commandGenerateOverlappingRandomEllipsoidsIntenseRVE = nullptr;
+
+    /// generateOverlappingRandomBezierCurveIntenseRVE ----------------------------------------
+    public : std::string generateOverlappingRandomBezierCurveIntenseRVE(
+            const std::string &name,
+            int curveNum,
+            int curveOrder,
+            int curveSamples,
+            int discreteLength,
+            float minScale,
+            int curveRadius,
+            float radiusDeviation,
+            float transitionLayerSize,
+            bool useRandomRotations,
+            float rotationOX,
+            float rotationOY,
+            float rotationOZ,
+            float coreValue) noexcept;
+    private: class _generateOverlappingRandomBezierCurveIntenseRVECommand : public ConsoleCommand
+    {
+        private: RepresentativeVolumeElementConsoleInterface &_manager;
+        public: _generateOverlappingRandomBezierCurveIntenseRVECommand(
+                RepresentativeVolumeElementConsoleInterface &manager, Console &console) :
+            ConsoleCommand(
+            //  "--------------------------------------------------------------------------------"
+                "generateOverlappingRandomBezierCurveIntenseRVE",
+                "generateOverlappingRandomBezierCurveIntenseRVE <Name> <curveNum> <curveOrder>\n"
+                "   <curveSamples> <discreteLength> <minScale> <curveRadius>\n"
+                "   <radiusDeviation> <transitionLayerSize> <useRandomRotations> <rotationOX>\n"
+                "   <rotationOY> <rotationOZ> <coreValue>\n"
+                "Generate overlapping random ellipsoids at unmasked RVE elements\n"
+                "Arguments:\n"
+                "[string] <Name> - the name of RVE in RAM memory;\n"
+                "[int]    <curveNum> - number of curves;\n"
+                "[int]    <curveOrder> - order of Bezier curve [1:8];\n"
+                "[int]    <curveSamples> - number of curve approximation samples [1:100];\n"
+                "[int]    <discreteLength> - discrete length of curve [1:RVE size];\n"
+                "[float]  <minScale> - minimal scale factor for curves radius deviation (0:1];\n"
+                "[int]    <curveRadius> - discrete radius of curve [1:RVE size];\n"
+                "[float]  <radiusDeviation> - radius deviation in Y and Z directions [0:1];\n"
+                "[float]  <transitionLayerSize> - (optional) in range (0:1], relative to radius,\n"
+                "               default = 1;\n"
+                "[bool]   <useRandomRotations> - (optional) use random curves rotations 'true'\n"
+                "               or 'false', default = false - next arguments are used;\n"
+                "[float]  <rotationOX> - (optional) the ellipsoid rotation angle in degrees on\n"
+                "               X axis, should be >= 0 and <= 180 degrees, default = 0;\n"
+                "[float]  <rotationOY> - (optional) the ellipsoid rotation angle in degrees on\n"
+                "               Y axis, should be >= 0 and <= 180 degrees, default = 0;\n"
+                "[float]  <rotationOZ> - (optional) the ellipsoid rotation angle in degrees on\n"
+                "               Z axis, should be >= 0 and <= 180 degrees, default = 0;\n"
+                "[float]  <coreValue> - (optional) intensity value of core [0:1], default = 1.\n",
+                console),
+                _manager(manager){}
+        public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
+    } *_commandGenerateOverlappingRandomBezierCurveIntenseRVE = nullptr;
 
     /// generateVoronoiRandomCellsRVE ---------------------------------------------------------
     public : std::string generateVoronoiRandomCellsRVE(
@@ -628,6 +682,8 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
             new _applyTwoCutMaskOutsideRVECommand(*this, console)),
         _commandGenerateOverlappingRandomEllipsoidsIntenseRVE(
             new _generateOverlappingRandomEllipsoidsIntenseRVECommand(*this, console)),
+        _commandGenerateOverlappingRandomBezierCurveIntenseRVE(
+            new _generateOverlappingRandomBezierCurveIntenseRVECommand(*this, console)),
         _commandgenerateVoronoiRandomCellsRVE(
             new _generateVoronoiRandomCellsRVECommand(*this, console))
         {}
@@ -653,6 +709,7 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
         delete _commandApplyTwoCutMaskInsideRVE;
         delete _commandApplyTwoCutMaskOutsideRVE;
         delete _commandGenerateOverlappingRandomEllipsoidsIntenseRVE;
+        delete _commandGenerateOverlappingRandomBezierCurveIntenseRVE;
         delete _commandgenerateVoronoiRandomCellsRVE;
     }
 };
