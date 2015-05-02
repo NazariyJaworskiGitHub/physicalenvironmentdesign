@@ -16,6 +16,9 @@ VolumeGLRenderRVE::VolumeGLRenderRVE(
     _MaxRadiusBackup = _ptrToRVE->getSize()/2;
     if(_MaxRadiusBackup == 0)_MaxRadiusBackup = 1;
 
+    _FiberLengthBackup = _ptrToRVE->getSize()/2;
+    if(_FiberLengthBackup == 0)_FiberLengthBackup = 1;
+
     updateInfoStringAndRepresentationSize();
 
     connect(_actionEdit, SIGNAL(triggered()), this, SLOT(slot_createEditDialog()));

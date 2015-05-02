@@ -31,6 +31,12 @@ namespace UserInterface
         private: float _TransitionLayerBackup = 0.5f;
         private: float _CoreIntensityBackup = 1.0f;
 
+        private: int _CurveOrderBackup = 3;
+        private: int _CurveApproximationPointsBackup = 10;
+        private: int _FiberLengthBackup;
+        private: float _MinScaleBackup = 0.25f;
+        private: float _PathDeviationBackup = 0.25f;
+
         private: float _innerBottomCutLevel = 0.0f; // min
         public : float getInnerBottomCutLevel() const noexcept {return _innerBottomCutLevel;}
         public : void setInnerBottomCutLevel(float newBottomCutLevel) noexcept {

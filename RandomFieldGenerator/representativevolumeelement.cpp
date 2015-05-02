@@ -308,9 +308,7 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
                     if( _curRadius <= _sphereRadius*(1.0f-transitionLayerSize)*\
                             _sphereRadius*(1.0f-transitionLayerSize))\
                         _data[(i * _size * _size) + (j * _size) + k] = coreValue;\
-                    else if(_curRadius <= _sphereRadius*_sphereRadius &&\
-                            _curRadius > _sphereRadius*(1.0f-transitionLayerSize)*\
-                            _sphereRadius*(1.0f-transitionLayerSize))\
+                    else if(_curRadius <= _sphereRadius*_sphereRadius)\
                     {\
                         float _newVal = (_sphereRadius - sqrt(_curRadius))/\
                                 _sphereRadius / transitionLayerSize * coreValue;\
@@ -383,16 +381,16 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
                     float x,\
                     float y,\
                     float z,\
-                    int currentSample,\
+                    int currentPoint,\
                     long offset,\
                     __global float *curveAproximation)\
         {\
-            return ((x-curveAproximation[offset + currentSample*3 + 0]) *\
-                    (x-curveAproximation[offset + currentSample*3 + 0]) +\
-                    (y-curveAproximation[offset + currentSample*3 + 1]) *\
-                    (y-curveAproximation[offset + currentSample*3 + 1]) +\
-                    (z-curveAproximation[offset + currentSample*3 + 2]) *\
-                    (z-curveAproximation[offset + currentSample*3 + 2]));\
+            return ((x-curveAproximation[offset + currentPoint*3 + 0]) *\
+                    (x-curveAproximation[offset + currentPoint*3 + 0]) +\
+                    (y-curveAproximation[offset + currentPoint*3 + 1]) *\
+                    (y-curveAproximation[offset + currentPoint*3 + 1]) +\
+                    (z-curveAproximation[offset + currentPoint*3 + 2]) *\
+                    (z-curveAproximation[offset + currentPoint*3 + 2]));\
         }\
         inline float _projectionLength(\
                     float x, float y, float z,\
@@ -417,7 +415,7 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
                     __global float *_curveParameters,\
                     __global float *_data,\
                     int curveNum,\
-                    int curveSamples,\
+                    int curveApproximationPoints,\
                     float transitionLayerSize,\
                     float coreValue,\
                     int _size)\
@@ -429,7 +427,7 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
             {\
                 for( int c = 0; c<curveNum; ++c)\
                 {\
-                    long offset = c*curveSamples*3;\
+                    long offset = c*curveApproximationPoints*3;\
                     float _kk, _jj, _ii;\
                     _distanceOnRepeatedSides(\
                                 _curveParameters[c*7 + 0],\
@@ -445,7 +443,7 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
                                 _kk, _jj, _ii, 0, offset, _curveAproximation);\
                     int _sampleIndexA = 0;\
                     int _sampleIndexB = 1;\
-                    for(int s=1; s<curveSamples; ++s)\
+                    for(int s=1; s<curveApproximationPoints; ++s)\
                     {\
                         float _curDist = _distanceToBezierSamplePoint(\
                                     _kk, _jj, _ii, s, offset, _curveAproximation);\
@@ -455,7 +453,7 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
                             _sampleIndexA = s;\
                         }\
                     }\
-                    if(_sampleIndexA != 0 && _sampleIndexA != curveSamples-1)\
+                    if(_sampleIndexA != 0 && _sampleIndexA != curveApproximationPoints-1)\
                     {\
                         float _minDistLeft = _distanceToBezierSamplePoint(\
                                     _kk, _jj, _ii, _sampleIndexA-1, offset, _curveAproximation);\
@@ -467,7 +465,7 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
                     }\
                     else if(_sampleIndexA == 0) _sampleIndexB = 1;\
                     else _sampleIndexB = _sampleIndexA-1;\
-                    if(!((_sampleIndexA == 0 || _sampleIndexA == curveSamples-1) &&\
+                    if(!((_sampleIndexA == 0 || _sampleIndexA == curveApproximationPoints-1) &&\
                          _projectionLength(\
                              _kk, _jj, _ii,\
                              _curveAproximation[offset + _sampleIndexA*3 + 0],\
@@ -1231,9 +1229,7 @@ void RepresentativeVolumeElement::generateRandomEllipsoidIntense(
                     if( _curRadius <= _sphereRadius*(1.0f-transitionLayerSize)*
                             _sphereRadius*(1.0f-transitionLayerSize))
                         _val = coreValue;
-                    else if(_curRadius <= _sphereRadius*_sphereRadius &&
-                            _curRadius > _sphereRadius*(1.0f-transitionLayerSize)*
-                            _sphereRadius*(1.0f-transitionLayerSize))
+                    else if(_curRadius <= _sphereRadius*_sphereRadius)
                     {
                         float _newVal = (_sphereRadius - std::sqrt(_curRadius))/
                                 _sphereRadius / transitionLayerSize * coreValue;
@@ -1270,9 +1266,9 @@ void RepresentativeVolumeElement::generateOverlappingRandomEllipsoidsIntense(
     if(maxRadius < minRadius)
         throw(std::runtime_error("generateOverlappingRandomEllipsoidsIntense(): "
                                  "maxRadius < minRadius.\n"));
-    if(transitionLayerSize <= 0.0f || transitionLayerSize > 1.0f)
+    if(transitionLayerSize < 0.0f || transitionLayerSize > 1.0f)
         throw(std::runtime_error(
-                "generateOverlappingRandomEllipsoidsIntense(): transitionLayerSize <= 0.0f || "
+                "generateOverlappingRandomEllipsoidsIntense(): transitionLayerSize < 0.0f || "
                 "transitionLayerSize > 1.0f.\n"));
     if(ellipsoidScaleFactorX <= 0.0f || ellipsoidScaleFactorX > 1.0f)
         throw(std::runtime_error(
@@ -1383,10 +1379,10 @@ void RepresentativeVolumeElement::generateOverlappingRandomEllipsoidsIntenseCL(
     if(maxRadius < minRadius)
         throw(std::runtime_error("generateOverlappingRandomEllipsoidsIntenseCL(): "
                                  "maxRadius < minRadius.\n"));
-    if(transitionLayerSize <= 0.0f || transitionLayerSize > 1.0f)
+    if(transitionLayerSize < 0.0f || transitionLayerSize > 1.0f)
         throw(std::runtime_error(
                 "generateOverlappingRandomEllipsoidsIntenseCL(): "
-                "transitionLayerSize <= 0.0f || "
+                "transitionLayerSize < 0.0f || "
                 "transitionLayerSize > 1.0f.\n"));
     if(ellipsoidScaleFactorX <= 0.0f || ellipsoidScaleFactorX > 1.0f)
         throw(std::runtime_error(
@@ -1494,10 +1490,10 @@ void RepresentativeVolumeElement::generateBezierCurveIntense(
         int y,
         int z,
         int curveOrder,
-        int curveSamples,
+        int curveApproximationPoints,
         int discreteLength,
         int curveRadius,
-        float radiusDeviation,
+        float pathDeviation,
         float transitionLayerSize,
         float rotationOX,
         float rotationOY,
@@ -1512,23 +1508,23 @@ void RepresentativeVolumeElement::generateBezierCurveIntense(
     {
         _controlPolygonPoints[k*3+0] = (-0.5f + k/(curveOrder-1.0f)) * discreteLength;
         _controlPolygonPoints[k*3+1] = MathUtils::rand<float>(
-                    -radiusDeviation, radiusDeviation) * discreteLength;
+                    -pathDeviation, pathDeviation) * discreteLength;
         _controlPolygonPoints[k*3+2] = MathUtils::rand<float>(
-                    -radiusDeviation, radiusDeviation) * discreteLength;
+                    -pathDeviation, pathDeviation) * discreteLength;
     }
 
-    float *_curveAproximation = new float[curveSamples*3];
+    float *_curveAproximation = new float[curveApproximationPoints*3];
     if(!_curveAproximation)
         throw(std::runtime_error("generateBezierCurveIntense():"
                                  "can't allocate memory for temporary storage.\n"));
-    for(int k=0; k<curveSamples; ++k)
+    for(int k=0; k<curveApproximationPoints; ++k)
     {
         _curveAproximation[k*3+0] = _BezierCurve(0, curveOrder, _controlPolygonPoints,
-                                                 k, curveSamples);
+                                                 k, curveApproximationPoints);
         _curveAproximation[k*3+1] = _BezierCurve(1, curveOrder, _controlPolygonPoints,
-                                                 k, curveSamples);
+                                                 k, curveApproximationPoints);
         _curveAproximation[k*3+2] = _BezierCurve(2, curveOrder, _controlPolygonPoints,
-                                                 k, curveSamples);
+                                                 k, curveApproximationPoints);
     }
 
     for(long i = 0; i<_size; ++i)
@@ -1549,7 +1545,7 @@ void RepresentativeVolumeElement::generateBezierCurveIntense(
                                 _kk, _jj, _ii, 0, _curveAproximation);
                     int _sampleIndexA = 0;
                     int _sampleIndexB = 1;
-                    for(int s=1; s<curveSamples; ++s)
+                    for(int s=1; s<curveApproximationPoints; ++s)
                     {
                         float _curDist = _distanceToBezierSamplePoint(
                                     _kk, _jj, _ii, s, _curveAproximation);
@@ -1559,7 +1555,7 @@ void RepresentativeVolumeElement::generateBezierCurveIntense(
                             _sampleIndexA = s;
                         }
                     }
-                    if(_sampleIndexA != 0 && _sampleIndexA != curveSamples-1)
+                    if(_sampleIndexA != 0 && _sampleIndexA != curveApproximationPoints-1)
                     {
                         float _minDistLeft = _distanceToBezierSamplePoint(
                                     _kk, _jj, _ii, _sampleIndexA-1, _curveAproximation);
@@ -1571,7 +1567,7 @@ void RepresentativeVolumeElement::generateBezierCurveIntense(
                     }
                     else if(_sampleIndexA == 0) _sampleIndexB = 1;
                     else  _sampleIndexB = _sampleIndexA-1;
-                    if(!((_sampleIndexA == 0 || _sampleIndexA == curveSamples-1) &&
+                    if(!((_sampleIndexA == 0 || _sampleIndexA == curveApproximationPoints-1) &&
                          _projectionLength(
                              _kk, _jj, _ii,
                              _curveAproximation[_sampleIndexA*3 + 0],
@@ -1607,11 +1603,11 @@ void RepresentativeVolumeElement::generateBezierCurveIntense(
 void RepresentativeVolumeElement::generateOverlappingRandomBezierCurveIntense(
         int curveNum,
         int curveOrder,
-        int curveSamples,
+        int curveApproximationPoints,
         int discreteLength,
         float minScale,
         int curveRadius,
-        float radiusDeviation,
+        float pathDeviation,
         float transitionLayerSize,
         bool useRandomRotations,
         float rotationOX,
@@ -1622,12 +1618,13 @@ void RepresentativeVolumeElement::generateOverlappingRandomBezierCurveIntense(
     if(curveNum <= 0)
         throw(std::runtime_error("generateOverlappingRandomBezierCurveIntense(): "
                                  "curveNum <= 0.\n"));
-    if(curveOrder <= 0 || curveOrder >= 8)
+    if(curveOrder <= 1 || curveOrder >= 9)
         throw(std::runtime_error("generateOverlappingRandomBezierCurveIntense(): "
-                                 "curveOrder <= 0 || curveOrder >= 10.\n"));
-    if(curveSamples <= 1 || curveSamples >= 100)
+                                 "curveOrder <= 1 || curveOrder >= 9.\n"));
+    if(curveApproximationPoints <= 1 || curveApproximationPoints > 100)
         throw(std::runtime_error("generateOverlappingRandomBezierCurveIntense(): "
-                                 "curveSamples <= 1 || curveSamples >= 100.\n"));
+                                 "curveApproximationPoints <= 1 || "
+                                 "curveApproximationPoints > 100.\n"));
     if(discreteLength <= 0 || discreteLength > _size)
         throw(std::runtime_error("generateOverlappingRandomBezierCurveIntense(): "
                                  "discreteLength <= 0 || discreteLength > _size.\n"));
@@ -1637,13 +1634,13 @@ void RepresentativeVolumeElement::generateOverlappingRandomBezierCurveIntense(
     if(curveRadius <= 0 || curveRadius > _size)
         throw(std::runtime_error("generateOverlappingRandomBezierCurveIntense(): "
                                  "curveRadius <= 0 || curveRadius > _size.\n"));
-    if(radiusDeviation < 0.0f || radiusDeviation > 1.0f)
+    if(pathDeviation < 0.0f || pathDeviation > 1.0f)
         throw(std::runtime_error("generateOverlappingRandomBezierCurveIntense(): "
-                                 "radiusDeviation < 0.0f || radiusDeviation > 1.0f.\n"));
-    if(transitionLayerSize <= 0.0f || transitionLayerSize > 1.0f)
+                                 "pathDeviation < 0.0f || pathDeviation > 1.0f.\n"));
+    if(transitionLayerSize < 0.0f || transitionLayerSize > 1.0f)
         throw(std::runtime_error(
                 "generateOverlappingRandomBezierCurveIntense(): "
-                "transitionLayerSize <= 0.0f || "
+                "transitionLayerSize < 0.0f || "
                 "transitionLayerSize > 1.0f.\n"));
     if(coreValue < 0.0f || coreValue > 1.0f)
         throw(std::runtime_error(
@@ -1681,10 +1678,10 @@ void RepresentativeVolumeElement::generateOverlappingRandomBezierCurveIntense(
 
         generateBezierCurveIntense(
                     _x, _y, _z,
-                    curveOrder, curveSamples,
+                    curveOrder, curveApproximationPoints,
                     discreteLength * _curveScale,
                     curveRadius * _curveScale,
-                    radiusDeviation, transitionLayerSize,
+                    pathDeviation, transitionLayerSize,
                     rotationOX, rotationOY, rotationOZ, coreValue);
     }
 }
@@ -1692,11 +1689,11 @@ void RepresentativeVolumeElement::generateOverlappingRandomBezierCurveIntense(
 void RepresentativeVolumeElement::generateOverlappingRandomBezierCurveIntenseCL(
         int curveNum,
         int curveOrder,
-        int curveSamples,
+        int curveApproximationPoints,
         int discreteLength,
         float minScale,
         int curveRadius,
-        float radiusDeviation,
+        float pathDeviation,
         float transitionLayerSize,
         bool useRandomRotations,
         float rotationOX,
@@ -1707,12 +1704,13 @@ void RepresentativeVolumeElement::generateOverlappingRandomBezierCurveIntenseCL(
     if(curveNum <= 0)
         throw(std::runtime_error("generateOverlappingRandomBezierCurveIntenseCL(): "
                                  "curveNum <= 0.\n"));
-    if(curveOrder <= 0 || curveOrder >= 8)
+    if(curveOrder <= 1 || curveOrder >= 9)
         throw(std::runtime_error("generateOverlappingRandomBezierCurveIntenseCL(): "
-                                 "curveOrder <= 0 || curveOrder >= 10.\n"));
-    if(curveSamples <= 1 || curveSamples >= 100)
+                                 "curveOrder <= 1 || curveOrder >= 9.\n"));
+    if(curveApproximationPoints <= 1 || curveApproximationPoints > 100)
         throw(std::runtime_error("generateOverlappingRandomBezierCurveIntenseCL(): "
-                                 "curveSamples <= 1 || curveSamples >= 100.\n"));
+                                 "curveApproximationPoints <= 1 || "
+                                 "curveApproximationPoints > 100.\n"));
     if(discreteLength <= 0 || discreteLength > _size)
         throw(std::runtime_error("generateOverlappingRandomBezierCurveIntenseCL(): "
                                  "discreteLength <= 0 || discreteLength > _size.\n"));
@@ -1722,13 +1720,13 @@ void RepresentativeVolumeElement::generateOverlappingRandomBezierCurveIntenseCL(
     if(curveRadius <= 0 || curveRadius > _size)
         throw(std::runtime_error("generateOverlappingRandomBezierCurveIntenseCL(): "
                                  "curveRadius <= 0 || curveRadius > _size.\n"));
-    if(radiusDeviation < 0.0f || radiusDeviation > 1.0f)
+    if(pathDeviation < 0.0f || pathDeviation > 1.0f)
         throw(std::runtime_error("generateOverlappingRandomBezierCurveIntenseCL(): "
-                                 "radiusDeviation < 0.0f || radiusDeviation > 1.0f.\n"));
-    if(transitionLayerSize <= 0.0f || transitionLayerSize > 1.0f)
+                                 "pathDeviation < 0.0f || pathDeviation > 1.0f.\n"));
+    if(transitionLayerSize < 0.0f || transitionLayerSize > 1.0f)
         throw(std::runtime_error(
                 "generateOverlappingRandomBezierCurveIntenseCL(): "
-                "transitionLayerSize <= 0.0f || "
+                "transitionLayerSize < 0.0f || "
                 "transitionLayerSize > 1.0f.\n"));
     if(coreValue < 0.0f || coreValue > 1.0f)
         throw(std::runtime_error(
@@ -1744,7 +1742,7 @@ void RepresentativeVolumeElement::generateOverlappingRandomBezierCurveIntenseCL(
         throw(std::runtime_error("generateOverlappingRandomBezierCurveIntenseCL(): rotationOZ "
                                  "< 0 or > 2*pi.\n"));
 
-    float *_curveAproximation = new float[curveNum*curveSamples*3];
+    float *_curveAproximation = new float[curveNum*curveApproximationPoints*3];
     if(!_curveAproximation)
         throw(std::runtime_error("generateOverlappingRandomBezierCurveIntenseCL():"
                                  "can't allocate memory for temporary storage.\n"));
@@ -1764,19 +1762,19 @@ void RepresentativeVolumeElement::generateOverlappingRandomBezierCurveIntenseCL(
         {
             _controlPolygonPoints[k*3+0] = (-0.5f + k/(curveOrder-1.0f)) * discreteLength;
             _controlPolygonPoints[k*3+1] = MathUtils::rand<float>(
-                        -radiusDeviation, radiusDeviation) * discreteLength;
+                        -pathDeviation, pathDeviation) * discreteLength;
             _controlPolygonPoints[k*3+2] = MathUtils::rand<float>(
-                        -radiusDeviation, radiusDeviation) * discreteLength;
+                        -pathDeviation, pathDeviation) * discreteLength;
         }
 
-        for(int k=0; k<curveSamples; ++k)
+        for(int k=0; k<curveApproximationPoints; ++k)
         {
-            _curveAproximation[c*curveSamples*3 + k*3 + 0] =
-                    _BezierCurve(0, curveOrder, _controlPolygonPoints, k, curveSamples);
-            _curveAproximation[c*curveSamples*3 + k*3 + 1] =
-                    _BezierCurve(1, curveOrder, _controlPolygonPoints, k, curveSamples);
-            _curveAproximation[c*curveSamples*3 + k*3 + 2] =
-                    _BezierCurve(2, curveOrder, _controlPolygonPoints, k, curveSamples);
+            _curveAproximation[c*curveApproximationPoints*3 + k*3 + 0] =
+                    _BezierCurve(0, curveOrder, _controlPolygonPoints, k, curveApproximationPoints);
+            _curveAproximation[c*curveApproximationPoints*3 + k*3 + 1] =
+                    _BezierCurve(1, curveOrder, _controlPolygonPoints, k, curveApproximationPoints);
+            _curveAproximation[c*curveApproximationPoints*3 + k*3 + 2] =
+                    _BezierCurve(2, curveOrder, _controlPolygonPoints, k, curveApproximationPoints);
         }
 
         _curveParameters[c*7 + 0] = MathUtils::rand<int>(0, _size-1);
@@ -1806,7 +1804,7 @@ void RepresentativeVolumeElement::generateOverlappingRandomBezierCurveIntenseCL(
     cl::Buffer _curveAproximationBuffer(
                 OpenCL::CLManager::instance().getCurrentContext(),
                 CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-                sizeof(float) * curveNum * curveSamples * 3,
+                sizeof(float) * curveNum * curveApproximationPoints * 3,
                 _curveAproximation);
 
     cl::Buffer _curveParametersBuffer(
@@ -1819,7 +1817,7 @@ void RepresentativeVolumeElement::generateOverlappingRandomBezierCurveIntenseCL(
     _kernelRandomBezierCurvesPtr->setArg(1, _curveParametersBuffer);
     _kernelRandomBezierCurvesPtr->setArg(2, _dataBuffer);
     _kernelRandomBezierCurvesPtr->setArg(3, curveNum);
-    _kernelRandomBezierCurvesPtr->setArg(4, curveSamples);
+    _kernelRandomBezierCurvesPtr->setArg(4, curveApproximationPoints);
     _kernelRandomBezierCurvesPtr->setArg(5, transitionLayerSize);
     _kernelRandomBezierCurvesPtr->setArg(6, coreValue);
     _kernelRandomBezierCurvesPtr->setArg(7, _size);

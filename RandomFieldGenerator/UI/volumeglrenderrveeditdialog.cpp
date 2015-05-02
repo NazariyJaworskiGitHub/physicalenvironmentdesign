@@ -19,6 +19,7 @@ VolumeGLRenderRVEEditDialog::VolumeGLRenderRVEEditDialog(QWidget *parent) :
 
     VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
 
+    // Masking
     ui->BottomCutLevelSlider->setValue(_parent->_innerBottomCutLevel * 1000);
     ui->BottomCutLevelLineEdit->setText(
                 QString::number(ui->BottomCutLevelSlider->value() / 1000.0f));
@@ -27,6 +28,7 @@ VolumeGLRenderRVEEditDialog::VolumeGLRenderRVEEditDialog(QWidget *parent) :
     ui->TopCutLevelLineEdit->setText(
                 QString::number(ui->TopCutLevelSlider->value() / 1000.0f));
 
+    // Gaussian filter
     ui->FilterRadiusSlider->setMaximum(_parent->_ptrToRVE->getSize());
     ui->FilterRadiusSlider->setValue(_parent->_FilterRadiusBackup);
     ui->FilterRadiusLineEdit->setText(QString::number(ui->FilterRadiusSlider->value()));
@@ -72,10 +74,12 @@ VolumeGLRenderRVEEditDialog::VolumeGLRenderRVEEditDialog(QWidget *parent) :
     _previewRender->resize(261,261);
     _previewRender->move(510, 10);
 
+    // Voronoi cells
     QIntValidator *_intValidator = new QIntValidator(this);
     _intValidator->setBottom(2);
     ui->NumberOfCellsLineEdit->setValidator(_intValidator);
 
+    // Ellipsoid inclusions
     QIntValidator *_intValidator2 = new QIntValidator(this);
     _intValidator->setBottom(1);
     ui->NumberOfInclusionsLineEdit->setValidator(_intValidator2);
@@ -119,6 +123,54 @@ VolumeGLRenderRVEEditDialog::VolumeGLRenderRVEEditDialog(QWidget *parent) :
     _previewRender_Inclusion->resize(261,261);
     _previewRender_Inclusion->move(510, 10);
 
+    // Fiber inclusions
+    QIntValidator *_intValidator3 = new QIntValidator(this);
+    _intValidator->setBottom(1);
+    ui->NumberOfFibersLineEdit->setValidator(_intValidator3);
+
+    ui->BezierCurveOrderSlider->setValue(_parent->_CurveOrderBackup);
+    ui->BezierCurveOrderLineEdit->setText(QString::number(ui->BezierCurveOrderSlider->value()));
+
+    ui->ApproximationPointsSlider->setValue(_parent->_CurveApproximationPointsBackup);
+    ui->ApproximationPointsLineEdit->setText(QString::number(ui->ApproximationPointsSlider->value()));
+
+    ui->FiberLengthSlider->setMaximum(_parent->_ptrToRVE->getSize());
+    ui->FiberLengthSlider->setValue(_parent->_FiberLengthBackup);
+    ui->FiberLengthLineEdit->setText(QString::number(ui->FiberLengthSlider->value()));
+
+    ui->FiberRadiusSlider->setMaximum(_parent->_ptrToRVE->getSize());
+    ui->FiberRadiusSlider->setValue(_parent->_MinRadiusBackup);
+    ui->FiberRadiusLineEdit->setText(QString::number(ui->FiberRadiusSlider->value()));
+
+    ui->MinimalScaleSlider->setValue(_parent->_MinScaleBackup * 100);
+    ui->MinimalScaleLineEdit->setText(QString::number(ui->MinimalScaleSlider->value() / 100.0f));
+
+    ui->PathDeviationSlider->setValue(_parent->_PathDeviationBackup * 100);
+    ui->PathDeviationLineEdit->setText(QString::number(ui->PathDeviationSlider->value() / 100.0f));
+
+    ui->TransitionLayerSlider_Fiber->setValue(_parent->_TransitionLayerBackup * 100);
+    ui->TransitionLayerLineEdit_Fiber->setText(QString::number(ui->TransitionLayerSlider_Fiber->value() / 100.0f));
+
+    ui->UseRandomOrientationCheckBox_Fiber->setCheckState(Qt::Unchecked);
+
+    ui->RotationOXSlider_Fiber->setValue(_parent->_FilterRotationOXBackup);
+    ui->RotationOXLineEdit_Fiber->setText(QString::number(ui->RotationOXSlider_Fiber->value()));
+
+    ui->RotationOYSlider_Fiber->setValue(_parent->_FilterRotationOYBackup);
+    ui->RotationOYLineEdit_Fiber->setText(QString::number(ui->RotationOYSlider_Fiber->value()));
+
+    ui->RotationOZSlider_Fiber->setValue(_parent->_FilterRotationOZBackup);
+    ui->RotationOZLineEdit_Fiber->setText(QString::number(ui->RotationOZSlider_Fiber->value()));
+
+    ui->CoreIntensitySlider_Fiber->setValue(_parent->_CoreIntensityBackup * 100);
+    ui->CoreIntensityLineEdit_Fiber->setText(QString::number(ui->CoreIntensitySlider_Fiber->value() / 100.0f));
+
+    _previewRender_Fiber = new CurvePreviewGLRender(
+                _parent->_ptrToRVE, ui->Fiber);
+    _previewRender_Fiber->resize(261,261);
+    _previewRender_Fiber->move(510, 10);
+
+    // Signals and slots
     connect(this,SIGNAL(signal_loadRVE(QString)),
             &UserInterfaceManager::instance(),
             SIGNAL(signal_loadRVE_T(QString)),
@@ -201,6 +253,13 @@ VolumeGLRenderRVEEditDialog::VolumeGLRenderRVEEditDialog(QWidget *parent) :
             SIGNAL(signal_generateOverlappingRandomEllipsoidsIntenseRVE_T(int,int,int,float,float,float,float,bool,float,float,float,float)),
             Qt::QueuedConnection);
     connect(&UserInterfaceManager::instance(), SIGNAL(signal_generateOverlappingRandomEllipsoidsIntenseRVEDone_T()),
+            this, SLOT(_enableWidget()), Qt::QueuedConnection);
+
+    connect(this,SIGNAL(signal_generateOverlappingRandomBezierCurveIntenseRVE(int,int,int,int,float,int,float,float,bool,float,float,float,float)),
+            &UserInterfaceManager::instance(),
+            SIGNAL(signal_generateOverlappingRandomBezierCurveIntenseRVE_T(int,int,int,int,float,int,float,float,bool,float,float,float,float)),
+            Qt::QueuedConnection);
+    connect(&UserInterfaceManager::instance(), SIGNAL(signal_generateOverlappingRandomBezierCurveIntenseRVEDone_T()),
             this, SLOT(_enableWidget()), Qt::QueuedConnection);
 
     connect(this,SIGNAL(signal_generateVoronoiRandomCellsRVE(int)),
@@ -420,6 +479,39 @@ float VolumeGLRenderRVEEditDialog::getFilterRotationOZValue_Inclusion() const {
 float VolumeGLRenderRVEEditDialog::getCoreIntensityValue() const{
     return ui->CoreIntensitySlider->value() / 100.0f;}
 
+int UserInterface::VolumeGLRenderRVEEditDialog::getCurveOrder() const{
+    return ui->BezierCurveOrderSlider->value();}
+
+int UserInterface::VolumeGLRenderRVEEditDialog::getCurveApproximationPoints() const{
+    return ui->ApproximationPointsSlider->value();}
+
+int UserInterface::VolumeGLRenderRVEEditDialog::getFiberLength() const{
+    return ui->FiberLengthSlider->value();}
+
+float UserInterface::VolumeGLRenderRVEEditDialog::getMinimalScale() const{
+    return ui->MinimalScaleSlider->value() / 100.0f;}
+
+int UserInterface::VolumeGLRenderRVEEditDialog::getFiberRadius() const{
+    return ui->FiberRadiusSlider->value();}
+
+float UserInterface::VolumeGLRenderRVEEditDialog::getPathDeviation() const{
+    return ui->PathDeviationSlider->value() / 100.0f;}
+
+float UserInterface::VolumeGLRenderRVEEditDialog::getTransitionLayerValue_Fiber() const{
+    return ui->TransitionLayerSlider_Fiber->value() / 100.0f;}
+
+float UserInterface::VolumeGLRenderRVEEditDialog::getFilterRotationOXValue_Fiber() const{
+    return ui->RotationOXSlider_Fiber->value();}
+
+float UserInterface::VolumeGLRenderRVEEditDialog::getFilterRotationOYValue_Fiber() const{
+    return ui->RotationOYSlider_Fiber->value();}
+
+float UserInterface::VolumeGLRenderRVEEditDialog::getFilterRotationOZValue_Fiber() const{
+    return ui->RotationOZSlider_Fiber->value();}
+
+float UserInterface::VolumeGLRenderRVEEditDialog::getCoreIntensityValue_Fiber() const{
+    return ui->CoreIntensitySlider_Fiber->value() / 100.0f;}
+
 void UserInterface::VolumeGLRenderRVEEditDialog::on_UseDataAsIntensityCheckBox_stateChanged(
         int arg1)
 {
@@ -489,6 +581,24 @@ void VolumeGLRenderRVEEditDialog::_updatePreview_Inclusion()
         QApplication::processEvents();
         _previewRender_Inclusion->loadDataIntoTexture();
         _previewRender_Inclusion->updateGL();
+        this->setEnabled(true);
+//        ui->progressBar->setValue(100);
+//        ui->progressBar->hide();
+        QApplication::processEvents();
+    }
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::_updatePreview_Fiber()
+{
+    if(_previewRender_Fiber)
+    {
+        /// \todo some bug - those lines calls twice slider mouse click event
+//        ui->progressBar->show();
+//        ui->progressBar->setValue(0);
+        this->setEnabled(false);
+        QApplication::processEvents();
+        _previewRender_Fiber->loadDataIntoTexture();
+        _previewRender_Fiber->updateGL();
         this->setEnabled(true);
 //        ui->progressBar->setValue(100);
 //        ui->progressBar->hide();
@@ -809,4 +919,219 @@ void UserInterface::VolumeGLRenderRVEEditDialog::on_SaveRVEButton_clicked()
     Q_EMIT signal_saveRVE(
                 QFileDialog::getSaveFileName(
                     this, tr("Save RVE"), tr(""), tr("RVE Files (*.RVE)")));
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_BezierCurveOrderSlider_valueChanged(int value)
+{
+    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
+    _parent->_CurveOrderBackup = value;
+
+    ui->BezierCurveOrderLineEdit->setText(QString::number(value));
+    if(!(ui->BezierCurveOrderSlider->isSliderDown()))
+        _updatePreview_Fiber();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_BezierCurveOrderSlider_sliderReleased()
+{
+    _updatePreview_Fiber();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_ApproximationPointsSlider_valueChanged(int value)
+{
+    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
+    _parent->_CurveApproximationPointsBackup = value;
+
+    ui->ApproximationPointsLineEdit->setText(QString::number(value));
+    if(!(ui->ApproximationPointsSlider->isSliderDown()))
+        _updatePreview_Fiber();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_ApproximationPointsSlider_sliderReleased()
+{
+    _updatePreview_Fiber();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_FiberLengthSlider_valueChanged(int value)
+{
+    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
+    _parent->_FiberLengthBackup = value;
+
+    ui->FiberLengthLineEdit->setText(QString::number(value));
+    if(!(ui->FiberLengthSlider->isSliderDown()))
+        _updatePreview_Fiber();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_FiberLengthSlider_sliderReleased()
+{
+    _updatePreview_Fiber();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_MinimalScaleSlider_valueChanged(int value)
+{
+    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
+    _parent->_MinScaleBackup = value / 100.0f;
+
+    ui->MinimalScaleLineEdit->setText(QString::number(value / 100.0f));
+    if(!(ui->MinimalScaleSlider->isSliderDown()))
+        _updatePreview_Fiber();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_MinimalScaleSlider_sliderReleased()
+{
+    _updatePreview_Fiber();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_FiberRadiusSlider_valueChanged(int value)
+{
+    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
+    _parent->_MaxRadiusBackup = value;
+    _parent->_MinRadiusBackup = value;
+
+    ui->FiberRadiusLineEdit->setText(QString::number(value));
+    if(!(ui->FiberRadiusSlider->isSliderDown()))
+        _updatePreview_Fiber();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_FiberRadiusSlider_sliderReleased()
+{
+    _updatePreview_Fiber();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_PathDeviationSlider_valueChanged(int value)
+{
+    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
+    _parent->_PathDeviationBackup = value / 100.0f;
+
+    ui->PathDeviationLineEdit->setText(QString::number(value / 100.0f));
+    if(!(ui->PathDeviationSlider->isSliderDown()))
+        _updatePreview_Fiber();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_PathDeviationSlider_sliderReleased()
+{
+    _updatePreview_Fiber();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_TransitionLayerSlider_Fiber_valueChanged(int value)
+{
+    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
+    _parent->_TransitionLayerBackup = value / 100.0f;
+
+    ui->TransitionLayerLineEdit_Fiber->setText(QString::number(value / 100.0f));
+    if(!(ui->TransitionLayerSlider_Fiber->isSliderDown()))
+        _updatePreview_Fiber();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_TransitionLayerSlider_Fiber_sliderReleased()
+{
+    _updatePreview_Fiber();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_RotationOXSlider_Fiber_valueChanged(int value)
+{
+    ui->RotationOXLineEdit_Fiber->setText(QString::number(value));
+    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
+    _parent->_FilterRotationOXBackup = value;
+    if(!ui->RotationOXSlider_Fiber->isSliderDown())
+        _updatePreview_Fiber();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_RotationOXSlider_Fiber_sliderReleased()
+{
+    _updatePreview_Fiber();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_RotationOYSlider_Fiber_valueChanged(int value)
+{
+    ui->RotationOYLineEdit_Fiber->setText(QString::number(value));
+    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
+    _parent->_FilterRotationOYBackup = value;
+    if(!ui->RotationOYSlider_Fiber->isSliderDown())
+        _updatePreview_Fiber();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_RotationOYSlider_Fiber_sliderReleased()
+{
+    _updatePreview_Fiber();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_RotationOZSlider_Fiber_valueChanged(int value)
+{
+    ui->RotationOZLineEdit_Fiber->setText(QString::number(value));
+    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
+    _parent->_FilterRotationOZBackup = value;
+    if(!ui->RotationOZSlider_Fiber->isSliderDown())
+        _updatePreview_Fiber();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_RotationOZSlider_Fiber_sliderReleased()
+{
+    _updatePreview_Fiber();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_CoreIntensitySlider_Fiber_valueChanged(int value)
+{
+    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
+    _parent->_CoreIntensityBackup = value / 100.0f;
+
+    ui->CoreIntensityLineEdit_Fiber->setText(QString::number(value / 100.0f));
+    if(!(ui->CoreIntensitySlider_Fiber->isSliderDown()))
+        _updatePreview_Fiber();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_CoreIntensitySlider_Fiber_sliderReleased()
+{
+    _updatePreview_Fiber();
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_UseRandomOrientationCheckBox_Fiber_stateChanged(int arg1)
+{
+    if(!(arg1 == Qt::Unchecked))
+    {
+        ui->RotationOXLabel_Fiber->setEnabled(false);
+        ui->RotationOXLineEdit_Fiber->setEnabled(false);
+        ui->RotationOXSlider_Fiber->setEnabled(false);
+
+        ui->RotationOYLabel_Fiber->setEnabled(false);
+        ui->RotationOYLineEdit_Fiber->setEnabled(false);
+        ui->RotationOYSlider_Fiber->setEnabled(false);
+
+        ui->RotationOZLabel_Fiber->setEnabled(false);
+        ui->RotationOZLineEdit_Fiber->setEnabled(false);
+        ui->RotationOZSlider_Fiber->setEnabled(false);
+    }
+    else
+    {
+        ui->RotationOXLabel_Fiber->setEnabled(true);
+        ui->RotationOXLineEdit_Fiber->setEnabled(true);
+        ui->RotationOXSlider_Fiber->setEnabled(true);
+
+        ui->RotationOYLabel_Fiber->setEnabled(true);
+        ui->RotationOYLineEdit_Fiber->setEnabled(true);
+        ui->RotationOYSlider_Fiber->setEnabled(true);
+
+        ui->RotationOZLabel_Fiber->setEnabled(true);
+        ui->RotationOZLineEdit_Fiber->setEnabled(true);
+        ui->RotationOZSlider_Fiber->setEnabled(true);
+    }
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_GenerateInclusionsButton_Fiber_clicked()
+{
+    _disableWigget();
+
+    Q_EMIT signal_generateOverlappingRandomBezierCurveIntenseRVE(
+                ui->NumberOfFibersLineEdit->text().toInt(),
+                ui->BezierCurveOrderSlider->value(),
+                ui->ApproximationPointsSlider->value(),
+                ui->FiberLengthSlider->value(),
+                ui->MinimalScaleSlider->value() / 100.0f,
+                ui->FiberRadiusSlider->value(),
+                ui->PathDeviationSlider->value() / 100.0f,
+                ui->TransitionLayerSlider_Fiber->value() / 100.0f,
+                ui->UseRandomOrientationCheckBox_Fiber->checkState(),
+                ui->RotationOXSlider_Fiber->value(),
+                ui->RotationOYSlider_Fiber->value(),
+                ui->RotationOZSlider_Fiber->value(),
+                ui->CoreIntensitySlider_Fiber->value() / 100.0f);
 }

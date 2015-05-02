@@ -234,6 +234,46 @@ void _EditRVECommand::generateOverlappingRandomEllipsoidsIntenseRVE(
     Q_EMIT signal_generateOverlappingRandomEllipsoidsIntenseRVEDone();
 }
 
+void _EditRVECommand::generateOverlappingRandomBezierCurveIntenseRVE(
+        int curveNum,
+        int curveOrder,
+        int curveApproximationPoints,
+        int discreteLength,
+        float minScale,
+        int curveRadius,
+        float pathDeviation,
+        float transitionLayerSize,
+        bool useRandomRotations,
+        float rotationOX,
+        float rotationOY,
+        float rotationOZ,
+        float coreValue)
+{
+    std::stringstream _str;
+    _str << "generateOverlappingRandomBezierCurveIntenseRVE " << _RVEName << " "
+         << curveNum << " "
+         << curveOrder << " "
+         << curveApproximationPoints << " "
+         << discreteLength << " "
+         << minScale << " "
+         << curveRadius << " "
+         << pathDeviation << " "
+         << transitionLayerSize << " ";
+    if(useRandomRotations) _str << "true ";
+    else _str << "false ";
+    _str << rotationOX << " "
+         << rotationOY << " "
+         << rotationOZ << " "
+         << coreValue;
+
+    // echo to console output without logging
+    getConsole().getOutputStream() << _str.str() << "\n";
+
+    getConsole() << _str.str();
+
+    Q_EMIT signal_generateOverlappingRandomBezierCurveIntenseRVEDone();
+}
+
 void _EditRVECommand::generateVoronoiRandomCellsRVE(int cellNum)
 {
     std::stringstream _str;
@@ -1079,11 +1119,11 @@ std::string RepresentativeVolumeElementConsoleInterface::generateOverlappingRand
         const std::string &name,
         int curveNum,
         int curveOrder,
-        int curveSamples,
+        int curveApproximationPoints,
         int discreteLength,
         float minScale,
         int curveRadius,
-        float radiusDeviation,
+        float pathDeviation,
         float transitionLayerSize,
         bool useRandomRotations,
         float rotationOX,
@@ -1103,11 +1143,11 @@ std::string RepresentativeVolumeElementConsoleInterface::generateOverlappingRand
             _pos->second->generateOverlappingRandomBezierCurveIntenseCL(
                         curveNum,
                         curveOrder,
-                        curveSamples,
+                        curveApproximationPoints,
                         discreteLength,
                         minScale,
                         curveRadius,
-                        radiusDeviation,
+                        pathDeviation,
                         transitionLayerSize,
                         useRandomRotations,
                         rotationOX * M_PI / 180.0f,
@@ -1148,12 +1188,12 @@ int RepresentativeVolumeElementConsoleInterface::_generateOverlappingRandomBezie
             return -1;
         }
     }
-    int curveSamples;
+    int curveApproximationPoints;
     {
         std::stringstream _str{argv[3]};
-        if(!(_str >> curveSamples))
+        if(!(_str >> curveApproximationPoints))
         {
-            getConsole().writeToOutput("wrong <curveSamples> argument.\n");
+            getConsole().writeToOutput("wrong <curveApproximationPoints> argument.\n");
             return -1;
         }
     }
@@ -1184,12 +1224,12 @@ int RepresentativeVolumeElementConsoleInterface::_generateOverlappingRandomBezie
             return -1;
         }
     }
-    float radiusDeviation;
+    float pathDeviation;
     {
         std::stringstream _str{argv[7]};
-        if(!(_str >> radiusDeviation))
+        if(!(_str >> pathDeviation))
         {
-            getConsole().writeToOutput("wrong <radiusDeviation> argument.\n");
+            getConsole().writeToOutput("wrong <pathDeviation> argument.\n");
             return -1;
         }
     }
@@ -1249,11 +1289,11 @@ int RepresentativeVolumeElementConsoleInterface::_generateOverlappingRandomBezie
                                    argv[0],
                                curveNum,
                                curveOrder,
-                               curveSamples,
+                               curveApproximationPoints,
                                discreteLength,
                                minScale,
                                curveRadius,
-                               radiusDeviation,
+                               pathDeviation,
                                transitionLayerSize,
                                useRandomRotations,
                                rotationOX,

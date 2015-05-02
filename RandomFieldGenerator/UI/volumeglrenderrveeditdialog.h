@@ -4,6 +4,7 @@
 #include <QDialog>
 #include "filterpreviewglrender.h"
 #include "inclusionpreviewglrender.h"
+#include "curvepreviewglrender.h"
 
 namespace Ui {
 class VolumeGLRenderRVEEditDialog;
@@ -99,7 +100,6 @@ namespace UserInterface
         void on_RotationOZSlider_Inclusion_sliderReleased();
 
         void on_CoreIntensitySlider_valueChanged(int value);
-
         void on_CoreIntensitySlider_sliderReleased();
 
         void on_GenerateInclusionsButton_clicked();
@@ -108,36 +108,80 @@ namespace UserInterface
 
         void on_LoadRVEButton_clicked();
 
+        void on_CoreIntensitySlider_Fiber_sliderReleased();
+        void on_CoreIntensitySlider_Fiber_valueChanged(int value);
+
+        void on_RotationOZSlider_Fiber_sliderReleased();
+        void on_RotationOZSlider_Fiber_valueChanged(int value);
+
+        void on_RotationOYSlider_Fiber_sliderReleased();
+        void on_RotationOYSlider_Fiber_valueChanged(int value);
+
+        void on_RotationOXSlider_Fiber_sliderReleased();
+        void on_RotationOXSlider_Fiber_valueChanged(int value);
+
+        void on_TransitionLayerSlider_Fiber_sliderReleased();
+        void on_TransitionLayerSlider_Fiber_valueChanged(int value);
+
+        void on_PathDeviationSlider_sliderReleased();
+        void on_PathDeviationSlider_valueChanged(int value);
+
+        void on_FiberRadiusSlider_sliderReleased();
+        void on_FiberRadiusSlider_valueChanged(int value);
+
+        void on_MinimalScaleSlider_sliderReleased();
+        void on_MinimalScaleSlider_valueChanged(int value);
+
+        void on_FiberLengthSlider_sliderReleased();
+        void on_FiberLengthSlider_valueChanged(int value);
+
+        void on_ApproximationPointsSlider_sliderReleased();
+        void on_ApproximationPointsSlider_valueChanged(int value);
+
+        void on_BezierCurveOrderSlider_sliderReleased();
+        void on_BezierCurveOrderSlider_valueChanged(int value);
+
+        void on_UseRandomOrientationCheckBox_Fiber_stateChanged(int arg1);
+
+        void on_GenerateInclusionsButton_Fiber_clicked();
+
     private:
         Ui::VolumeGLRenderRVEEditDialog *ui;
         FilterPreviewGLRender *_previewRender = nullptr;
         InclusionPreviewGLRender *_previewRender_Inclusion = nullptr;
+        CurvePreviewGLRender *_previewRender_Fiber = nullptr;
 
     public:
         float getFilterRadiusValue() const;
-
         float getFilterScaleFactorXValue() const;
         float getFilterScaleFactorYValue() const;
         float getFilterScaleFactorZValue() const;
-
         float getFilterRotationOXValue() const;
         float getFilterRotationOYValue() const;
         float getFilterRotationOZValue() const;
 
         float getMinRadiusValue() const;
         float getMaxRadiusValue() const;
-
         float getTransitionLayerValue() const;
-
         float getFilterScaleFactorXValue_Inclusion() const;
         float getFilterScaleFactorYValue_Inclusion() const;
         float getFilterScaleFactorZValue_Inclusion() const;
-
         float getFilterRotationOXValue_Inclusion() const;
         float getFilterRotationOYValue_Inclusion() const;
         float getFilterRotationOZValue_Inclusion() const;
-
         float getCoreIntensityValue() const;
+
+        int getCurveOrder() const;
+        int getCurveApproximationPoints() const;
+        int getFiberLength() const;
+        float getMinimalScale() const;
+        int getFiberRadius() const;
+        float getPathDeviation() const;
+        float getTransitionLayerValue_Fiber() const;
+        float getFilterRotationOXValue_Fiber() const;
+        float getFilterRotationOYValue_Fiber() const;
+        float getFilterRotationOZValue_Fiber() const;
+        float getCoreIntensityValue_Fiber() const;
 
     public: /// See UserInterfaceManager, there should be same transitive signals with suffix _T
         Q_SIGNAL void signal_loadRVE(QString fileName);
@@ -180,6 +224,21 @@ namespace UserInterface
                 float rotationOZ,
                 float coreValue);
 
+        Q_SIGNAL void signal_generateOverlappingRandomBezierCurveIntenseRVE(
+                int curveNum,
+                int curveOrder,
+                int curveApproximationPoints,
+                int discreteLength,
+                float minScale,
+                int curveRadius,
+                float pathDeviation,
+                float transitionLayerSize,
+                bool useRandomRotations,
+                float rotationOX,
+                float rotationOY,
+                float rotationOZ,
+                float coreValue);
+
         Q_SIGNAL void signal_generateVoronoiRandomCellsRVE(int cellNum);
 
     private:
@@ -187,6 +246,7 @@ namespace UserInterface
         Q_SLOT void _enableWidget();
         void _updatePreview();
         void _updatePreview_Inclusion();
+        void _updatePreview_Fiber();
     };
 }
 

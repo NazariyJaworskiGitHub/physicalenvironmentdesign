@@ -130,6 +130,13 @@ class _EditRVECommand : public QObject, public ConsoleCommand
                 SIGNAL(signal_generateOverlappingRandomEllipsoidsIntenseRVEDone_T()));
 
         connect(&UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_generateOverlappingRandomBezierCurveIntenseRVE_T(int,int,int,int,float,int,float,float,bool,float,float,float,float)),
+                this, SLOT(generateOverlappingRandomBezierCurveIntenseRVE(int,int,int,int,float,int,float,float,bool,float,float,float,float)));
+        connect(this, SIGNAL(signal_generateOverlappingRandomBezierCurveIntenseRVEDone()),
+                &UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_generateOverlappingRandomBezierCurveIntenseRVEDone_T()));
+
+        connect(&UserInterface::UserInterfaceManager::instance(),
                 SIGNAL(signal_generateVoronoiRandomCellsRVE_T(int)),
                 this, SLOT(generateVoronoiRandomCellsRVE(int)));
         connect(this, SIGNAL(signal_generateVoronoiRandomCellsRVEDone()),
@@ -193,6 +200,22 @@ class _EditRVECommand : public QObject, public ConsoleCommand
             float rotationOZ,
             float coreValue);
     public: Q_SIGNAL void signal_generateOverlappingRandomEllipsoidsIntenseRVEDone();
+
+    public: Q_SLOT void generateOverlappingRandomBezierCurveIntenseRVE(
+            int curveNum,
+            int curveOrder,
+            int curveApproximationPoints,
+            int discreteLength,
+            float minScale,
+            int curveRadius,
+            float pathDeviation,
+            float transitionLayerSize,
+            bool useRandomRotations,
+            float rotationOX,
+            float rotationOY,
+            float rotationOZ,
+            float coreValue);
+    public: Q_SIGNAL void signal_generateOverlappingRandomBezierCurveIntenseRVEDone();
 
     public: Q_SLOT void generateVoronoiRandomCellsRVE(int cellNum);
     public: Q_SIGNAL void signal_generateVoronoiRandomCellsRVEDone();
@@ -562,7 +585,7 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
                 "[int]    <ellipsoidNum> - number of ellipsoids;\n"
                 "[int]    <minRadius> - bottom boudn of radius deviation;\n"
                 "[int]    <maxRadius> - top bound of radius deviation;\n"
-                "[float]  <transitionLayerSize> - (optional) in range (0:1], relative to radius,\n"
+                "[float]  <transitionLayerSize> - (optional) in range [0:1], relative to radius,\n"
                 "               default = 1;\n"
                 "[float]  <ScaleFactorX> - (optional) the ellipsoid scale factor on X axis of\n"
                 "               filter mask, should be > 0 and <= 1, default = 1;\n"
@@ -589,11 +612,11 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
             const std::string &name,
             int curveNum,
             int curveOrder,
-            int curveSamples,
+            int curveApproximationPoints,
             int discreteLength,
             float minScale,
             int curveRadius,
-            float radiusDeviation,
+            float pathDeviation,
             float transitionLayerSize,
             bool useRandomRotations,
             float rotationOX,
@@ -609,20 +632,21 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
             //  "--------------------------------------------------------------------------------"
                 "generateOverlappingRandomBezierCurveIntenseRVE",
                 "generateOverlappingRandomBezierCurveIntenseRVE <Name> <curveNum> <curveOrder>\n"
-                "   <curveSamples> <discreteLength> <minScale> <curveRadius>\n"
-                "   <radiusDeviation> <transitionLayerSize> <useRandomRotations> <rotationOX>\n"
+                "   <curveApproximationPoints> <discreteLength> <minScale> <curveRadius>\n"
+                "   <pathDeviation> <transitionLayerSize> <useRandomRotations> <rotationOX>\n"
                 "   <rotationOY> <rotationOZ> <coreValue>\n"
                 "Generate overlapping random ellipsoids at unmasked RVE elements\n"
                 "Arguments:\n"
                 "[string] <Name> - the name of RVE in RAM memory;\n"
                 "[int]    <curveNum> - number of curves;\n"
-                "[int]    <curveOrder> - order of Bezier curve [1:8];\n"
-                "[int]    <curveSamples> - number of curve approximation samples [1:100];\n"
+                "[int]    <curveOrder> - order of Bezier curve [2:8];\n"
+                "[int]    <curveApproximationPoints> - number of curve approximation\n"
+                "               points [2:100];\n"
                 "[int]    <discreteLength> - discrete length of curve [1:RVE size];\n"
                 "[float]  <minScale> - minimal scale factor for curves radius deviation (0:1];\n"
                 "[int]    <curveRadius> - discrete radius of curve [1:RVE size];\n"
-                "[float]  <radiusDeviation> - radius deviation in Y and Z directions [0:1];\n"
-                "[float]  <transitionLayerSize> - (optional) in range (0:1], relative to radius,\n"
+                "[float]  <pathDeviation> - path deviation in Y and Z directions [0:1];\n"
+                "[float]  <transitionLayerSize> - (optional) in range [0:1], relative to radius,\n"
                 "               default = 1;\n"
                 "[bool]   <useRandomRotations> - (optional) use random curves rotations 'true'\n"
                 "               or 'false', default = false - next arguments are used;\n"

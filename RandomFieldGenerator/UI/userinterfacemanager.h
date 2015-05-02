@@ -92,6 +92,22 @@ namespace UserInterface
                     float coreValue);
             Q_SIGNAL void signal_generateOverlappingRandomEllipsoidsIntenseRVEDone_T();
 
+            Q_SIGNAL void signal_generateOverlappingRandomBezierCurveIntenseRVE_T(
+                    int curveNum,
+                    int curveOrder,
+                    int curveApproximationPoints,
+                    int discreteLength,
+                    float minScale,
+                    int curveRadius,
+                    float pathDeviation,
+                    float transitionLayerSize,
+                    bool useRandomRotations,
+                    float rotationOX,
+                    float rotationOY,
+                    float rotationOZ,
+                    float coreValue);
+            Q_SIGNAL void signal_generateOverlappingRandomBezierCurveIntenseRVEDone_T();
+
             Q_SIGNAL void signal_generateVoronoiRandomCellsRVE_T(int cellNum);
             Q_SIGNAL void signal_generateVoronoiRandomCellsRVEDone_T();
 

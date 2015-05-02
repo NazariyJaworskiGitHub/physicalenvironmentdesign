@@ -266,44 +266,45 @@ class RepresentativeVolumeElement
             float rotationOZ = 0.0f,
             const float coreValue = 1.0f) throw (std::runtime_error);
 
-    private : inline float _BernsteinBasis(int n, int i, float t)
+    private : static inline float _BernsteinBasis(int n, int i, float t)
     {
         return MathUtils::factorial(n)*std::pow(t,i)*std::pow(1.0f-t,n-i)/
                 MathUtils::factorial(i)/MathUtils::factorial(n-i);
     }
 
-    private: inline float _BezierCurve(
+    public: static inline float _BezierCurve(
             int coordinate,
             int &curveOrder,
             float *controlPolygonPoints,
-            int currentSample,
-            int &curveSamples)
+            int currentPoint,
+            int &curveApproximationPoints)
     {
         float _sum = 0.0f;
         for(int i=0; i<curveOrder; ++i)
             _sum += controlPolygonPoints[i*3 + coordinate] *
-                    _BernsteinBasis(curveOrder-1, i, currentSample/(curveSamples-1.0f));
+                    _BernsteinBasis(curveOrder-1, i, currentPoint/
+                                    (curveApproximationPoints-1.0f));
         return _sum;
     }
 
     /// \warning it is without sqrt
-    private: inline float _distanceToBezierSamplePoint(
+    public: static inline float _distanceToBezierSamplePoint(
             float x,
             float y,
             float z,
-            int currentSample,
+            int currentPoint,
             float *curveAproximation)
     {
         return
-                (x-curveAproximation[currentSample*3 + 0]) *
-                (x-curveAproximation[currentSample*3 + 0]) +
-                (y-curveAproximation[currentSample*3 + 1]) *
-                (y-curveAproximation[currentSample*3 + 1]) +
-                (z-curveAproximation[currentSample*3 + 2]) *
-                (z-curveAproximation[currentSample*3 + 2]);
+                (x-curveAproximation[currentPoint*3 + 0]) *
+                (x-curveAproximation[currentPoint*3 + 0]) +
+                (y-curveAproximation[currentPoint*3 + 1]) *
+                (y-curveAproximation[currentPoint*3 + 1]) +
+                (z-curveAproximation[currentPoint*3 + 2]) *
+                (z-curveAproximation[currentPoint*3 + 2]);
     }
 
-    private: inline float _projectionLength(
+    public: static inline float _projectionLength(
             float x, float y, float z,
             float Ax, float Ay, float Az,
             float Bx, float By, float Bz)
@@ -313,7 +314,7 @@ class RepresentativeVolumeElement
     }
 
     /// \warning it is without sqrt
-    private: inline float _distanceToLine(
+    public: static inline float _distanceToLine(
             float x, float y, float z,
             float Ax, float Ay, float Az,
             float Bx, float By, float Bz)
@@ -332,10 +333,10 @@ class RepresentativeVolumeElement
             int y,
             int z,
             int curveOrder,
-            int curveSamples,
+            int curveApproximationPoints,
             int discreteLength,
             int curveRadius,
-            float radiusDeviation,
+            float pathDeviation,
             float transitionLayerSize = 1.0f,
             float rotationOX = 0.0f,
             float rotationOY = 0.0f,
@@ -343,14 +344,13 @@ class RepresentativeVolumeElement
             float coreValue = 1.0f) throw (std::runtime_error);
 
     /// Generate overlapping random ellipsoids at unmasked _data elements
-    public : void generateOverlappingRandomBezierCurveIntense(
-            int curveNum,
+    public : void generateOverlappingRandomBezierCurveIntense(int curveNum,
             int curveOrder,
-            int curveSamples,
+            int curveApproximationPoints,
             int discreteLength,
             float minScale,
             int curveRadius,
-            float radiusDeviation,
+            float pathDeviation,
             float transitionLayerSize = 1.0f,
             bool useRandomRotations = false,
             float rotationOX = 0.0f,
@@ -359,14 +359,13 @@ class RepresentativeVolumeElement
             float coreValue = 1.0f) throw (std::runtime_error);
 
     /// Generate overlapping random ellipsoids at unmasked _data elements OpenCL version
-    public : void generateOverlappingRandomBezierCurveIntenseCL(
-            int curveNum,
+    public : void generateOverlappingRandomBezierCurveIntenseCL(int curveNum,
             int curveOrder,
-            int curveSamples,
+            int curveApproximationPoints,
             int discreteLength,
             float minScale,
             int curveRadius,
-            float radiusDeviation,
+            float pathDeviation,
             float transitionLayerSize = 1.0f,
             bool useRandomRotations = false,
             float rotationOX = 0.0f,
