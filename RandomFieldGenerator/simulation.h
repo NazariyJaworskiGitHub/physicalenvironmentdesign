@@ -77,9 +77,20 @@ namespace FEM
                 const float T0,
                 //char maskDirichletConditions,
                 const float flux,
+                const float cuttingPlane,
                 std::vector< std::map<long, float> > &cpu_sparse_matrix,
                 std::vector< float > &cpu_loads
                 ) noexcept;
+
+        public: static void calculateConductionCoefficient(
+                const float RVEPhysicalLength,
+                const int RVEDiscreteSize,
+                const float *ptrToRVEFieldData,
+                const float T0,
+                const float flux,
+                float &effectiveCoefficient,
+                float &minCoefficient,
+                float &maxCoefficient) noexcept;
 
         public: Simulation(){}
         public: ~Simulation(){}

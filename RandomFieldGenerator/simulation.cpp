@@ -182,7 +182,6 @@ void FEM::Simulation::applyLocalNeumannConditions(
     }
 }
 
-float cutting = 0.63;
 void FEM::Simulation::assembleSiffnessMatrix(
         const float RVEPhysicalLength,
         const int RVEDiscreteSize,
@@ -193,10 +192,11 @@ void FEM::Simulation::assembleSiffnessMatrix(
         const float T0,
         //char maskDirichletConditions,
         const float flux,
+        const float cuttingPlane,
         std::vector<std::map<long, float> > &cpu_sparse_matrix,
         std::vector<float> &cpu_loads) noexcept
 {
-    float _step = RVEPhysicalLength / RVEDiscreteSize;
+    float _step = RVEPhysicalLength / (RVEDiscreteSize-1);
     float _q = flux * _step * _step / 2.0f / 3.0f;
 
     for(int k=0; k<RVEDiscreteSize-1; ++k)
@@ -227,10 +227,10 @@ void FEM::Simulation::assembleSiffnessMatrix(
                     float _curConduction;
 
                     if(
-                            ptrToRVEData[_v0] > cutting &&
-                            ptrToRVEData[_v1] > cutting &&
-                            ptrToRVEData[_v6] > cutting &&
-                            ptrToRVEData[_v4] > cutting )
+                            ptrToRVEData[_v0] < cuttingPlane &&
+                            ptrToRVEData[_v1] < cuttingPlane &&
+                            ptrToRVEData[_v6] < cuttingPlane &&
+                            ptrToRVEData[_v4] < cuttingPlane )
                         _curConduction = conductionPhase;
                     else
                         _curConduction = conductionMatrix;
@@ -277,10 +277,10 @@ void FEM::Simulation::assembleSiffnessMatrix(
                     float _curConduction;
 
                     if(
-                            ptrToRVEData[_v0] > cutting &&
-                            ptrToRVEData[_v1] > cutting &&
-                            ptrToRVEData[_v2] > cutting &&
-                            ptrToRVEData[_v6] > cutting )
+                            ptrToRVEData[_v0] < cuttingPlane &&
+                            ptrToRVEData[_v1] < cuttingPlane &&
+                            ptrToRVEData[_v2] < cuttingPlane &&
+                            ptrToRVEData[_v6] < cuttingPlane )
                         _curConduction = conductionPhase;
                     else
                         _curConduction = conductionMatrix;
@@ -326,10 +326,10 @@ void FEM::Simulation::assembleSiffnessMatrix(
                     float _curConduction;
 
                     if(
-                            ptrToRVEData[_v1] > cutting &&
-                            ptrToRVEData[_v5] > cutting &&
-                            ptrToRVEData[_v7] > cutting &&
-                            ptrToRVEData[_v6] > cutting )
+                            ptrToRVEData[_v1] < cuttingPlane &&
+                            ptrToRVEData[_v5] < cuttingPlane &&
+                            ptrToRVEData[_v7] < cuttingPlane &&
+                            ptrToRVEData[_v6] < cuttingPlane )
                         _curConduction = conductionPhase;
                     else
                         _curConduction = conductionMatrix;
@@ -372,10 +372,10 @@ void FEM::Simulation::assembleSiffnessMatrix(
                     float _curConduction;
 
                     if(
-                            ptrToRVEData[_v1] > cutting &&
-                            ptrToRVEData[_v3] > cutting &&
-                            ptrToRVEData[_v6] > cutting &&
-                            ptrToRVEData[_v7] > cutting )
+                            ptrToRVEData[_v1] < cuttingPlane &&
+                            ptrToRVEData[_v3] < cuttingPlane &&
+                            ptrToRVEData[_v6] < cuttingPlane &&
+                            ptrToRVEData[_v7] < cuttingPlane )
                         _curConduction = conductionPhase;
                     else
                         _curConduction = conductionMatrix;
@@ -418,10 +418,10 @@ void FEM::Simulation::assembleSiffnessMatrix(
                     float _curConduction;
 
                     if(
-                            ptrToRVEData[_v1] > cutting &&
-                            ptrToRVEData[_v3] > cutting &&
-                            ptrToRVEData[_v2] > cutting &&
-                            ptrToRVEData[_v6] > cutting )
+                            ptrToRVEData[_v1] < cuttingPlane &&
+                            ptrToRVEData[_v3] < cuttingPlane &&
+                            ptrToRVEData[_v2] < cuttingPlane &&
+                            ptrToRVEData[_v6] < cuttingPlane )
                         _curConduction = conductionPhase;
                     else
                         _curConduction = conductionMatrix;
@@ -464,10 +464,10 @@ void FEM::Simulation::assembleSiffnessMatrix(
                     float _curConduction;
 
                     if(
-                            ptrToRVEData[_v1] > cutting &&
-                            ptrToRVEData[_v4] > cutting &&
-                            ptrToRVEData[_v5] > cutting &&
-                            ptrToRVEData[_v6] > cutting )
+                            ptrToRVEData[_v1] < cuttingPlane &&
+                            ptrToRVEData[_v4] < cuttingPlane &&
+                            ptrToRVEData[_v5] < cuttingPlane &&
+                            ptrToRVEData[_v6] < cuttingPlane )
                         _curConduction = conductionPhase;
                     else
                         _curConduction = conductionMatrix;
@@ -501,4 +501,35 @@ void FEM::Simulation::assembleSiffnessMatrix(
                     }
                 }
             }
+}
+
+void FEM::Simulation::calculateConductionCoefficient(
+        const float RVEPhysicalLength,
+        const int RVEDiscreteSize,
+        const float *ptrToRVEFieldData,
+        const float T0,
+        const float flux,
+        float &effectiveCoefficient,
+        float &minCoefficient,
+        float &maxCoefficient) noexcept
+{
+    // h = d/R = d*q/dT
+    effectiveCoefficient = 0.0f;
+    minCoefficient = ptrToRVEFieldData[0];
+    maxCoefficient = ptrToRVEFieldData[0];
+    // T0 should be at right side (i==RVEDiscreteSize-2)
+    // calculated T should be at left side (i==0)
+    for(int k=0; k<RVEDiscreteSize; ++k)          // z
+        for(int j=0; j<RVEDiscreteSize; ++j)      // y
+        {
+            float _curVal = ptrToRVEFieldData[
+                    0 + RVEDiscreteSize*j + k*RVEDiscreteSize*RVEDiscreteSize];
+            effectiveCoefficient += _curVal;
+            if(_curVal < minCoefficient) minCoefficient = _curVal;
+            if(_curVal > maxCoefficient) maxCoefficient = _curVal;
+        }
+    effectiveCoefficient /= RVEDiscreteSize*RVEDiscreteSize;
+    effectiveCoefficient = flux * RVEPhysicalLength / (effectiveCoefficient - T0);
+    minCoefficient = flux * RVEPhysicalLength / (minCoefficient - T0);
+    maxCoefficient = flux * RVEPhysicalLength / (maxCoefficient - T0);
 }
