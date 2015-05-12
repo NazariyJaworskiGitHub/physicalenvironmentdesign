@@ -104,7 +104,9 @@ SOURCES += main.cpp \
     UI/xyglrender.cpp \
     UI/xyglrenderformatdialog.cpp \
     UI/inclusionpreviewglrender.cpp \
-    UI/curvepreviewglrender.cpp
+    UI/curvepreviewglrender.cpp \
+    PHYSICALENVIRONMENT/basicphysicalenvironment.cpp \
+    TESTS/test_matrix.cpp
 
 HEADERS += \
     CLMANAGER/clmanager.h \
@@ -135,7 +137,13 @@ HEADERS += \
     UI/xyglrenderformatdialog.h \
     constants.h \
     UI/inclusionpreviewglrender.h \
-    UI/curvepreviewglrender.h
+    UI/curvepreviewglrender.h \
+    timer.h \
+    PHYSICALENVIRONMENT/basicphysicalenvironment.h \
+    PHYSICALENVIRONMENT/characteristics.h \
+    matrix.h \
+    TESTS/test_matrix.h \
+    FEM/weakoperator.h
 
 FORMS += \
     UI/volumeglrenderformatdialog.ui \

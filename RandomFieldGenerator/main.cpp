@@ -14,7 +14,7 @@
 
 #include "TESTS/tests_runner.h"
 
-#include <chrono>
+#include "timer.h"
 
 #include <viennacl/compressed_matrix.hpp>
 #include <viennacl/vector.hpp>
@@ -31,37 +31,38 @@
 
 #include "constants.h"
 
+#include "FEM/weakoperator.h"
+
 int main(int argc, char *argv[])
 {
     Controller::ConsoleRunner _consoleRunner(std::cout, std::cin);
     _consoleRunner.start();
 
-//    Log::Logger LogFile("logfile.txt", &_consoleRunner);
-
     QLocale::setDefault(QLocale::C);
     UserInterface::UserInterfaceManager::instance().setConsoleRunnerLifetime(_consoleRunner);
-
-//    LogFile << "Setup done.";
 
     ///////////////////////////////////////////////////////////////////////////////////////
     OpenCL::setupViennaCL();
 
     ///////////////////////////////////////////////////////////////////////////////////////
-//    run_tests_all();
-//    LogFile << "Tests done.";
+    run_tests_Matrix();
+    _consoleRunner.writeToOutput("Tests done\n");
 
-    ///////////////////////////////////////////////////////////////////////////////////////
-//    OpenCL::CLManager::instance().setCurrentPlatform(0);
-//    OpenCL::CLManager::instance().setCurrentDevice(1);
-//    viennacl::ocl::switch_context(0);
-//    viennacl::ocl::current_context().switch_device(1);
+/*    ///////////////////////////////////////////////////////////////////////////////////////
+    OpenCL::CLManager::instance().setCurrentPlatform(0);
+    OpenCL::CLManager::instance().setCurrentDevice(1);
+    viennacl::ocl::switch_context(0);
+    viennacl::ocl::current_context().switch_device(1);
 
-    std::chrono::steady_clock::time_point _t1 = std::chrono::steady_clock::now();
+    Timer _TotalCalculationTimer;
+    _TotalCalculationTimer.start();
+    Timer _RVEGenerationTimer;
+    _RVEGenerationTimer.start();
 
     int size = 64;
     RepresentativeVolumeElement _RVE(size);
 //    _RVE.generateBezierCurveIntense(
-//                size/2, size/2, size/2, 5, 10, size*0.9, size/24, 0.25f, 0.5f, 0.0f, 0.0f, M_PI/4);
+//                size/2, size/2, 0, 7, 40, size*0.5, size/4, 0.2f, 0.8f);
 //    _RVE.generateOverlappingRandomBezierCurveIntenseCL(
 //                100, 5, 10, size*0.9, 0.9, size/40, 0.25f, 0.0, false);
 //    _RVE.generateOverlappingRandomEllipsoidsIntenseCL(
@@ -73,8 +74,8 @@ int main(int argc, char *argv[])
 
 //    _RVE.applyTwoCutMaskOutside(0.001f, 0.999f);
 //    _RVE.cleanUnMaskedData();
-    _RVE.addRandomNoise();
-    _RVE.applyGaussianFilterCL(size/8);
+//    _RVE.addRandomNoise();
+//    _RVE.applyGaussianFilterCL(size/4);
 //    _RVE.applyGaussianFilter(size/4);
 //    _RVE.applyGaussianFilter(size/16,1,1,1,true,0.25f);
 //    _RVE.applyGaussianFilter(size/64,1,1,1,true,2);
@@ -106,10 +107,18 @@ int main(int argc, char *argv[])
 //    _RVE.cleanMask();
 //    _RVE.invertUnMasked();
 
-    std::chrono::steady_clock::time_point _t2 = std::chrono::steady_clock::now();
-    std::chrono::duration<double> time_span =
-            std::chrono::duration_cast<std::chrono::duration<double>>(_t2 - _t1);
-    std::cout << time_span.count() << " seconds" << std::endl;
+    for(int i=1; i<=100; ++i)
+    {
+        _RVE.generateOverlappingRandomEllipsoidsIntenseCL(
+            1, 8, 12, 0.5f, 0.5f, 0.5f, 1.0f, true, 0.0f, 0.0f, 0.0, i/100.0f);
+    }
+    _RVE.applyGaussianFilterCL(16, 1,1,1, true, 2);
+    _RVE.applyGaussianFilterCL(8, 1,1,1, true, 3);
+    _RVE.applyGaussianFilterCL(4, 1,1,1, true, 4);
+    _RVE.applyGaussianFilterCL(2, 1,1,1, true, 5);
+
+    _RVEGenerationTimer.stop();
+    std::cout << _RVEGenerationTimer.getTimeSpanAsString() << " seconds" << std::endl;
 
     ///////////////////////////////////////////////////////////////////////////////////////
 //    OpenCL::CLManager::instance().setCurrentPlatform(0);
@@ -131,7 +140,7 @@ int main(int argc, char *argv[])
 
     std::ofstream _OutputFile;
     _OutputFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    _OutputFile.open("RVE64_filter8_237_1500");
+    _OutputFile.open("RVE64_ellipsoidMultiscale_237_1500.txt");
 
     for(int i=0; i<=_NumExperiments; ++i)
     {
@@ -140,7 +149,7 @@ int main(int argc, char *argv[])
 
     ////////////////////////////////////////////////////////////////////////////////////////
     std::cout << "assembling and solving SLAE" << std::endl;
-    _t1 = std::chrono::steady_clock::now();
+    _RVEGenerationTimer.start();
 
     viennacl::compressed_matrix<float>  _K(size*size*size, size*size*size);
     viennacl::vector<float>             _f(size*size*size);
@@ -167,9 +176,8 @@ int main(int argc, char *argv[])
 
     viennacl::copy(_u.begin(), _u.end(), cpu_field.data());
 
-    _t2 = std::chrono::steady_clock::now();
-    time_span = std::chrono::duration_cast<std::chrono::duration<double>>(_t2 - _t1);
-    std::cout << time_span.count() << " seconds" << std::endl;
+    _RVEGenerationTimer.stop();
+    std::cout << _RVEGenerationTimer.getTimeSpanAsString() << " seconds" << std::endl;
 //    unsigned long _matrixSize = 0;
 //    for(long i=0; i<size*size*size; ++i)
 //        _matrixSize += cpu_sparse_matrix[i].size();
@@ -195,6 +203,10 @@ int main(int argc, char *argv[])
         _arrayMinimal.nodes.push_back({i*_conductionPhase/(_NumExperiments), _minCoeff});
         _arrayMaximal.nodes.push_back({i*_conductionPhase/(_NumExperiments), _maxCoeff});
     }
+
+    _TotalCalculationTimer.stop();
+    std::cout << "Total: " << _TotalCalculationTimer.getTimeSpanAsString() << " seconds" << std::endl;
+
     _OutputFile.close();
     _nodalfunctions.push_back(_arrayEffective);
     _nodalfunctions.push_back(_arrayMinimal);
@@ -221,12 +233,12 @@ int main(int argc, char *argv[])
 //    functions.push_back(UserInterface::Function{"cos",[](float x)->float{return std::cos(x);}});
 //    functions.push_back(UserInterface::Function{"x*x",[](float x)->float{return x*x;}});
 
-    UserInterface::XYGLRender _render2D(
-                nullptr,
-                &_nodalfunctions,
-                NULL);
-    _render2D.resize(800,600);
-    _render2D.show();
-    ///////////////////////////////////////////////////////////////////////////////////////
+//    UserInterface::XYGLRender _render2D(
+//                nullptr,
+//                &_nodalfunctions,
+//                NULL);
+//    _render2D.resize(800,600);
+//    _render2D.show();
+    /////////////////////////////////////////////////////////////////////////////////////// */
     return UserInterface::UserInterfaceManager::instance().exec();
 }

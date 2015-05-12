@@ -5,6 +5,7 @@
 
 #include "test_clmanager.h"
 #include "test_viennacl.h"
+#include "test_matrix.h"
 #include "test_simulation.h"
 
 //tip! use "-vs" to see emited signals
@@ -22,6 +23,11 @@ void run_tests_ViennaCL()
     Test_ViennaCL _myTest_ViennaCL;
     QTest::qExec(&_myTest_ViennaCL, arguments);
 }
+void run_tests_Matrix()
+{
+    Test_Matrix _myTest_Matrix;
+    QTest::qExec(&_myTest_Matrix, arguments);
+}
 void run_tests_Simulation()
 {
     Test_Simulation _myTest_Simulation;
@@ -31,6 +37,7 @@ void run_tests_all()
 {
     run_tests_CLManager();
     run_tests_ViennaCL();
+    run_tests_Matrix();
     run_tests_Simulation();
 }
 #endif // TESTS_RUNNER_H

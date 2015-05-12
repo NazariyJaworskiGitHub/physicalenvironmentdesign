@@ -1,6 +1,6 @@
 #include "test_viennacl.h"
 
-#include <chrono>
+#include "timer.h"
 
 #include "CLMANAGER/viennaclmanager.h"
 
@@ -13,19 +13,18 @@ void Test_ViennaCL::testBeam1D()
     try
     {
         std::cout << "  Preparing device...             ";
-        std::chrono::steady_clock::time_point _t1 = std::chrono::steady_clock::now();
+        Timer _t1;
+        _t1.start();
         OpenCL::CLManager::instance().setCurrentPlatform(0);
         OpenCL::CLManager::instance().setCurrentDevice(0);
         viennacl::ocl::switch_context(0);
         viennacl::ocl::current_context().switch_device(0);
 
-        std::chrono::steady_clock::time_point _t2 = std::chrono::steady_clock::now();
-        std::chrono::duration<double> time_span =
-                std::chrono::duration_cast<std::chrono::duration<double>>(_t2 - _t1);
-        std::cout << "Done " << time_span.count() << " seconds" << std::endl;
+        _t1.stop();
+        std::cout << "Done " << _t1.getTimeSpanAsString() << " seconds" << std::endl;
 
         std::cout << "  Creating buffers...             ";
-        _t1 = std::chrono::steady_clock::now();
+        _t1.start();
 
 //        cl_uint _aligment;
 //        OpenCL::CLManager::instance().getDevices()[0][0].getInfo(
@@ -34,12 +33,11 @@ void Test_ViennaCL::testBeam1D()
         viennacl::vector<float>             _f(5);
         viennacl::vector<float>             _u(5);
 
-        _t2 = std::chrono::steady_clock::now();
-        time_span = std::chrono::duration_cast<std::chrono::duration<double>>(_t2 - _t1);
-        std::cout << "Done " << time_span.count() << " seconds" << std::endl;
+        _t1.stop();
+        std::cout << "Done " << _t1.getTimeSpanAsString() << " seconds" << std::endl;
 
         std::cout << "  Preparing data...               ";
-        _t1 = std::chrono::steady_clock::now();
+        _t1.start();
 
         std::vector< std::map< unsigned, float> > cpu_sparse_matrix(5);
         cpu_sparse_matrix[0][0] =  10.0f;
@@ -61,19 +59,17 @@ void Test_ViennaCL::testBeam1D()
         cpu_loads[3] =   0.0f;
         cpu_loads[4] = 500.0f;
 
-        _t2 = std::chrono::steady_clock::now();
-        time_span = std::chrono::duration_cast<std::chrono::duration<double>>(_t2 - _t1);
-        std::cout << "Done " << time_span.count() << " seconds" << std::endl;
+        _t1.stop();
+        std::cout << "Done " << _t1.getTimeSpanAsString() << " seconds" << std::endl;
 
         std::cout << "  Sending data to device...       ";
-        _t1 = std::chrono::steady_clock::now();
+        _t1.start();
 
         viennacl::copy(cpu_sparse_matrix, _K);
         viennacl::copy(cpu_loads.begin(), cpu_loads.end(), _f.begin());
 
-        _t2 = std::chrono::steady_clock::now();
-        time_span = std::chrono::duration_cast<std::chrono::duration<double>>(_t2 - _t1);
-        std::cout << "Done " << time_span.count() << " seconds" << std::endl;
+        _t1.stop();
+        std::cout << "Done " << _t1.getTimeSpanAsString() << " seconds" << std::endl;
 
         //    _u = viennacl::linalg::solve(_K, _f, viennacl::linalg::upper_tag());
         //    _u = viennacl::linalg::solve(_K, _f, viennacl::linalg::lower_tag());
@@ -81,21 +77,19 @@ void Test_ViennaCL::testBeam1D()
         //    viennacl::linalg::lu_substitute(_K, _f);
 
         std::cout << "  Solving SLAE...                 ";
-        _t1 = std::chrono::steady_clock::now();
+        _t1.start();
 
         _u = viennacl::linalg::solve(_K, _f, viennacl::linalg::cg_tag(1e-4, 10));
 
-        _t2 = std::chrono::steady_clock::now();
-        time_span = std::chrono::duration_cast<std::chrono::duration<double>>(_t2 - _t1);
-        std::cout << "Done " << time_span.count() << " seconds" << std::endl;
+        _t1.stop();
+        std::cout << "Done " << _t1.getTimeSpanAsString() << " seconds" << std::endl;
 
         std::cout << "  Retrieving data from device...  ";
-        _t1 = std::chrono::steady_clock::now();
+        _t1.start();
 
         viennacl::copy(_u.begin(), _u.end(), cpu_loads.begin());
-        _t2 = std::chrono::steady_clock::now();
-        time_span = std::chrono::duration_cast<std::chrono::duration<double>>(_t2 - _t1);
-        std::cout << "Done " << time_span.count() << " seconds" << std::endl;
+        _t1.stop();
+        std::cout << "Done " << _t1.getTimeSpanAsString() << " seconds" << std::endl;
 
         for(auto i: cpu_loads)
             std::cout << "  " << i;

@@ -227,10 +227,10 @@ void FEM::Simulation::assembleSiffnessMatrix(
                     float _curConduction;
 
                     if(
-                            ptrToRVEData[_v0] < cuttingPlane &&
-                            ptrToRVEData[_v1] < cuttingPlane &&
-                            ptrToRVEData[_v6] < cuttingPlane &&
-                            ptrToRVEData[_v4] < cuttingPlane )
+                            ptrToRVEData[_v0] > cuttingPlane &&
+                            ptrToRVEData[_v1] > cuttingPlane &&
+                            ptrToRVEData[_v6] > cuttingPlane &&
+                            ptrToRVEData[_v4] > cuttingPlane )
                         _curConduction = conductionPhase;
                     else
                         _curConduction = conductionMatrix;
@@ -277,10 +277,10 @@ void FEM::Simulation::assembleSiffnessMatrix(
                     float _curConduction;
 
                     if(
-                            ptrToRVEData[_v0] < cuttingPlane &&
-                            ptrToRVEData[_v1] < cuttingPlane &&
-                            ptrToRVEData[_v2] < cuttingPlane &&
-                            ptrToRVEData[_v6] < cuttingPlane )
+                            ptrToRVEData[_v0] > cuttingPlane &&
+                            ptrToRVEData[_v1] > cuttingPlane &&
+                            ptrToRVEData[_v2] > cuttingPlane &&
+                            ptrToRVEData[_v6] > cuttingPlane )
                         _curConduction = conductionPhase;
                     else
                         _curConduction = conductionMatrix;
@@ -326,10 +326,10 @@ void FEM::Simulation::assembleSiffnessMatrix(
                     float _curConduction;
 
                     if(
-                            ptrToRVEData[_v1] < cuttingPlane &&
-                            ptrToRVEData[_v5] < cuttingPlane &&
-                            ptrToRVEData[_v7] < cuttingPlane &&
-                            ptrToRVEData[_v6] < cuttingPlane )
+                            ptrToRVEData[_v1] > cuttingPlane &&
+                            ptrToRVEData[_v5] > cuttingPlane &&
+                            ptrToRVEData[_v7] > cuttingPlane &&
+                            ptrToRVEData[_v6] > cuttingPlane )
                         _curConduction = conductionPhase;
                     else
                         _curConduction = conductionMatrix;
@@ -372,10 +372,10 @@ void FEM::Simulation::assembleSiffnessMatrix(
                     float _curConduction;
 
                     if(
-                            ptrToRVEData[_v1] < cuttingPlane &&
-                            ptrToRVEData[_v3] < cuttingPlane &&
-                            ptrToRVEData[_v6] < cuttingPlane &&
-                            ptrToRVEData[_v7] < cuttingPlane )
+                            ptrToRVEData[_v1] > cuttingPlane &&
+                            ptrToRVEData[_v3] > cuttingPlane &&
+                            ptrToRVEData[_v6] > cuttingPlane &&
+                            ptrToRVEData[_v7] > cuttingPlane )
                         _curConduction = conductionPhase;
                     else
                         _curConduction = conductionMatrix;
@@ -418,10 +418,10 @@ void FEM::Simulation::assembleSiffnessMatrix(
                     float _curConduction;
 
                     if(
-                            ptrToRVEData[_v1] < cuttingPlane &&
-                            ptrToRVEData[_v3] < cuttingPlane &&
-                            ptrToRVEData[_v2] < cuttingPlane &&
-                            ptrToRVEData[_v6] < cuttingPlane )
+                            ptrToRVEData[_v1] > cuttingPlane &&
+                            ptrToRVEData[_v3] > cuttingPlane &&
+                            ptrToRVEData[_v2] > cuttingPlane &&
+                            ptrToRVEData[_v6] > cuttingPlane )
                         _curConduction = conductionPhase;
                     else
                         _curConduction = conductionMatrix;
@@ -464,10 +464,10 @@ void FEM::Simulation::assembleSiffnessMatrix(
                     float _curConduction;
 
                     if(
-                            ptrToRVEData[_v1] < cuttingPlane &&
-                            ptrToRVEData[_v4] < cuttingPlane &&
-                            ptrToRVEData[_v5] < cuttingPlane &&
-                            ptrToRVEData[_v6] < cuttingPlane )
+                            ptrToRVEData[_v1] > cuttingPlane &&
+                            ptrToRVEData[_v4] > cuttingPlane &&
+                            ptrToRVEData[_v5] > cuttingPlane &&
+                            ptrToRVEData[_v6] > cuttingPlane )
                         _curConduction = conductionPhase;
                     else
                         _curConduction = conductionMatrix;
