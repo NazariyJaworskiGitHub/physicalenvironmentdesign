@@ -5,9 +5,10 @@
 #include <list>
 
 namespace FEM
-{
+{    
     class Polynomial
     {
+        public : friend class Derivative;
         public : class Summand;
 
         class Variable
@@ -100,6 +101,13 @@ namespace FEM
         public : std::list<Summand> summands;
 
         private: Polynomial() noexcept {}
+        public : Polynomial(const Polynomial &target) noexcept : summands(target.summands){}
+        public : Polynomial & operator = (const Polynomial &target) noexcept
+        {
+            summands.clear();
+            summands = target.summands;
+            return *this;
+        }
         public : Polynomial(const int coeff) noexcept
         {
             Summand _s(coeff);
@@ -118,8 +126,7 @@ namespace FEM
         public : friend Polynomial operator + (
                 const Polynomial &A, const Polynomial &B) noexcept
         {
-            Polynomial _rezult;
-            _rezult.summands = A.summands;
+            Polynomial _rezult = A;
             for(auto _curBSummandIterator = B.summands.cbegin();
                 _curBSummandIterator != B.summands.cend(); ++_curBSummandIterator)
             {
@@ -142,8 +149,7 @@ namespace FEM
         public : friend Polynomial operator - (
                 const Polynomial &A, const Polynomial &B) noexcept
         {
-            Polynomial _rezult;
-            _rezult.summands = A.summands;
+            Polynomial _rezult = A;
             for(auto _curBSummandIterator = B.summands.cbegin();
                 _curBSummandIterator != B.summands.cend(); ++_curBSummandIterator)
             {
@@ -182,11 +188,14 @@ namespace FEM
                     if(!_curSummand.multipliers.empty())
                         out << "*";
                 }
+                bool _isFirstMultiplier = true;
                 for(Multiplier &_curMultiplier: _curSummand.multipliers)
                 {
+                    if(!_isFirstMultiplier)out << "*";
                     out << _curMultiplier.var;
                     if(_curMultiplier.power > 1)
                         out << "^" << _curMultiplier.power;
+                    _isFirstMultiplier = false;
                 }
                 _isFirst = false;
             }

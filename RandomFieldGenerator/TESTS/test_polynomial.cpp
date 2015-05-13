@@ -1,5 +1,5 @@
 #include "test_polynomial.h"
-#include "iostream"
+#include <iostream>
 using namespace FEM;
 
 void Test_Polynomial::test_Polynomial()
@@ -27,10 +27,10 @@ void Test_Polynomial::test_Polynomial()
 
     Polynomial True = 2*L1*L1+1-6*L2*3*L3;
 
-    std::cout << "A = " << A << "\n";
-    std::cout << "B = " << B << "\n";
-    std::cout << "C = " << C << "\n";
-    std::cout << "D = " << D << "\n";
+//    std::cout << "A = " << A << "\n";
+//    std::cout << "B = " << B << "\n";
+//    std::cout << "C = " << C << "\n";
+//    std::cout << "D = " << D << "\n";
 
     QVERIFY(True.summands.size() == D.summands.size() &&
             True.summands.size() == 3 &&
