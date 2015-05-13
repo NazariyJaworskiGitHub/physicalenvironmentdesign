@@ -13,22 +13,6 @@ namespace FEM
 
 //    };
 
-//    class Linear3DSimplexSpace  //[N]
-//    {
-//        // N1(L1,L2,L3,L4) = L1;
-//        // N2(L1,L2,L3,L4) = L2;
-//        // N3(L1,L2,L3,L4) = L3;
-//        // N4(L1,L2,L3,L4) = L4;
-
-//        // dNX(L1,L2,L3)/dL1 = dNX(L1,L2,L3,L4)/dL1 - dNX(L1,L2,L3,L4)/dL4
-//        // dNX(L1,L2,L3)/dL2 = dNX(L1,L2,L3,L4)/dL2 - dNX(L1,L2,L3,L4)/dL4
-//        // dNX(L1,L2,L3)/dL3 = dNX(L1,L2,L3,L4)/dL3 - dNX(L1,L2,L3,L4)/dL4
-
-//        // Jac = [Ax-Dx Ay-Dy Az-Dz]
-//        //       [Bx-Dx By-Dy Bz-Dz]
-//        //       [Cx-Dx Cy-Dy Cz-Dz]
-//    };
-
 //    class CharacteristicsMatrix //[D]
 //    {
 

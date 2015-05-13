@@ -106,7 +106,9 @@ SOURCES += main.cpp \
     UI/inclusionpreviewglrender.cpp \
     UI/curvepreviewglrender.cpp \
     PHYSICALENVIRONMENT/basicphysicalenvironment.cpp \
-    TESTS/test_matrix.cpp
+    TESTS/test_matrix.cpp \
+    TESTS/test_derivative.cpp \
+    TESTS/test_polynomial.cpp
 
 HEADERS += \
     CLMANAGER/clmanager.h \
@@ -143,7 +145,11 @@ HEADERS += \
     PHYSICALENVIRONMENT/characteristics.h \
     matrix.h \
     TESTS/test_matrix.h \
-    FEM/weakoperator.h
+    FEM/weakoperator.h \
+    FEM/derivative.h \
+    TESTS/test_derivative.h \
+    FEM/polynomial.h \
+    TESTS/test_polynomial.h
 
 FORMS += \
     UI/volumeglrenderformatdialog.ui \

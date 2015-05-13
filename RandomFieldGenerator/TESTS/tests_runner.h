@@ -5,6 +5,8 @@
 
 #include "test_clmanager.h"
 #include "test_viennacl.h"
+#include "test_polynomial.h"
+#include "test_derivative.h"
 #include "test_matrix.h"
 #include "test_simulation.h"
 
@@ -23,6 +25,16 @@ void run_tests_ViennaCL()
     Test_ViennaCL _myTest_ViennaCL;
     QTest::qExec(&_myTest_ViennaCL, arguments);
 }
+void run_tests_Polynomial()
+{
+    Test_Polynomial _myTest_Polynomial;
+    QTest::qExec(&_myTest_Polynomial, arguments);
+}
+void run_tests_Derivative()
+{
+    Test_Derivative _myTest_Derivative;
+    QTest::qExec(&_myTest_Derivative, arguments);
+}
 void run_tests_Matrix()
 {
     Test_Matrix _myTest_Matrix;
@@ -37,6 +49,8 @@ void run_tests_all()
 {
     run_tests_CLManager();
     run_tests_ViennaCL();
+    run_tests_Polynomial();
+    run_tests_Derivative();
     run_tests_Matrix();
     run_tests_Simulation();
 }

@@ -92,7 +92,7 @@ namespace MathUtils
 
             public   : void inverse() noexcept
             {
-
+                /// \todo
             }
 
             public   : virtual ~AbstractMatrix(){}
