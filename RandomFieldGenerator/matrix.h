@@ -46,6 +46,20 @@ namespace MathUtils
                             (*this)(i,j) += A(i,k) * B(k,j);
                     }
             }
+            // e.g. Polynomial::multiplyT<DerivativeMapped,Polynomial>(L,N);
+            public   : template<typename _Type1_, typename _Type2_> // for matrices
+            void multiplyT(
+                    const AbstractMatrix<_Type1_> &A,
+                    const AbstractMatrix<_Type2_> &B) noexcept
+            {
+                for(int i=0; i<A.rows(); ++i)
+                    for(int j=0; j<B.cols(); ++j)
+                    {
+                        (*this)(i,j) = _Type2_();
+                        for(int k=0; k<A.cols(); ++k)
+                            (*this)(i,j) = (*this)(i,j) + A(i,k) * B(k,j);
+                    }
+            }
 
             public   : void transpose() noexcept {
                         this->_isTransposed = !this->_isTransposed;}
@@ -89,10 +103,34 @@ namespace MathUtils
                 }
                 return det;
             }
-
-            public   : void inverse() noexcept
+            public   : _DimType_ determinant3x3() noexcept
             {
-                /// \todo
+                return _data[0+0]*_data[3+1]*_data[6+2] +
+                        _data[0+1]*_data[3+2]*_data[6+0] +
+                        _data[0+2]*_data[3+0]*_data[6+1] -
+                        _data[0+2]*_data[3+1]*_data[6+0] -
+                        _data[0+1]*_data[3+0]*_data[6+2] -
+                        _data[0+0]*_data[3+2]*_data[6+1];
+            }
+            public   : void inverse3x3() noexcept
+            {
+                _DimType_ _A[9];
+                for(int i=0; i<9; ++i)
+                    _A[i] = _data[i];
+
+                _DimType_ _det = this->determinant3x3();
+
+                _data[0] = ( _A[3+1]*_A[6+2]-_A[3+2]*_A[6+1])/_det;
+                _data[1] = (-_A[0+1]*_A[6+2]+_A[0+2]*_A[6+1])/_det;
+                _data[2] = ( _A[0+1]*_A[3+2]-_A[0+2]*_A[3+1])/_det;
+
+                _data[3] = (-_A[3+0]*_A[6+2]+_A[3+2]*_A[6+0])/_det;
+                _data[4] = ( _A[0+0]*_A[6+2]-_A[0+2]*_A[6+0])/_det;
+                _data[5] = (-_A[0+0]*_A[3+2]+_A[0+2]*_A[3+0])/_det;
+
+                _data[6] = ( _A[3+0]*_A[6+1]-_A[3+1]*_A[6+0])/_det;
+                _data[7] = (-_A[0+0]*_A[6+1]+_A[0+1]*_A[6+0])/_det;
+                _data[8] = ( _A[0+0]*_A[3+1]-_A[0+1]*_A[3+0])/_det;
             }
 
             public   : virtual ~AbstractMatrix(){}
@@ -144,7 +182,7 @@ namespace MathUtils
                 return _rez;
             }
 
-            ~DynamicMatrix() final {
+            ~DynamicMatrix() override {
                 _deleteData();}
         };
 
@@ -175,7 +213,7 @@ namespace MathUtils
                 return *this;
             }
 
-            public : ~StaticMatrix() final {}
+            public : ~StaticMatrix() override {}
         };
     }
 }

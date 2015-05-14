@@ -7,27 +7,6 @@
 
 namespace FEM
 {
-//    //I{([L][N])T[D][L][N]}dV{u}=I([N]T{f})dV
-//    class NodalPotential        //{u}
-//    {
-
-//    };
-
-//    class CharacteristicsMatrix //[D]
-//    {
-
-//    };
-
-//    class Problem   // whole equation
-//    {
-
-//    };
-
-//    class Integrator    // gets integrals
-//    {
-
-//    };
-
     class Simulation
     {
         /// step -          (physical length of RVE side) / (discrete size of RVE side);

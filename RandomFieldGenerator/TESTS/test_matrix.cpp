@@ -19,6 +19,8 @@ void Test_Matrix::test_Matrix()
         QVERIFY(_detR == 12.0f);
         _detR = _MR.determinantGaussElimination();
         QVERIFY(_detR == 12.0f);
+        _detR = _MR.determinant3x3();
+        QVERIFY(_detR == 12.0f);
     }
     {
         Matrix::StaticMatrix<float,3,3> _MR;
@@ -35,6 +37,8 @@ void Test_Matrix::test_Matrix()
         QVERIFY(_detR == 0.0f);
         _detR = _MR.determinantGaussElimination();
         QVERIFY(_detR == 0.0f);
+        _detR = _MR.determinant3x3();
+        QVERIFY(_detR == 0.0f);
     }
     {
         Matrix::DynamicMatrix<float> _MRD(3,3);
@@ -50,6 +54,8 @@ void Test_Matrix::test_Matrix()
         float _detRD = _MRD.determinant();
         QVERIFY(_detRD == 12.0f);
         _detRD = _MRD.determinantGaussElimination();
+        QVERIFY(_detRD == 12.0f);
+        _detRD = _MRD.determinant3x3();
         QVERIFY(_detRD == 12.0f);
     }
     {
@@ -137,6 +143,60 @@ void Test_Matrix::test_Matrix()
         }
         QVERIFY(_maxError < 1e-4f);
     }
+    {
+        Matrix::StaticMatrix<float,3,3> C;
+        C(0,0) = 0;
+        C(0,1) = 0;
+        C(0,2) = -0.1;
+        C(1,0) = 0.1;
+        C(1,1) = 0;
+        C(1,2) = -0.1;
+        C(2,0) = 0;
+        C(2,1) = 0.1;
+        C(2,2) = -0.1;
+        C.inverse3x3();
+        Matrix::StaticMatrix<float,3,3> True;
+        True(0,0) = -10;
+        True(0,1) = 10;
+        True(0,2) = 0;
+        True(1,0) = -10;
+        True(1,1) = 0;
+        True(1,2) = 10;
+        True(2,0) = -10;
+        True(2,1) = 0;
+        True(2,2) = 0;
+        float _maxError = 0.0f;
+        for(int i=0; i<3; ++i)
+            for(int j=0; j<3; ++j)
+        {
+            float err = std::fabs(C(i,j)-True(i,j));
+            if(True(i,j)!=0)err /= True(i,j);
+            if(err>_maxError)
+                _maxError = err;
+        }
+        QVERIFY(_maxError < 1e-4f);
+    }
 }
 
-
+void Test_Matrix::test_JacobiMatrix()
+{
+    float _A[] = {  0,  0,  0};
+    float _B[] = {0.1,  0,  0};
+    float _C[] = {  0,0.1,  0};
+    float _D[] = {  0,  0,0.1};
+    FEM::JacobiMatrix Jac(_A,_B,_C,_D);
+    float _KTrue[4][4] = {
+        {  0,   0, -0.1},
+        {0.1,   0, -0.1},
+        {  0, 0.1, -0.1}};
+    float _maxError = 0.0f;
+    for(int i=0; i<3; ++i)
+        for(int j=0; j<3; ++j)
+        {
+            float err = std::fabs(Jac(i,j)-_KTrue[i][j]);
+            if(_KTrue[i][j]!=0.0f)err /= _KTrue[i][j];
+            if(err>_maxError)
+                _maxError = err;
+        }
+    QVERIFY(_maxError < 1e-4f);
+}

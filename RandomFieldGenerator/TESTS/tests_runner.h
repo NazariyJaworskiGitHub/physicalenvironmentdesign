@@ -8,6 +8,7 @@
 #include "test_polynomial.h"
 #include "test_derivative.h"
 #include "test_matrix.h"
+#include "test_fespacesimplex.h"
 #include "test_simulation.h"
 
 //tip! use "-vs" to see emited signals
@@ -40,6 +41,11 @@ void run_tests_Matrix()
     Test_Matrix _myTest_Matrix;
     QTest::qExec(&_myTest_Matrix, arguments);
 }
+void run_tests_FESpaceSimplex()
+{
+    Test_FESpaceSimplex _myTest_FESpaceSimplex;
+    QTest::qExec(&_myTest_FESpaceSimplex, arguments);
+}
 void run_tests_Simulation()
 {
     Test_Simulation _myTest_Simulation;
@@ -52,6 +58,7 @@ void run_tests_all()
     run_tests_Polynomial();
     run_tests_Derivative();
     run_tests_Matrix();
+    run_tests_FESpaceSimplex();
     run_tests_Simulation();
 }
 #endif // TESTS_RUNNER_H

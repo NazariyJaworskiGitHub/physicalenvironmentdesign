@@ -14,7 +14,8 @@ namespace FEM
         class Variable
         {
             public : const std::string name;
-            public : const int id;
+            public : const int id = -1;
+            public : Variable() noexcept : name("?"), id(-1) {}
             public : Variable(std::string name, int id) noexcept : name(name), id(id){}
             public : Variable(const Variable &V) noexcept : name(V.name), id(V.id){}
             public : Variable & operator = (const Variable &target) noexcept
@@ -100,7 +101,7 @@ namespace FEM
 
         public : std::list<Summand> summands;
 
-        private: Polynomial() noexcept {}
+        public : Polynomial() noexcept {}
         public : Polynomial(const Polynomial &target) noexcept : summands(target.summands){}
         public : Polynomial & operator = (const Polynomial &target) noexcept
         {
@@ -174,6 +175,11 @@ namespace FEM
         }
         public : friend std::ostream & operator << (std::ostream &out, const Polynomial& P)
         {
+            if(P.summands.empty())
+            {
+                out << "0";
+                return out;
+            }
             bool _isFirst = true;
             for(auto _curSummand: P.summands)
             {

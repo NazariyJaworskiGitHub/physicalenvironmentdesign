@@ -108,7 +108,8 @@ SOURCES += main.cpp \
     PHYSICALENVIRONMENT/basicphysicalenvironment.cpp \
     TESTS/test_matrix.cpp \
     TESTS/test_derivative.cpp \
-    TESTS/test_polynomial.cpp
+    TESTS/test_polynomial.cpp \
+    TESTS/test_fespacesimplex.cpp
 
 HEADERS += \
     CLMANAGER/clmanager.h \
@@ -149,7 +150,10 @@ HEADERS += \
     FEM/derivative.h \
     TESTS/test_derivative.h \
     FEM/polynomial.h \
-    TESTS/test_polynomial.h
+    TESTS/test_polynomial.h \
+    FEM/fespacesimplex.h \
+    FEM/jacobimatrix.h \
+    TESTS/test_fespacesimplex.h
 
 FORMS += \
     UI/volumeglrenderformatdialog.ui \
