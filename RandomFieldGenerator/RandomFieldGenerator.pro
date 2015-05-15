@@ -156,7 +156,8 @@ HEADERS += \
     TESTS/test_fespacesimplex.h \
     FEM/domain.h \
     FEM/problem.h \
-    FEM/solver.h
+    FEM/solver.h \
+    FEM/staticconstants.h
 
 FORMS += \
     UI/volumeglrenderformatdialog.ui \

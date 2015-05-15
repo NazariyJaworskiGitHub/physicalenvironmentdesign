@@ -9,7 +9,7 @@
 
 namespace FEM
 {
-    class AbstractProblem
+/*    class AbstractProblem
     {
         protected: const AbstractDomain &_domain;
         protected: const AbstractFESpace &_FESpace;
@@ -62,7 +62,7 @@ namespace FEM
 //            //output = 1.0f / 6.0f * JacDet
         }
         public : ~HeatConductionProblem() noexcept override {}
-    };
+    };*/
 }
 
 #endif // PROBLEM

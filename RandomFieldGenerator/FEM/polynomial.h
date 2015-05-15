@@ -4,6 +4,16 @@
 #include <iostream>
 #include <list>
 
+#define L1_id 1
+#define L2_id 2
+#define L3_id 3
+#define L4_id 4
+
+#define L1_literal "L1"
+#define L2_literal "L2"
+#define L3_literal "L3"
+#define L4_literal "L3"
+
 namespace FEM
 {    
     class Polynomial
@@ -13,14 +23,14 @@ namespace FEM
 
         class Variable
         {
-            public : const std::string name;
+            /*public : const std::string name;*/
             public : const int id = -1;
-            public : Variable() noexcept : name("?"), id(-1) {}
-            public : Variable(const std::string &name, int id) noexcept : name(name), id(id){}
-            public : Variable(const Variable &V) noexcept : name(V.name), id(V.id){}
+            public : Variable() noexcept : /*name("?"),*/ id(-1) {}
+            public : Variable(/*const std::string &name,*/ int id) noexcept : /*name(name),*/ id(id){}
+            public : Variable(const Variable &V) noexcept : /*name(V.name),*/ id(V.id){}
             public : Variable & operator = (const Variable &target) noexcept
             {
-                (*const_cast<std::string*>(&name)) = target.name;
+                //(*const_cast<std::string*>(&name)) = target.name;
                 (*const_cast<int*>(&id)) = target.id;
                 return *this;
             }
@@ -30,8 +40,8 @@ namespace FEM
             }
             public : friend std::ostream & operator << (std::ostream &out, const Variable &V)
             {
-                return out << V.name;
-                //return out << "L" << V.id;
+                //return out << V.name;
+                return out << "L" << V.id;
             }
             public : friend Polynomial::Summand operator * (
                     const int coef, const Variable &V) noexcept
@@ -231,10 +241,6 @@ namespace FEM
             return _result;
         }
     };
-    static const Polynomial::Variable L1("L1",1);
-    static const Polynomial::Variable L2("L2",2);
-    static const Polynomial::Variable L3("L3",3);
-    static const Polynomial::Variable L4("L4",4);
 }
 
 #endif // POLYNOMIAL

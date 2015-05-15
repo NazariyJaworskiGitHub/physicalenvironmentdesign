@@ -3,11 +3,11 @@
 
 namespace FEM
 {
-    class AbstractSolver
-    {
-        public : AbstractSolver() noexcept {}
-        public : virtual ~AbstractSolver() noexcept {}
-    };
+//    class AbstractSolver
+//    {
+//        public : AbstractSolver() noexcept {}
+//        public : virtual ~AbstractSolver() noexcept {}
+//    };
 }
 
 #endif // SOLVER

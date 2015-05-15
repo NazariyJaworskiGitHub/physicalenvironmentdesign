@@ -3,8 +3,6 @@
 
 #include "matrix.h"
 #include "polynomial.h"
-//#include "jacobimatrix.h"
-//#include "weakoperator.h"
 
 namespace FEM
 {
@@ -17,7 +15,7 @@ namespace FEM
         public : virtual ~AbstractFESpace() noexcept {}
     };
 
-    template <int _DegreesOfFreedom_> class SimplexElement : public AbstractFESpace
+    template <int _DegreesOfFreedom_> class SimplexIsoparametricFESpace : public AbstractFESpace
     {
         public : class LinearInterpolationFunctions : public MathUtils::Matrix::StaticMatrix<
                 Polynomial,_DegreesOfFreedom_,_DegreesOfFreedom_*4>
@@ -26,17 +24,17 @@ namespace FEM
             {
                 for(int i=0; i<_DegreesOfFreedom_; ++i)
                 {
-                    (*this)(i,0*_DegreesOfFreedom_+i) = L1;
-                    (*this)(i,1*_DegreesOfFreedom_+i) = L2;
-                    (*this)(i,2*_DegreesOfFreedom_+i) = L3;
-                    (*this)(i,3*_DegreesOfFreedom_+i) = L4;
+                    (*this)(i,0*_DegreesOfFreedom_+i) = Polynomial::Variable(/*L1_literal,*/ L1_id);
+                    (*this)(i,1*_DegreesOfFreedom_+i) = Polynomial::Variable(/*L2_literal,*/ L2_id);
+                    (*this)(i,2*_DegreesOfFreedom_+i) = Polynomial::Variable(/*L3_literal,*/ L3_id);
+                    (*this)(i,3*_DegreesOfFreedom_+i) = Polynomial::Variable(/*L4_literal,*/ L4_id);
                 }
             }
             public: ~LinearInterpolationFunctions() noexcept final {}
         };
         private: const LinearInterpolationFunctions _interpFunc;
-        public : SimplexElement() noexcept : AbstractFESpace(_interpFunc){}
-        public : ~SimplexElement() noexcept final{}
+        public : SimplexIsoparametricFESpace() noexcept : AbstractFESpace(_interpFunc){}
+        public : ~SimplexIsoparametricFESpace() noexcept final{}
     };
 
     class Simplex1DegInterpConst : MathUtils::Matrix::StaticMatrix<float,3,4>
@@ -60,7 +58,6 @@ namespace FEM
         }
         public: ~Simplex1DegInterpConst() noexcept final {}
     };
-    static const Simplex1DegInterpConst LNSimplex1DegOfFreedom;
 }
 
 #endif // FESPACESIMPLEX

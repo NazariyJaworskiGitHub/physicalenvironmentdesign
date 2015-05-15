@@ -1,6 +1,7 @@
 #include "test_polynomial.h"
-#include <iostream>
-//#include <FEM/fespacesimplex.h> /// \todo
+
+#include "FEM/staticconstants.h"
+
 using namespace FEM;
 
 void Test_Polynomial::test_Polynomial()
@@ -28,30 +29,8 @@ void Test_Polynomial::test_Polynomial()
 
     Polynomial True = 2*L1*L1+1-6*L2*3*L3;
 
-//    std::cout << "A = " << A << "\n";
-//    std::cout << "B = " << B << "\n";
-//    std::cout << "C = " << C << "\n";
-//    std::cout << "D = " << D << "\n";
-
     QVERIFY(True.summands.size() == D.summands.size() &&
             True.summands.size() == 3 &&
             True.summands.front().compare(D.summands.front()) &&
             True.summands.back().compare(D.summands.back()));
-
-//    /// \todo
-//    FEM::SimplexElement<1>::LinearInterpolationFunctions Nu1D;
-//    for(int i=0; i<1; ++i)
-//    {
-//        for(int j=0; j<1*4; ++j)
-//            std::cout << Nu1D(i,j) << " ";
-//        std::cout << "\n";
-//    }
-//    FEM::SimplexElement<3>::LinearInterpolationFunctions Nu3D;
-//    for(int i=0; i<3; ++i)
-//    {
-//        for(int j=0; j<3*4; ++j)
-//            std::cout << Nu3D(i,j) << " ";
-//        std::cout << "\n";
-//    }
-
 }

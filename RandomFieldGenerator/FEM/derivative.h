@@ -46,11 +46,6 @@ namespace FEM
         public : ~Derivative() noexcept {}
     };
 
-    static const Derivative d_dL1(L1);
-    static const Derivative d_dL2(L2);
-    static const Derivative d_dL3(L3);
-    static const Derivative d_dL4(L4);
-
     class DerivativeMapped  // df(x)/dx = df(L1,L2)/dL1 - df(L1,L2)/dL2 (for barycentric)
     {
         public : const Derivative mainDer;  // e.g. L1
@@ -73,14 +68,6 @@ namespace FEM
         }
         public : ~DerivativeMapped(){}
     };
-
-    // dNX(L1,L2,L3)/dx = dNX(L1,L2,L3,L4)/dL1 - dNX(L1,L2,L3,L4)/dL4
-    // dNX(L1,L2,L3)/dy = dNX(L1,L2,L3,L4)/dL2 - dNX(L1,L2,L3,L4)/dL4
-    // dNX(L1,L2,L3)/dz = dNX(L1,L2,L3,L4)/dL3 - dNX(L1,L2,L3,L4)/dL4
-    static const DerivativeMapped d_dx(d_dL1, d_dL4);
-    static const DerivativeMapped d_dy(d_dL2, d_dL4);
-    static const DerivativeMapped d_dz(d_dL3, d_dL4);
 }
 
 #endif // DERIVATIVE
-

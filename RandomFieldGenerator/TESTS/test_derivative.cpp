@@ -1,6 +1,6 @@
 #include "test_derivative.h"
 
-#include <iostream>
+#include "FEM/staticconstants.h"
 
 using namespace FEM;
 
@@ -10,9 +10,6 @@ void Test_Derivative::test_Derivative()
     Polynomial df_dL1 = d_dL1 * f;
 
     Polynomial True = 4*L1*L2 - 3*L3 + 4;
-
-//    std::cout << "f = " << f << "\n";
-//    std::cout << "df_dL1 = " << df_dL1 << "\n";
 
     QVERIFY(True.summands.size() == df_dL1.summands.size() &&
             True.summands.size() == 3 &&
@@ -36,8 +33,6 @@ void Test_Derivative::test_DerivativeMapped()
     L(2,0) = d_dz;
 
     auto B = L * N;
-//    MathUtils::Matrix::StaticMatrix<Polynomial,3,4> B;
-//    B.multiply<DerivativeMapped,Polynomial>(L,N);
 
     QVERIFY(B(0,0).summands.front().coef == 1);
     QVERIFY(B(0,1).summands.empty());
@@ -53,18 +48,6 @@ void Test_Derivative::test_DerivativeMapped()
     QVERIFY(B(2,1).summands.empty());
     QVERIFY(B(2,2).summands.front().coef == 1);
     QVERIFY(B(2,3).summands.front().coef == -1);
-
-//    std::cout << "dL1_dx = " << d_dx * L1 << "\n";
-//    std::cout << "dL2_dx = " << d_dx * L2 << "\n";
-//    std::cout << "dL3_dx = " << d_dx * L3 << "\n";
-//    std::cout << "dL4_dx = " << d_dx * L4 << "\n";
-
-//    for(int i=0; i<3; ++i)
-//    {
-//        for(int j=0; j<4; ++j)
-//            std::cout << B(i,j) << " ";
-//        std::cout << "\n";
-    //    }
 }
 
 void Test_Derivative::test_WeakOperator()
@@ -76,8 +59,6 @@ void Test_Derivative::test_WeakOperator()
     N(0,3) = L4;
 
     auto B = grad * N;
-//    MathUtils::Matrix::StaticMatrix<Polynomial,3,4> B;
-//    B.multiply<DerivativeMapped,Polynomial>(Gradient,N);
 
     QVERIFY(B(0,0).summands.front().coef == 1);
     QVERIFY(B(0,1).summands.empty());
