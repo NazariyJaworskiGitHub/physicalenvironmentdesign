@@ -16,7 +16,7 @@ namespace FEM
             public : const std::string name;
             public : const int id = -1;
             public : Variable() noexcept : name("?"), id(-1) {}
-            public : Variable(std::string name, int id) noexcept : name(name), id(id){}
+            public : Variable(const std::string &name, int id) noexcept : name(name), id(id){}
             public : Variable(const Variable &V) noexcept : name(V.name), id(V.id){}
             public : Variable & operator = (const Variable &target) noexcept
             {
@@ -31,6 +31,7 @@ namespace FEM
             public : friend std::ostream & operator << (std::ostream &out, const Variable &V)
             {
                 return out << V.name;
+                //return out << "L" << V.id;
             }
             public : friend Polynomial::Summand operator * (
                     const int coef, const Variable &V) noexcept
@@ -181,7 +182,7 @@ namespace FEM
                 return out;
             }
             bool _isFirst = true;
-            for(auto _curSummand: P.summands)
+            for(const Summand &_curSummand: P.summands)
             {
                 if(_curSummand.coef > 0)
                 {
@@ -195,7 +196,7 @@ namespace FEM
                         out << "*";
                 }
                 bool _isFirstMultiplier = true;
-                for(Multiplier &_curMultiplier: _curSummand.multipliers)
+                for(const Multiplier &_curMultiplier: _curSummand.multipliers)
                 {
                     if(!_isFirstMultiplier)out << "*";
                     out << _curMultiplier.var;
@@ -207,11 +208,33 @@ namespace FEM
             }
             return out;
         }
+        /// \todo more variables
+        public : float calculate(
+                const float vL1, const float vL2, const float vL3, const float vL4) const noexcept
+        {
+            float _result = 0.0f;
+            for(const Summand &_curSummand: summands)
+            {
+                float _mul = _curSummand.coef;
+                for(const Multiplier &_curMultiplier: _curSummand.multipliers)
+                {
+                    switch (_curMultiplier.var.id)
+                    {
+                        case 0: for(int i=0; i<_curMultiplier.power; ++i) _mul *= vL1; break;
+                        case 1: for(int i=0; i<_curMultiplier.power; ++i) _mul *= vL2; break;
+                        case 2: for(int i=0; i<_curMultiplier.power; ++i) _mul *= vL3; break;
+                        case 3: for(int i=0; i<_curMultiplier.power; ++i) _mul *= vL4; break;
+                    }
+                }
+                _result += _mul;
+            }
+            return _result;
+        }
     };
-    static const Polynomial::Variable L1("L1",0);
-    static const Polynomial::Variable L2("L2",1);
-    static const Polynomial::Variable L3("L3",2);
-    static const Polynomial::Variable L4("L4",3);
+    static const Polynomial::Variable L1("L1",1);
+    static const Polynomial::Variable L2("L2",2);
+    static const Polynomial::Variable L3("L3",3);
+    static const Polynomial::Variable L4("L4",4);
 }
 
 #endif // POLYNOMIAL

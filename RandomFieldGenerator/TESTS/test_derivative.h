@@ -2,6 +2,7 @@
 #define TEST_DERIVATIVE_H
 
 #include "FEM/derivative.h"
+#include "FEM/weakoperator.h"
 #include <QTest>
 
 using namespace FEM;

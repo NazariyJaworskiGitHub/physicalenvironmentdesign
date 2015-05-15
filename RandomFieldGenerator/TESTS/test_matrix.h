@@ -11,6 +11,7 @@ class Test_Matrix : public QObject
 {
     Q_OBJECT
     private: Q_SLOT void test_Matrix();
+    private: Q_SLOT void test_MatrixExpression();
     private: Q_SLOT void test_JacobiMatrix();
 };
 

@@ -1,8 +1,7 @@
 #include "test_derivative.h"
+
 #include <iostream>
-#include "FEM/polynomial.h"
-#include "matrix.h"
-#include "FEM/weakoperator.h"
+
 using namespace FEM;
 
 void Test_Derivative::test_Derivative()
@@ -35,8 +34,10 @@ void Test_Derivative::test_DerivativeMapped()
     L(0,0) = d_dx;
     L(1,0) = d_dy;
     L(2,0) = d_dz;
-    MathUtils::Matrix::StaticMatrix<Polynomial,3,4> B;
-    B.multiplyT<DerivativeMapped,Polynomial>(L,N);
+
+    auto B = L * N;
+//    MathUtils::Matrix::StaticMatrix<Polynomial,3,4> B;
+//    B.multiply<DerivativeMapped,Polynomial>(L,N);
 
     QVERIFY(B(0,0).summands.front().coef == 1);
     QVERIFY(B(0,1).summands.empty());
@@ -74,8 +75,9 @@ void Test_Derivative::test_WeakOperator()
     N(0,2) = L3;
     N(0,3) = L4;
 
-    MathUtils::Matrix::StaticMatrix<Polynomial,3,4> B;
-    B.multiplyT<DerivativeMapped,Polynomial>(Gradient,N);
+    auto B = grad * N;
+//    MathUtils::Matrix::StaticMatrix<Polynomial,3,4> B;
+//    B.multiply<DerivativeMapped,Polynomial>(Gradient,N);
 
     QVERIFY(B(0,0).summands.front().coef == 1);
     QVERIFY(B(0,1).summands.empty());

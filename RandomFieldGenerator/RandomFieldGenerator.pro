@@ -153,7 +153,10 @@ HEADERS += \
     TESTS/test_polynomial.h \
     FEM/fespacesimplex.h \
     FEM/jacobimatrix.h \
-    TESTS/test_fespacesimplex.h
+    TESTS/test_fespacesimplex.h \
+    FEM/domain.h \
+    FEM/problem.h \
+    FEM/solver.h
 
 FORMS += \
     UI/volumeglrenderformatdialog.ui \

@@ -1,12 +1,23 @@
 #ifndef FESPACESIMPLEX
 #define FESPACESIMPLEX
 
-#include "jacobimatrix.h"
-#include "weakoperator.h"
+#include "matrix.h"
+#include "polynomial.h"
+//#include "jacobimatrix.h"
+//#include "weakoperator.h"
 
 namespace FEM
 {
-    template <int _DegreesOfFreedom_> class SimplexElement
+    class AbstractFESpace
+    {
+        public : const MathUtils::Matrix::AbstractMatrix<Polynomial> &interpolationFunctions;
+        public : AbstractFESpace(
+                const MathUtils::Matrix::AbstractMatrix<Polynomial> &interpFunc) noexcept :
+            interpolationFunctions(interpFunc) {}
+        public : virtual ~AbstractFESpace() noexcept {}
+    };
+
+    template <int _DegreesOfFreedom_> class SimplexElement : public AbstractFESpace
     {
         public : class LinearInterpolationFunctions : public MathUtils::Matrix::StaticMatrix<
                 Polynomial,_DegreesOfFreedom_,_DegreesOfFreedom_*4>
@@ -21,25 +32,35 @@ namespace FEM
                     (*this)(i,3*_DegreesOfFreedom_+i) = L4;
                 }
             }
-            public: ~LinearInterpolationFunctions() final {}
+            public: ~LinearInterpolationFunctions() noexcept final {}
         };
-//        // [K] = 1/3!*([J]^-1[B])^T[D][J]^-1[B]|[J]|
-//        public: static void constructLocalStiffnessMatrix(
-//            const float *a,
-//            const float *b,
-//            const float *c,
-//            const float *d,
-//            const MathUtils::Matrix::StaticMatrix<
-//                float,_DegreesOfFreedom_*4,_DegreesOfFreedom_*4> &characteristics,
-//            MathUtils::Matrix::StaticMatrix<float,_DegreesOfFreedom_*4,_DegreesOfFreedom_*4> &K
-//            ) noexcept
-//        {
-//            JacobiMatrix JacInv(a,b,c,d);
-//            MathUtils::Matrix::StaticMatrix<float,3,3> Jac = JacInv;
-//            JacInv.inverse3x3();
-//            float JacDet = Jac.determinant3x3();
-//        }
+        private: const LinearInterpolationFunctions _interpFunc;
+        public : SimplexElement() noexcept : AbstractFESpace(_interpFunc){}
+        public : ~SimplexElement() noexcept final{}
     };
+
+    class Simplex1DegInterpConst : MathUtils::Matrix::StaticMatrix<float,3,4>
+    {
+        public: Simplex1DegInterpConst() noexcept
+        {
+            (*this)(0,0) =  1;
+            (*this)(0,1) =  0;
+            (*this)(0,2) =  0;
+            (*this)(0,3) = -1;
+
+            (*this)(1,0) =  0;
+            (*this)(1,1) =  1;
+            (*this)(1,2) =  0;
+            (*this)(1,3) = -1;
+
+            (*this)(2,0) =  0;
+            (*this)(2,1) =  0;
+            (*this)(2,2) =  1;
+            (*this)(2,3) = -1;
+        }
+        public: ~Simplex1DegInterpConst() noexcept final {}
+    };
+    static const Simplex1DegInterpConst LNSimplex1DegOfFreedom;
 }
 
 #endif // FESPACESIMPLEX
