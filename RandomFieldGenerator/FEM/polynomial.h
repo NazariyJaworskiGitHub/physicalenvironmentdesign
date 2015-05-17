@@ -220,7 +220,10 @@ namespace FEM
         }
         /// \todo more variables
         public : float calculate(
-                const float vL1, const float vL2, const float vL3, const float vL4) const noexcept
+                const float vL1 = 0,
+                const float vL2 = 0,
+                const float vL3 = 0,
+                const float vL4 = 0) const noexcept
         {
             float _result = 0.0f;
             for(const Summand &_curSummand: summands)

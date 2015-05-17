@@ -25,15 +25,19 @@ namespace FEM
     static const DerivativeMapped d_dz(d_dL3, d_dL4);
 
     static const Gradient grad(d_dx, d_dy, d_dz);
+    static const StrainTensor strain(d_dx, d_dy, d_dz);
 
     // N - Interpolation functions
     // S - Simplex (topology)
     // I - Isoparametric element
     // number - Nodal degrees of freedom
     // L - Linear differential operator
+    /// \todo make arguments input
     static const SimplexIsoparametricFESpace<1>::LinearInterpolationFunctions N_SI1;
     static const SimplexIsoparametricFESpace<3>::LinearInterpolationFunctions N_SI3;
-    static const Simplex1DegInterpConst LN_SI1;
+
+    static const SimplexIsoparametrixGradientN gradN_SI1(grad, N_SI1);
+    static const SimplexIsoparametrixStrainN strainN_SI3(strain, N_SI3);
 }
 
 #endif // STATICCONSTANTS

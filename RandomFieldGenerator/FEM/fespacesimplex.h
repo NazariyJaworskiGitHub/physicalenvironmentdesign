@@ -36,28 +36,6 @@ namespace FEM
         public : SimplexIsoparametricFESpace() noexcept : AbstractFESpace(_interpFunc){}
         public : ~SimplexIsoparametricFESpace() noexcept final{}
     };
-
-    class Simplex1DegInterpConst : MathUtils::Matrix::StaticMatrix<float,3,4>
-    {
-        public: Simplex1DegInterpConst() noexcept
-        {
-            (*this)(0,0) =  1;
-            (*this)(0,1) =  0;
-            (*this)(0,2) =  0;
-            (*this)(0,3) = -1;
-
-            (*this)(1,0) =  0;
-            (*this)(1,1) =  1;
-            (*this)(1,2) =  0;
-            (*this)(1,3) = -1;
-
-            (*this)(2,0) =  0;
-            (*this)(2,1) =  0;
-            (*this)(2,2) =  1;
-            (*this)(2,3) = -1;
-        }
-        public: ~Simplex1DegInterpConst() noexcept final {}
-    };
 }
 
 #endif // FESPACESIMPLEX
