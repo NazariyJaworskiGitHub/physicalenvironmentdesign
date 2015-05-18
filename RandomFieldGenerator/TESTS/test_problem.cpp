@@ -37,8 +37,10 @@ void Test_Problem::test_HeatConduction_constructLocalStiffnessMatrix()
     QVERIFY(maxError < 1e-4f);
 }
 
-void Test_Problem::test_Elasticity()
+/// see http://www.colorado.edu/engineering/CAS/courses.d/AFEM.d/AFEM.Ch09.d/AFEM.Ch09.pdf
+void Test_Problem::test_Elasticity_constructLocalStiffnessMatrix()
 {
-
+//    MathUtils::Matrix::StaticMatrix<float,12,12> K;
+//    MathUtils::Matrix::StaticMatrix<float,6,6> D;
 }
 

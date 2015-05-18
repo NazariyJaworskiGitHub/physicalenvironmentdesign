@@ -4,6 +4,8 @@
 #include <cmath>
 //#include <iostream>
 
+#include "MathUtils"
+
 namespace MathUtils
 {
     /// Math utilities for native simple small matrices usage;
@@ -19,7 +21,8 @@ namespace MathUtils
             public   : int rows() const noexcept {return _rows;}
             public   : int cols() const noexcept {return _cols;}
             protected: _DimType_ *_data;
-            public   : const _DimType_ * getData() const noexcept {return _data;}
+            public   : const _DimType_ * data() const noexcept {return _data;}
+            public   : _DimType_ * data() noexcept {return _data;}
             public   : AbstractMatrix(
                     const int rows,
                     const int cols,
@@ -55,27 +58,6 @@ namespace MathUtils
             }
 
             // Only for square matrices
-//            private  : _DimType_ _minorByCopy(const _DimType_ *A, int size) const noexcept
-//            {
-//                if(size==1)return A[0];
-//                _DimType_ S = 0.0;
-//                _DimType_ *M = new _DimType_[(size-1)*(size-1)];
-//                for(int i=1; i<size; ++i)
-//                    for(int j=1; j<size; ++j)
-//                        M[(j-1)+(i-1)*(size-1)] = A[j+i*size];
-//                for(int i=0; i<size; ++i)
-//                {
-//                    S += (((i+1)%2)*2 - 1) * A[i] * _minorByCopy(M,size-1);
-//                    if(i<size-1)
-//                        for(int j=1; j<size; ++j)
-//                            M[i+(j-1)*(size-1)]=A[i+j*size];
-//                }
-//                delete[] M;
-//                return S;
-//            }
-//            public   : _DimType_ determinant() const noexcept{
-//                return _minorByCopy(_data, _rows);}
-
 //            public   : _DimType_ determinantGaussElimination() noexcept
 //            {
 //                _DimType_ det = 1;
@@ -93,36 +75,61 @@ namespace MathUtils
 //                }
 //                return det;
 //            }
-            public   : _DimType_ determinant3x3() noexcept
+//            public   : _DimType_ determinant3x3() noexcept
+//            {
+//                return _data[0+0]*_data[3+1]*_data[6+2] +
+//                        _data[0+1]*_data[3+2]*_data[6+0] +
+//                        _data[0+2]*_data[3+0]*_data[6+1] -
+//                        _data[0+2]*_data[3+1]*_data[6+0] -
+//                        _data[0+1]*_data[3+0]*_data[6+2] -
+//                        _data[0+0]*_data[3+2]*_data[6+1];
+//            }
+            public   : _DimType_ determinant3x3() const noexcept
             {
-                return _data[0+0]*_data[3+1]*_data[6+2] +
-                        _data[0+1]*_data[3+2]*_data[6+0] +
-                        _data[0+2]*_data[3+0]*_data[6+1] -
-                        _data[0+2]*_data[3+1]*_data[6+0] -
-                        _data[0+1]*_data[3+0]*_data[6+2] -
-                        _data[0+0]*_data[3+2]*_data[6+1];
+                return Eigen::Matrix<_DimType_,3,3>(_data).determinant();
             }
+            public   : _DimType_ determinant4x4() const noexcept
+            {
+                return Eigen::Matrix<_DimType_,4,4>(_data).determinant();
+            }
+
+//            public   : _DimType_ inverse3x3() noexcept
+//            {
+//                _DimType_ _A[9];
+//                for(int i=0; i<9; ++i)
+//                    _A[i] = _data[i];
+
+//                _DimType_ _det = this->determinant3x3();
+
+//                _data[0] = ( _A[3+1]*_A[6+2]-_A[3+2]*_A[6+1])/_det;
+//                _data[1] = (-_A[0+1]*_A[6+2]+_A[0+2]*_A[6+1])/_det;
+//                _data[2] = ( _A[0+1]*_A[3+2]-_A[0+2]*_A[3+1])/_det;
+
+//                _data[3] = (-_A[3+0]*_A[6+2]+_A[3+2]*_A[6+0])/_det;
+//                _data[4] = ( _A[0+0]*_A[6+2]-_A[0+2]*_A[6+0])/_det;
+//                _data[5] = (-_A[0+0]*_A[3+2]+_A[0+2]*_A[3+0])/_det;
+
+//                _data[6] = ( _A[3+0]*_A[6+1]-_A[3+1]*_A[6+0])/_det;
+//                _data[7] = (-_A[0+0]*_A[6+1]+_A[0+1]*_A[6+0])/_det;
+//                _data[8] = ( _A[0+0]*_A[3+1]-_A[0+1]*_A[3+0])/_det;
+
+//                return _det;
+//            }
             public   : _DimType_ inverse3x3() noexcept
             {
-                _DimType_ _A[9];
+                Eigen::Matrix<_DimType_,3,3> _tmp(_data);
+                Eigen::Matrix<_DimType_,3,3> _inv = _tmp.inverse();
                 for(int i=0; i<9; ++i)
-                    _A[i] = _data[i];
-
-                _DimType_ _det = this->determinant3x3();
-
-                _data[0] = ( _A[3+1]*_A[6+2]-_A[3+2]*_A[6+1])/_det;
-                _data[1] = (-_A[0+1]*_A[6+2]+_A[0+2]*_A[6+1])/_det;
-                _data[2] = ( _A[0+1]*_A[3+2]-_A[0+2]*_A[3+1])/_det;
-
-                _data[3] = (-_A[3+0]*_A[6+2]+_A[3+2]*_A[6+0])/_det;
-                _data[4] = ( _A[0+0]*_A[6+2]-_A[0+2]*_A[6+0])/_det;
-                _data[5] = (-_A[0+0]*_A[3+2]+_A[0+2]*_A[3+0])/_det;
-
-                _data[6] = ( _A[3+0]*_A[6+1]-_A[3+1]*_A[6+0])/_det;
-                _data[7] = (-_A[0+0]*_A[6+1]+_A[0+1]*_A[6+0])/_det;
-                _data[8] = ( _A[0+0]*_A[3+1]-_A[0+1]*_A[3+0])/_det;
-
-                return _det;
+                    _data[i] = _inv.data()[i];
+                return _tmp.determinant();
+            }
+            public   : _DimType_ inverse4x4() noexcept
+            {
+                Eigen::Matrix<_DimType_,4,4> _tmp(_data);
+                Eigen::Matrix<_DimType_,4,4> _inv = _tmp.inverse();
+                for(int i=0; i<16; ++i)
+                    _data[i] = _inv.data()[i];
+                return _tmp.determinant();
             }
 
             public   : virtual ~AbstractMatrix() noexcept {}

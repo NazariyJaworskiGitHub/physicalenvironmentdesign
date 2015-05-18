@@ -10,7 +10,7 @@ class Test_Problem : public QObject
 {
     Q_OBJECT
     private: Q_SLOT void test_HeatConduction_constructLocalStiffnessMatrix();
-    private: Q_SLOT void test_Elasticity();
+    private: Q_SLOT void test_Elasticity_constructLocalStiffnessMatrix();
 };
 
 #endif // TEST_PROBLEM_H

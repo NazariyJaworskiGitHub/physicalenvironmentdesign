@@ -223,7 +223,7 @@ void Test_Matrix::test_Matrix()
         C(2,0) = 0;
         C(2,1) = 0.1;
         C(2,2) = -0.1;
-        C.inverse3x3();
+        float det = C.inverse3x3();
         Matrix::StaticMatrix<float,3,3> True;
         True(0,0) = -10;
         True(0,1) = 10;
@@ -244,6 +244,7 @@ void Test_Matrix::test_Matrix()
                 _maxError = err;
         }
         QVERIFY(_maxError < 1e-4f);
+        QVERIFY(std::fabs(det + 0.001)/(-0.001) < 1e-4f);
     }
 }
 
