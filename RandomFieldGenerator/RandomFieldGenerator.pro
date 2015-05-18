@@ -109,7 +109,8 @@ SOURCES += main.cpp \
     TESTS/test_matrix.cpp \
     TESTS/test_derivative.cpp \
     TESTS/test_polynomial.cpp \
-    TESTS/test_fespacesimplex.cpp
+    TESTS/test_fespacesimplex.cpp \
+    TESTS/test_problem.cpp
 
 HEADERS += \
     CLMANAGER/clmanager.h \
@@ -157,7 +158,8 @@ HEADERS += \
     FEM/domain.h \
     FEM/problem.h \
     FEM/solver.h \
-    FEM/staticconstants.h
+    FEM/staticconstants.h \
+    TESTS/test_problem.h
 
 FORMS += \
     UI/volumeglrenderformatdialog.ui \

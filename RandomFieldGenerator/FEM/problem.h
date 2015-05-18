@@ -1,68 +1,57 @@
 #ifndef PROBLEM
 #define PROBLEM
 
+#include "matrix.h"
 #include "domain.h"
-#include "fespacesimplex.h"
-#include "jacobimatrix.h"
 #include "solver.h"
-#include "weakoperator.h"
+
+#include "staticconstants.h"
+#include "jacobimatrix.h"
 
 namespace FEM
 {
-/*    class AbstractProblem
-    {
-        protected: const AbstractDomain &_domain;
-        protected: const AbstractFESpace &_FESpace;
-        public   : AbstractProblem(
-                const AbstractDomain &domain,
-                const AbstractFESpace &finiteElementSpace) noexcept :
-            _domain(domain), _FESpace(finiteElementSpace) {}
-        /// local [K] = I{equation(L,D,N)}dV
-        protected: virtual void _localK(
-                const long elementIndex,
-                const MathUtils::Matrix::AbstractMatrix<float> &D,
-                MathUtils::Matrix::AbstractMatrix<float> output
-                ) noexcept = 0;
-        /// [K]{u}={f}
-//        public   : virtual void solve(const AbstractSolver &solver) noexcept {}
-        public   : virtual ~AbstractProblem() noexcept {}
-    };
+    /// \todo it is only for simplex isoparametric elements - tetrahedrons
+//    class AbstractProblem
+//    {
+//        protected: const AbstractDomain &_domain;
+//        public   : AbstractProblem(const AbstractDomain &domain) noexcept : _domain(domain) {}
+//        /// local [K] = I{equation(L,D,N)}dV
+//        public   : virtual void localK(
+//                const float *a,
+//                const float *b,
+//                const float *c,
+//                const float *d,
+////                const long elementIndex,
+//                const MathUtils::Matrix::AbstractMatrix<float> &D,
+//                MathUtils::Matrix::AbstractMatrix<float> &output
+//                ) noexcept = 0;
+//        /// [K]{u}={f}
+////        public   : virtual void solve(const AbstractSolver &solver) noexcept {}
+//        public   : virtual ~AbstractProblem() noexcept {}
+//    };
 
-    class HeatConductionProblem : public AbstractProblem
+    class HeatConductionProblem //: public AbstractProblem
     {
-        public : HeatConductionProblem(
-                const AbstractDomain &domain,
-                const AbstractFESpace &finiteElementSpace) noexcept :
-            AbstractProblem(domain, finiteElementSpace){}
+        private: const AbstractDomain &_domain;
+        public : HeatConductionProblem(const AbstractDomain &domain) noexcept :
+            _domain(domain){}
         /// [K] = I{([L][N])^T[D][L][N]}dV = 1/3!*|[Jac]|([Jac]^-1[L][N])^T[D][Jac]^-1[L][N]
-        private: virtual void _localK(
-                const long elementIndex,
-                const MathUtils::Matrix::AbstractMatrix<float> &D,
-                MathUtils::Matrix::AbstractMatrix<float> output
-                ) noexcept final
+        public : static inline void localK(
+                const float *a,
+                const float *b,
+                const float *c,
+                const float *d,
+                const MathUtils::Matrix::StaticMatrix<float,3,3> &D,
+                MathUtils::Matrix::StaticMatrix<float,4,4> &output
+                ) noexcept
         {
-//            /// \todo it is only for simplex elements
-//            JacobiMatrix JacInv(
-//                    this->_domain[elementIndex][0],
-//                    this->_domain[elementIndex][1],
-//                    this->_domain[elementIndex][2],
-//                    this->_domain[elementIndex][3]);
-//            float JacDet = JacInv.determinant3x3();
-//            JacInv.inverse3x3();
-
-////            MathUtils::Matrix::StaticMatrix<Polynomial,3,4> LN;
-////            LN.multiplyT<DerivativeMapped,Polynomial>(Gradient,N);
-
-//            MathUtils::Matrix::StaticMatrix<float,3,4> JacInvLN;
-//            JacInvLN.multiply(JacInv,LNSimplex1DegOfFreedom);
-//            JacInvLN.transpose();
-
-//            output.multiply(JacInvLN,D);
-//            output.multiply(JacInvLN,D);
-//            //output = 1.0f / 6.0f * JacDet
+            JacobiMatrix JacInv(a,b,c,d);
+            float volume = - JacInv.inverse3x3() / 6.0f;
+            MathUtils::Matrix::StaticMatrix<float,3,4> JacInvGradN_SI1 = JacInv * gradN_SI1;
+            output = volume * JacInvGradN_SI1.T() * D * JacInvGradN_SI1;
         }
-        public : ~HeatConductionProblem() noexcept override {}
-    };*/
+        public : ~HeatConductionProblem() noexcept {}
+    };
 }
 
 #endif // PROBLEM

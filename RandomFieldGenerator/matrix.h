@@ -102,7 +102,7 @@ namespace MathUtils
                         _data[0+1]*_data[3+0]*_data[6+2] -
                         _data[0+0]*_data[3+2]*_data[6+1];
             }
-            public   : void inverse3x3() noexcept
+            public   : _DimType_ inverse3x3() noexcept
             {
                 _DimType_ _A[9];
                 for(int i=0; i<9; ++i)
@@ -121,6 +121,8 @@ namespace MathUtils
                 _data[6] = ( _A[3+0]*_A[6+1]-_A[3+1]*_A[6+0])/_det;
                 _data[7] = (-_A[0+0]*_A[6+1]+_A[0+1]*_A[6+0])/_det;
                 _data[8] = ( _A[0+0]*_A[3+1]-_A[0+1]*_A[3+0])/_det;
+
+                return _det;
             }
 
             public   : virtual ~AbstractMatrix() noexcept {}

@@ -9,6 +9,7 @@
 #include "test_derivative.h"
 #include "test_matrix.h"
 #include "test_fespacesimplex.h"
+#include "test_problem.h"
 #include "test_simulation.h"
 
 //tip! use "-vs" to see emited signals
@@ -46,6 +47,11 @@ void run_tests_FESpaceSimplex()
     Test_FESpaceSimplex _myTest_FESpaceSimplex;
     QTest::qExec(&_myTest_FESpaceSimplex, arguments);
 }
+void run_tests_Problem()
+{
+    Test_Problem _myTest_Problem;
+    QTest::qExec(&_myTest_Problem, arguments);
+}
 void run_tests_Simulation()
 {
     Test_Simulation _myTest_Simulation;
@@ -59,6 +65,7 @@ void run_tests_all()
     run_tests_Derivative();
     run_tests_Matrix();
     run_tests_FESpaceSimplex();
+    run_tests_Problem();
     run_tests_Simulation();
 }
 #endif // TESTS_RUNNER_H
