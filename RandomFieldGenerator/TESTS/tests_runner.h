@@ -9,6 +9,7 @@
 #include "test_derivative.h"
 #include "test_matrix.h"
 #include "test_fespacesimplex.h"
+#include "test_domain.h"
 #include "test_problem.h"
 #include "test_simulation.h"
 
@@ -47,6 +48,11 @@ void run_tests_FESpaceSimplex()
     Test_FESpaceSimplex _myTest_FESpaceSimplex;
     QTest::qExec(&_myTest_FESpaceSimplex, arguments);
 }
+void run_tests_Domain()
+{
+    Test_Domain _myTest_Domain;
+    QTest::qExec(&_myTest_Domain, arguments);
+}
 void run_tests_Problem()
 {
     Test_Problem _myTest_Problem;
@@ -65,6 +71,7 @@ void run_tests_all()
     run_tests_Derivative();
     run_tests_Matrix();
     run_tests_FESpaceSimplex();
+    run_tests_Domain();
     run_tests_Problem();
     run_tests_Simulation();
 }

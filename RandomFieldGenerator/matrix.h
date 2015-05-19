@@ -142,6 +142,15 @@ namespace MathUtils
             public : DynamicMatrix(const int rows, const int cols) noexcept :
                 AbstractMatrix<_DimType_>(rows, cols, new _DimType_[rows * cols]){}
 
+            public : DynamicMatrix(
+                    const int rows,
+                    const int cols,
+                    const std::initializer_list<_DimType_> data) noexcept :
+                AbstractMatrix<_DimType_>(rows, cols, new _DimType_[rows * cols])
+            {
+                std::copy(data.begin(), data.end(), this->_data);
+            }
+
             public : DynamicMatrix(const DynamicMatrix &m) noexcept :
                 AbstractMatrix<_DimType_>(
                     m.rows(), m.cols(), new _DimType_[m.rows() * m.cols()])
@@ -193,7 +202,11 @@ namespace MathUtils
             private: _DimType_ _staticData[_rows_ * _cols_];
             public : StaticMatrix() noexcept :
                 AbstractMatrix<_DimType_>(_rows_, _cols_, _staticData){}
-
+            public : StaticMatrix(const std::initializer_list<_DimType_> data) noexcept :
+                AbstractMatrix<_DimType_>(_rows_, _cols_, _staticData)
+            {
+                std::copy(data.begin(), data.end(), this->_data);
+            }
             public : StaticMatrix(const StaticMatrix &m) noexcept :
                 AbstractMatrix<_DimType_>(_rows_, _cols_, _staticData)
             {
