@@ -155,7 +155,6 @@ HEADERS += \
     TESTS/test_fespacesimplex.h \
     FEM/domain.h \
     FEM/problem.h \
-    FEM/solver.h \
     FEM/staticconstants.h \
     TESTS/test_problem.h \
     TESTS/test_domain.h

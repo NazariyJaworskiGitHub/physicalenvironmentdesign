@@ -3,18 +3,73 @@
 
 #include "matrix.h"
 #include "domain.h"
-//#include "solver.h"
 
 #include "staticconstants.h"
 #include "jacobimatrix.h"
 
+#include <map>
+
+#include <viennacl/compressed_matrix.hpp>
+#include <viennacl/vector.hpp>
+#include <viennacl/linalg/cg.hpp>
+#include <viennacl/linalg/bicgstab.hpp>
+
+/// \todo refactoring
 namespace FEM
 {
+    template <int _DegreesOfFreedom_> class BoundaryConditionsManager
+    {
+        public : class BoundaryCondition
+        {
+            private: float _c0[_DegreesOfFreedom_];
+            public : const float& c(int index = 0) const noexcept {
+                return _c0[index];}
+            public : BoundaryCondition(const std::initializer_list<float> condVal){
+                std::copy(condVal.begin(), condVal.end(), _c0);}
+            public : ~BoundaryCondition() noexcept{}
+        };
+        public : BoundaryCondition *NeumannBCs[6];
+        public : BoundaryCondition *DirichletBCs[6];
+        public : BoundaryConditionsManager() noexcept
+        {
+            for(int i=0; i<6; ++i)
+            {
+                NeumannBCs[i] = nullptr;
+                DirichletBCs[i] = nullptr;
+            }
+        }
+        public : void addNeumannBC(const SIDES side, const BoundaryCondition *newBC)
+        {
+            switch (side) {
+            case TOP:NeumannBCs[0]=newBC;break;
+            case BOTTOM:NeumannBCs[1]=newBC;break;
+            case LEFT:NeumannBCs[2]=newBC;break;
+            case RIGHT:NeumannBCs[3]=newBC;break;
+            case FRONT:NeumannBCs[4]=newBC;break;
+            case BACK:NeumannBCs[5]=newBC;break;
+            }
+        }
+        public : void addDirichletBC(const SIDES side, const BoundaryCondition *newBC)
+        {
+            switch (side) {
+            case TOP:DirichletBCs[0]=newBC;break;
+            case BOTTOM:DirichletBCs[1]=newBC;break;
+            case LEFT:DirichletBCs[2]=newBC;break;
+            case RIGHT:DirichletBCs[3]=newBC;break;
+            case FRONT:DirichletBCs[4]=newBC;break;
+            case BACK:DirichletBCs[5]=newBC;break;
+        }
+        }
+        public : ~BoundaryConditionsManager() noexcept {}
+    };
+
+
     /// \todo it is only for simplex isoparametric elements - tetrahedrons
     // u = {u}^T
     class HeatConductionProblem
     {
         private: const Domain &_domain;
+        public : BoundaryConditionsManager<1> BCManager;
         public : HeatConductionProblem(const Domain &domain) noexcept :
             _domain(domain){}
         /// [D]
@@ -119,6 +174,97 @@ namespace FEM
                 break;
             }
         }
+        public: void assembleSLAE(
+            std::vector<std::map<long, float>> &sparseMatrix,
+            std::vector< float > &loads) noexcept
+        {
+            for(long el=0; el< _domain.elementsNum(); ++el)
+            {
+                FixedTetrahedron element = _domain[el];
+
+                MathUtils::Matrix::StaticMatrix<float,4,4> K;
+                MathUtils::Matrix::StaticMatrix<float,4,1> f = {0,0,0,0};
+
+                KM(element.a, element.b, element.c, element.d,
+                   DM(element.characteristics->heatConductionCoefficient),K);
+
+                NODES_TRIPLET triplet;
+                // TOP
+                if(BCManager.NeumannBCs[0] && element.isOnSide(1,_domain.size(),triplet))
+                    applyLocalNeumannConditions(triplet,BCManager.NeumannBCs[0]->c()*_domain.fixedTetrahedronSideArea()/3.0,f);
+                // BOTTOM
+                if(BCManager.NeumannBCs[1] && element.isOnSide(1,0,triplet))
+                    applyLocalNeumannConditions(triplet,BCManager.NeumannBCs[1]->c()*_domain.fixedTetrahedronSideArea()/3.0,f);
+                // LEFT
+                if(BCManager.NeumannBCs[2] && element.isOnSide(0,0,triplet))
+                    applyLocalNeumannConditions(triplet,BCManager.NeumannBCs[2]->c()*_domain.fixedTetrahedronSideArea()/3.0,f);
+                // RIGHT
+                if(BCManager.NeumannBCs[3] && element.isOnSide(0,_domain.size(),triplet))
+                    applyLocalNeumannConditions(triplet,BCManager.NeumannBCs[3]->c()*_domain.fixedTetrahedronSideArea()/3.0,f);
+                // FRONT
+                if(BCManager.NeumannBCs[4] && element.isOnSide(2,0,triplet))
+                    applyLocalNeumannConditions(triplet,BCManager.NeumannBCs[4]->c()*_domain.fixedTetrahedronSideArea()/3.0,f);
+                // BACK
+                if(BCManager.NeumannBCs[5] && element.isOnSide(2,_domain.size(),triplet))
+                    applyLocalNeumannConditions(triplet,BCManager.NeumannBCs[5]->c()*_domain.fixedTetrahedronSideArea()/3.0,f);
+
+
+                // TOP
+                for(int i=0; i<4; ++i)
+                    if(BCManager.DirichletBCs[0] && element[i][1] == _domain.size())
+                        applyLocalDirichletConditions(i,BCManager.DirichletBCs[0]->c(),K,f);
+                // BOTTOM
+                for(int i=0; i<4; ++i)
+                    if(BCManager.DirichletBCs[1] && element[i][1] == 0)
+                        applyLocalDirichletConditions(i,BCManager.DirichletBCs[0]->c(),K,f);
+                // LEFT
+                for(int i=0; i<4; ++i)
+                    if(BCManager.DirichletBCs[2] && element[i][0] == 0)
+                        applyLocalDirichletConditions(i,BCManager.DirichletBCs[0]->c(),K,f);
+                // RIGHT
+                for(int i=0; i<4; ++i)
+                    if(BCManager.DirichletBCs[3] && element[i][0] == _domain.size())
+                        applyLocalDirichletConditions(i,BCManager.DirichletBCs[0]->c(),K,f);
+                // FRONT
+                for(int i=0; i<4; ++i)
+                    if(BCManager.DirichletBCs[4] && element[i][2] == 0)
+                        applyLocalDirichletConditions(i,BCManager.DirichletBCs[0]->c(),K,f);
+                // BACK
+                for(int i=0; i<4; ++i)
+                    if(BCManager.DirichletBCs[5] && element[i][2] == _domain.size())
+                        applyLocalDirichletConditions(i,BCManager.DirichletBCs[0]->c(),K,f);
+
+                for(long i=0; i<4; ++i)
+                {
+                    for(long j=0; j<4; ++j)
+                        sparseMatrix[element.indexes[i]][element.indexes[j]] += K(i,j);
+                    loads[element.indexes[i]] += f(i,0);
+                }
+            }
+        }
+
+        public : void solve(
+                const float eps, const int maxIteration, std::vector<float> &out) noexcept
+        {
+            int size = _domain.size();
+            viennacl::compressed_matrix<float>  K(size*size*size, size*size*size);
+            viennacl::vector<float>             f(size*size*size);
+            viennacl::vector<float>             u(size*size*size);
+
+            std::vector<std::map<long, float>> cpu_sparse_matrix(size*size*size);
+            std::vector<float> cpu_loads(size*size*size);
+
+            assembleSLAE(cpu_sparse_matrix, cpu_loads);
+
+            viennacl::copy(cpu_sparse_matrix, K);
+            viennacl::copy(cpu_loads.begin(), cpu_loads.end(), f.begin());
+
+            u = viennacl::linalg::solve(K, f, viennacl::linalg::cg_tag(eps, maxIteration));
+
+            if(out.size() != u.size())out.resize(u.size());
+
+            viennacl::copy(u.begin(), u.end(), out.data());
+        }
         public : ~HeatConductionProblem() noexcept {}
     };  
 
@@ -126,6 +272,7 @@ namespace FEM
     class ElasticityProblem
     {
         private: const Domain &_domain;
+        public : BoundaryConditionsManager<3> BCManager;
         public : ElasticityProblem(const Domain &domain) noexcept :
             _domain(domain){}
         /// [D]

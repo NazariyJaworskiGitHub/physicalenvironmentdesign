@@ -18,4 +18,9 @@ void Test_Domain::test_RVEDomain()
             _DomRVE4[0].b[0] == _DomRVE4[0][1][0] && _DomRVE4[0][1][0] == 1.0f/3.0f &&
             _DomRVE4[0].c[1] == _DomRVE4[0][2][1] && _DomRVE4[0][2][1] == 1.0f/3.0f &&
             _DomRVE4[0].d[2] == _DomRVE4[0][3][2] && _DomRVE4[0][3][2] == 1.0f/3.0f);
+    QVERIFY(_DomRVE4[0].indexes[0] == 0 &&
+            _DomRVE4[0].indexes[1] == 1 &&
+            _DomRVE4[0].indexes[2] == _RVE4.getSize() + _RVE4.getSize()*_RVE4.getSize() &&
+            _DomRVE4[0].indexes[3] == _RVE4.getSize()*_RVE4.getSize() &&
+            _DomRVE4[0].characteristics == nullptr);
 }

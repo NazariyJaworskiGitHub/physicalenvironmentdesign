@@ -23,6 +23,8 @@ class RepresentativeVolumeElement
     private: float * _data = nullptr;
     public : float * getData() noexcept {return _data;}
     public : const float * getData() const noexcept {return _data;}
+    public : float getData(int i, int j, int k) const noexcept{
+        return _data[i + (j * _size) + (k * _size * _size)];}
     public : void setData(float * newData) noexcept {
         memcpy(_data, newData, sizeof(float) * _size * _size * _size);}
     private: float _representationSize = 1.0f;

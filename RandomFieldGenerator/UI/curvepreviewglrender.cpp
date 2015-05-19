@@ -81,8 +81,6 @@ void CurvePreviewGLRender::loadDataIntoTexture() throw(std::runtime_error)
                     rotationOX * M_PI / 180,
                     rotationOY * M_PI / 180,
                     rotationOZ * M_PI / 180);
-
-        float _newVal = 0.0f;
         float _minDist = RepresentativeVolumeElement::_distanceToBezierSamplePoint(
                     _kk, _jj, _ii, 0, _curveAproximation);
         int _sampleIndexA = 0;
