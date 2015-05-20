@@ -61,8 +61,10 @@ int main(int argc, char *argv[])
     HeatConductionProblem problem(RVE4Domain);
     problem.BCManager.addNeumannBC(LEFT, {100});
     problem.BCManager.addNeumannBC(RIGHT,{100});
-    problem.BCManager.addDirichletBC(TOP,{30});
+    problem.BCManager.addDirichletBC(TOP,{20});
     problem.BCManager.addDirichletBC(BOTTOM,{20});
+//    problem.BCManager.addDirichletBC(LEFT, {30});
+//    problem.BCManager.addDirichletBC(RIGHT,{20});
     //dT = lq/h
 
     std::vector<float> temperature;

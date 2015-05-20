@@ -5,12 +5,13 @@ using namespace FEM;
 
 void Test_Problem::test_HeatConduction_constructLocalStiffnessMatrix()
 {
+    Characteristics ch{3,0,0,0,0};
     MathUtils::Matrix::StaticMatrix<float,4,4> K;
     float a[] = {0,0,0};
     float b[] = {0.1,0,0};
     float c[] = {0,0.1,0};
     float d[] = {0,0,0.1};
-    HeatConductionProblem::KM(a,b,c,d,HeatConductionProblem::DM(3),K);
+    HeatConductionProblem::KM(a,b,c,d,HeatConductionProblem::DM(&ch),K);
     float KTrue[4][4] = {
         { 0.15f, -0.05f, -0.05f, -0.05f},
         {-0.05f,  0.05f,   0.0f,   0.0f},
@@ -75,7 +76,7 @@ void Test_Problem::test_HeatConduction_applyLocalDirichletConditions()
 void Test_Problem::test_HeatConduction_applyLocalNeumannConditions()
 {
     MathUtils::Matrix::StaticMatrix<float,4,1> f = {1e6f, 2e6f, 3e6f, 4e6f};
-    HeatConductionProblem::applyLocalNeumannConditions(ACD, 1e6f, f);
+    HeatConductionProblem::applyLocalNeumannConditions(ACD, 0, 1e6f, f);
     MathUtils::Matrix::StaticMatrix<float,4,1> fTrue = {1e6f + 1e6f, 2e6f , 3e6f + 1e6f, 4e6f + 1e6f};
     float _maxError = 0.0f;
     for(int i=0; i<4; ++i)
@@ -104,6 +105,8 @@ void Test_Problem::test_HeatConduction_fullCycle_DirichletDirichlet()
     std::vector<float> temperature;
     problem.solve(1e-8,1000,temperature);
 
+//    std::cout << temperature[0] << " " << temperature[1] << "\n";
+
     QVERIFY(std::fabs(temperature[0] - 20.0f) < 1e-4f &&
             std::fabs(temperature[1] - 30.0f) < 1e-4f);
 
@@ -120,12 +123,13 @@ void Test_Problem::test_HeatConduction_fullCycle_DirichletDirichlet()
 /// see http://www.colorado.edu/engineering/CAS/courses.d/AFEM.d/AFEM.Ch09.d/AFEM.Ch09.pdf
 void Test_Problem::test_Elasticity_constructLocalStiffnessMatrix()
 {
+    Characteristics ch{0,480,1.0/3.0,0,0};
     MathUtils::Matrix::StaticMatrix<float,12,12> K;
     float a[] = {0,0,0};
     float b[] = {0.1,0,0};
     float c[] = {0,0.1,0};
     float d[] = {0,0,0.1};
-    ElasticityProblem::KM(a,b,c,d,ElasticityProblem::DM(480,1.0/3.0),K);
+    ElasticityProblem::KM(a,b,c,d,ElasticityProblem::DM(&ch),K);
     float KTrue[12][12] = {
         { 745,   540,  120,   -5,   30,   60, -270,  -240,    0, -470,  -330, -180},
         { 540,  1720,  270, -120,  520,  210, -120, -1080,  -60, -300, -1160, -420},
