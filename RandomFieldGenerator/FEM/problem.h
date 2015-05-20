@@ -24,8 +24,8 @@ namespace FEM
             private: float _c0[_DegreesOfFreedom_];
             public : const float& c(int index = 0) const noexcept {
                 return _c0[index];}
-            public : BoundaryCondition(const std::initializer_list<float> condVal){
-                std::copy(condVal.begin(), condVal.end(), _c0);}
+            public : BoundaryCondition(const std::initializer_list<float> val){
+                std::copy(val.begin(), val.end(), _c0);}
             public : ~BoundaryCondition() noexcept{}
         };
         public : BoundaryCondition *NeumannBCs[6];
@@ -38,8 +38,9 @@ namespace FEM
                 DirichletBCs[i] = nullptr;
             }
         }
-        public : void addNeumannBC(const SIDES side, const BoundaryCondition *newBC)
+        public : void addNeumannBC(const SIDES side, const std::initializer_list<float> val)
         {
+            BoundaryCondition *newBC = new BoundaryCondition(val);
             switch (side) {
             case TOP:NeumannBCs[0]=newBC;break;
             case BOTTOM:NeumannBCs[1]=newBC;break;
@@ -49,8 +50,9 @@ namespace FEM
             case BACK:NeumannBCs[5]=newBC;break;
             }
         }
-        public : void addDirichletBC(const SIDES side, const BoundaryCondition *newBC)
+        public : void addDirichletBC(const SIDES side, const std::initializer_list<float> val)
         {
+            BoundaryCondition *newBC = new BoundaryCondition(val);
             switch (side) {
             case TOP:DirichletBCs[0]=newBC;break;
             case BOTTOM:DirichletBCs[1]=newBC;break;
@@ -58,9 +60,28 @@ namespace FEM
             case RIGHT:DirichletBCs[3]=newBC;break;
             case FRONT:DirichletBCs[4]=newBC;break;
             case BACK:DirichletBCs[5]=newBC;break;
+            }
         }
+        public : void cleanBCs() noexcept
+        {
+            for(int i=0; i<6; ++i)
+            {
+                if(NeumannBCs[i])
+                {
+                    delete NeumannBCs[i];
+                    NeumannBCs[i] = nullptr;
+                }
+                if(DirichletBCs[i])
+                {
+                    delete DirichletBCs[i];
+                    DirichletBCs[i] = nullptr;
+                }
+            }
         }
-        public : ~BoundaryConditionsManager() noexcept {}
+        public : ~BoundaryConditionsManager() noexcept
+        {
+            cleanBCs();
+        }
     };
 
 
@@ -216,23 +237,23 @@ namespace FEM
                 // BOTTOM
                 for(int i=0; i<4; ++i)
                     if(BCManager.DirichletBCs[1] && element[i][1] == 0)
-                        applyLocalDirichletConditions(i,BCManager.DirichletBCs[0]->c(),K,f);
+                        applyLocalDirichletConditions(i,BCManager.DirichletBCs[1]->c(),K,f);
                 // LEFT
                 for(int i=0; i<4; ++i)
                     if(BCManager.DirichletBCs[2] && element[i][0] == 0)
-                        applyLocalDirichletConditions(i,BCManager.DirichletBCs[0]->c(),K,f);
+                        applyLocalDirichletConditions(i,BCManager.DirichletBCs[2]->c(),K,f);
                 // RIGHT
                 for(int i=0; i<4; ++i)
                     if(BCManager.DirichletBCs[3] && element[i][0] == _domain.size())
-                        applyLocalDirichletConditions(i,BCManager.DirichletBCs[0]->c(),K,f);
+                        applyLocalDirichletConditions(i,BCManager.DirichletBCs[3]->c(),K,f);
                 // FRONT
                 for(int i=0; i<4; ++i)
                     if(BCManager.DirichletBCs[4] && element[i][2] == 0)
-                        applyLocalDirichletConditions(i,BCManager.DirichletBCs[0]->c(),K,f);
+                        applyLocalDirichletConditions(i,BCManager.DirichletBCs[4]->c(),K,f);
                 // BACK
                 for(int i=0; i<4; ++i)
                     if(BCManager.DirichletBCs[5] && element[i][2] == _domain.size())
-                        applyLocalDirichletConditions(i,BCManager.DirichletBCs[0]->c(),K,f);
+                        applyLocalDirichletConditions(i,BCManager.DirichletBCs[5]->c(),K,f);
 
                 for(long i=0; i<4; ++i)
                 {
@@ -246,7 +267,7 @@ namespace FEM
         public : void solve(
                 const float eps, const int maxIteration, std::vector<float> &out) noexcept
         {
-            int size = _domain.size();
+            int size = _domain.discreteSize();
             viennacl::compressed_matrix<float>  K(size*size*size, size*size*size);
             viennacl::vector<float>             f(size*size*size);
             viennacl::vector<float>             u(size*size*size);

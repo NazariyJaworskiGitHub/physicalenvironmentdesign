@@ -89,6 +89,34 @@ void Test_Problem::test_HeatConduction_applyLocalNeumannConditions()
     QVERIFY(_maxError < 1e-4f);
 }
 
+void Test_Problem::test_HeatConduction_fullCycle_DirichletDirichlet()
+{
+    RepresentativeVolumeElement _RVE(2,2);
+    Characteristics ch{4,0,0,0,0};
+
+    Domain RVE4Domain(_RVE);
+    RVE4Domain.addMaterial(0,1,ch);
+
+    HeatConductionProblem problem(RVE4Domain);
+    problem.BCManager.addDirichletBC(LEFT, {20});
+    problem.BCManager.addDirichletBC(RIGHT,{30});
+
+    std::vector<float> temperature;
+    problem.solve(1e-8,1000,temperature);
+
+    QVERIFY(std::fabs(temperature[0] - 20.0f) < 1e-4f &&
+            std::fabs(temperature[1] - 30.0f) < 1e-4f);
+
+    problem.BCManager.cleanBCs();
+    problem.BCManager.addNeumannBC(LEFT, {100});
+    problem.BCManager.addDirichletBC(RIGHT,{30});
+    //dT = lq/h = 2*100/4 = 50, T0=30, T1=T0+dT=30+50=80
+    problem.solve(1e-8,1000,temperature);
+
+    QVERIFY(std::fabs(temperature[0] - 80.0f) < 1e-4f &&
+            std::fabs(temperature[1] - 30.0f) < 1e-4f);
+}
+
 /// see http://www.colorado.edu/engineering/CAS/courses.d/AFEM.d/AFEM.Ch09.d/AFEM.Ch09.pdf
 void Test_Problem::test_Elasticity_constructLocalStiffnessMatrix()
 {

@@ -66,8 +66,12 @@ namespace FEM
         public : long elementsNum() const noexcept {return _elementsNum;}
         public : long nodesNum() const noexcept {return _nodesNum;}
         public : std::vector<RVEMaterial> MaterialsVector;
+        public : void addMaterial(
+                float minIntensity, float maxIntensity, Characteristics ch) noexcept {
+            MaterialsVector.push_back(RVEMaterial{minIntensity, maxIntensity, ch});}
         private: const RepresentativeVolumeElement &_refToRVE;
         public : float size() const noexcept {return _refToRVE.getRepresentationSize();}
+        public : float discreteSize() const noexcept {return _refToRVE.getSize();}
         public : Domain(const RepresentativeVolumeElement &RVE) noexcept : _refToRVE(RVE)
         {
             this->_nodesNum = _refToRVE.getSize() * _refToRVE.getSize() * _refToRVE.getSize();
@@ -83,7 +87,7 @@ namespace FEM
         {
             int size = _refToRVE.getSize();
 
-            int t = index % 6 % (size-1) % (size-1);
+            int t = index % 6;
             int i = index / 6 % (size-1) % (size-1);
             int j = index / 6 / (size-1) % (size-1);
             int k = index / 6 / (size-1) / (size-1);

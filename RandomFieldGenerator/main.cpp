@@ -31,7 +31,7 @@
 
 #include "constants.h"
 
-#include "FEM/weakoperator.h"
+#include "FEM/problem.h"
 
 int main(int argc, char *argv[])
 {
@@ -47,6 +47,35 @@ int main(int argc, char *argv[])
     ///////////////////////////////////////////////////////////////////////////////////////
     run_tests_all();
     _consoleRunner.writeToOutput("Tests done\n");
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+    Timer _TotalCalculationTimer;
+    _TotalCalculationTimer.start();
+
+    RepresentativeVolumeElement _RVE(64,2);
+    Characteristics ch{4,0,0,0,0};
+
+    Domain RVE4Domain(_RVE);
+    RVE4Domain.addMaterial(0,1,ch);
+
+    HeatConductionProblem problem(RVE4Domain);
+    problem.BCManager.addNeumannBC(LEFT, {100});
+    problem.BCManager.addNeumannBC(RIGHT,{100});
+    problem.BCManager.addDirichletBC(TOP,{30});
+    problem.BCManager.addDirichletBC(BOTTOM,{20});
+    //dT = lq/h
+
+    std::vector<float> temperature;
+    problem.solve(1e-8,1000,temperature);
+
+    _TotalCalculationTimer.stop();
+    std::cout << "Total: " << _TotalCalculationTimer.getTimeSpanAsString() << " seconds" << std::endl;
+
+    UserInterface::VolumeGLRender _render(
+                _RVE.getSize(), _RVE.getData(), temperature.data(), NULL);
+    _render.setBoundingBoxRepresentationSize(2);
+    _render.resize(800,600);
+    _render.show();
 
 /*    ///////////////////////////////////////////////////////////////////////////////////////
     OpenCL::CLManager::instance().setCurrentPlatform(0);
