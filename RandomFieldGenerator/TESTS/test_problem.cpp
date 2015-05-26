@@ -90,7 +90,7 @@ void Test_Problem::test_HeatConduction_applyLocalNeumannConditions()
     QVERIFY(_maxError < 1e-4f);
 }
 
-void Test_Problem::test_HeatConduction_fullCycle_DirichletDirichlet()
+void Test_Problem::test_HeatConduction_fullCycle()
 {
     RepresentativeVolumeElement _RVE(2,2);
     Characteristics ch{4,0,0,0,0};
@@ -103,7 +103,7 @@ void Test_Problem::test_HeatConduction_fullCycle_DirichletDirichlet()
     problem.BCManager.addDirichletBC(RIGHT,{30});
 
     std::vector<float> temperature;
-    problem.solve(1e-8,1000,temperature);
+    problem.solve(1e-6f,100,temperature);
 
     QVERIFY(std::fabs(temperature[0] - 20.0f) < 1e-4f &&
             std::fabs(temperature[1] - 30.0f) < 1e-4f);
@@ -112,7 +112,7 @@ void Test_Problem::test_HeatConduction_fullCycle_DirichletDirichlet()
     problem.BCManager.addNeumannBC(LEFT, {100});
     problem.BCManager.addDirichletBC(RIGHT,{30});
     //dT = lq/h = 2*100/4 = 50, T0=30, T1=T0+dT=30+50=80
-    problem.solve(1e-8,1000,temperature);
+    problem.solve(1e-6f,100,temperature);
 
 //    std::cout << temperature[0] << " " << temperature[1] << "\n";
 
@@ -238,8 +238,60 @@ void Test_Problem::test_Elasticity_applyLocalNeumannConditions()
     QVERIFY(_maxError < 1e-4f);
 }
 
-void Test_Problem::test_Elasticity_fullCycle_DirichletDirichlet()
+void Test_Problem::test_Elasticity_fullCycle()
 {
+    RepresentativeVolumeElement _RVE(4,2);
+    Characteristics ch{4, 480, 1.0/3.0, 0, 0};
 
+    Domain RVEDomain(_RVE);
+    RVEDomain.addMaterial(0,1,ch);
+
+    ElasticityProblem problem(RVEDomain);
+    problem.BCManager.addDirichletBC(LEFT, {5,6,7});
+    problem.BCManager.addDirichletBC(RIGHT, {10,20,30});
+
+    std::vector<float> displacement;
+    problem.solve(1e-6f,100,displacement);
+
+    std::vector<float> uX;
+    std::vector<float> uY;
+    std::vector<float> uZ;
+
+    for(unsigned i=0; i<displacement.size()/3; ++i)
+    {
+        uX.push_back(displacement[i*3+0]);
+        uY.push_back(displacement[i*3+1]);
+        uZ.push_back(displacement[i*3+2]);
+    }
+    displacement.clear();
+
+    QVERIFY(std::fabs(uX[0] - 5.0f) < 1e-4f &&
+            std::fabs(uX[3] - 10.0f) < 1e-4f &&
+            std::fabs(uY[0] - 6.0f) < 1e-4f &&
+            std::fabs(uY[3] - 20.0f) < 1e-4f &&
+            std::fabs(uZ[0] - 7.0f) < 1e-4f &&
+            std::fabs(uZ[3] - 30.0f) < 1e-4f);
+
+    problem.BCManager.cleanBCs();
+
+    problem.BCManager.addNeumannBC(LEFT, {3000.0f,0,0});
+    problem.BCManager.NeumannBCs[2]->setVoid(1);
+    problem.BCManager.NeumannBCs[2]->setVoid(2);
+    problem.BCManager.addDirichletBC(RIGHT,{0,0,0});
+    problem.BCManager.DirichletBCs[3]->setVoid(1);
+    problem.BCManager.DirichletBCs[3]->setVoid(2);
+
+    problem.solve(1e-6f,100,displacement);
+
+    uX.clear();
+    uY.clear();
+    uZ.clear();
+    for(unsigned i=0; i<displacement.size()/3; ++i)
+    {
+        uX.push_back(displacement[i*3+0]);
+        uY.push_back(displacement[i*3+1]);
+        uZ.push_back(displacement[i*3+2]);
+    }
+    QVERIFY(std::fabs(2*3000.0f/std::fabs(uX[0]-uX[3]) - 480.0f) <1e-4f);
 }
 

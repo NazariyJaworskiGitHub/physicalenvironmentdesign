@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 //    problem.BCManager.addDirichletBC(LEFT, {0,0,0});
 //    problem.BCManager.DirichletBCs[2]->setVoid(1);
 //    problem.BCManager.DirichletBCs[2]->setVoid(2);
-    problem.BCManager.addNeumannBC(LEFT, {300,0,0});
+    problem.BCManager.addNeumannBC(LEFT, {30,0,0});
     problem.BCManager.NeumannBCs[2]->setVoid(1);
     problem.BCManager.NeumannBCs[2]->setVoid(2);
     problem.BCManager.addDirichletBC(RIGHT,{0,0,0});
@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
     // v   = |dUy/dUx| = |dUz/dUx|
 
     std::vector<float> displacement;
-    problem.solve(1e-8,1000,displacement);
+    problem.solve(1e-8f,1000,displacement);
 
     std::vector<float> uX;
     std::vector<float> uY;
@@ -107,10 +107,10 @@ int main(int argc, char *argv[])
     }
     displacement.clear();
 
-    std::cout << "E = " << length*300/std::fabs(uX[0]-uX[size-1]) << "\n";
-    std::cout << "v = " << std::fabs(uY[0]-uY[size*(size-1)+size-1])/
+    std::cout << "E = " << length*30/std::fabs(uX[0]-uX[size-1]) << "\n";
+    std::cout << "v = " << std::fabs(uY[0]-uY[size*(size-1)])/
             std::fabs(uX[0]-uX[size-1]) << "\n";
-    std::cout << "v = " << std::fabs(uZ[0]-uZ[size*size*(size-1)+size*(size-1)+size-1])/
+    std::cout << "v = " << std::fabs(uZ[0]-uZ[size*size*(size-1)])/
             std::fabs(uX[0]-uX[size-1]) << "\n";
 
     _TotalCalculationTimer.stop();
