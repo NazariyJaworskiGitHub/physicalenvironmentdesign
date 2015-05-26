@@ -52,32 +52,93 @@ int main(int argc, char *argv[])
     Timer _TotalCalculationTimer;
     _TotalCalculationTimer.start();
 
-    RepresentativeVolumeElement _RVE(64,2);
-    Characteristics ch{4,0,0,0,0};
+    float length = 2;
+    int size = 32;
+    RepresentativeVolumeElement _RVE(size,length);
+    Characteristics ch{4, 480, 1.0/3.0, 0, 0};
 
-    Domain RVE4Domain(_RVE);
-    RVE4Domain.addMaterial(0,1,ch);
+    Domain RVEDomain(_RVE);
+    RVEDomain.addMaterial(0,1,ch);
 
-    HeatConductionProblem problem(RVE4Domain);
-    problem.BCManager.addNeumannBC(LEFT, {100});
-    problem.BCManager.addNeumannBC(RIGHT,{100});
-    problem.BCManager.addDirichletBC(TOP,{20});
-    problem.BCManager.addDirichletBC(BOTTOM,{20});
-//    problem.BCManager.addDirichletBC(LEFT, {30});
-//    problem.BCManager.addDirichletBC(RIGHT,{20});
-    //dT = lq/h
+//    HeatConductionProblem problem(RVEDomain);
+////    problem.BCManager.addNeumannBC(LEFT, {100});
+////    problem.BCManager.addNeumannBC(RIGHT,{100});
+////    problem.BCManager.addDirichletBC(TOP,{20});
+////    problem.BCManager.addDirichletBC(BOTTOM,{20});
+////    problem.BCManager.addDirichletBC(LEFT, {30});
+////    problem.BCManager.addDirichletBC(RIGHT,{20});
+//    problem.BCManager.cleanBCs();
+//    problem.BCManager.addNeumannBC(LEFT, {100});
+//    problem.BCManager.addDirichletBC(RIGHT,{30});
+//    //dT = lq/h
 
-    std::vector<float> temperature;
-    problem.solve(1e-8,1000,temperature);
+//    std::vector<float> temperature;
+//    problem.solve(1e-8,1000,temperature);
+
+    ElasticityProblem problem(RVEDomain);
+//    problem.BCManager.addDirichletBC(LEFT, {0,0,0});
+//    problem.BCManager.DirichletBCs[2]->setVoid(1);
+//    problem.BCManager.DirichletBCs[2]->setVoid(2);
+    problem.BCManager.addNeumannBC(LEFT, {300,0,0});
+    problem.BCManager.NeumannBCs[2]->setVoid(1);
+    problem.BCManager.NeumannBCs[2]->setVoid(2);
+    problem.BCManager.addDirichletBC(RIGHT,{0,0,0});
+    problem.BCManager.DirichletBCs[3]->setVoid(1);
+    problem.BCManager.DirichletBCs[3]->setVoid(2);
+    // dUx = lF/E  E = lF/dUx
+    // v   = |dUy/dUx| = |dUz/dUx|
+
+    std::vector<float> displacement;
+    problem.solve(1e-8,1000,displacement);
+
+    std::vector<float> uX;
+    std::vector<float> uY;
+    std::vector<float> uZ;
+
+    for(unsigned i=0; i<displacement.size()/3; ++i)
+    {
+        uX.push_back(displacement[i*3+0]);
+        uY.push_back(displacement[i*3+1]);
+        uZ.push_back(displacement[i*3+2]);
+
+//        std::cout << displacement[i*3+0] << " "
+//                  << displacement[i*3+1] << " "
+//                  << displacement[i*3+2] << "\n";
+    }
+    displacement.clear();
+
+    std::cout << "E = " << length*300/std::fabs(uX[0]-uX[size-1]) << "\n";
+    std::cout << "v = " << std::fabs(uY[0]-uY[size*(size-1)+size-1])/
+            std::fabs(uX[0]-uX[size-1]) << "\n";
+    std::cout << "v = " << std::fabs(uZ[0]-uZ[size*size*(size-1)+size*(size-1)+size-1])/
+            std::fabs(uX[0]-uX[size-1]) << "\n";
 
     _TotalCalculationTimer.stop();
     std::cout << "Total: " << _TotalCalculationTimer.getTimeSpanAsString() << " seconds" << std::endl;
 
-    UserInterface::VolumeGLRender _render(
-                _RVE.getSize(), _RVE.getData(), temperature.data(), NULL);
-    _render.setBoundingBoxRepresentationSize(2);
-    _render.resize(800,600);
-    _render.show();
+//    UserInterface::VolumeGLRender _render(
+//                _RVE.getSize(), _RVE.getData(), temperature.data(), NULL);
+//    _render.setBoundingBoxRepresentationSize(2);
+//    _render.resize(800,600);
+//    _render.show();
+
+    UserInterface::VolumeGLRender _renderUX(
+                _RVE.getSize(), _RVE.getData(), uX.data(), NULL);
+    _renderUX.setBoundingBoxRepresentationSize(2);
+    _renderUX.resize(800,600);
+    _renderUX.show();
+
+    UserInterface::VolumeGLRender _renderUY(
+                _RVE.getSize(), _RVE.getData(), uY.data(), NULL);
+    _renderUY.setBoundingBoxRepresentationSize(2);
+    _renderUY.resize(800,600);
+    _renderUY.show();
+
+    UserInterface::VolumeGLRender _renderUZ(
+                _RVE.getSize(), _RVE.getData(), uZ.data(), NULL);
+    _renderUZ.setBoundingBoxRepresentationSize(2);
+    _renderUZ.resize(800,600);
+    _renderUZ.show();
 
 /*    ///////////////////////////////////////////////////////////////////////////////////////
     OpenCL::CLManager::instance().setCurrentPlatform(0);

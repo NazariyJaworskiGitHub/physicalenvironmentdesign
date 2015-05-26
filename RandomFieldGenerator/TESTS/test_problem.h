@@ -16,6 +16,7 @@ class Test_Problem : public QObject
     private: Q_SLOT void test_Elasticity_constructLocalStiffnessMatrix();
     private: Q_SLOT void test_Elasticity_applyLocalDirichletConditions();
     private: Q_SLOT void test_Elasticity_applyLocalNeumannConditions();
+    private: Q_SLOT void test_Elasticity_fullCycle_DirichletDirichlet();
 };
 
 #endif // TEST_PROBLEM_H

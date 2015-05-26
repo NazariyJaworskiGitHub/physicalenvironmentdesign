@@ -105,8 +105,6 @@ void Test_Problem::test_HeatConduction_fullCycle_DirichletDirichlet()
     std::vector<float> temperature;
     problem.solve(1e-8,1000,temperature);
 
-//    std::cout << temperature[0] << " " << temperature[1] << "\n";
-
     QVERIFY(std::fabs(temperature[0] - 20.0f) < 1e-4f &&
             std::fabs(temperature[1] - 30.0f) < 1e-4f);
 
@@ -115,6 +113,8 @@ void Test_Problem::test_HeatConduction_fullCycle_DirichletDirichlet()
     problem.BCManager.addDirichletBC(RIGHT,{30});
     //dT = lq/h = 2*100/4 = 50, T0=30, T1=T0+dT=30+50=80
     problem.solve(1e-8,1000,temperature);
+
+//    std::cout << temperature[0] << " " << temperature[1] << "\n";
 
     QVERIFY(std::fabs(temperature[0] - 80.0f) < 1e-4f &&
             std::fabs(temperature[1] - 30.0f) < 1e-4f);
@@ -125,10 +125,10 @@ void Test_Problem::test_Elasticity_constructLocalStiffnessMatrix()
 {
     Characteristics ch{0,480,1.0/3.0,0,0};
     MathUtils::Matrix::StaticMatrix<float,12,12> K;
-    float a[] = {0,0,0};
-    float b[] = {0.1,0,0};
-    float c[] = {0,0.1,0};
-    float d[] = {0,0,0.1};
+    float a[] = {2,3,4};
+    float b[] = {6,3,2};
+    float c[] = {2,5,1};
+    float d[] = {4,3,6};
     ElasticityProblem::KM(a,b,c,d,ElasticityProblem::DM(&ch),K);
     float KTrue[12][12] = {
         { 745,   540,  120,   -5,   30,   60, -270,  -240,    0, -470,  -330, -180},
@@ -236,5 +236,10 @@ void Test_Problem::test_Elasticity_applyLocalNeumannConditions()
             _maxError = err;
     }
     QVERIFY(_maxError < 1e-4f);
+}
+
+void Test_Problem::test_Elasticity_fullCycle_DirichletDirichlet()
+{
+
 }
 

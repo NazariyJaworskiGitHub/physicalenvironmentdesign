@@ -22,10 +22,16 @@ namespace FEM
         public : class BoundaryCondition
         {
             private: float _c0[_DegreesOfFreedom_];
-            public : const float& c(int index = 0) const noexcept {
-                return _c0[index];}
-            public : BoundaryCondition(const std::initializer_list<float> val){
-                std::copy(val.begin(), val.end(), _c0);}
+            /// For vector fields, when only one scalar is given
+            private: bool _voidMask[_DegreesOfFreedom_];
+            public : float c(int index = 0) const noexcept {return _c0[index];}
+            public : bool isVoid(int index = 0) const noexcept {return _voidMask[index];}
+            public : void setVoid(int index) noexcept {_voidMask[index]=true;}
+            public : BoundaryCondition(const std::initializer_list<float> val)
+            {
+                std::copy(val.begin(), val.end(), _c0);
+                memset(_voidMask,false,sizeof(bool)*_DegreesOfFreedom_);
+            }
             public : ~BoundaryCondition() noexcept{}
         };
         public : BoundaryCondition *NeumannBCs[6];
@@ -84,7 +90,7 @@ namespace FEM
         }
     };
 
-    template<int _DegreesOfFreedom_, int _characteristicsNum_> class AbstractProblem
+    template<int _DegreesOfFreedom_> class AbstractProblem
     {
         protected: const Domain &_domain;
         public   : BoundaryConditionsManager<_DegreesOfFreedom_> BCManager;
@@ -190,33 +196,39 @@ namespace FEM
                     // TOP
                     if(BCManager.NeumannBCs[0] && element.isOnSide(1,_domain.size(),triplet))
                         for(int i=0; i<_DegreesOfFreedom_; ++i)
-                            applyLocalNeumannConditions(
-                                        triplet,i,BCManager.NeumannBCs[0]->c(i)*_A_3,f);
+                            if(!BCManager.NeumannBCs[0]->isVoid(i))
+                                applyLocalNeumannConditions(
+                                            triplet,i,BCManager.NeumannBCs[0]->c(i)*_A_3,f);
                     // BOTTOM
                     if(BCManager.NeumannBCs[1] && element.isOnSide(1,0,triplet))
                         for(int i=0; i<_DegreesOfFreedom_; ++i)
-                            applyLocalNeumannConditions(
-                                        triplet,i,BCManager.NeumannBCs[1]->c(i)*_A_3,f);
+                            if(!BCManager.NeumannBCs[1]->isVoid(i))
+                                applyLocalNeumannConditions(
+                                            triplet,i,BCManager.NeumannBCs[1]->c(i)*_A_3,f);
                     // LEFT
                     if(BCManager.NeumannBCs[2] && element.isOnSide(0,0,triplet))
                         for(int i=0; i<_DegreesOfFreedom_; ++i)
-                            applyLocalNeumannConditions(
-                                        triplet,i,BCManager.NeumannBCs[2]->c(i)*_A_3,f);
+                            if(!BCManager.NeumannBCs[2]->isVoid(i))
+                                applyLocalNeumannConditions(
+                                            triplet,i,BCManager.NeumannBCs[2]->c(i)*_A_3,f);
                     // RIGHT
                     if(BCManager.NeumannBCs[3] && element.isOnSide(0,_domain.size(),triplet))
                         for(int i=0; i<_DegreesOfFreedom_; ++i)
-                            applyLocalNeumannConditions(
-                                        triplet,i,BCManager.NeumannBCs[3]->c(i)*_A_3,f);
+                            if(!BCManager.NeumannBCs[3]->isVoid(i))
+                                applyLocalNeumannConditions(
+                                            triplet,i,BCManager.NeumannBCs[3]->c(i)*_A_3,f);
                     // FRONT
                     if(BCManager.NeumannBCs[4] && element.isOnSide(2,0,triplet))
                         for(int i=0; i<_DegreesOfFreedom_; ++i)
-                            applyLocalNeumannConditions(
-                                        triplet,i,BCManager.NeumannBCs[4]->c(i)*_A_3,f);
+                            if(!BCManager.NeumannBCs[4]->isVoid(i))
+                                applyLocalNeumannConditions(
+                                            triplet,i,BCManager.NeumannBCs[4]->c(i)*_A_3,f);
                     // BACK
                     if(BCManager.NeumannBCs[5] && element.isOnSide(2,_domain.size(),triplet))
                         for(int i=0; i<_DegreesOfFreedom_; ++i)
-                            applyLocalNeumannConditions(
-                                        triplet,i,BCManager.NeumannBCs[5]->c(i)*_A_3,f);
+                            if(!BCManager.NeumannBCs[5]->isVoid(i))
+                                applyLocalNeumannConditions(
+                                            triplet,i,BCManager.NeumannBCs[5]->c(i)*_A_3,f);
                 }
 
                 // Dirichlet boundary conditions
@@ -225,44 +237,50 @@ namespace FEM
                     for(int i=0; i<4; ++i)
                         if(BCManager.DirichletBCs[0] && element[i][1] == _domain.size())
                             for(int j=0; j<_DegreesOfFreedom_; ++j)
-                                applyLocalDirichletConditions(
-                                            i*_DegreesOfFreedom_+j,
-                                            BCManager.DirichletBCs[0]->c(j),K,f);
+                                if(!BCManager.DirichletBCs[0]->isVoid(j))
+                                    applyLocalDirichletConditions(
+                                                i*_DegreesOfFreedom_+j,
+                                                BCManager.DirichletBCs[0]->c(j),K,f);
                     // BOTTOM
                     for(int i=0; i<4; ++i)
                         if(BCManager.DirichletBCs[1] && element[i][1] == 0)
                             for(int j=0; j<_DegreesOfFreedom_; ++j)
-                                applyLocalDirichletConditions(
-                                            i*_DegreesOfFreedom_+j,
-                                            BCManager.DirichletBCs[1]->c(j),K,f);
+                                if(!BCManager.DirichletBCs[1]->isVoid(j))
+                                    applyLocalDirichletConditions(
+                                                i*_DegreesOfFreedom_+j,
+                                                BCManager.DirichletBCs[1]->c(j),K,f);
                     // LEFT
                     for(int i=0; i<4; ++i)
                         if(BCManager.DirichletBCs[2] && element[i][0] == 0)
                             for(int j=0; j<_DegreesOfFreedom_; ++j)
-                                applyLocalDirichletConditions(
-                                            i*_DegreesOfFreedom_+j,
-                                            BCManager.DirichletBCs[2]->c(j),K,f);
+                                if(!BCManager.DirichletBCs[2]->isVoid(j))
+                                    applyLocalDirichletConditions(
+                                                i*_DegreesOfFreedom_+j,
+                                                BCManager.DirichletBCs[2]->c(j),K,f);
                     // RIGHT
                     for(int i=0; i<4; ++i)
                         if(BCManager.DirichletBCs[3] && element[i][0] == _domain.size())
                             for(int j=0; j<_DegreesOfFreedom_; ++j)
-                                applyLocalDirichletConditions(
-                                            i*_DegreesOfFreedom_+j,
-                                            BCManager.DirichletBCs[3]->c(j),K,f);
+                                if(!BCManager.DirichletBCs[3]->isVoid(j))
+                                    applyLocalDirichletConditions(
+                                                i*_DegreesOfFreedom_+j,
+                                                BCManager.DirichletBCs[3]->c(j),K,f);
                     // FRONT
                     for(int i=0; i<4; ++i)
                         if(BCManager.DirichletBCs[4] && element[i][2] == 0)
                             for(int j=0; j<_DegreesOfFreedom_; ++j)
-                                applyLocalDirichletConditions(
-                                            i*_DegreesOfFreedom_+j,
-                                            BCManager.DirichletBCs[4]->c(j),K,f);
+                                if(!BCManager.DirichletBCs[4]->isVoid(j))
+                                    applyLocalDirichletConditions(
+                                                i*_DegreesOfFreedom_+j,
+                                                BCManager.DirichletBCs[4]->c(j),K,f);
                     // BACK
                     for(int i=0; i<4; ++i)
                         if(BCManager.DirichletBCs[5] && element[i][2] == _domain.size())
                             for(int j=0; j<_DegreesOfFreedom_; ++j)
-                                applyLocalDirichletConditions(
-                                            i*_DegreesOfFreedom_+j,
-                                            BCManager.DirichletBCs[5]->c(j),K,f);
+                                if(!BCManager.DirichletBCs[5]->isVoid(j))
+                                    applyLocalDirichletConditions(
+                                                i*_DegreesOfFreedom_+j,
+                                                BCManager.DirichletBCs[5]->c(j),K,f);
                 }
 
                 // Add local matrices to global
@@ -308,10 +326,10 @@ namespace FEM
 
     /// \todo it is only for simplex isoparametric elements - tetrahedrons
     // u = {u}^T
-    class HeatConductionProblem : public AbstractProblem<1,1>
+    class HeatConductionProblem : public AbstractProblem<1>
     {
         public : HeatConductionProblem(const Domain &domain) noexcept :
-            AbstractProblem<1,1>(domain){}
+            AbstractProblem<1>(domain){}
 
         /// [D]
         public : static inline MathUtils::Matrix::StaticMatrix<float,3,3> DM(
@@ -351,10 +369,10 @@ namespace FEM
     };  
 
     // u = {ux, uy, uz}^T
-    class ElasticityProblem : public AbstractProblem<3,2>
+    class ElasticityProblem : public AbstractProblem<3>
     {
         public : ElasticityProblem(const Domain &domain) noexcept :
-            AbstractProblem<3,2>(domain){}
+            AbstractProblem<3>(domain){}
 
         /// [D]
         public : static inline MathUtils::Matrix::StaticMatrix<float,6,6> DM(
@@ -404,7 +422,7 @@ namespace FEM
             B(4,2) = CInv(1,0); B(4,5) = CInv(1,1); B(4,8) = CInv(1,2); B(4,11) = CInv(1,3);
             B(5,1) = CInv(3,0); B(5,4) = CInv(3,1); B(5,7) = CInv(3,2); B(5,10) = CInv(3,3);
             B(5,2) = CInv(2,0); B(5,5) = CInv(2,1); B(5,8) = CInv(2,2); B(5,11) = CInv(2,3);
-            output = volume / 6.0 * B.T() * D * B;
+            output = volume * B.T() * D * B;
         }
 
         private  : inline void _assembleLocalK(
