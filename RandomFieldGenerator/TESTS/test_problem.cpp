@@ -295,3 +295,23 @@ void Test_Problem::test_Elasticity_fullCycle()
     QVERIFY(std::fabs(2*3000.0f/std::fabs(uX[0]-uX[3]) - 480.0f) <1e-4f);
 }
 
+void Test_Problem::test_Thermoelasticity_constructLocalStiffnessMatrix()
+{
+
+}
+
+void Test_Problem::test_Thermoelasticity_applyLocalDirichletConditions()
+{
+
+}
+
+void Test_Problem::test_Thermoelasticity_applyLocalNeumannConditions()
+{
+
+}
+
+void Test_Problem::test_Thermoelasticity_fullCycle()
+{
+
+}
+

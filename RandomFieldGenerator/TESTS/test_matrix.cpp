@@ -262,10 +262,10 @@ void Test_Matrix::test_MatrixExpression()
         Matrix::DynamicMatrix<float> C(2,1);
         C(0,0) = 1;
         C(1,0) = 3;
-        Matrix::DynamicMatrix<float> rez = 2 * A * B * C.T() * B;
-        Matrix::DynamicMatrix<float> True(2,1);
-        True(0,0) = 40;
-        True(1,0) = 100;
+        Matrix::StaticMatrix<float,2,1> rez = 2 * A * B * C.T() * B - 10 * B;
+        Matrix::StaticMatrix<float,2,1> True;
+        True(0,0) = 20;
+        True(1,0) = 90;
         float _maxError = 0.0f;
         for(int i=0; i<2; ++i)
             for(int j=0; j<1; ++j)
@@ -275,7 +275,7 @@ void Test_Matrix::test_MatrixExpression()
             if(err>_maxError)
                 _maxError = err;
         }
-        QVERIFY(_maxError < 1e-4f && rez.cols() == 1 && rez.rows() == 2);
+        QVERIFY(_maxError < 1e-4f);
     }
 }
 

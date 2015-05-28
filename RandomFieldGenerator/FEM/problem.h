@@ -436,6 +436,112 @@ namespace FEM
 
         public : ~ElasticityProblem() noexcept final {}
     };
+
+    // u = {T, ux, uy, uz}^T
+    class ThermoelasticityProblem : public AbstractProblem<4>
+    {
+        public : ThermoelasticityProblem(const Domain &domain) noexcept :
+            AbstractProblem<4>(domain){}
+
+        /// [K] = I{[B]^T[D][B] - [N]^T[L]^T[J][N]}dV
+        /// [B] = [L][N]
+        /// [L]^T[J][N] -> [J]^T[L][N] = [J]^T[B]
+        /// I{[N]^Ta} = Va/4
+        public : static inline void KM(
+                const float *a,
+                const float *b,
+                const float *c,
+                const float *d,
+                const Characteristics *ch,
+                MathUtils::Matrix::StaticMatrix<float,16,16> &output
+                ) noexcept
+        {
+            TetrahedronMatrix CInv(a,b,c,d);
+            // [a0 a1 a2 a3]
+            // [b0 b1 b2 b3]
+            // [c0 c1 c2 c3]
+            // [d0 d1 d2 d3]
+            float volume = CInv.inverse4x4() / 6.0;
+            MathUtils::Matrix::StaticMatrix<float,9,16> B;
+            for(int i=0; i<9*16; ++i) B.data()[i]=0;
+            //     0  1  2  3    4  5  6  7    8  9 10 11   12 13 14 15
+            // 0 [b0  0  0  0 | b1  0  0  0 | b2  0  0  0 | b3  0  0  0]
+            // 1 [c0  0  0  0 | c1  0  0  0 | c2  0  0  0 | c3  0  0  0]
+            // 2 [d0  0  0  0 | d1  0  0  0 | d2  0  0  0 | d3  0  0  0]
+            // 3 [ 0 b0  0  0 |  0 b1  0  0 |  0 b2  0  0 |  0 b3  0  0]
+            // 4 [ 0  0 c0  0 |  0  0 c1  0 |  0  0 c2  0 |  0  0 c3  0]
+            // 5 [ 0  0  0 d0 |  0  0  0 d1 |  0  0  0 d2 |  0  0  0 d3]
+            // 6 [ 0 c0 b0  0 |  0 c1 b1  0 |  0 c2 b2  0 |  0 c3 b3  0]
+            // 7 [ 0 d0  0 b0 |  0 d1  0 b1 |  0 d2  0 b2 |  0 d3  0 b3]
+            // 8 [ 0  0 d0 c0 |  0  0 d1 c1 |  0  0 d2 c2 |  0  0 d3 c3]
+            B(0,0) = CInv(1,0); B(0,4) = CInv(1,1); B(0,8) = CInv(1,2); B(0,12)= CInv(1,3);
+            B(1,0) = CInv(2,0); B(1,4) = CInv(2,1); B(1,8) = CInv(2,2); B(1,12)= CInv(2,3);
+            B(2,0) = CInv(3,0); B(2,4) = CInv(3,1); B(2,8) = CInv(3,2); B(2,12)= CInv(3,3);
+            B(3,1) = CInv(1,0); B(3,5) = CInv(1,1); B(3,9) = CInv(1,2); B(3,13)= CInv(1,3);
+            B(4,2) = CInv(2,0); B(4,6) = CInv(2,1); B(4,10)= CInv(2,2); B(4,14)= CInv(2,3);
+            B(5,3) = CInv(3,0); B(5,7) = CInv(3,1); B(5,11)= CInv(3,2); B(5,15)= CInv(3,3);
+            B(6,1) = CInv(2,0); B(6,5) = CInv(2,1); B(6,9) = CInv(2,2); B(6,13)= CInv(2,3);
+            B(6,2) = CInv(1,0); B(6,6) = CInv(1,1); B(6,10)= CInv(1,2); B(6,14)= CInv(1,3);
+            B(7,1) = CInv(3,0); B(7,5) = CInv(3,1); B(7,9) = CInv(3,2); B(7,13)= CInv(3,3);
+            B(7,3) = CInv(1,0); B(7,7) = CInv(1,1); B(7,11)= CInv(1,2); B(7,15)= CInv(1,3);
+            B(8,2) = CInv(3,0); B(8,6) = CInv(3,1); B(8,10)= CInv(3,2); B(8,14)= CInv(3,3);
+            B(8,3) = CInv(2,0); B(8,7) = CInv(2,1); B(8,11)= CInv(2,2); B(8,15)= CInv(2,3);
+
+            const float &h = ch->heatConductionCoefficient;
+            const float &E = ch->elasticModulus;
+            const float &v = ch->PoissonsRatio;
+            const float &al = ch->linearTemperatuceExpansionCoefficient;
+            float p = E*(1-v)/(1+v)/(1-2*v);
+            float q = E*v/(1+v)/(1-2*v);
+            float r = E/(2-2*v);
+            float s = E*al/(1-2*v);
+            MathUtils::Matrix::StaticMatrix<float,9,9> D(
+                {h, 0, 0, 0, 0, 0, 0, 0, 0,
+                 0, h, 0, 0, 0, 0, 0, 0, 0,
+                 0, 0, h, 0, 0, 0, 0, 0, 0,
+                 0, 0, 0, p, q, q, 0, 0, 0,
+                 0, 0, 0, q, p, q, 0, 0, 0,
+                 0, 0, 0, q, q, p, 0, 0, 0,
+                 0, 0, 0, 0, 0, 0, r, 0, 0,
+                 0, 0, 0, 0, 0, 0, 0, r, 0,
+                 0, 0, 0, 0, 0, 0, 0, 0, r});
+
+            // [ 0 b0 c0 d0 |  0 b1 c1 d1 | ...]
+            // [b0  0  0  0 | b1  0  0  0 | ...]
+            // [c0  0  0  0 | b1  0  0  0 | ...]
+            // [d0  0  0  0 | b1  0  0  0 | ...]
+            // ---------------------------------
+            // [ 0 b0 c0 d0 |  0 b1 c1 d1 | ...]
+            // [b0  0  0  0 | b1  0  0  0 | ...]
+            // [c0  0  0  0 | c1  0  0  0 | ...]
+            // [d0  0  0  0 | d1  0  0  0 | ...]
+            // ---------------------------------
+            // [...         | ...         | ...]
+            MathUtils::Matrix::StaticMatrix<float,16,16> J; // = I{[N]^T[L]^T[J][N]}dV;
+            for(int i=0; i<16*16; ++i) J.data()[i]=0;
+            for(int i=0; i<4; ++i)
+                for(int j=0; j<4; ++j)
+                {
+                    J(0+i*4,1+j*4) = CInv(1,j);
+                    J(0+i*4,2+j*4) = CInv(2,j);
+                    J(0+i*4,3+j*4) = CInv(3,j);
+
+                    J(1+i*4,0+j*4) = CInv(1,j);
+                    J(2+i*4,0+j*4) = CInv(2,j);
+                    J(3+i*4,0+j*4) = CInv(3,j);
+                }
+
+            output = volume * (B.T()*D*B - s/4 * J);
+        }
+
+        private  : inline void _assembleLocalK(
+            const FixedTetrahedron &element,
+            MathUtils::Matrix::StaticMatrix<float,16,16> &output
+            ) noexcept final
+        {
+            KM(element.a, element.b, element.c, element.d, element.characteristics, output);
+        }
+    };
 }
 
 #endif // PROBLEM

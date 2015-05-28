@@ -57,6 +57,26 @@ namespace MathUtils
                         (*this)(i,j) = scalar * A(i,j);
             }
 
+            public   : template<typename _Type1_>
+            void add(
+                    const AbstractMatrix<_Type1_> &A,
+                    const AbstractMatrix<_Type1_> &B) noexcept
+            {
+                for(int i=0; i<A.rows(); ++i)
+                    for(int j=0; j<A.cols(); ++j)
+                        (*this)(i,j) = A(i,j)+B(i,j);
+            }
+
+            public   : template<typename _Type1_>
+            void subtract(
+                    const AbstractMatrix<_Type1_> &A,
+                    const AbstractMatrix<_Type1_> &B) noexcept
+            {
+                for(int i=0; i<A.rows(); ++i)
+                    for(int j=0; j<A.cols(); ++j)
+                        (*this)(i,j) = A(i,j)-B(i,j);
+            }
+
             // Only for square matrices
 //            public   : _DimType_ determinantGaussElimination() noexcept
 //            {
@@ -306,6 +326,90 @@ namespace MathUtils
         {
             StaticMatrix<_Type2_, _Arows_, _Acols_> _rez;
             _rez.multiply(scalar,A);
+            return _rez;
+        }
+
+        // +
+        template <typename _Type1_, int _Arows_, int _Acols_>
+        auto operator + (
+                const StaticMatrix<_Type1_, _Arows_, _Acols_> &A,
+                const StaticMatrix<_Type1_, _Arows_, _Acols_> &B) noexcept
+        -> StaticMatrix<_Type1_, _Arows_, _Acols_>
+        {
+            StaticMatrix<_Type1_, _Arows_, _Acols_> _rez;
+            _rez.add(A,B);
+            return _rez;
+        }
+        template <typename _Type1_, int _Arows_, int _Acols_>
+        auto operator + (
+                const StaticMatrix<_Type1_, _Arows_, _Acols_> &A,
+                const DynamicMatrix<_Type1_> &B) noexcept
+        -> StaticMatrix<_Type1_, _Arows_, _Acols_>
+        {
+            StaticMatrix<_Type1_, _Arows_, _Acols_> _rez;
+            _rez.add(A,B);
+            return _rez;
+        }
+        template <typename _Type1_, int _Arows_, int _Acols_>
+        auto operator + (
+                const DynamicMatrix<_Type1_> &A,
+                const StaticMatrix<_Type1_, _Arows_, _Acols_> &B) noexcept
+        -> StaticMatrix<_Type1_, _Arows_, _Acols_>
+        {
+            StaticMatrix<_Type1_, _Arows_, _Acols_> _rez;
+            _rez.add(A,B);
+            return _rez;
+        }
+        template <typename _Type1_>
+        auto operator + (
+                const DynamicMatrix<_Type1_> &A,
+                const DynamicMatrix<_Type1_> &B) noexcept
+        -> DynamicMatrix<_Type1_>
+        {
+            DynamicMatrix<_Type1_> _rez(A.cols(),A.rows());
+            _rez.add(A,B);
+            return _rez;
+        }
+
+        // -
+        template <typename _Type1_, int _Arows_, int _Acols_>
+        auto operator - (
+                const StaticMatrix<_Type1_, _Arows_, _Acols_> &A,
+                const StaticMatrix<_Type1_, _Arows_, _Acols_> &B) noexcept
+        -> StaticMatrix<_Type1_, _Arows_, _Acols_>
+        {
+            StaticMatrix<_Type1_, _Arows_, _Acols_> _rez;
+            _rez.subtract(A,B);
+            return _rez;
+        }
+        template <typename _Type1_, int _Arows_, int _Acols_>
+        auto operator - (
+                const StaticMatrix<_Type1_, _Arows_, _Acols_> &A,
+                const DynamicMatrix<_Type1_> &B) noexcept
+        -> StaticMatrix<_Type1_, _Arows_, _Acols_>
+        {
+            StaticMatrix<_Type1_, _Arows_, _Acols_> _rez;
+            _rez.subtract(A,B);
+            return _rez;
+        }
+        template <typename _Type1_, int _Arows_, int _Acols_>
+        auto operator - (
+                const DynamicMatrix<_Type1_> &A,
+                const StaticMatrix<_Type1_, _Arows_, _Acols_> &B) noexcept
+        -> StaticMatrix<_Type1_, _Arows_, _Acols_>
+        {
+            StaticMatrix<_Type1_, _Arows_, _Acols_> _rez;
+            _rez.subtract(A,B);
+            return _rez;
+        }
+        template <typename _Type1_>
+        auto operator - (
+                const DynamicMatrix<_Type1_> &A,
+                const DynamicMatrix<_Type1_> &B) noexcept
+        -> DynamicMatrix<_Type1_>
+        {
+            DynamicMatrix<_Type1_> _rez(A.cols(),A.rows());
+            _rez.subtract(A,B);
             return _rez;
         }
     }
