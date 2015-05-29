@@ -493,7 +493,7 @@ namespace FEM
             const float &al = ch->linearTemperatuceExpansionCoefficient;
             float p = E*(1-v)/(1+v)/(1-2*v);
             float q = E*v/(1+v)/(1-2*v);
-            float r = E/(2-2*v);
+            float r = E/(2+2*v);
             float s = E*al/(1-2*v);
             MathUtils::Matrix::StaticMatrix<float,9,9> D(
                 {h, 0, 0, 0, 0, 0, 0, 0, 0,
