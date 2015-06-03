@@ -53,9 +53,9 @@ int main(int argc, char *argv[])
     _TotalCalculationTimer.start();
 
     float length = 2;
-    int size = 32;
+    int size = 2;
     RepresentativeVolumeElement _RVE(size,length);
-    Characteristics ch{4, 480, 1.0/3.0, 0, 0};
+    Characteristics ch{4, 480, 1.0/3.0, 1.0/600.0, 0};
 
     Domain RVEDomain(_RVE);
     RVEDomain.addMaterial(0,1,ch);
@@ -75,70 +75,113 @@ int main(int argc, char *argv[])
 //    std::vector<float> temperature;
 //    problem.solve(1e-8,1000,temperature);
 
-    ElasticityProblem problem(RVEDomain);
-//    problem.BCManager.addDirichletBC(LEFT, {0,0,0});
-//    problem.BCManager.DirichletBCs[2]->setVoid(1);
-//    problem.BCManager.DirichletBCs[2]->setVoid(2);
-    problem.BCManager.addNeumannBC(LEFT, {30,0,0});
-    problem.BCManager.NeumannBCs[2]->setVoid(1);
-    problem.BCManager.NeumannBCs[2]->setVoid(2);
-    problem.BCManager.addDirichletBC(RIGHT,{0,0,0});
-    problem.BCManager.DirichletBCs[3]->setVoid(1);
-    problem.BCManager.DirichletBCs[3]->setVoid(2);
-    // dUx = lF/E  E = lF/dUx
-    // v   = |dUy/dUx| = |dUz/dUx|
+    //    _TotalCalculationTimer.stop();
+    //    std::cout << "Total: " << _TotalCalculationTimer.getTimeSpanAsString() << " seconds" << std::endl;
 
-    std::vector<float> displacement;
-    problem.solve(1e-8f,1000,displacement);
+    //    UserInterface::VolumeGLRender _render(
+    //                _RVE.getSize(), _RVE.getData(), temperature.data(), NULL);
+    //    _render.setBoundingBoxRepresentationSize(2);
+    //    _render.resize(800,600);
+    //    _render.show();
 
+//    ElasticityProblem problem(RVEDomain);
+////    problem.BCManager.addDirichletBC(LEFT, {0,0,0});
+////    problem.BCManager.DirichletBCs[2]->setVoid(1);
+////    problem.BCManager.DirichletBCs[2]->setVoid(2);
+//    problem.BCManager.addNeumannBC(LEFT, {30,0,0});
+//    problem.BCManager.NeumannBCs[2]->setVoid(1);
+//    problem.BCManager.NeumannBCs[2]->setVoid(2);
+//    problem.BCManager.addDirichletBC(RIGHT,{0,0,0});
+//    problem.BCManager.DirichletBCs[3]->setVoid(1);
+//    problem.BCManager.DirichletBCs[3]->setVoid(2);
+//    // dUx = lF/E  E = lF/dUx
+//    // v   = |dUy/dUx| = |dUz/dUx|
+
+//    std::vector<float> displacement;
+//    problem.solve(1e-8f,1000,displacement);
+
+//    std::vector<float> uX;
+//    std::vector<float> uY;
+//    std::vector<float> uZ;
+
+//    for(unsigned i=0; i<displacement.size()/3; ++i)
+//    {
+//        uX.push_back(displacement[i*3+0]);
+//        uY.push_back(displacement[i*3+1]);
+//        uZ.push_back(displacement[i*3+2]);
+
+////        std::cout << displacement[i*3+0] << " "
+////                  << displacement[i*3+1] << " "
+////                  << displacement[i*3+2] << "\n";
+//    }
+//    displacement.clear();
+
+//    std::cout << "E = " << length*30/std::fabs(uX[0]-uX[size-1]) << "\n";
+//    std::cout << "v = " << std::fabs(uY[0]-uY[size*(size-1)])/
+//            std::fabs(uX[0]-uX[size-1]) << "\n";
+//    std::cout << "v = " << std::fabs(uZ[0]-uZ[size*size*(size-1)])/
+//            std::fabs(uX[0]-uX[size-1]) << "\n";
+
+//    _TotalCalculationTimer.stop();
+//    std::cout << "Total: " << _TotalCalculationTimer.getTimeSpanAsString() << " seconds" << std::endl;
+
+//    UserInterface::VolumeGLRender _renderUX(
+//                _RVE.getSize(), _RVE.getData(), uX.data(), NULL);
+//    _renderUX.setBoundingBoxRepresentationSize(2);
+//    _renderUX.resize(800,600);
+//    _renderUX.show();
+
+//    UserInterface::VolumeGLRender _renderUY(
+//                _RVE.getSize(), _RVE.getData(), uY.data(), NULL);
+//    _renderUY.setBoundingBoxRepresentationSize(2);
+//    _renderUY.resize(800,600);
+//    _renderUY.show();
+
+//    UserInterface::VolumeGLRender _renderUZ(
+//                _RVE.getSize(), _RVE.getData(), uZ.data(), NULL);
+//    _renderUZ.setBoundingBoxRepresentationSize(2);
+//    _renderUZ.resize(800,600);
+//    _renderUZ.show();
+    ThermoelasticityProblem problem(RVEDomain);
+    problem.BCManager.addDirichletBC(LEFT, {30,0,-1,-1});
+    problem.BCManager.DirichletBCs[2]->setVoid(2);
+    problem.BCManager.DirichletBCs[2]->setVoid(3);
+    problem.BCManager.addNeumannBC(RIGHT,{100,-1,-1,-1});
+    problem.BCManager.NeumannBCs[3]->setVoid(1);
+    problem.BCManager.NeumannBCs[3]->setVoid(2);
+    problem.BCManager.NeumannBCs[3]->setVoid(3);
+
+    std::vector<float> temperatureDisplacement;
+    problem.solve(1e-8f,1000,temperatureDisplacement,true);
+
+    std::vector<float> T;
     std::vector<float> uX;
     std::vector<float> uY;
     std::vector<float> uZ;
 
-    for(unsigned i=0; i<displacement.size()/3; ++i)
+    for(unsigned i=0; i<temperatureDisplacement.size()/4; ++i)
     {
-        uX.push_back(displacement[i*3+0]);
-        uY.push_back(displacement[i*3+1]);
-        uZ.push_back(displacement[i*3+2]);
+        T.push_back(temperatureDisplacement[i*4+0]);
+        uX.push_back(temperatureDisplacement[i*4+1]);
+        uY.push_back(temperatureDisplacement[i*4+2]);
+        uZ.push_back(temperatureDisplacement[i*4+3]);
 
-//        std::cout << displacement[i*3+0] << " "
-//                  << displacement[i*3+1] << " "
-//                  << displacement[i*3+2] << "\n";
+        std::cout << temperatureDisplacement[i*4+0] << " "
+                  << temperatureDisplacement[i*4+1] << " "
+                  << temperatureDisplacement[i*4+2] << " "
+                  << temperatureDisplacement[i*4+3] << "\n";
     }
-    displacement.clear();
+    temperatureDisplacement.clear();
 
-    std::cout << "E = " << length*30/std::fabs(uX[0]-uX[size-1]) << "\n";
-    std::cout << "v = " << std::fabs(uY[0]-uY[size*(size-1)])/
-            std::fabs(uX[0]-uX[size-1]) << "\n";
-    std::cout << "v = " << std::fabs(uZ[0]-uZ[size*size*(size-1)])/
-            std::fabs(uX[0]-uX[size-1]) << "\n";
+//    std::cout << "E = " << length*30/std::fabs(uX[0]-uX[size-1]) << "\n";
+//    std::cout << "v = " << std::fabs(uY[0]-uY[size*(size-1)])/
+//            std::fabs(uX[0]-uX[size-1]) << "\n";
+//    std::cout << "v = " << std::fabs(uZ[0]-uZ[size*size*(size-1)])/
+//            std::fabs(uX[0]-uX[size-1]) << "\n";
 
     _TotalCalculationTimer.stop();
     std::cout << "Total: " << _TotalCalculationTimer.getTimeSpanAsString() << " seconds" << std::endl;
 
-//    UserInterface::VolumeGLRender _render(
-//                _RVE.getSize(), _RVE.getData(), temperature.data(), NULL);
-//    _render.setBoundingBoxRepresentationSize(2);
-//    _render.resize(800,600);
-//    _render.show();
-
-    UserInterface::VolumeGLRender _renderUX(
-                _RVE.getSize(), _RVE.getData(), uX.data(), NULL);
-    _renderUX.setBoundingBoxRepresentationSize(2);
-    _renderUX.resize(800,600);
-    _renderUX.show();
-
-    UserInterface::VolumeGLRender _renderUY(
-                _RVE.getSize(), _RVE.getData(), uY.data(), NULL);
-    _renderUY.setBoundingBoxRepresentationSize(2);
-    _renderUY.resize(800,600);
-    _renderUY.show();
-
-    UserInterface::VolumeGLRender _renderUZ(
-                _RVE.getSize(), _RVE.getData(), uZ.data(), NULL);
-    _renderUZ.setBoundingBoxRepresentationSize(2);
-    _renderUZ.resize(800,600);
-    _renderUZ.show();
 
 /*    ///////////////////////////////////////////////////////////////////////////////////////
     OpenCL::CLManager::instance().setCurrentPlatform(0);

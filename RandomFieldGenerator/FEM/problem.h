@@ -13,6 +13,7 @@
 #include <viennacl/vector.hpp>
 #include <viennacl/linalg/cg.hpp>
 #include <viennacl/linalg/bicgstab.hpp>
+#include <viennacl/linalg/gmres.hpp>
 
 /// \todo refactoring
 namespace FEM
@@ -299,7 +300,10 @@ namespace FEM
             }
         }
         public : void solve(
-                const float eps, const int maxIteration, std::vector<float> &out) noexcept
+            const float eps,
+            const int maxIteration,
+            std::vector<float> &out,
+            const bool useBiCG = false) noexcept
         {
             int size = _domain.discreteSize();
             viennacl::compressed_matrix<float>  K(size*size*size*_DegreesOfFreedom_,size*size*size*_DegreesOfFreedom_);
@@ -314,7 +318,8 @@ namespace FEM
             viennacl::copy(cpu_sparse_matrix, K);
             viennacl::copy(cpu_loads.begin(), cpu_loads.end(), f.begin());
 
-            u = viennacl::linalg::solve(K, f, viennacl::linalg::cg_tag(eps, maxIteration));
+            if(useBiCG) u = viennacl::linalg::solve(K, f, viennacl::linalg::gmres_tag(eps, maxIteration));
+            else u = viennacl::linalg::solve(K, f, viennacl::linalg::cg_tag(eps, maxIteration));
 
             if(out.size() != u.size())out.resize(u.size());
 
