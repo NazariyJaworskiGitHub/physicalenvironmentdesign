@@ -71,7 +71,7 @@ namespace FEM
             MaterialsVector.push_back(RVEMaterial{minIntensity, maxIntensity, ch});}
         private: const RepresentativeVolumeElement &_refToRVE;
         public : float size() const noexcept {return _refToRVE.getRepresentationSize();}
-        public : float discreteSize() const noexcept {return _refToRVE.getSize();}
+        public : int discreteSize() const noexcept {return _refToRVE.getSize();}
         public : Domain(const RepresentativeVolumeElement &RVE) noexcept : _refToRVE(RVE)
         {
             this->_nodesNum = _refToRVE.getSize() * _refToRVE.getSize() * _refToRVE.getSize();

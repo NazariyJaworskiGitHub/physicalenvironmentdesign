@@ -7,6 +7,8 @@
 #include "staticconstants.h"
 #include "jacobimatrix.h"
 
+#include "timer.h"
+
 #include <map>
 
 #include <viennacl/compressed_matrix.hpp>
@@ -290,9 +292,10 @@ namespace FEM
                     for(long j=0; j<4; ++j)
                         for(long p=0; p<_DegreesOfFreedom_; ++p)
                             for(long q=0; q<_DegreesOfFreedom_; ++q)
-                                sparseMatrix[element.indexes[i]*_DegreesOfFreedom_+p]
-                                        [element.indexes[j]*_DegreesOfFreedom_+q] +=
-                                        K(i*_DegreesOfFreedom_+p,j*_DegreesOfFreedom_+q);
+                                if(K(i*_DegreesOfFreedom_+p,j*_DegreesOfFreedom_+q) != 0)
+                                    sparseMatrix[element.indexes[i]*_DegreesOfFreedom_+p]
+                                            [element.indexes[j]*_DegreesOfFreedom_+q] +=
+                                            K(i*_DegreesOfFreedom_+p,j*_DegreesOfFreedom_+q);
                     for(long p=0; p<_DegreesOfFreedom_; ++p)
                         loads[element.indexes[i]*_DegreesOfFreedom_+p] +=
                                 f(i*_DegreesOfFreedom_+p,0);
@@ -305,6 +308,13 @@ namespace FEM
             std::vector<float> &out,
             const bool useBiCG = false) noexcept
         {
+            /// \todo remove cout
+            std::cout << "Solving problem:\n";
+            std::cout << " Assembling SLAE...";
+
+            Timer _calculationTimer;
+            _calculationTimer.start();
+
             int size = _domain.discreteSize();
             viennacl::compressed_matrix<float>  K(size*size*size*_DegreesOfFreedom_,size*size*size*_DegreesOfFreedom_);
             viennacl::vector<float>             f(size*size*size*_DegreesOfFreedom_);
@@ -315,15 +325,43 @@ namespace FEM
 
             assembleSLAE(cpu_sparse_matrix, cpu_loads);
 
+            /// \todo remove cout
+            std::cout << " assembled:\n  " << size*size*size << " nodes;\n  "
+                      << _DegreesOfFreedom_ << " degrees of freedom\n  "
+                      << (size-1)*(size-1)*(size-1)*6 << " elements\n";
+
             viennacl::copy(cpu_sparse_matrix, K);
             viennacl::copy(cpu_loads.begin(), cpu_loads.end(), f.begin());
 
-            if(useBiCG) u = viennacl::linalg::solve(K, f, viennacl::linalg::gmres_tag(eps, maxIteration));
-            else u = viennacl::linalg::solve(K, f, viennacl::linalg::cg_tag(eps, maxIteration));
+            /// \todo remove cout
+            std::cout << " Solving SLAE...";
+            if(useBiCG)
+            {
+                viennacl::linalg::bicgstab_tag solverBiCG(eps, maxIteration);
+                u = viennacl::linalg::solve(K, f, solverBiCG);
+                /// \todo remove cout
+                std::cout << " solved: "
+                          << "  error = "<< solverBiCG.error()
+                          << "  iterations = " << solverBiCG.iters() << "\n";
+            }
+            else
+            {
+                viennacl::linalg::cg_tag solverCG(eps, maxIteration);
+                u = viennacl::linalg::solve(K, f, solverCG);
+                /// \todo remove cout
+                std::cout << " solved: "
+                          << "  error = "<< solverCG.error()
+                          << "  iterations = " << solverCG.iters() << "\n";
+            }
 
             if(out.size() != u.size())out.resize(u.size());
 
             viennacl::copy(u.begin(), u.end(), out.data());
+
+            _calculationTimer.stop();
+
+            /// \todo remove cout
+            std::cout << " Time = " << _calculationTimer.getTimeSpanAsString() << " seconds\n";
         }
 
         public : virtual ~AbstractProblem() noexcept {}

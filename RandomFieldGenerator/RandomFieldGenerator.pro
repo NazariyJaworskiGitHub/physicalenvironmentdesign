@@ -110,7 +110,8 @@ SOURCES += main.cpp \
     TESTS/test_polynomial.cpp \
     TESTS/test_fespacesimplex.cpp \
     TESTS/test_problem.cpp \
-    TESTS/test_domain.cpp
+    TESTS/test_domain.cpp \
+    TESTS/test_synthesis.cpp
 
 HEADERS += \
     CLMANAGER/clmanager.h \
@@ -157,7 +158,9 @@ HEADERS += \
     FEM/problem.h \
     FEM/staticconstants.h \
     TESTS/test_problem.h \
-    TESTS/test_domain.h
+    TESTS/test_domain.h \
+    SYNTHESIS/synthesis.h \
+    TESTS/test_synthesis.h
 
 FORMS += \
     UI/volumeglrenderformatdialog.ui \

@@ -11,6 +11,7 @@
 #include "test_fespacesimplex.h"
 #include "test_domain.h"
 #include "test_problem.h"
+#include "test_synthesis.h"
 #include "test_simulation.h"
 
 //tip! use "-vs" to see emited signals
@@ -58,6 +59,11 @@ void run_tests_Problem()
     Test_Problem _myTest_Problem;
     QTest::qExec(&_myTest_Problem, arguments);
 }
+void run_tests_Synthesis()
+{
+    Test_Synthesis _myTest_Synthesis;
+    QTest::qExec(&_myTest_Synthesis, arguments);
+}
 void run_tests_Simulation()
 {
     Test_Simulation _myTest_Simulation;
@@ -73,6 +79,7 @@ void run_tests_all()
     run_tests_FESpaceSimplex();
     run_tests_Domain();
     run_tests_Problem();
+    run_tests_Synthesis();
     run_tests_Simulation();
 }
 #endif // TESTS_RUNNER_H
