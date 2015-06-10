@@ -85,20 +85,17 @@ int main(int argc, char *argv[])
     //    _render.show();
 
 //    ElasticityProblem problem(RVEDomain);
-////    problem.BCManager.addDirichletBC(LEFT, {0,0,0});
-////    problem.BCManager.DirichletBCs[2]->setVoid(1);
-////    problem.BCManager.DirichletBCs[2]->setVoid(2);
 //    problem.BCManager.addNeumannBC(LEFT, {30,0,0});
-//    problem.BCManager.NeumannBCs[2]->setVoid(1);
-//    problem.BCManager.NeumannBCs[2]->setVoid(2);
+//    problem.BCManager.NeumannBCs[LEFT]->setVoid(1);
+//    problem.BCManager.NeumannBCs[LEFT]->setVoid(2);
 //    problem.BCManager.addDirichletBC(RIGHT,{0,0,0});
-//    problem.BCManager.DirichletBCs[3]->setVoid(1);
-//    problem.BCManager.DirichletBCs[3]->setVoid(2);
+//    problem.BCManager.DirichletBCs[RIGHT]->setVoid(1);
+//    problem.BCManager.DirichletBCs[RIGHT]->setVoid(2);
 //    // dUx = lF/E  E = lF/dUx
 //    // v   = |dUy/dUx| = |dUz/dUx|
 
 //    std::vector<float> displacement;
-//    problem.solve(1e-8f,1000,displacement);
+//    problem.solve(1e-6f,1000,displacement);
 
 //    std::vector<float> uX;
 //    std::vector<float> uY;
@@ -109,10 +106,6 @@ int main(int argc, char *argv[])
 //        uX.push_back(displacement[i*3+0]);
 //        uY.push_back(displacement[i*3+1]);
 //        uZ.push_back(displacement[i*3+2]);
-
-////        std::cout << displacement[i*3+0] << " "
-////                  << displacement[i*3+1] << " "
-////                  << displacement[i*3+2] << "\n";
 //    }
 //    displacement.clear();
 
@@ -121,9 +114,6 @@ int main(int argc, char *argv[])
 //            std::fabs(uX[0]-uX[size-1]) << "\n";
 //    std::cout << "v = " << std::fabs(uZ[0]-uZ[size*size*(size-1)])/
 //            std::fabs(uX[0]-uX[size-1]) << "\n";
-
-//    _TotalCalculationTimer.stop();
-//    std::cout << "Total: " << _TotalCalculationTimer.getTimeSpanAsString() << " seconds" << std::endl;
 
 //    UserInterface::VolumeGLRender _renderUX(
 //                _RVE.getSize(), _RVE.getData(), uX.data(), NULL);
@@ -151,8 +141,9 @@ int main(int argc, char *argv[])
     problem.BCManager.NeumannBCs[3]->setVoid(2);
     problem.BCManager.NeumannBCs[3]->setVoid(3);
 
+    /// \todo some bug with thermoelasticity
     std::vector<float> temperatureDisplacement;
-    problem.solve(1e-8f,1000,temperatureDisplacement,true);
+    problem.solve(1e-6f,1000,temperatureDisplacement,true);
 
     std::vector<float> T;
     std::vector<float> uX;
@@ -172,12 +163,6 @@ int main(int argc, char *argv[])
                   << temperatureDisplacement[i*4+3] << "\n";
     }
     temperatureDisplacement.clear();
-
-//    std::cout << "E = " << length*30/std::fabs(uX[0]-uX[size-1]) << "\n";
-//    std::cout << "v = " << std::fabs(uY[0]-uY[size*(size-1)])/
-//            std::fabs(uX[0]-uX[size-1]) << "\n";
-//    std::cout << "v = " << std::fabs(uZ[0]-uZ[size*size*(size-1)])/
-//            std::fabs(uX[0]-uX[size-1]) << "\n";
 
     _TotalCalculationTimer.stop();
     std::cout << "Total: " << _TotalCalculationTimer.getTimeSpanAsString() << " seconds" << std::endl;

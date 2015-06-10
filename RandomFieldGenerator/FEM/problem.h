@@ -50,26 +50,12 @@ namespace FEM
         public : void addNeumannBC(const SIDES side, const std::initializer_list<float> val)
         {
             BoundaryCondition *newBC = new BoundaryCondition(val);
-            switch (side) {
-            case TOP:NeumannBCs[0]=newBC;break;
-            case BOTTOM:NeumannBCs[1]=newBC;break;
-            case LEFT:NeumannBCs[2]=newBC;break;
-            case RIGHT:NeumannBCs[3]=newBC;break;
-            case FRONT:NeumannBCs[4]=newBC;break;
-            case BACK:NeumannBCs[5]=newBC;break;
-            }
+            NeumannBCs[side]=newBC;
         }
         public : void addDirichletBC(const SIDES side, const std::initializer_list<float> val)
         {
             BoundaryCondition *newBC = new BoundaryCondition(val);
-            switch (side) {
-            case TOP:DirichletBCs[0]=newBC;break;
-            case BOTTOM:DirichletBCs[1]=newBC;break;
-            case LEFT:DirichletBCs[2]=newBC;break;
-            case RIGHT:DirichletBCs[3]=newBC;break;
-            case FRONT:DirichletBCs[4]=newBC;break;
-            case BACK:DirichletBCs[5]=newBC;break;
-            }
+            DirichletBCs[side]=newBC;
         }
         public : void cleanBCs() noexcept
         {
@@ -197,93 +183,93 @@ namespace FEM
                     NODES_TRIPLET triplet;
                     float _A_3 = _domain.fixedTetrahedronSideArea()/3.0;
                     // TOP
-                    if(BCManager.NeumannBCs[0] && element.isOnSide(1,_domain.size(),triplet))
+                    if(BCManager.NeumannBCs[TOP] && element.isOnSide(1,_domain.size(),triplet))
                         for(int i=0; i<_DegreesOfFreedom_; ++i)
-                            if(!BCManager.NeumannBCs[0]->isVoid(i))
+                            if(!BCManager.NeumannBCs[TOP]->isVoid(i))
                                 applyLocalNeumannConditions(
-                                            triplet,i,BCManager.NeumannBCs[0]->c(i)*_A_3,f);
+                                            triplet,i,BCManager.NeumannBCs[TOP]->c(i)*_A_3,f);
                     // BOTTOM
-                    if(BCManager.NeumannBCs[1] && element.isOnSide(1,0,triplet))
+                    if(BCManager.NeumannBCs[BOTTOM] && element.isOnSide(1,0,triplet))
                         for(int i=0; i<_DegreesOfFreedom_; ++i)
-                            if(!BCManager.NeumannBCs[1]->isVoid(i))
+                            if(!BCManager.NeumannBCs[BOTTOM]->isVoid(i))
                                 applyLocalNeumannConditions(
-                                            triplet,i,BCManager.NeumannBCs[1]->c(i)*_A_3,f);
+                                            triplet,i,BCManager.NeumannBCs[BOTTOM]->c(i)*_A_3,f);
                     // LEFT
-                    if(BCManager.NeumannBCs[2] && element.isOnSide(0,0,triplet))
+                    if(BCManager.NeumannBCs[LEFT] && element.isOnSide(0,0,triplet))
                         for(int i=0; i<_DegreesOfFreedom_; ++i)
-                            if(!BCManager.NeumannBCs[2]->isVoid(i))
+                            if(!BCManager.NeumannBCs[LEFT]->isVoid(i))
                                 applyLocalNeumannConditions(
-                                            triplet,i,BCManager.NeumannBCs[2]->c(i)*_A_3,f);
+                                            triplet,i,BCManager.NeumannBCs[LEFT]->c(i)*_A_3,f);
                     // RIGHT
-                    if(BCManager.NeumannBCs[3] && element.isOnSide(0,_domain.size(),triplet))
+                    if(BCManager.NeumannBCs[RIGHT] && element.isOnSide(0,_domain.size(),triplet))
                         for(int i=0; i<_DegreesOfFreedom_; ++i)
-                            if(!BCManager.NeumannBCs[3]->isVoid(i))
+                            if(!BCManager.NeumannBCs[RIGHT]->isVoid(i))
                                 applyLocalNeumannConditions(
-                                            triplet,i,BCManager.NeumannBCs[3]->c(i)*_A_3,f);
+                                            triplet,i,BCManager.NeumannBCs[RIGHT]->c(i)*_A_3,f);
                     // FRONT
-                    if(BCManager.NeumannBCs[4] && element.isOnSide(2,0,triplet))
+                    if(BCManager.NeumannBCs[FRONT] && element.isOnSide(2,0,triplet))
                         for(int i=0; i<_DegreesOfFreedom_; ++i)
-                            if(!BCManager.NeumannBCs[4]->isVoid(i))
+                            if(!BCManager.NeumannBCs[FRONT]->isVoid(i))
                                 applyLocalNeumannConditions(
-                                            triplet,i,BCManager.NeumannBCs[4]->c(i)*_A_3,f);
+                                            triplet,i,BCManager.NeumannBCs[FRONT]->c(i)*_A_3,f);
                     // BACK
-                    if(BCManager.NeumannBCs[5] && element.isOnSide(2,_domain.size(),triplet))
+                    if(BCManager.NeumannBCs[BACK] && element.isOnSide(2,_domain.size(),triplet))
                         for(int i=0; i<_DegreesOfFreedom_; ++i)
-                            if(!BCManager.NeumannBCs[5]->isVoid(i))
+                            if(!BCManager.NeumannBCs[BACK]->isVoid(i))
                                 applyLocalNeumannConditions(
-                                            triplet,i,BCManager.NeumannBCs[5]->c(i)*_A_3,f);
+                                            triplet,i,BCManager.NeumannBCs[BACK]->c(i)*_A_3,f);
                 }
 
                 // Dirichlet boundary conditions
                 {
                     // TOP
                     for(int i=0; i<4; ++i)
-                        if(BCManager.DirichletBCs[0] && element[i][1] == _domain.size())
+                        if(BCManager.DirichletBCs[TOP] && element[i][1] == _domain.size())
                             for(int j=0; j<_DegreesOfFreedom_; ++j)
-                                if(!BCManager.DirichletBCs[0]->isVoid(j))
+                                if(!BCManager.DirichletBCs[TOP]->isVoid(j))
                                     applyLocalDirichletConditions(
                                                 i*_DegreesOfFreedom_+j,
-                                                BCManager.DirichletBCs[0]->c(j),K,f);
+                                                BCManager.DirichletBCs[TOP]->c(j),K,f);
                     // BOTTOM
                     for(int i=0; i<4; ++i)
-                        if(BCManager.DirichletBCs[1] && element[i][1] == 0)
+                        if(BCManager.DirichletBCs[BOTTOM] && element[i][1] == 0)
                             for(int j=0; j<_DegreesOfFreedom_; ++j)
-                                if(!BCManager.DirichletBCs[1]->isVoid(j))
+                                if(!BCManager.DirichletBCs[BOTTOM]->isVoid(j))
                                     applyLocalDirichletConditions(
                                                 i*_DegreesOfFreedom_+j,
-                                                BCManager.DirichletBCs[1]->c(j),K,f);
+                                                BCManager.DirichletBCs[BOTTOM]->c(j),K,f);
                     // LEFT
                     for(int i=0; i<4; ++i)
-                        if(BCManager.DirichletBCs[2] && element[i][0] == 0)
+                        if(BCManager.DirichletBCs[LEFT] && element[i][0] == 0)
                             for(int j=0; j<_DegreesOfFreedom_; ++j)
-                                if(!BCManager.DirichletBCs[2]->isVoid(j))
+                                if(!BCManager.DirichletBCs[LEFT]->isVoid(j))
                                     applyLocalDirichletConditions(
                                                 i*_DegreesOfFreedom_+j,
-                                                BCManager.DirichletBCs[2]->c(j),K,f);
+                                                BCManager.DirichletBCs[LEFT]->c(j),K,f);
                     // RIGHT
                     for(int i=0; i<4; ++i)
-                        if(BCManager.DirichletBCs[3] && element[i][0] == _domain.size())
+                        if(BCManager.DirichletBCs[RIGHT] && element[i][0] == _domain.size())
                             for(int j=0; j<_DegreesOfFreedom_; ++j)
-                                if(!BCManager.DirichletBCs[3]->isVoid(j))
+                                if(!BCManager.DirichletBCs[RIGHT]->isVoid(j))
                                     applyLocalDirichletConditions(
                                                 i*_DegreesOfFreedom_+j,
-                                                BCManager.DirichletBCs[3]->c(j),K,f);
+                                                BCManager.DirichletBCs[RIGHT]->c(j),K,f);
                     // FRONT
                     for(int i=0; i<4; ++i)
-                        if(BCManager.DirichletBCs[4] && element[i][2] == 0)
+                        if(BCManager.DirichletBCs[FRONT] && element[i][2] == 0)
                             for(int j=0; j<_DegreesOfFreedom_; ++j)
-                                if(!BCManager.DirichletBCs[4]->isVoid(j))
+                                if(!BCManager.DirichletBCs[FRONT]->isVoid(j))
                                     applyLocalDirichletConditions(
                                                 i*_DegreesOfFreedom_+j,
-                                                BCManager.DirichletBCs[4]->c(j),K,f);
+                                                BCManager.DirichletBCs[FRONT]->c(j),K,f);
                     // BACK
                     for(int i=0; i<4; ++i)
-                        if(BCManager.DirichletBCs[5] && element[i][2] == _domain.size())
+                        if(BCManager.DirichletBCs[BACK] && element[i][2] == _domain.size())
                             for(int j=0; j<_DegreesOfFreedom_; ++j)
-                                if(!BCManager.DirichletBCs[5]->isVoid(j))
+                                if(!BCManager.DirichletBCs[BACK]->isVoid(j))
                                     applyLocalDirichletConditions(
                                                 i*_DegreesOfFreedom_+j,
-                                                BCManager.DirichletBCs[5]->c(j),K,f);
+                                                BCManager.DirichletBCs[BACK]->c(j),K,f);
                 }
 
                 // Add local matrices to global
@@ -292,7 +278,7 @@ namespace FEM
                     for(long j=0; j<4; ++j)
                         for(long p=0; p<_DegreesOfFreedom_; ++p)
                             for(long q=0; q<_DegreesOfFreedom_; ++q)
-                                if(K(i*_DegreesOfFreedom_+p,j*_DegreesOfFreedom_+q) != 0)
+                                //if(K(i*_DegreesOfFreedom_+p,j*_DegreesOfFreedom_+q) != 0)
                                     sparseMatrix[element.indexes[i]*_DegreesOfFreedom_+p]
                                             [element.indexes[j]*_DegreesOfFreedom_+q] +=
                                             K(i*_DegreesOfFreedom_+p,j*_DegreesOfFreedom_+q);

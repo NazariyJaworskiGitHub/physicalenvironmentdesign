@@ -6,12 +6,12 @@
 namespace FEM
 {
     enum SIDES{
-        TOP     = 0b00000001,
-        BOTTOM  = 0b00000010,
-        LEFT    = 0b00000100,
-        RIGHT   = 0b00001000,
-        FRONT   = 0b00010000,
-        BACK    = 0b00100000
+        TOP     = 0,
+        BOTTOM  = 1,
+        LEFT    = 2,
+        RIGHT   = 3,
+        FRONT   = 4,
+        BACK    = 5
     };
     enum NODES_TRIPLET{ABC, ABD, ACD, BCD};
 
@@ -40,6 +40,7 @@ namespace FEM
             case 3: return d;
             }
         }
+        // axis: 0 - X, 1 - Y, 2 - Z
         public: bool isOnSide(const int axis, const float val, NODES_TRIPLET &out) const noexcept{
             if(a[axis] == val && b[axis] == val && c[axis] == val){out = ABC; return true;}
             if(a[axis] == val && b[axis] == val && d[axis] == val){out = ABD; return true;}

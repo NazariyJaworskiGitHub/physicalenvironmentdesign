@@ -275,12 +275,13 @@ void Test_Problem::test_Elasticity_fullCycle()
     problem.BCManager.cleanBCs();
 
     problem.BCManager.addNeumannBC(LEFT, {3000.0f,0,0});
-    problem.BCManager.NeumannBCs[2]->setVoid(1);
-    problem.BCManager.NeumannBCs[2]->setVoid(2);
+    problem.BCManager.NeumannBCs[LEFT]->setVoid(1);
+    problem.BCManager.NeumannBCs[LEFT]->setVoid(2);
     problem.BCManager.addDirichletBC(RIGHT,{0,0,0});
-    problem.BCManager.DirichletBCs[3]->setVoid(1);
-    problem.BCManager.DirichletBCs[3]->setVoid(2);
+    problem.BCManager.DirichletBCs[RIGHT]->setVoid(1);
+    problem.BCManager.DirichletBCs[RIGHT]->setVoid(2);
 
+    /// \todo some bug, if accuracy is 1e-8f
     problem.solve(1e-6f,100,displacement);
 
     uX.clear();
