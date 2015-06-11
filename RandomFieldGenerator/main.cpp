@@ -49,16 +49,16 @@ int main(int argc, char *argv[])
     _consoleRunner.writeToOutput("Tests done\n");
 
     ///////////////////////////////////////////////////////////////////////////////////////
-    Timer _TotalCalculationTimer;
-    _TotalCalculationTimer.start();
+//    Timer _TotalCalculationTimer;
+//    _TotalCalculationTimer.start();
 
-    float length = 2;
-    int size = 2;
-    RepresentativeVolumeElement _RVE(size,length);
-    Characteristics ch{4, 480, 1.0/3.0, 1.0/600.0, 0};
+//    float length = 2;
+//    int size = 8;
+//    RepresentativeVolumeElement _RVE(size,length);
+//    Characteristics ch{4, 480, 1.0/3.0, 1.0/600.0, 0};
 
-    Domain RVEDomain(_RVE);
-    RVEDomain.addMaterial(0,1,ch);
+//    Domain RVEDomain(_RVE);
+//    RVEDomain.addMaterial(0,1,ch);
 
 //    HeatConductionProblem problem(RVEDomain);
 ////    problem.BCManager.addNeumannBC(LEFT, {100});
@@ -132,40 +132,40 @@ int main(int argc, char *argv[])
 //    _renderUZ.setBoundingBoxRepresentationSize(2);
 //    _renderUZ.resize(800,600);
 //    _renderUZ.show();
-    ThermoelasticityProblem problem(RVEDomain);
-    problem.BCManager.addDirichletBC(LEFT, {30,0,-1,-1});
-    problem.BCManager.DirichletBCs[2]->setVoid(2);
-    problem.BCManager.DirichletBCs[2]->setVoid(3);
-    problem.BCManager.addNeumannBC(RIGHT,{100,-1,-1,-1});
-    problem.BCManager.NeumannBCs[3]->setVoid(1);
-    problem.BCManager.NeumannBCs[3]->setVoid(2);
-    problem.BCManager.NeumannBCs[3]->setVoid(3);
+//    ThermoelasticityProblem problem(RVEDomain);
+//    problem.BCManager.addDirichletBC(LEFT, {30,0,-1,-1});
+//    problem.BCManager.DirichletBCs[2]->setFloating(2);
+//    problem.BCManager.DirichletBCs[2]->setFloating(3);
+//    problem.BCManager.addNeumannBC(RIGHT,{100,-1,-1,-1});
+//    problem.BCManager.NeumannBCs[3]->setFloating(1);
+//    problem.BCManager.NeumannBCs[3]->setFloating(2);
+//    problem.BCManager.NeumannBCs[3]->setFloating(3);
 
-    /// \todo some bug with thermoelasticity
-    std::vector<float> temperatureDisplacement;
-    problem.solve(1e-6f,1000,temperatureDisplacement,true);
+//    /// \todo some bug with thermoelasticity
+//    std::vector<float> temperatureDisplacement;
+//    problem.solve(1e-4f,1000,temperatureDisplacement,true);
 
-    std::vector<float> T;
-    std::vector<float> uX;
-    std::vector<float> uY;
-    std::vector<float> uZ;
+//    std::vector<float> T;
+//    std::vector<float> uX;
+//    std::vector<float> uY;
+//    std::vector<float> uZ;
 
-    for(unsigned i=0; i<temperatureDisplacement.size()/4; ++i)
-    {
-        T.push_back(temperatureDisplacement[i*4+0]);
-        uX.push_back(temperatureDisplacement[i*4+1]);
-        uY.push_back(temperatureDisplacement[i*4+2]);
-        uZ.push_back(temperatureDisplacement[i*4+3]);
+//    for(unsigned i=0; i<temperatureDisplacement.size()/4; ++i)
+//    {
+//        T.push_back(temperatureDisplacement[i*4+0]);
+//        uX.push_back(temperatureDisplacement[i*4+1]);
+//        uY.push_back(temperatureDisplacement[i*4+2]);
+//        uZ.push_back(temperatureDisplacement[i*4+3]);
 
-        std::cout << temperatureDisplacement[i*4+0] << " "
-                  << temperatureDisplacement[i*4+1] << " "
-                  << temperatureDisplacement[i*4+2] << " "
-                  << temperatureDisplacement[i*4+3] << "\n";
-    }
-    temperatureDisplacement.clear();
+////        std::cout << temperatureDisplacement[i*4+0] << " "
+////                  << temperatureDisplacement[i*4+1] << " "
+////                  << temperatureDisplacement[i*4+2] << " "
+////                  << temperatureDisplacement[i*4+3] << "\n";
+//    }
+//    temperatureDisplacement.clear();
 
-    _TotalCalculationTimer.stop();
-    std::cout << "Total: " << _TotalCalculationTimer.getTimeSpanAsString() << " seconds" << std::endl;
+//    _TotalCalculationTimer.stop();
+//    std::cout << "Total: " << _TotalCalculationTimer.getTimeSpanAsString() << " seconds" << std::endl;
 
 
 /*    ///////////////////////////////////////////////////////////////////////////////////////

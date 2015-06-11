@@ -29,7 +29,7 @@ namespace FEM
             private: bool _voidMask[_DegreesOfFreedom_];
             public : float c(int index = 0) const noexcept {return _c0[index];}
             public : bool isVoid(int index = 0) const noexcept {return _voidMask[index];}
-            public : void setVoid(int index) noexcept {_voidMask[index]=true;}
+            public : void setFloating(int index) noexcept {_voidMask[index]=true;}
             public : BoundaryCondition(const std::initializer_list<float> val)
             {
                 std::copy(val.begin(), val.end(), _c0);
@@ -278,7 +278,7 @@ namespace FEM
                     for(long j=0; j<4; ++j)
                         for(long p=0; p<_DegreesOfFreedom_; ++p)
                             for(long q=0; q<_DegreesOfFreedom_; ++q)
-                                //if(K(i*_DegreesOfFreedom_+p,j*_DegreesOfFreedom_+q) != 0)
+                                if(K(i*_DegreesOfFreedom_+p,j*_DegreesOfFreedom_+q) != 0)
                                     sparseMatrix[element.indexes[i]*_DegreesOfFreedom_+p]
                                             [element.indexes[j]*_DegreesOfFreedom_+q] +=
                                             K(i*_DegreesOfFreedom_+p,j*_DegreesOfFreedom_+q);
