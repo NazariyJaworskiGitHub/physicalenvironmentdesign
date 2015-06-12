@@ -18,7 +18,7 @@ namespace Synthesis
             float &effHeatConductionCoefficient,
             float &minHeatConductionCoefficient,
             float &maxHeatConductionCoefficient,
-            const float eps = 1e-6f,
+            const double eps = 1e-6,
             const int maxIteration = 10000) noexcept
     {
         // need this to get into corresponding floating point numbers
@@ -47,17 +47,16 @@ namespace Synthesis
                 float _curVal = temperature[
                         0 + discreteSize*j + k*discreteSize*discreteSize];
                 effdT += _curVal;
-                // note that min and max are replaced
-                if(_curVal > mindT) mindT = _curVal;
-                if(_curVal < maxdT) maxdT = _curVal;
+                if(_curVal < mindT) mindT = _curVal;
+                if(_curVal > maxdT) maxdT = _curVal;
             }
         effdT /= discreteSize*discreteSize;
         effdT = (effdT - _T0);
         mindT = (mindT - _T0);
         maxdT = (maxdT - _T0);
         effHeatConductionCoefficient = flux * RVEDomain.size() / effdT;
-        minHeatConductionCoefficient = flux * RVEDomain.size() / mindT;
-        maxHeatConductionCoefficient = flux * RVEDomain.size() / maxdT;
+        minHeatConductionCoefficient = flux * RVEDomain.size() / maxdT; // note min and max
+        maxHeatConductionCoefficient = flux * RVEDomain.size() / mindT;
     }
 
     /// \todo some bug, if accuracy is 1e-8f
@@ -69,7 +68,7 @@ namespace Synthesis
             float &effPoissonsRatio,
             float &minPoissonsRatio,
             float &maxPoissonsRatio,
-            const float eps = 1e-6f,
+            const double eps = 1e-6,
             const int maxIteration = 10000) noexcept
     {
         // need this to get into corresponding floating point numbers
@@ -103,37 +102,35 @@ namespace Synthesis
                 float _curVal = displacement[
                         0 + discreteSize*j*3 + k*discreteSize*discreteSize*3];
                 effdux += _curVal;
-                // note that min and max are replaced
-                if(_curVal > mindux) mindux = _curVal;
-                if(_curVal < maxdux) maxdux = _curVal;
+                if(_curVal < mindux) mindux = _curVal;
+                if(_curVal > maxdux) maxdux = _curVal;
             }
         effdux /= discreteSize*discreteSize;
         effdux = (effdux - _U0);
         mindux = (mindux - _U0);
         maxdux = (maxdux - _U0);
         effElasticModulus = flux * RVEDomain.size() / effdux;
-        minElasticModulus = flux * RVEDomain.size() / mindux;
-        maxElasticModulus = flux * RVEDomain.size() / maxdux;
+        minElasticModulus = flux * RVEDomain.size() / maxdux;   // note min and max
+        maxElasticModulus = flux * RVEDomain.size() / mindux;
 
         // v = |duy/dux| = |duz/dux|
         /// \todo it is only for Y axis
         float effduy = 0.0f;
-        float minduy = displacement[1] - displacement[1 + 3*discreteSize*(discreteSize-1)];
-        float maxduy = displacement[1] - displacement[1 + 3*discreteSize*(discreteSize-1)];
+        float minduy = std::fabs(displacement[1] - displacement[1 + 3*discreteSize*(discreteSize-1)]);
+        float maxduy = std::fabs(displacement[1] - displacement[1 + 3*discreteSize*(discreteSize-1)]);
         for(int k=0; k<discreteSize; ++k)          // z
             for(int i=0; i<discreteSize; ++i)      // x
             {
-                float _curVal = displacement[1 + i*3 + k*discreteSize*discreteSize*3] -
-                        displacement[1 + i*3 + (discreteSize-1)*discreteSize*3 + k*discreteSize*discreteSize*3];
+                float _curVal = std::fabs(displacement[1 + i*3 + k*discreteSize*discreteSize*3] -
+                        displacement[1 + i*3 + (discreteSize-1)*discreteSize*3 + k*discreteSize*discreteSize*3]);
                 effduy += _curVal;
                 if(_curVal < minduy) minduy = _curVal;
                 if(_curVal > maxduy) maxduy = _curVal;
             }
         effduy /= discreteSize*discreteSize;
-        effPoissonsRatio = std::fabs(effduy / effdux);
-        // note that min and max dux are replaced
-        minPoissonsRatio = std::fabs(minduy / mindux);
-        maxPoissonsRatio = std::fabs(maxduy / maxdux);
+        effPoissonsRatio = effduy / effdux;
+        minPoissonsRatio = minduy / maxdux;
+        maxPoissonsRatio = maxduy / mindux;
     }
     /// \todo some bug, if accuracy is 1e-8f
     /// note that matrix in this problem is non symmetric
@@ -145,7 +142,7 @@ namespace Synthesis
             float &effLinearTemperatureExpansionCoefficient,
             float &minLinearTemperatureExpansionCoefficient,
             float &maxLinearTemperatureExpansionCoefficient,
-            const float eps = 1e-4f,
+            const double eps = 1e-6,
             const int maxIteration = 10000) noexcept
     {
         // a = dux/(d*dT)

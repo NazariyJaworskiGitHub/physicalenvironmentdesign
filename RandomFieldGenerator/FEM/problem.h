@@ -289,7 +289,7 @@ namespace FEM
             }
         }
         public : void solve(
-            const float eps,
+            const double eps,
             const int maxIteration,
             std::vector<float> &out,
             const bool useBiCG = false) noexcept
