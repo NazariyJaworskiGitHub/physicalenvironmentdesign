@@ -31,6 +31,7 @@ class RepresentativeVolumeElement
     public : float getRepresentationSize() const noexcept {return _representationSize;}
     public : void setRepresentationSize(const float newRepresentationSize) noexcept {
         _representationSize = newRepresentationSize;}
+    public : long getRangeCellsNum(float minIntensity, float maxIntensity) const noexcept;
 
     /// Save current RVE to file (recommended extension *.RVE)
     public : void saveRVEToFile(const std::string &fileName) const;

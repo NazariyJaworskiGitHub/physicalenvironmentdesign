@@ -33,6 +33,8 @@
 
 #include "FEM/problem.h"
 
+#include "_SIMULATIONS/al_sic.h"
+
 int main(int argc, char *argv[])
 {
     Controller::ConsoleRunner _consoleRunner(std::cout, std::cin);
@@ -45,20 +47,21 @@ int main(int argc, char *argv[])
     OpenCL::setupViennaCL();
 
     ///////////////////////////////////////////////////////////////////////////////////////
-    run_tests_all();
-    _consoleRunner.writeToOutput("Tests done\n");
+//    run_tests_all();
+//    _consoleRunner.writeToOutput("Tests done\n");
+    Simulation::AlSiC_SphericalInclusionsSimulationTest( 16);
 
     ///////////////////////////////////////////////////////////////////////////////////////
-    Timer _TotalCalculationTimer;
-    _TotalCalculationTimer.start();
+//    Timer _TotalCalculationTimer;
+//    _TotalCalculationTimer.start();
 
-    float length = 2;
-    int size = 16;
-    RepresentativeVolumeElement _RVE(size,length);
-    Characteristics ch{4, 480, 1.0/4.0, 1.0/500.0, 0};
+//    float length = 2;
+//    int size = 16;
+//    RepresentativeVolumeElement _RVE(size,length);
+//    Characteristics ch{4, 480, 1.0/4.0, 1.0/500.0, 0};
 
-    Domain RVEDomain(_RVE);
-    RVEDomain.addMaterial(0,1,ch);
+//    Domain RVEDomain(_RVE);
+//    RVEDomain.addMaterial(0,1,ch);
 
 //    HeatConductionProblem problem(RVEDomain);
 ////    problem.BCManager.addNeumannBC(LEFT, {100});
@@ -132,87 +135,87 @@ int main(int argc, char *argv[])
 //    _renderUZ.setBoundingBoxRepresentationSize(2);
 //    _renderUZ.resize(800,600);
 //    _renderUZ.show();
-    ThermoelasticityProblem problem(RVEDomain);
-    problem.BCManager.addNeumannBC(FEM::LEFT, {100,0,0,0});
+//    ThermoelasticityProblem problem(RVEDomain);
+//    problem.BCManager.addNeumannBC(FEM::LEFT, {100,0,0,0});
 
-    problem.BCManager.addDirichletBC(FEM::TOP,{-1,-1,0,0});
-    problem.BCManager.DirichletBCs[FEM::TOP]->setFloating(0);
-    problem.BCManager.DirichletBCs[FEM::TOP]->setFloating(1);
+//    problem.BCManager.addDirichletBC(FEM::TOP,{-1,-1,0,0});
+//    problem.BCManager.DirichletBCs[FEM::TOP]->setFloating(0);
+//    problem.BCManager.DirichletBCs[FEM::TOP]->setFloating(1);
 
-    problem.BCManager.addDirichletBC(FEM::BOTTOM,{-1,-1,0,0});
-    problem.BCManager.DirichletBCs[FEM::BOTTOM]->setFloating(0);
-    problem.BCManager.DirichletBCs[FEM::BOTTOM]->setFloating(1);
+//    problem.BCManager.addDirichletBC(FEM::BOTTOM,{-1,-1,0,0});
+//    problem.BCManager.DirichletBCs[FEM::BOTTOM]->setFloating(0);
+//    problem.BCManager.DirichletBCs[FEM::BOTTOM]->setFloating(1);
 
-    problem.BCManager.addDirichletBC(FEM::FRONT,{-1,-1,0,0});
-    problem.BCManager.DirichletBCs[FEM::FRONT]->setFloating(0);
-    problem.BCManager.DirichletBCs[FEM::FRONT]->setFloating(1);
+//    problem.BCManager.addDirichletBC(FEM::FRONT,{-1,-1,0,0});
+//    problem.BCManager.DirichletBCs[FEM::FRONT]->setFloating(0);
+//    problem.BCManager.DirichletBCs[FEM::FRONT]->setFloating(1);
 
-    problem.BCManager.addDirichletBC(FEM::BACK,{-1,-1,0,0});
-    problem.BCManager.DirichletBCs[FEM::BACK]->setFloating(0);
-    problem.BCManager.DirichletBCs[FEM::BACK]->setFloating(1);
+//    problem.BCManager.addDirichletBC(FEM::BACK,{-1,-1,0,0});
+//    problem.BCManager.DirichletBCs[FEM::BACK]->setFloating(0);
+//    problem.BCManager.DirichletBCs[FEM::BACK]->setFloating(1);
 
-    problem.BCManager.addDirichletBC(FEM::RIGHT,{0,0,0,0});
+//    problem.BCManager.addDirichletBC(FEM::RIGHT,{0,0,0,0});
 //    problem.BCManager.DirichletBCs[FEM::RIGHT]->setFloating(2);
 //    problem.BCManager.DirichletBCs[FEM::RIGHT]->setFloating(3);
 
-    /// \todo some bug with thermoelasticity
-    std::vector<float> temperatureDisplacement;
-    problem.solve(1e-6,10000,temperatureDisplacement,true);
+//    /// \todo some bug with thermoelasticity
+//    std::vector<float> temperatureDisplacement;
+//    problem.solve(1e-6,10000,temperatureDisplacement,true);
 
-    std::vector<float> T;
-    std::vector<float> uX;
-    std::vector<float> uY;
-    std::vector<float> uZ;
+//    std::vector<float> T;
+//    std::vector<float> uX;
+//    std::vector<float> uY;
+//    std::vector<float> uZ;
 
-    for(unsigned i=0; i<temperatureDisplacement.size()/4; ++i)
-    {
-        T.push_back(temperatureDisplacement[i*4+0]);
-        uX.push_back(temperatureDisplacement[i*4+1]);
-        uY.push_back(temperatureDisplacement[i*4+2]);
-        uZ.push_back(temperatureDisplacement[i*4+3]);
+//    for(unsigned i=0; i<temperatureDisplacement.size()/4; ++i)
+//    {
+//        T.push_back(temperatureDisplacement[i*4+0]);
+//        uX.push_back(temperatureDisplacement[i*4+1]);
+//        uY.push_back(temperatureDisplacement[i*4+2]);
+//        uZ.push_back(temperatureDisplacement[i*4+3]);
 
 //        std::cout << temperatureDisplacement[i*4+0] << " "
 //                  << temperatureDisplacement[i*4+1] << " "
 //                  << temperatureDisplacement[i*4+2] << " "
 //                  << temperatureDisplacement[i*4+3] << "\n";
-    }
-    temperatureDisplacement.clear();
+//    }
+//    temperatureDisplacement.clear();
 
-    std::cout << "h = " << length*100/std::fabs(T[0]-T[size-1])
-              << " error = " << std::fabs(length*100/std::fabs(T[0]-T[size-1])-4.0)/4.0 << "\n";
-    std::cout << "a = " << std::fabs(uX[0]-uX[size-1])/length/std::fabs(T[0]-T[size-1])
-              << " error = " << std::fabs(std::fabs(uX[0]-uX[size-1])/length/std::fabs(T[0]-T[size-1])-1.0/500.0)/(1.0/500.0) << "\n";
+//    std::cout << "h = " << length*100/std::fabs(T[0]-T[size-1])
+//              << " error = " << std::fabs(length*100/std::fabs(T[0]-T[size-1])-4.0)/4.0 << "\n";
+//    std::cout << "a = " << std::fabs(uX[0]-uX[size-1])/length/std::fabs(T[0]-T[size-1])
+//              << " error = " << std::fabs(std::fabs(uX[0]-uX[size-1])/length/std::fabs(T[0]-T[size-1])-1.0/500.0)/(1.0/500.0) << "\n";
 
-    _TotalCalculationTimer.stop();
-    std::cout << "Total: " << _TotalCalculationTimer.getTimeSpanAsString() << " seconds" << std::endl;
+//    _TotalCalculationTimer.stop();
+//    std::cout << "Total: " << _TotalCalculationTimer.getTimeSpanAsString() << " seconds" << std::endl;
 
-    UserInterface::VolumeGLRender _renderT(
-                _RVE.getSize(), _RVE.getData(), T.data(), NULL);
-    _renderT.setWindowTitle("Temperature");
-    _renderT.setBoundingBoxRepresentationSize(2);
-    _renderT.resize(800,600);
-    _renderT.show();
+//    UserInterface::VolumeGLRender _renderT(
+//                _RVE.getSize(), _RVE.getData(), T.data(), NULL);
+//    _renderT.setWindowTitle("Temperature");
+//    _renderT.setBoundingBoxRepresentationSize(2);
+//    _renderT.resize(800,600);
+//    _renderT.show();
 
-    UserInterface::VolumeGLRender _renderUX(
-                _RVE.getSize(), _RVE.getData(), uX.data(), NULL);
-    _renderUX.setWindowTitle("Displacement X");
-    _renderUX.setBoundingBoxRepresentationSize(2);
-    _renderUX.resize(800,600);
-    _renderUX.show();
+//    UserInterface::VolumeGLRender _renderUX(
+//                _RVE.getSize(), _RVE.getData(), uX.data(), NULL);
+//    _renderUX.setWindowTitle("Displacement X");
+//    _renderUX.setBoundingBoxRepresentationSize(2);
+//    _renderUX.resize(800,600);
+//    _renderUX.show();
 
-    UserInterface::VolumeGLRender _renderUY(
-                _RVE.getSize(), _RVE.getData(), uY.data(), NULL);
-    _renderUY.setWindowTitle("Displacement Y");
-    _renderUY.setBoundingBoxRepresentationSize(2);
-    _renderUY.resize(800,600);
-    _renderUY.show();
+//    UserInterface::VolumeGLRender _renderUY(
+//                _RVE.getSize(), _RVE.getData(), uY.data(), NULL);
+//    _renderUY.setWindowTitle("Displacement Y");
+//    _renderUY.setBoundingBoxRepresentationSize(2);
+//    _renderUY.resize(800,600);
+//    _renderUY.show();
 
-    UserInterface::VolumeGLRender _renderUZ(
-                _RVE.getSize(), _RVE.getData(), uZ.data(), NULL);
-    _renderUZ.setWindowTitle("Displacement Z");
-    _renderUZ.setBoundingBoxRepresentationSize(2);
-    _renderUZ.resize(800,600);
-    _renderUZ.show();
+//    UserInterface::VolumeGLRender _renderUZ(
+//                _RVE.getSize(), _RVE.getData(), uZ.data(), NULL);
+//    _renderUZ.setWindowTitle("Displacement Z");
+//    _renderUZ.setBoundingBoxRepresentationSize(2);
+//    _renderUZ.resize(800,600);
+//    _renderUZ.show();
 
 /*    ///////////////////////////////////////////////////////////////////////////////////////
     OpenCL::CLManager::instance().setCurrentPlatform(0);

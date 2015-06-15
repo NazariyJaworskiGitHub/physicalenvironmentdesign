@@ -16,6 +16,19 @@ cl::Kernel *RepresentativeVolumeElement::_kernelVoronoiPtr = nullptr;
 
 #define _MASK_EPS_ 1.0f
 
+long RepresentativeVolumeElement::getRangeCellsNum(
+        float minIntensity, float maxIntensity) const noexcept
+{
+    long sum = 0;
+    for( long i = 0; i < _size; ++i)
+        for( long j = 0; j < _size; ++j)
+            for( long k = 0; k < _size; ++k)
+             if(_data[(i * _size * _size) + (j * _size) + k] >= minIntensity &&
+                     _data[(i * _size * _size) + (j * _size) + k] < maxIntensity)
+                 ++sum;
+    return sum;
+}
+
 void RepresentativeVolumeElement::saveRVEToFile(const std::string &fileName) const
 {
     std::ofstream _RVEFileStream;

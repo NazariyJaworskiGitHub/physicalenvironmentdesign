@@ -198,31 +198,30 @@ namespace Synthesis
                 float _curVal = temperatureDisplacement[
                         0 + discreteSize*j*4 + k*discreteSize*discreteSize*4];
                 effdT += _curVal;
-                // note that min and max are replaced
-                if(_curVal > mindT) mindT = _curVal;
-                if(_curVal < maxdT) maxdT = _curVal;
+                if(_curVal < mindT) mindT = _curVal;
+                if(_curVal > maxdT) maxdT = _curVal;
 
                 _curVal = temperatureDisplacement[
                         1 + discreteSize*j*4 + k*discreteSize*discreteSize*4];
                 effdux += _curVal;
-                if(_curVal < mindux) mindux = _curVal;
-                if(_curVal > maxdux) maxdux = _curVal;
+                // note, min and max are replaced because displacement is negative
+                if(_curVal > mindux) mindux = _curVal;
+                if(_curVal < maxdux) maxdux = _curVal;
             }
         effdT /= discreteSize*discreteSize;
         effdT = (effdT - _T0);
         mindT = (mindT - _T0);
         maxdT = (maxdT - _T0);
         effHeatConductionCoefficient = flux * RVEDomain.size() / effdT;
-        minHeatConductionCoefficient = flux * RVEDomain.size() / mindT;
-        maxHeatConductionCoefficient = flux * RVEDomain.size() / maxdT;
+        minHeatConductionCoefficient = flux * RVEDomain.size() / maxdT;
+        maxHeatConductionCoefficient = flux * RVEDomain.size() / mindT;
         effdux /= discreteSize*discreteSize;
 //        effdux = (effdux - _U0);
 //        mindux = (mindux - _U0);
 //        maxdux = (maxdux - _U0);
-        // note that min and max dT are replaced
         effLinearTemperatureExpansionCoefficient = std::fabs(effdux / (RVEDomain.size() * effdT));
-        minLinearTemperatureExpansionCoefficient = std::fabs(mindux / (RVEDomain.size() * mindT));
-        maxLinearTemperatureExpansionCoefficient = std::fabs(maxdux / (RVEDomain.size() * maxdT));
+        minLinearTemperatureExpansionCoefficient = std::fabs(mindux / (RVEDomain.size() * maxdT));
+        maxLinearTemperatureExpansionCoefficient = std::fabs(maxdux / (RVEDomain.size() * mindT));
     }
 }
 
