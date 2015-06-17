@@ -27,7 +27,8 @@ namespace Simulation
             int RVEDiscreteSize,
             float RVEPhysicalLength,
             FEM::Characteristics Matrix,
-            FEM::Characteristics Phase)
+            FEM::Characteristics Phase,
+            int volumeIterations)
     {
         Timer timer;
         timer.start();
@@ -37,8 +38,6 @@ namespace Simulation
         FEM::Domain RVEDomain(RVE);
         RVEDomain.addMaterial(0,0.5,Matrix);
         RVEDomain.addMaterial(0.5,2,Phase);   // 1<2 (excluding max intensity
-
-        int expNum = RVEDiscreteSize;
 
         std::ofstream OutputFile;
         OutputFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
@@ -57,7 +56,7 @@ namespace Simulation
                    << " a=" << Phase.linearTemperatuceExpansionCoefficient << "\n";
         OutputFile << "R+1 N R vol effh minh maxh effE minE maxE effv minv maxv effa mina maxa\n";
 
-        for(int i=0; i<=expNum/4; ++i)
+        for(int i=0; i<=RVEDiscreteSize/2; ++i)
         {
             RVE.cleanData();
 
@@ -70,11 +69,11 @@ namespace Simulation
             int n=0;
             float PhaseVol = 0;
 
-            for(int j=0; j<=expNum*2; ++j)
+            for(int j=0; j<=volumeIterations; ++j)
             {
-                float targetVol=(float)(j)/expNum/2.0;
+                float targetVol=(float)(j)/volumeIterations;
                 if(PhaseVol > targetVol) continue;
-                if(j!=0 && j<expNum*2)
+                if(j!=0 && j<volumeIterations)
                 {
                     for(;;)
                     {
@@ -85,7 +84,7 @@ namespace Simulation
                         if(PhaseVol >= targetVol || PhaseVol >= 0.975) break;
                     }
                 }
-                else if(j == expNum*2)
+                else if(j == volumeIterations)
                 {
                     PhaseVol = 1;
                     RVE.cleanData();
