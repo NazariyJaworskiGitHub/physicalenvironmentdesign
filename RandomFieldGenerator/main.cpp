@@ -50,11 +50,14 @@ int main(int argc, char *argv[])
 //    run_tests_all();
 //    _consoleRunner.writeToOutput("Tests done\n");
 
-    //                          h       E       v       LCTE    unused
-    FEM::Characteristics Al{     210.0,   68.0, 0.36,   25.50,  0};
-    FEM::Characteristics SiC{    125.6,  410.0, 0.14,    4.51,  0};
-    FEM::Characteristics C{     2000.0, 1220.0, 0.20,    1.10,  0};
-    Simulation::SphericalInclusionsSimulationTest(32, 0.01, Al, C, 50);
+//    //                          h       E       v       LCTE    unused
+//    FEM::Characteristics Al{     210.0,   68.0, 0.36,   25.50,  0};
+//    FEM::Characteristics SiC{    125.6,  410.0, 0.14,    4.51,  0};
+//    FEM::Characteristics C{     2000.0, 1220.0, 0.20,    1.10,  0};
+//    Simulation::SphericalInclusionsSimulationTest(32, 0.01, Al, C, 50);
+
+    // 23.10.2015
+    Simulation::TavangarTest();
 
     ///////////////////////////////////////////////////////////////////////////////////////
 //    Timer _TotalCalculationTimer;
