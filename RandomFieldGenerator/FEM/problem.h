@@ -302,7 +302,8 @@ namespace FEM
             _calculationTimer.start();
 
             int size = _domain.discreteSize();
-            viennacl::compressed_matrix<float>  K(size*size*size*_DegreesOfFreedom_,size*size*size*_DegreesOfFreedom_);
+            viennacl::compressed_matrix<float>  K(size*size*size*_DegreesOfFreedom_,
+                                                  size*size*size*_DegreesOfFreedom_);
             viennacl::vector<float>             f(size*size*size*_DegreesOfFreedom_);
             viennacl::vector<float>             u(size*size*size*_DegreesOfFreedom_);
 
@@ -462,7 +463,50 @@ namespace FEM
             KM(element.a, element.b, element.c, element.d,
                DM(element.characteristics),output);
         }
+////////////////////////////////////////////////////////////////////////////////////////////
+        /// \todo TEST!!!
+        /// [stress] = [D][L][N]{u}
+        /// displacement - is the output from 'solve()' function
+        /// axis - 0..5 {x,y,z,xy,yz,xz}
+        public : void calculateStress(
+                const std::vector<float> &displacement,
+                const int axis,
+                std::vector<float> &stress) noexcept
+        {
+            stress.resize(_domain.discreteSize()*_domain.discreteSize()*_domain.discreteSize());
+            for(long el=0; el< _domain.elementsNum(); ++el)
+            {
+                const FixedTetrahedron element = _domain[el];
 
+                MathUtils::Matrix::StaticMatrix<float,12,1> u;
+                for(long i=0; i<4; ++i)
+                    for(long p=0; p<3; ++p)
+                        u(i*3+p,0) = displacement[element.indexes[i]*3+p];
+
+                TetrahedronMatrix CInv(element.a,element.b,element.c,element.d);
+                //float volume = CInv.inverse4x4() / 6.0;
+                CInv.inverse4x4();
+
+                MathUtils::Matrix::StaticMatrix<float,6,12> B;
+                for(int i=0; i<6*12; ++i) B.data()[i]=0;
+                B(0,0) = CInv(1,0); B(0,3) = CInv(1,1); B(0,6) = CInv(1,2); B(0,9)  = CInv(1,3);
+                B(1,1) = CInv(2,0); B(1,4) = CInv(2,1); B(1,7) = CInv(2,2); B(1,10) = CInv(2,3);
+                B(2,2) = CInv(3,0); B(2,5) = CInv(3,1); B(2,8) = CInv(3,2); B(2,11) = CInv(3,3);
+                B(3,0) = CInv(2,0); B(3,3) = CInv(2,1); B(3,6) = CInv(2,2); B(3,9)  = CInv(2,3);
+                B(3,1) = CInv(1,0); B(3,4) = CInv(1,1); B(3,7) = CInv(1,2); B(3,10) = CInv(1,3);
+                B(4,0) = CInv(3,0); B(4,3) = CInv(3,1); B(4,6) = CInv(3,2); B(4,9)  = CInv(3,3);
+                B(4,2) = CInv(1,0); B(4,5) = CInv(1,1); B(4,8) = CInv(1,2); B(4,11) = CInv(1,3);
+                B(5,1) = CInv(3,0); B(5,4) = CInv(3,1); B(5,7) = CInv(3,2); B(5,10) = CInv(3,3);
+                B(5,2) = CInv(2,0); B(5,5) = CInv(2,1); B(5,8) = CInv(2,2); B(5,11) = CInv(2,3);
+
+                MathUtils::Matrix::StaticMatrix<float,6,1> localStress;
+                //localStress = volume * DM(element.characteristics) * B * u;
+                localStress = DM(element.characteristics) * B * u;
+
+                for(long i=0; i<4; ++i) stress[element.indexes[i]] = localStress(axis,0);
+            }
+        }
+////////////////////////////////////////////////////////////////////////////////////////////
         public : ~ElasticityProblem() noexcept final {}
     };
 

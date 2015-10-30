@@ -34,6 +34,7 @@
 #include "FEM/problem.h"
 
 #include "_SIMULATIONS/al_sic.h"
+#include "_SIMULATIONS/mechanical.h"
 
 int main(int argc, char *argv[])
 {
@@ -56,8 +57,106 @@ int main(int argc, char *argv[])
 //    FEM::Characteristics C{     2000.0, 1220.0, 0.20,    1.10,  0};
 //    Simulation::SphericalInclusionsSimulationTest(32, 0.01, Al, C, 50);
 
-    // 23.10.2015
-    Simulation::TavangarTest();
+//    // 23.10.2015
+//    Simulation::TavangarTest();
+
+    // 30.10.2015
+    Simulation::MechanicalTest1();
+
+    std::ofstream OutputFile;
+    OutputFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    OutputFile.open("MechanicalTest1.txt");
+    Timer timer;
+    timer.start();
+
+    FEM::Characteristics Phase{0, 105, 0.1, 0, 0};
+    FEM::Characteristics Matrix{0, 11, 0.35, 0, 0};
+    RepresentativeVolumeElement RVE(64,0.01);
+    FEM::Domain RVEDomain(RVE);
+    RVE.generateRandomEllipsoidIntense(32,32,32,30,30,0,1,0.25,0.25);
+    RVEDomain.addMaterial(0,0.5,Matrix);
+    RVEDomain.addMaterial(0.5,2,Phase);
+
+    FEM::ElasticityProblem problem(RVEDomain);
+    problem.BCManager.addNeumannBC(FEM::LEFT, {100,0,0});
+    problem.BCManager.NeumannBCs[FEM::LEFT]->setFloating(1);
+    problem.BCManager.NeumannBCs[FEM::LEFT]->setFloating(2);
+    problem.BCManager.addDirichletBC(FEM::RIGHT,{0,0,0});
+    problem.BCManager.DirichletBCs[FEM::RIGHT]->setFloating(1);
+    problem.BCManager.DirichletBCs[FEM::RIGHT]->setFloating(2);
+
+    std::vector<float> displacement;
+    problem.solve(1e-5f,10000,displacement);
+
+    std::vector<float> stressX;
+    std::vector<float> stressY;
+    std::vector<float> stressZ;
+    std::vector<float> stressXY;
+    problem.calculateStress(displacement,0,stressX);
+    problem.calculateStress(displacement,1,stressY);
+    problem.calculateStress(displacement,2,stressZ);
+    problem.calculateStress(displacement,3,stressXY);
+
+//    std::vector<float> uX;
+//    std::vector<float> uY;
+//    std::vector<float> uZ;
+
+//    for(unsigned i=0; i<displacement.size()/3; ++i)
+//    {
+//        uX.push_back(displacement[i*3+0]);
+//        uY.push_back(displacement[i*3+1]);
+//        uZ.push_back(displacement[i*3+2]);
+//    }
+    displacement.clear();
+
+    timer.stop();
+    std::cout << "Total: " << timer.getTimeSpanAsString() << " seconds" << std::endl;
+    OutputFile << "Total: " << timer.getTimeSpanAsString() << " seconds" << std::endl;
+    OutputFile.close();
+
+//    UserInterface::VolumeGLRenderRVE renderRVE(&RVE, NULL);
+//    renderRVE.setInfoString("");
+//    renderRVE.resize(800,600);
+//    renderRVE.show();
+
+//    UserInterface::VolumeGLRender renderUX(
+//                RVE.getSize(), RVE.getData(), uX.data(), NULL);
+//    renderUX.setBoundingBoxRepresentationSize(0.01);
+//    renderUX.resize(800,600);
+//    renderUX.show();
+
+//    UserInterface::VolumeGLRender renderUY(
+//                RVE.getSize(), RVE.getData(), uY.data(), NULL);
+//    renderUY.setBoundingBoxRepresentationSize(0.01);
+//    renderUY.resize(800,600);
+//    renderUY.show();
+
+//    UserInterface::VolumeGLRender renderUZ(
+//                RVE.getSize(), RVE.getData(), uZ.data(), NULL);
+//    renderUZ.setBoundingBoxRepresentationSize(0.01);
+//    renderUZ.resize(800,600);
+//    renderUZ.show();
+
+    UserInterface::VolumeGLRender renderStressX(
+                RVE.getSize(), RVE.getData(), stressX.data(), NULL);
+    renderStressX.setWindowTitle("StressX");
+    renderStressX.resize(800,600);
+    renderStressX.show();
+    UserInterface::VolumeGLRender renderStressY(
+                RVE.getSize(), RVE.getData(), stressY.data(), NULL);
+    renderStressY.setWindowTitle("StressY");
+    renderStressY.resize(800,600);
+    renderStressY.show();
+    UserInterface::VolumeGLRender renderStressZ(
+                RVE.getSize(), RVE.getData(), stressZ.data(), NULL);
+    renderStressZ.setWindowTitle("StressZ");
+    renderStressZ.resize(800,600);
+    renderStressZ.show();
+    UserInterface::VolumeGLRender renderStressXY(
+                RVE.getSize(), RVE.getData(), stressXY.data(), NULL);
+    renderStressXY.setWindowTitle("StressXY");
+    renderStressXY.resize(800,600);
+    renderStressXY.show();
 
     ///////////////////////////////////////////////////////////////////////////////////////
 //    Timer _TotalCalculationTimer;
