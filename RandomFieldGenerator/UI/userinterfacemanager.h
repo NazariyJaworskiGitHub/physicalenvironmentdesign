@@ -111,6 +111,9 @@ namespace UserInterface
             Q_SIGNAL void signal_generateVoronoiRandomCellsRVE_T(int cellNum);
             Q_SIGNAL void signal_generateVoronoiRandomCellsRVEDone_T();
 
+            Q_SIGNAL void signal_generateLayerRVE_T(int bottom, int top, float coreValue);
+            Q_SIGNAL void signal_generateLayerRVEDone_T();
+
         public : static UserInterfaceManager &instance();
 
         /// Use to bind UserInterfaceManager lifetime to consoleRunner lifetime

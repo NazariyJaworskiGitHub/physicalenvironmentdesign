@@ -2000,6 +2000,177 @@
      </property>
     </widget>
    </widget>
+   <widget class="QWidget" name="Layers">
+    <attribute name="title">
+     <string>Layers</string>
+    </attribute>
+    <widget class="QSlider" name="LayerTopSideSlider_Layer">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>9</y>
+       <width>281</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="minimum">
+      <number>0</number>
+     </property>
+     <property name="maximum">
+      <number>179</number>
+     </property>
+     <property name="value">
+      <number>0</number>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="LayerTopSideLineEdit_Layer">
+     <property name="geometry">
+      <rect>
+       <x>410</x>
+       <y>10</y>
+       <width>91</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="dragEnabled">
+      <bool>false</bool>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="LayerBottomSideLabel_Layer">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>40</y>
+       <width>101</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Layer bottom side</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="LayerBottomSideLineEdit_Layer">
+     <property name="geometry">
+      <rect>
+       <x>410</x>
+       <y>40</y>
+       <width>91</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="dragEnabled">
+      <bool>false</bool>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="LayerTopSideLabel_Layer">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>101</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Layer top side</string>
+     </property>
+    </widget>
+    <widget class="QSlider" name="LayerBottomSideSlider_Layer">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>39</y>
+       <width>281</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="minimum">
+      <number>0</number>
+     </property>
+     <property name="maximum">
+      <number>179</number>
+     </property>
+     <property name="value">
+      <number>0</number>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+    <widget class="QSlider" name="CoreIntensitySlider_Layer">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>69</y>
+       <width>281</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="minimum">
+      <number>1</number>
+     </property>
+     <property name="maximum">
+      <number>100</number>
+     </property>
+     <property name="value">
+      <number>100</number>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="CoreIntensityLineEdit_Layer">
+     <property name="geometry">
+      <rect>
+       <x>410</x>
+       <y>70</y>
+       <width>91</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="dragEnabled">
+      <bool>false</bool>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="CoreIntensityLabel_Layer">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>70</y>
+       <width>101</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Core intensity</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="addLayerButton_Layer">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>100</y>
+       <width>761</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Add layer</string>
+     </property>
+    </widget>
+   </widget>
   </widget>
   <widget class="QPushButton" name="LoadRVEButton">
    <property name="geometry">

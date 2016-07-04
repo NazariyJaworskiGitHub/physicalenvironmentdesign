@@ -142,6 +142,13 @@ class _EditRVECommand : public QObject, public ConsoleCommand
         connect(this, SIGNAL(signal_generateVoronoiRandomCellsRVEDone()),
                 &UserInterface::UserInterfaceManager::instance(),
                 SIGNAL(signal_generateVoronoiRandomCellsRVEDone_T()));
+
+        connect(&UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_generateLayerRVE_T(int, int, float)),
+                this, SLOT(generateLayerRVE(int, int, float)));
+        connect(this, SIGNAL(signal_generateLayerRVEDone()),
+                &UserInterface::UserInterfaceManager::instance(),
+                SIGNAL(signal_generateLayerRVEDone_T()));
     }
     public: Q_SIGNAL void signal_editRVEGUIStart(RepresentativeVolumeElement* ptrToRVE);
     public: Q_SLOT void editRVEGUIFinish(){
@@ -219,6 +226,9 @@ class _EditRVECommand : public QObject, public ConsoleCommand
 
     public: Q_SLOT void generateVoronoiRandomCellsRVE(int cellNum);
     public: Q_SIGNAL void signal_generateVoronoiRandomCellsRVEDone();
+
+    public: Q_SLOT void generateLayerRVE(int bottom, int top, float coreValue);
+    public: Q_SIGNAL void signal_generateLayerRVEDone();
 
     public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
 };
@@ -683,7 +693,34 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
                 console),
                 _manager(manager){}
         public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
-    } *_commandgenerateVoronoiRandomCellsRVE = nullptr;
+    } *_commandGenerateVoronoiRandomCellsRVE = nullptr;
+
+    /// generateLayerRVE ----------------------------------------------------------------------
+    public : std::string generateLayerRVE(
+            const std::string &name,
+            int bottom,
+            int top,
+            float coreValue) noexcept;
+    private: class _generateLayerRVECommand : public ConsoleCommand
+    {
+        private: RepresentativeVolumeElementConsoleInterface &_manager;
+        public: _generateLayerRVECommand(
+                RepresentativeVolumeElementConsoleInterface &manager, Console &console) :
+            ConsoleCommand(
+            //  "--------------------------------------------------------------------------------"
+                "generateLayerRVE",
+                "generateLayerRVE <Name> <bottomSide> <topSide>\n"
+                "Generate layer as a simple box on OY axis.\n"
+                "Arguments:\n"
+                "[string] <Name> - the name of RVE in RAM memory;\n"
+                "[int]    <bottomSide> - layer bottom side. Should be >= 0 and < layer top side.\n"
+                "[int]    <topSide> - layer top side. Should be < RVE size\n"
+                "               and > layer bottom side.\n"
+                "[float]  <coreValue> - (optional) intensity value of core [0:1], default = 1.\n",
+                console),
+                _manager(manager){}
+        public: int executeConsoleCommand(const std::vector<std::string> &argv) override;
+    } *_commandGenerateLayerRVE = nullptr;
 
     /// Constructor --------------------------------------------------------------------------
     public : RepresentativeVolumeElementConsoleInterface(Console &console):
@@ -708,8 +745,9 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
             new _generateOverlappingRandomEllipsoidsIntenseRVECommand(*this, console)),
         _commandGenerateOverlappingRandomBezierCurveIntenseRVE(
             new _generateOverlappingRandomBezierCurveIntenseRVECommand(*this, console)),
-        _commandgenerateVoronoiRandomCellsRVE(
-            new _generateVoronoiRandomCellsRVECommand(*this, console))
+        _commandGenerateVoronoiRandomCellsRVE(
+            new _generateVoronoiRandomCellsRVECommand(*this, console)),
+        _commandGenerateLayerRVE(new _generateLayerRVECommand(*this, console))
         {}
 
     /// Destructor ---------------------------------------------------------------------------
@@ -734,7 +772,8 @@ class RepresentativeVolumeElementConsoleInterface : public QObject
         delete _commandApplyTwoCutMaskOutsideRVE;
         delete _commandGenerateOverlappingRandomEllipsoidsIntenseRVE;
         delete _commandGenerateOverlappingRandomBezierCurveIntenseRVE;
-        delete _commandgenerateVoronoiRandomCellsRVE;
+        delete _commandGenerateVoronoiRandomCellsRVE;
+        delete _commandGenerateLayerRVE;
     }
 };
 }

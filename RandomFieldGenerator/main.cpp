@@ -27,14 +27,14 @@
 
 #include "LOGGER/logger.h"
 
-#include "UI/xyglrender.h"
+//#include "UI/xyglrender.h"
 
 #include "constants.h"
 
 #include "FEM/problem.h"
 
-#include "_SIMULATIONS/al_sic.h"
-#include "_SIMULATIONS/mechanical.h"
+//#include "_SIMULATIONS/al_sic.h"
+//#include "_SIMULATIONS/mechanical.h"
 
 int main(int argc, char *argv[])
 {
@@ -47,7 +47,62 @@ int main(int argc, char *argv[])
     ///////////////////////////////////////////////////////////////////////////////////////
     OpenCL::setupViennaCL();
 
-    ///////////////////////////////////////////////////////////////////////////////////////
+//    ///////////////////////////////////////////////////////////////////////////////////////
+//    // 04.07.2016
+//    Timer timer;
+//    timer.start();
+
+//    int size = 256;
+//    RepresentativeVolumeElement RVE(size,0.001);
+
+//    RVE.generateLayerY(size/2-size/6,size/2+size/6,0.2);
+//    RVE.applyTwoCutMaskOutside(0.19,0.21);
+//    RVE.cleanUnMaskedData();
+//    RVE.addRandomNoise();
+//    RVE.cleanMask();
+//    RVE.applyGaussianFilterCL(size/32);
+//    RVE.applyTwoCutMaskInside(0.93,1.0);
+//    RVE.cleanUnMaskedData();
+//    RVE.cleanMask();
+//    RVE.applyTwoCutMaskOutside(0.93,1.0);
+//    RVE.cleanUnMaskedData(0.8);
+//    RVE.cleanMask();
+
+//    RVE.generateOverlappingRandomBezierCurveIntenseCL(50, 3, 10, size/2, 1, 4, 0.2, 0, false, 0, M_PI*0.0/6.0, 0, 0.4);
+//    RVE.generateOverlappingRandomBezierCurveIntenseCL(50, 3, 10, size/2, 1, 4, 0.2, 0, false, 0, M_PI*1.0/6.0, 0, 0.4);
+//    RVE.generateOverlappingRandomBezierCurveIntenseCL(50, 3, 10, size/2, 1, 4, 0.2, 0, false, 0, M_PI*2.0/6.0, 0, 0.4);
+//    RVE.generateOverlappingRandomBezierCurveIntenseCL(50, 3, 10, size/2, 1, 4, 0.2, 0, false, 0, M_PI*3.0/6.0, 0, 0.4);
+//    RVE.generateOverlappingRandomBezierCurveIntenseCL(50, 3, 10, size/2, 1, 4, 0.2, 0, false, 0, M_PI*4.0/6.0, 0, 0.4);
+//    RVE.generateOverlappingRandomBezierCurveIntenseCL(50, 3, 10, size/2, 1, 4, 0.2, 0, false, 0, M_PI*5.0/6.0, 0, 0.4);
+
+//    RVE.applyTwoCutMaskInside(0.21,1.0);
+//    RVE.generateLayerY(size/2-size/4,size/2+size/4,0.2);
+//    RVE.cleanMask();
+//    RVE.applyTwoCutMaskOutside(0.19,0.21);
+//    RVE.generateOverlappingRandomBezierCurveIntenseCL(100, 3, 10, size/3, 1, 2, 0.2, 0, false, 0, M_PI*0.0/6.0, 0, 0.6);
+//    RVE.generateOverlappingRandomBezierCurveIntenseCL(100, 3, 10, size/3, 1, 2, 0.2, 0, false, 0, M_PI*1.0/6.0, 0, 0.6);
+//    RVE.generateOverlappingRandomBezierCurveIntenseCL(100, 3, 10, size/3, 1, 2, 0.2, 0, false, 0, M_PI*2.0/6.0, 0, 0.6);
+//    RVE.generateOverlappingRandomBezierCurveIntenseCL(100, 3, 10, size/3, 1, 2, 0.2, 0, false, 0, M_PI*3.0/6.0, 0, 0.6);
+//    RVE.generateOverlappingRandomBezierCurveIntenseCL(100, 3, 10, size/3, 1, 2, 0.2, 0, false, 0, M_PI*4.0/6.0, 0, 0.6);
+//    RVE.generateOverlappingRandomBezierCurveIntenseCL(100, 3, 10, size/3, 1, 2, 0.2, 0, false, 0, M_PI*5.0/6.0, 0, 0.6);
+//    RVE.cleanMask();
+//    RVE.applyTwoCutMaskOutside(0.19,0.21);
+//    RVE.cleanUnMaskedData();
+//    RVE.cleanMask();
+
+//    RVE.generateLayerY(size/2-size/32,size/2+size/32,1.0);
+
+//    timer.stop();
+//    std::cout << "Total: " << timer.getTimeSpanAsString() << " seconds" << std::endl;
+
+//    RVE.saveRVEToFile("Fuel_Cell.RVE");
+
+//    UserInterface::VolumeGLRenderRVE render(&RVE, NULL);
+//    render.setWindowTitle("Cell");
+//    render.resize(800,600);
+//    render.show();
+
+//    ///////////////////////////////////////////////////////////////////////////////////////
 //    run_tests_all();
 //    _consoleRunner.writeToOutput("Tests done\n");
 
@@ -61,102 +116,83 @@ int main(int argc, char *argv[])
 //    Simulation::TavangarTest();
 
     // 30.10.2015
-    Simulation::MechanicalTest1();
+//    Simulation::MechanicalTest1();
 
-    std::ofstream OutputFile;
-    OutputFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    OutputFile.open("MechanicalTest1.txt");
-    Timer timer;
-    timer.start();
+//    std::ofstream OutputFile;
+//    OutputFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+//    OutputFile.open("MechanicalTest1.txt");
+//    Timer timer;
+//    timer.start();
 
-    FEM::Characteristics Phase{0, 105, 0.1, 0, 0};
-    FEM::Characteristics Matrix{0, 11, 0.35, 0, 0};
-    RepresentativeVolumeElement RVE(64,0.01);
-    FEM::Domain RVEDomain(RVE);
-    RVE.generateRandomEllipsoidIntense(32,32,32,30,30,0,1,0.25,0.25);
-    RVEDomain.addMaterial(0,0.5,Matrix);
-    RVEDomain.addMaterial(0.5,2,Phase);
+//    FEM::Characteristics Phase{0, 105, 0.1, 0, 0};
+//    FEM::Characteristics Matrix{0, 11, 0.35, 0, 0};
+//    RepresentativeVolumeElement RVE(64,0.01);
+//    FEM::Domain RVEDomain(RVE);
+//    //RVE.generateRandomEllipsoidIntense(32,32,32,30,30,0,1,0.25,0.25);
+//    //RVE.generateOverlappingRandomEllipsoidsIntenseCL(150,2,6,0,1,0.3,0.3,true);
+//    //RVE.generateOverlappingRandomBezierCurveIntenseCL(50,5,32,32,0.5,2,0.2,0);
+//    RVE.generateRandomEllipsoidIntense(32,32,32,30,30,1);
+//    RVE.applyTwoCutMaskOutside(0.01,0.5);
+//    RVE.applyGaussianFilterCL(3,1,1,1,true);
+//    RVE.cleanMask();
+//    RVE.applyTwoCutMaskInside(0.5,1);
+//    RVE.cleanUnMaskedData(0);
+//    RVE.cleanMask();
+//    RVE.applyTwoCutMaskOutside(0.5,1);
+//    RVE.cleanUnMaskedData(1);
+//    RVE.cleanMask();
+//    RVEDomain.addMaterial(0,0.5,Matrix);
+//    RVEDomain.addMaterial(0.5,2,Phase);
 
-    FEM::ElasticityProblem problem(RVEDomain);
-    problem.BCManager.addNeumannBC(FEM::LEFT, {100,0,0});
-    problem.BCManager.NeumannBCs[FEM::LEFT]->setFloating(1);
-    problem.BCManager.NeumannBCs[FEM::LEFT]->setFloating(2);
-    problem.BCManager.addDirichletBC(FEM::RIGHT,{0,0,0});
-    problem.BCManager.DirichletBCs[FEM::RIGHT]->setFloating(1);
-    problem.BCManager.DirichletBCs[FEM::RIGHT]->setFloating(2);
+//    FEM::ElasticityProblem problem(RVEDomain);
+//    problem.BCManager.addNeumannBC(FEM::LEFT, {100,0,0});
+//    problem.BCManager.NeumannBCs[FEM::LEFT]->setFloating(1);
+//    problem.BCManager.NeumannBCs[FEM::LEFT]->setFloating(2);
+//    problem.BCManager.addDirichletBC(FEM::RIGHT,{0,0,0});
+//    problem.BCManager.DirichletBCs[FEM::RIGHT]->setFloating(1);
+//    problem.BCManager.DirichletBCs[FEM::RIGHT]->setFloating(2);
 
-    std::vector<float> displacement;
-    problem.solve(1e-5f,10000,displacement);
+//    std::vector<float> displacement;
+//    problem.solve(1e-5f,5000,displacement);
 
-    std::vector<float> stressX;
-    std::vector<float> stressY;
-    std::vector<float> stressZ;
-    std::vector<float> stressXY;
-    problem.calculateStress(displacement,0,stressX);
-    problem.calculateStress(displacement,1,stressY);
-    problem.calculateStress(displacement,2,stressZ);
-    problem.calculateStress(displacement,3,stressXY);
+//    std::vector<float> stressX;
+//    std::vector<float> stressY;
+//    std::vector<float> stressZ;
+//    std::vector<float> stressXY;
+//    problem.calculateStress(displacement,0,stressX);
+//    problem.calculateStress(displacement,1,stressY);
+//    problem.calculateStress(displacement,2,stressZ);
+//    problem.calculateStress(displacement,3,stressXY);
 
-//    std::vector<float> uX;
-//    std::vector<float> uY;
-//    std::vector<float> uZ;
+////    std::vector<float> uX;
+////    std::vector<float> uY;
+////    std::vector<float> uZ;
 
-//    for(unsigned i=0; i<displacement.size()/3; ++i)
-//    {
-//        uX.push_back(displacement[i*3+0]);
-//        uY.push_back(displacement[i*3+1]);
-//        uZ.push_back(displacement[i*3+2]);
-//    }
-    displacement.clear();
+////    for(unsigned i=0; i<displacement.size()/3; ++i)
+////    {
+////        uX.push_back(displacement[i*3+0]);
+////        uY.push_back(displacement[i*3+1]);
+////        uZ.push_back(displacement[i*3+2]);
+////    }
+//    displacement.clear();
 
-    timer.stop();
-    std::cout << "Total: " << timer.getTimeSpanAsString() << " seconds" << std::endl;
-    OutputFile << "Total: " << timer.getTimeSpanAsString() << " seconds" << std::endl;
-    OutputFile.close();
+//    timer.stop();
+//    std::cout << "Total: " << timer.getTimeSpanAsString() << " seconds" << std::endl;
+//    OutputFile << "Total: " << timer.getTimeSpanAsString() << " seconds" << std::endl;
+//    OutputFile.close();
 
-//    UserInterface::VolumeGLRenderRVE renderRVE(&RVE, NULL);
-//    renderRVE.setInfoString("");
-//    renderRVE.resize(800,600);
-//    renderRVE.show();
-
-//    UserInterface::VolumeGLRender renderUX(
-//                RVE.getSize(), RVE.getData(), uX.data(), NULL);
-//    renderUX.setBoundingBoxRepresentationSize(0.01);
-//    renderUX.resize(800,600);
-//    renderUX.show();
-
-//    UserInterface::VolumeGLRender renderUY(
-//                RVE.getSize(), RVE.getData(), uY.data(), NULL);
-//    renderUY.setBoundingBoxRepresentationSize(0.01);
-//    renderUY.resize(800,600);
-//    renderUY.show();
-
-//    UserInterface::VolumeGLRender renderUZ(
-//                RVE.getSize(), RVE.getData(), uZ.data(), NULL);
-//    renderUZ.setBoundingBoxRepresentationSize(0.01);
-//    renderUZ.resize(800,600);
-//    renderUZ.show();
-
-    UserInterface::VolumeGLRender renderStressX(
-                RVE.getSize(), RVE.getData(), stressX.data(), NULL);
-    renderStressX.setWindowTitle("StressX");
-    renderStressX.resize(800,600);
-    renderStressX.show();
-    UserInterface::VolumeGLRender renderStressY(
-                RVE.getSize(), RVE.getData(), stressY.data(), NULL);
-    renderStressY.setWindowTitle("StressY");
-    renderStressY.resize(800,600);
-    renderStressY.show();
-    UserInterface::VolumeGLRender renderStressZ(
-                RVE.getSize(), RVE.getData(), stressZ.data(), NULL);
-    renderStressZ.setWindowTitle("StressZ");
-    renderStressZ.resize(800,600);
-    renderStressZ.show();
-    UserInterface::VolumeGLRender renderStressXY(
-                RVE.getSize(), RVE.getData(), stressXY.data(), NULL);
-    renderStressXY.setWindowTitle("StressXY");
-    renderStressXY.resize(800,600);
-    renderStressXY.show();
+//    UserInterface::VolumeGLRender renderStressY(
+//                RVE.getSize(), RVE.getData(), stressY.data(), NULL);
+//    renderStressY.setBoundingBoxRepresentationSize(RVE.getRepresentationSize());
+//    renderStressY.setWindowTitle("StressY");
+//    renderStressY.resize(800,600);
+//    renderStressY.show();
+//    UserInterface::VolumeGLRender renderStressXY(
+//                RVE.getSize(), RVE.getData(), stressXY.data(), NULL);
+//    renderStressXY.setBoundingBoxRepresentationSize(RVE.getRepresentationSize());
+//    renderStressXY.setWindowTitle("StressXY");
+//    renderStressXY.resize(800,600);
+//    renderStressXY.show();
 
     ///////////////////////////////////////////////////////////////////////////////////////
 //    Timer _TotalCalculationTimer;

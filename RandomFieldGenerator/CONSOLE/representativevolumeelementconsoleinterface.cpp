@@ -287,6 +287,26 @@ void _EditRVECommand::generateVoronoiRandomCellsRVE(int cellNum)
     Q_EMIT signal_generateVoronoiRandomCellsRVEDone();
 }
 
+void _EditRVECommand::generateLayerRVE(
+        int bottom,
+        int top,
+        float coreValue)
+{
+    std::stringstream _str;
+    _str << "generateLayerRVE "
+         << _RVEName << " "
+         << bottom << " "
+         << top << " "
+         << coreValue;
+
+    // echo to console output without logging
+    getConsole().getOutputStream() << _str.str() << "\n";
+
+    getConsole() << _str.str();
+
+    Q_EMIT signal_generateLayerRVEDone();
+}
+
 std::string RepresentativeVolumeElementConsoleInterface::createRVE(
         const std::string &name, int size, float representationSize) noexcept
 {
@@ -1342,5 +1362,68 @@ int RepresentativeVolumeElementConsoleInterface::_generateVoronoiRandomCellsRVEC
         getConsole().writeToOutput("wrong <cellNum> argument.\n");
         return -1;
     }
+    return 0;
+}
+
+std::string RepresentativeVolumeElementConsoleInterface::generateLayerRVE(
+        const std::string &name, int bottom, int top, float coreValue) noexcept
+{
+    try
+    {
+        auto _pos = RVEs.find(name);
+        if(_pos == RVEs.end())
+        {
+            _refToConsole.setLastCommandBadState(true);
+            return "Error: Representative Volume Element " + name + " doesn't exist.\n";
+        }
+        else
+            _pos->second->generateLayerY(bottom, top, coreValue);
+        return "Representative Volume Element " + name + " layer generated.\n";
+    }
+    catch(std::exception &e)
+    {
+        return "Error: " + std::string(e.what());
+    }
+}
+
+int RepresentativeVolumeElementConsoleInterface::_generateLayerRVECommand::executeConsoleCommand(
+        const std::vector<std::string> &argv)
+{
+    if(argv.size() < 3 || argv.size() > 4)
+    {
+        getConsole().writeToOutput("Error: wrong number of arguments.\n");
+        return -1;
+    }
+    int bottom;
+    {
+        std::stringstream _str{argv[1]};
+        if(!(_str >> bottom))
+        {
+            getConsole().writeToOutput("wrong <bottomSide> argument.\n");
+            return -1;
+        }
+    }
+    int top;
+    {
+        std::stringstream _str{argv[2]};
+        if(!(_str >> top))
+        {
+            getConsole().writeToOutput("wrong <topSide> argument.\n");
+            return -1;
+        }
+    }
+    float coreValue = 1.0f;
+    if(argv.size() == 4)
+    {
+        std::stringstream _str{argv[3]};
+        if(!(_str >> coreValue))
+        {
+            getConsole().writeToOutput("wrong <coreValue> argument.\n");
+            return -1;
+        }
+    }
+
+    getConsole().writeToOutput(_manager.generateLayerRVE(argv[0], bottom, top, coreValue));
+
     return 0;
 }

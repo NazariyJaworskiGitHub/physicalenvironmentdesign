@@ -400,6 +400,12 @@ class RepresentativeVolumeElement
             float &jj,
             float &ii) noexcept;
 
+    /// Generate layer as a simple box on OY axis
+    public : void generateLayerY(
+            const int bottom,
+            const int top,
+            float coreValue = 1.0f) throw (std::runtime_error);
+
     public : ~RepresentativeVolumeElement()
     {
         delete [] _data;

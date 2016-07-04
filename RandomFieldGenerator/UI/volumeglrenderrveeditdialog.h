@@ -145,6 +145,11 @@ namespace UserInterface
 
         void on_GenerateInclusionsButton_Fiber_clicked();
 
+        void on_LayerBottomSideSlider_Layer_valueChanged(int value);
+        void on_LayerTopSideSlider_Layer_valueChanged(int value);
+        void on_CoreIntensitySlider_Layer_valueChanged(int value);
+        void on_addLayerButton_Layer_clicked();
+
     private:
         Ui::VolumeGLRenderRVEEditDialog *ui;
         FilterPreviewGLRender *_previewRender = nullptr;
@@ -240,6 +245,8 @@ namespace UserInterface
                 float coreValue);
 
         Q_SIGNAL void signal_generateVoronoiRandomCellsRVE(int cellNum);
+
+        Q_SIGNAL void signal_generateLayerRVE(int bottom, int top, float coreValue);
 
     private:
         void _disableWigget();

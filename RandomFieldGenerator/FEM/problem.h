@@ -503,7 +503,7 @@ namespace FEM
                 //localStress = volume * DM(element.characteristics) * B * u;
                 localStress = DM(element.characteristics) * B * u;
 
-                for(long i=0; i<4; ++i) stress[element.indexes[i]] = localStress(axis,0);
+                for(long i=0; i<4; ++i) stress[element.indexes[i]] = std::fabs(localStress(axis,0));
             }
         }
 ////////////////////////////////////////////////////////////////////////////////////////////

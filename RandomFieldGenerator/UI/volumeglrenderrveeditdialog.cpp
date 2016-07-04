@@ -170,6 +170,20 @@ VolumeGLRenderRVEEditDialog::VolumeGLRenderRVEEditDialog(QWidget *parent) :
     _previewRender_Fiber->resize(261,261);
     _previewRender_Fiber->move(510, 10);
 
+    // Layers
+    ui->LayerBottomSideSlider_Layer->setMaximum(_parent->_ptrToRVE->getSize()-2);
+    ui->LayerBottomSideSlider_Layer->setMinimum(0);
+    ui->LayerBottomSideSlider_Layer->setValue(0);
+    ui->LayerBottomSideLineEdit_Layer->setText(0);
+
+    ui->LayerTopSideSlider_Layer->setMaximum(_parent->_ptrToRVE->getSize()-1);
+    ui->LayerTopSideSlider_Layer->setMinimum(1);
+    ui->LayerTopSideSlider_Layer->setValue(_parent->_ptrToRVE->getSize()-1);
+    ui->LayerTopSideLineEdit_Layer->setText(QString::number(_parent->_ptrToRVE->getSize()-1));
+
+    ui->CoreIntensitySlider_Layer->setValue(_parent->_CoreIntensityBackup * 100);
+    ui->CoreIntensityLineEdit_Layer->setText(QString::number(ui->CoreIntensitySlider_Layer->value() / 100.0f));
+
     // Signals and slots
     connect(this,SIGNAL(signal_loadRVE(QString)),
             &UserInterfaceManager::instance(),
@@ -267,6 +281,13 @@ VolumeGLRenderRVEEditDialog::VolumeGLRenderRVEEditDialog(QWidget *parent) :
             SIGNAL(signal_generateVoronoiRandomCellsRVE_T(int)),
             Qt::QueuedConnection);
     connect(&UserInterfaceManager::instance(), SIGNAL(signal_generateVoronoiRandomCellsRVEDone_T()),
+            this, SLOT(_enableWidget()), Qt::QueuedConnection);
+
+    connect(this,SIGNAL(signal_generateLayerRVE(int, int, float)),
+            &UserInterfaceManager::instance(),
+            SIGNAL(signal_generateLayerRVE_T(int, int, float)),
+            Qt::QueuedConnection);
+    connect(&UserInterfaceManager::instance(), SIGNAL(signal_generateLayerRVEDone_T()),
             this, SLOT(_enableWidget()), Qt::QueuedConnection);
 
     ui->progressBar->setWindowModality(Qt::WindowModal);
@@ -1134,4 +1155,36 @@ void UserInterface::VolumeGLRenderRVEEditDialog::on_GenerateInclusionsButton_Fib
                 ui->RotationOYSlider_Fiber->value(),
                 ui->RotationOZSlider_Fiber->value(),
                 ui->CoreIntensitySlider_Fiber->value() / 100.0f);
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_LayerBottomSideSlider_Layer_valueChanged(int value)
+{
+    ui->LayerBottomSideLineEdit_Layer->setText(QString::number(value));
+    if(value >= ui->LayerTopSideSlider_Layer->value())
+        ui->LayerTopSideSlider_Layer->setValue(value+1);
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_LayerTopSideSlider_Layer_valueChanged(int value)
+{
+    ui->LayerTopSideLineEdit_Layer->setText(QString::number(value));
+    if(value <= ui->LayerBottomSideSlider_Layer->value())
+        ui->LayerBottomSideSlider_Layer->setValue(value-1);
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_CoreIntensitySlider_Layer_valueChanged(int value)
+{
+    VolumeGLRenderRVE* _parent = static_cast<VolumeGLRenderRVE*>(this->parent());
+    _parent->_CoreIntensityBackup = value / 100.0f;
+
+    ui->CoreIntensityLineEdit_Layer->setText(QString::number(value / 100.0f));
+}
+
+void UserInterface::VolumeGLRenderRVEEditDialog::on_addLayerButton_Layer_clicked()
+{
+    _disableWigget();
+
+    Q_EMIT signal_generateLayerRVE(
+                ui->LayerBottomSideSlider_Layer->value(),
+                ui->LayerTopSideSlider_Layer->value(),
+                ui->CoreIntensitySlider_Layer->value() / 100.0f);
 }
