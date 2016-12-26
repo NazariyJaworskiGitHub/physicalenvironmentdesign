@@ -1865,7 +1865,9 @@ void RepresentativeVolumeElement::generateOverlappingRandomBezierCurveIntenseCL(
 }
 
 void RepresentativeVolumeElement::generateVoronoiRandomCells(
-        const int cellNum) throw (std::runtime_error)
+        const int cellNum,
+        const std::vector<MathUtils::Node<3,float>> *_initialPointsPtr)
+throw (std::runtime_error)
 {
     if(cellNum < 2)
         throw(std::runtime_error("generateVoronoiRandomCells(): "
@@ -1873,11 +1875,21 @@ void RepresentativeVolumeElement::generateVoronoiRandomCells(
 
     // Generate initial points
     std::vector<MathUtils::Node<3,float>> _initialPoints;
-    for(int c=0; c<cellNum; ++c)
-        _initialPoints.push_back(MathUtils::Node<3,float>(
-            MathUtils::rand<int>(0,_size-1),
-            MathUtils::rand<int>(0,_size-1),
-            MathUtils::rand<int>(0,_size-1)));
+    if(_initialPointsPtr)
+    {
+        if(cellNum!=_initialPointsPtr->size())
+            throw(std::runtime_error("generateVoronoiRandomCells(): "
+                                     "cellNum!=_initialPointsPtr->size\n"));
+        _initialPoints = *_initialPointsPtr;
+    }
+    else
+    {
+        for(int c=0; c<cellNum; ++c)
+            _initialPoints.push_back(MathUtils::Node<3,float>(
+                MathUtils::rand<int>(0,_size-1),
+                MathUtils::rand<int>(0,_size-1),
+                MathUtils::rand<int>(0,_size-1)));
+    }
 
     for( long i = 0; i<_size; ++i)
         for( long j = 0; j<_size; ++j)
@@ -1941,7 +1953,9 @@ void RepresentativeVolumeElement::generateVoronoiRandomCells(
 }
 
 void RepresentativeVolumeElement::generateVoronoiRandomCellsCL(
-        const int cellNum) throw (std::runtime_error)
+        const int cellNum,
+        const std::vector<MathUtils::Node<3,float>> *_initialPointsPtr)
+throw (std::runtime_error)
 {
     if(cellNum < 2)
         throw(std::runtime_error("generateVoronoiRandomCellsCL(): "
@@ -1952,11 +1966,26 @@ void RepresentativeVolumeElement::generateVoronoiRandomCellsCL(
     if(!_initialPoints)
         throw(std::runtime_error("generateVoronoiRandomCellsCL():"
                                  "can't allocate memory for temporary storage.\n"));
-    for(int c=0; c<cellNum; ++c)
+    if(_initialPointsPtr)
     {
-        _initialPoints[c*3+0] = MathUtils::rand<int>(0,_size-1);
-        _initialPoints[c*3+1] = MathUtils::rand<int>(0,_size-1);
-        _initialPoints[c*3+2] = MathUtils::rand<int>(0,_size-1);
+        if(cellNum!=_initialPointsPtr->size())
+            throw(std::runtime_error("generateVoronoiRandomCellsCL(): "
+                                     "cellNum!=_initialPointsPtr->size\n"));
+        for(int c=0; c<cellNum; ++c)
+        {
+            _initialPoints[c*3+0] = (*_initialPointsPtr)[c][0];
+            _initialPoints[c*3+1] = (*_initialPointsPtr)[c][1];
+            _initialPoints[c*3+2] = (*_initialPointsPtr)[c][2];
+        }
+    }
+    else
+    {
+        for(int c=0; c<cellNum; ++c)
+        {
+            _initialPoints[c*3+0] = MathUtils::rand<int>(0,_size-1);
+            _initialPoints[c*3+1] = MathUtils::rand<int>(0,_size-1);
+            _initialPoints[c*3+2] = MathUtils::rand<int>(0,_size-1);
+        }
     }
 
     cl::Buffer _dataBuffer(
@@ -2058,11 +2087,11 @@ void RepresentativeVolumeElement::generateLayerY(
         float coreValue)  throw (std::runtime_error)
 {
     if(top <= bottom)
-        throw(std::runtime_error("generateLayerX(): layer top index <= layer bottom index.\n"));
+        throw(std::runtime_error("generateLayerY(): layer top index <= layer bottom index.\n"));
     if(top >= _size)
-        throw(std::runtime_error("generateLayerX(): layer top index >= RVE size.\n"));
+        throw(std::runtime_error("generateLayerY(): layer top index >= RVE size.\n"));
     if(bottom < 0)
-        throw(std::runtime_error("generateLayerX(): layer bottom index < 0.\n"));
+        throw(std::runtime_error("generateLayerY(): layer bottom index < 0.\n"));
 
     for( long i = 0; i<_size; ++i)
         for( long j = bottom; j<top; ++j)
@@ -2071,5 +2100,21 @@ void RepresentativeVolumeElement::generateLayerY(
                 float &_val = _data[(i * _size * _size) + (j * _size) + k];
                 if(_val >= 0)
                     _val = coreValue;
+            }
+}
+
+void RepresentativeVolumeElement::cloneLayerY(const int layerIndex) throw (std::runtime_error)
+{
+    if(layerIndex >= _size)
+        throw(std::runtime_error("cloneLayerY(): layer index >= RVE size.\n"));
+    if(layerIndex < 0)
+        throw(std::runtime_error("cloneLayerY(): layer index < 0.\n"));
+    for( long i = 0; i<_size; ++i)
+        for( long j = 0; j<_size; ++j)
+            for( long k = 0; k<_size; ++k)
+            {
+                float &_val = _data[(i * _size * _size) + (j * _size) + k];
+                if(_val >= 0)
+                    _val = _data[(i * _size * _size) + (layerIndex * _size) + k];
             }
 }

@@ -47,8 +47,64 @@ int main(int argc, char *argv[])
     ///////////////////////////////////////////////////////////////////////////////////////
     OpenCL::setupViennaCL();
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    // 26.12.16 Nanoporous alumina cells generation part
+    Timer timer;
+    timer.start();
+
+    int size = 256;
+    int cellNum = 15;
+    RepresentativeVolumeElement RVE(size,0.001);
+
+    timer.stop();
+    std::cout << "Total: " << timer.getTimeSpanAsString() << " seconds" << std::endl;
+
+//    // Random ---------------------------------------------------------------------------
+//    std::vector<MathUtils::Node<3,float>> _initialPoints;
+//    for(int c=0; c<cellNum*cellNum; ++c)
+//        _initialPoints.push_back(MathUtils::Node<3,float>(
+//                                     MathUtils::rand<int>(0,size-1),
+//                                     size-1,
+//                                     MathUtils::rand<int>(0,size-1)));
+//    RVE.generateVoronoiRandomCellsCL(cellNum*cellNum,&_initialPoints);
+//    RVE.cloneLayerY(size-1);
+//    RVE.saveRVEToFile("Nanoporous_alumina_Random_Voronoi.RVE");
+
+//    // Regular quasi regular square -----------------------------------------------------
+//    std::vector<MathUtils::Node<3,float>> _initialPoints;
+//    for(int i=0; i<cellNum; ++i)
+//        for(int j=0; j<cellNum; ++j)
+//        _initialPoints.push_back(MathUtils::Node<3,float>(
+//                                     i*size/cellNum + MathUtils::rand<int>(-size/cellNum/5,size/cellNum/5),
+//                                     size-1,
+//                                     j*size/cellNum + MathUtils::rand<int>(-size/cellNum/5,size/cellNum/5)));
+//    RVE.generateVoronoiRandomCellsCL(cellNum*cellNum,&_initialPoints);
+//    RVE.cloneLayerY(size-1);
+//    RVE.saveRVEToFile("Nanoporous_alumina_Square_Voronoi.RVE");
+
+    // Regular quasi regular hexagon ------------------------------------------------------
+    std::vector<MathUtils::Node<3,float>> _initialPoints;
+    int pnts = 0;
+    for(int i=0; i<cellNum; ++i)
+        for(int j=0; j<cellNum/(sqrt(3)/2); ++j)
+        {
+            ++pnts;
+            _initialPoints.push_back(MathUtils::Node<3,float>(
+                                         (size/cellNum/2)*(j%2) + i*size/cellNum + MathUtils::rand<int>(-size/cellNum/5,size/cellNum/5),
+                                         size-1,
+                                         j*size/(cellNum/(sqrt(3)/2)) + MathUtils::rand<int>(-size/cellNum/5,size/cellNum/5)));
+        }
+    RVE.generateVoronoiRandomCellsCL(pnts,&_initialPoints);
+    RVE.cloneLayerY(size-1);
+    RVE.saveRVEToFile("Nanoporous_alumina_Hexagon_Voronoi.RVE");
+
+    UserInterface::VolumeGLRenderRVE render(&RVE, NULL);
+    render.setWindowTitle("Nanoporous alumina");
+    render.resize(800,600);
+    render.show();
+
 //    ///////////////////////////////////////////////////////////////////////////////////////
-//    // 04.07.2016
+//    // 04.07.2016 Layers and Fuel cell generation part
 //    Timer timer;
 //    timer.start();
 

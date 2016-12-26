@@ -378,11 +378,15 @@ class RepresentativeVolumeElement
 
     /// Generate Voronoi diagram random cells
     public : void generateVoronoiRandomCells(
-            const int cellNum) throw (std::runtime_error);
+            const int cellNum,
+            const std::vector<MathUtils::Node<3,float>> *_initialPointsPtr = nullptr)
+    throw (std::runtime_error);
 
     /// Generate Voronoi diagram random cells OpenCL version
     public : void generateVoronoiRandomCellsCL(
-            const int cellNum) throw (std::runtime_error);
+            const int cellNum,
+            const std::vector<MathUtils::Node<3,float>> *_initialPointsPtr = nullptr)
+    throw (std::runtime_error);
 
     private: void _add(
             float *recipient,
@@ -405,6 +409,10 @@ class RepresentativeVolumeElement
             const int bottom,
             const int top,
             float coreValue = 1.0f) throw (std::runtime_error);
+
+    /// Clone layer as a simple box on OY axis
+    public : void cloneLayerY(
+            const int layerIndex) throw (std::runtime_error);
 
     public : ~RepresentativeVolumeElement()
     {
