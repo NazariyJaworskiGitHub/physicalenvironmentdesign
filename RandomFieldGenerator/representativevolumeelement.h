@@ -362,7 +362,8 @@ class RepresentativeVolumeElement
             float coreValue = 1.0f) throw (std::runtime_error);
 
     /// Generate overlapping random ellipsoids at unmasked _data elements OpenCL version
-    public : void generateOverlappingRandomBezierCurveIntenseCL(int curveNum,
+    public : void generateOverlappingRandomBezierCurveIntenseCL(
+            int curveNum,
             int curveOrder,
             int curveApproximationPoints,
             int discreteLength,
@@ -374,7 +375,8 @@ class RepresentativeVolumeElement
             float rotationOX = 0.0f,
             float rotationOY = 0.0f,
             float rotationOZ = 0.0f,
-            float coreValue = 1.0f) throw (std::runtime_error);
+            float coreValue = 1.0f,
+            const std::vector<MathUtils::Node<3,float>> *_initialPointsPtr= nullptr) throw (std::runtime_error);
 
     /// Generate Voronoi diagram random cells
     public : void generateVoronoiRandomCells(

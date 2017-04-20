@@ -48,38 +48,159 @@ int main(int argc, char *argv[])
     OpenCL::setupViennaCL();
 
     ///////////////////////////////////////////////////////////////////////////////////////
-    // 26.12.16 Nanoporous alumina cells generation part
+    // 20.04.17 AAO Thermal conduction
+
+    // See https://figshare.com/articles/Rules_to_Determine_Thermal_Conductivity_and_Density_of_Anodic_Aluminum_Oxide_AAO_Membranes/3085315
+    //                               h       unused  unused  unused  unused
+    FEM::Characteristics Al     {     237.0,      0,      0,      0,      0};
+    FEM::Characteristics AAO_Air{       0.92,     0,      0,      0,      0};
+    int RVEDiscreteSize = 128;
+    float RVEPhysicalLength = 0.001;
+    int cellNum = 7;
+
     Timer timer;
     timer.start();
 
-    int size = 256;
-    int cellNum = 9;
-    RepresentativeVolumeElement RVE(size,0.001);
+    std::ofstream OutputFile;
+    OutputFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    std::stringstream _filename;
+    _filename << "RVE" << RVEDiscreteSize << "AAO_Thermal.txt";
+    OutputFile.open(_filename.str());
+    OutputFile << "RVE "<< RVEPhysicalLength << "m "
+               << RVEDiscreteSize << "x" << RVEDiscreteSize << "x" << RVEDiscreteSize << "\n";
+    OutputFile << "Matrix Al:\nh=" << Al.heatConductionCoefficient << "\n";
+    OutputFile << "Phase AAO_Air:\nh=" << AAO_Air.heatConductionCoefficient << "\n";
+    OutputFile << "Pores per length = " << cellNum << "\n";
+    OutputFile.flush();
 
-//    // Random ---------------------------------------------------------------------------
-//    std::vector<MathUtils::Node<3,float>> _initialPoints;
-//    for(int c=0; c<cellNum*cellNum; ++c)
-//        _initialPoints.push_back(MathUtils::Node<3,float>(
-//                                     MathUtils::rand<int>(0,size-1),
-//                                     size-1,
-//                                     MathUtils::rand<int>(0,size-1)));
-//    RVE.generateVoronoiRandomCellsCL(cellNum*cellNum,&_initialPoints);
-//    RVE.cloneLayerY(size-1);
-//    RVE.saveRVEToFile("Nanoporous_alumina_Random_Voronoi.RVE");
+    RepresentativeVolumeElement RVE(RVEDiscreteSize,RVEPhysicalLength);
 
-//    // Quasi regular square -----------------------------------------------------
-//    std::vector<MathUtils::Node<3,float>> _initialPoints;
-//    for(int i=0; i<cellNum; ++i)
-//        for(int j=0; j<cellNum; ++j)
-//        _initialPoints.push_back(MathUtils::Node<3,float>(
-//                                     i*size/cellNum + MathUtils::rand<int>(-size/cellNum/5,size/cellNum/5),
-//                                     size-1,
-//                                     j*size/cellNum + MathUtils::rand<int>(-size/cellNum/5,size/cellNum/5)));
-//    RVE.generateVoronoiRandomCellsCL(cellNum*cellNum,&_initialPoints);
-//    RVE.cloneLayerY(size-1);
-//    RVE.saveRVEToFile("Nanoporous_alumina_Square_Voronoi.RVE");
+    // Quasi regular hexagon bezier -------------------------------------------------
+    std::vector<MathUtils::Node<3,float>> _initialPoints;
+    int pnts = 0;
+    for(int i=0; i<cellNum; ++i)
+        for(int j=0; j<cellNum/(sqrt(3)/2); ++j)
+        {
+            ++pnts;
+            _initialPoints.push_back(MathUtils::Node<3,float>(
+                                         RVEDiscreteSize/2,
+                                         (RVEDiscreteSize/cellNum/2)*(j%2) + i*RVEDiscreteSize/cellNum + MathUtils::rand<int>(-RVEDiscreteSize/cellNum/5,RVEDiscreteSize/cellNum/5),
+                                         j*RVEDiscreteSize/(cellNum/(sqrt(3)/2)) + MathUtils::rand<int>(-RVEDiscreteSize/cellNum/5,RVEDiscreteSize/cellNum/5)));
+        }
+    RVE.generateOverlappingRandomBezierCurveIntenseCL(
+                pnts,4,6,RVEDiscreteSize,0.8,RVEDiscreteSize/cellNum/1.3, 0.01, 1.0, false, 0, 0, 0, 1.0, &_initialPoints);
+    RVE.invertUnMasked();
+    RVE.saveRVEToFile("Nanoporous_alumina_Hexagon_Bezier_128.RVE");
 
-//    // Quasi regular hexagon ------------------------------------------------------
+    float effh, minh, maxh;
+    FEM::Domain RVEDomain(RVE);
+    RVEDomain.addMaterial(0,0.5,AAO_Air);
+    RVEDomain.addMaterial(0.5,2,Al);
+
+    float _maxCoeff = RVEDomain.MaterialsVector[0].characteristics.heatConductionCoefficient;
+    for(auto &curMaterial : RVEDomain.MaterialsVector)
+        if(curMaterial.characteristics.heatConductionCoefficient > _maxCoeff)
+            _maxCoeff = curMaterial.characteristics.heatConductionCoefficient;
+    float flux = _maxCoeff / RVEDomain.size();
+
+    FEM::HeatConductionProblem problem(RVEDomain);
+    problem.BCManager.addNeumannBC(FEM::LEFT, {flux});
+    problem.BCManager.addDirichletBC(FEM::RIGHT,{0});
+    std::vector<float> temperature;
+    problem.solve(1e-6,10000,temperature);
+
+    // h = d/R = d*q/dT
+    float effdT = 0.0f;
+    float mindT = temperature[0];
+    float maxdT = temperature[0];
+    int discreteSize = RVEDomain.discreteSize();
+    // T0 should be at right side (i==RVEDiscreteSize-1)
+    // calculated T should be at left side (i==0)
+    for(int k=0; k<discreteSize; ++k)          // z
+        for(int j=0; j<discreteSize; ++j)      // y
+        {
+            float _curVal = temperature[
+                    0 + discreteSize*j + k*discreteSize*discreteSize];
+            effdT += _curVal;
+            if(_curVal < mindT) mindT = _curVal;
+            if(_curVal > maxdT) maxdT = _curVal;
+        }
+    effdT /= discreteSize*discreteSize;
+    effdT = (effdT - _T0);
+    mindT = (mindT - _T0);
+    maxdT = (maxdT - _T0);
+    effh = flux * RVEDomain.size() / effdT;
+    minh = flux * RVEDomain.size() / maxdT; // note min and max
+    maxh = flux * RVEDomain.size() / mindT;
+
+    std::cout  << " effh=" << effh << " minh=" << minh << " maxh=" << maxh << "\n";
+    OutputFile << " effh=" << effh << " minh=" << minh << " maxh=" << maxh << "\n";
+    OutputFile.flush();
+
+    timer.stop();
+    std::cout << "Total: " << timer.getTimeSpanAsString() << " seconds" << std::endl;
+
+    UserInterface::VolumeGLRender render(
+                RVE.getSize(), RVE.getData(), temperature.data(), NULL);
+    render.setWindowTitle("Nanoporous alumina");
+    render.setBoundingBoxRepresentationSize(RVEPhysicalLength);
+    render.resize(800,600);
+    render.show();
+
+    UserInterface::VolumeGLRenderRVE _render(&RVE, NULL);
+    _render.setWindowTitle("Nanoporous alumina");
+    _render.resize(800,600);
+    _render.show();
+
+//    ///////////////////////////////////////////////////////////////////////////////////////
+//    // 26.12.16 Nanoporous alumina cells generation part
+//    Timer timer;
+//    timer.start();
+
+//    int size = 256;
+//    int cellNum = 7;
+//    RepresentativeVolumeElement RVE(size,0.001);
+
+////    // Random ---------------------------------------------------------------------------
+////    std::vector<MathUtils::Node<3,float>> _initialPoints;
+////    for(int c=0; c<cellNum*cellNum; ++c)
+////        _initialPoints.push_back(MathUtils::Node<3,float>(
+////                                     MathUtils::rand<int>(0,size-1),
+////                                     size-1,
+////                                     MathUtils::rand<int>(0,size-1)));
+////    RVE.generateVoronoiRandomCellsCL(cellNum*cellNum,&_initialPoints);
+////    RVE.cloneLayerY(size-1);
+////    RVE.saveRVEToFile("Nanoporous_alumina_Random_Voronoi.RVE");
+
+////    // Quasi regular square -----------------------------------------------------
+////    std::vector<MathUtils::Node<3,float>> _initialPoints;
+////    for(int i=0; i<cellNum; ++i)
+////        for(int j=0; j<cellNum; ++j)
+////        _initialPoints.push_back(MathUtils::Node<3,float>(
+////                                     i*size/cellNum + MathUtils::rand<int>(-size/cellNum/5,size/cellNum/5),
+////                                     size-1,
+////                                     j*size/cellNum + MathUtils::rand<int>(-size/cellNum/5,size/cellNum/5)));
+////    RVE.generateVoronoiRandomCellsCL(cellNum*cellNum,&_initialPoints);
+////    RVE.cloneLayerY(size-1);
+////    RVE.saveRVEToFile("Nanoporous_alumina_Square_Voronoi.RVE");
+
+////    // Quasi regular hexagon ------------------------------------------------------
+////    std::vector<MathUtils::Node<3,float>> _initialPoints;
+////    int pnts = 0;
+////    for(int i=0; i<cellNum; ++i)
+////        for(int j=0; j<cellNum/(sqrt(3)/2); ++j)
+////        {
+////            ++pnts;
+////            _initialPoints.push_back(MathUtils::Node<3,float>(
+////                                         (size/cellNum/2)*(j%2) + i*size/cellNum + MathUtils::rand<int>(-size/cellNum/5,size/cellNum/5),
+////                                         size-1,
+////                                         j*size/(cellNum/(sqrt(3)/2)) + MathUtils::rand<int>(-size/cellNum/5,size/cellNum/5)));
+////        }
+////    RVE.generateVoronoiRandomCellsCL(pnts,&_initialPoints);
+////    RVE.cloneLayerY(size-1);
+////    RVE.saveRVEToFile("Nanoporous_alumina_Hexagon_Voronoi.RVE");
+
+//    // Quasi regular hexagon bezier -------------------------------------------------
 //    std::vector<MathUtils::Node<3,float>> _initialPoints;
 //    int pnts = 0;
 //    for(int i=0; i<cellNum; ++i)
@@ -87,35 +208,21 @@ int main(int argc, char *argv[])
 //        {
 //            ++pnts;
 //            _initialPoints.push_back(MathUtils::Node<3,float>(
-//                                         (size/cellNum/2)*(j%2) + i*size/cellNum + MathUtils::rand<int>(-size/cellNum/5,size/cellNum/5),
-//                                         size-1,
-//                                         j*size/(cellNum/(sqrt(3)/2)) + MathUtils::rand<int>(-size/cellNum/5,size/cellNum/5)));
+//                                         (size/cellNum/2)*(j%2) + i*size/cellNum /*+ MathUtils::rand<int>(-size/cellNum/5,size/cellNum/5)*/,
+//                                         size/2,
+//                                         j*size/(cellNum/(sqrt(3)/2)) /*+ MathUtils::rand<int>(-size/cellNum/5,size/cellNum/5)*/));
 //        }
-//    RVE.generateVoronoiRandomCellsCL(pnts,&_initialPoints);
-//    RVE.cloneLayerY(size-1);
-//    RVE.saveRVEToFile("Nanoporous_alumina_Hexagon_Voronoi.RVE");
+//    RVE.generateOverlappingRandomBezierCurveIntenseCL(
+//                pnts,4,6,size,0.8,size/cellNum/1.3, 0.01, 1.0, false, 0, 0, M_PI/2, 1.0, &_initialPoints);
+//    RVE.saveRVEToFile("Nanoporous_alumina_Hexagon_Bezier.RVE");
 
-    // Quasi regular hexagon bezier -------------------------------------------------
-    for(int i=0; i<cellNum; ++i)
-        for(int j=0; j<cellNum/(sqrt(3)/2)-1; ++j)
-        {
-            std::cout << "\b\b\b\b"
-                      << (int)((j + i*cellNum) * 100.0 / (cellNum*cellNum/(sqrt(3)/2)))
-                      << "%";
-    RVE.generateBezierCurveIntense((size/cellNum/2)*(j%2) + i*size/cellNum /*+ MathUtils::rand<int>(-size/cellNum/5,size/cellNum/5)*/,
-                                   size/2,
-                                   j*size/(cellNum/(sqrt(3)/2)) /*+ MathUtils::rand<int>(-size/cellNum/5,size/cellNum/5)*/,
-                                   4, 10, size, size/cellNum/1.5, 0.025, 1.0, 0, 0, M_PI/2);
-        }
-    RVE.saveRVEToFile("Nanoporous_alumina_Hexagon_Bezier_2.RVE");
+//    timer.stop();
+//    std::cout << "Total: " << timer.getTimeSpanAsString() << " seconds" << std::endl;
 
-    timer.stop();
-    std::cout << "Total: " << timer.getTimeSpanAsString() << " seconds" << std::endl;
-
-    UserInterface::VolumeGLRenderRVE render(&RVE, NULL);
-    render.setWindowTitle("Nanoporous alumina");
-    render.resize(800,600);
-    render.show();
+//    UserInterface::VolumeGLRenderRVE render(&RVE, NULL);
+//    render.setWindowTitle("Nanoporous alumina");
+//    render.resize(800,600);
+//    render.show();
 
 //    ///////////////////////////////////////////////////////////////////////////////////////
 //    // 04.07.2016 Layers and Fuel cell generation part

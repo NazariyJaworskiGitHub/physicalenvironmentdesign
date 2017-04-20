@@ -1712,7 +1712,8 @@ void RepresentativeVolumeElement::generateOverlappingRandomBezierCurveIntenseCL(
         float rotationOX,
         float rotationOY,
         float rotationOZ,
-        float coreValue) throw (std::runtime_error)
+        float coreValue,
+        const std::vector<MathUtils::Node<3,float>> *_initialPointsPtr) throw (std::runtime_error)
 {
     if(curveNum <= 0)
         throw(std::runtime_error("generateOverlappingRandomBezierCurveIntenseCL(): "
@@ -1766,8 +1767,15 @@ void RepresentativeVolumeElement::generateOverlappingRandomBezierCurveIntenseCL(
                                  "can't allocate memory for temporary storage.\n"));
     float *_controlPolygonPoints = new float[curveOrder*3];
     if(!_controlPolygonPoints)
-        throw(std::runtime_error("generateBezierCurveIntense():"
+        throw(std::runtime_error("generateBezierCurveIntenseCL():"
                                  "can't allocate memory for temporary storage.\n"));
+
+    if(_initialPointsPtr)
+    {
+        if(curveNum!=_initialPointsPtr->size())
+            throw(std::runtime_error("generateBezierCurveIntenseCL(): "
+                                     "curveNum!=_initialPointsPtr->size\n"));
+    }
 
     for(int c=0; c<curveNum; ++c)
     {
@@ -1790,9 +1798,18 @@ void RepresentativeVolumeElement::generateOverlappingRandomBezierCurveIntenseCL(
                     _BezierCurve(2, curveOrder, _controlPolygonPoints, k, curveApproximationPoints);
         }
 
-        _curveParameters[c*7 + 0] = MathUtils::rand<int>(0, _size-1);
-        _curveParameters[c*7 + 1] = MathUtils::rand<int>(0, _size-1);
-        _curveParameters[c*7 + 2] = MathUtils::rand<int>(0, _size-1);
+        if(_initialPointsPtr)
+        {
+            _curveParameters[c*7 + 0] = (*_initialPointsPtr)[c][0];
+            _curveParameters[c*7 + 1] = (*_initialPointsPtr)[c][1];
+            _curveParameters[c*7 + 2] = (*_initialPointsPtr)[c][2];
+        }
+        else
+        {
+            _curveParameters[c*7 + 0] = MathUtils::rand<int>(0, _size-1);
+            _curveParameters[c*7 + 1] = MathUtils::rand<int>(0, _size-1);
+            _curveParameters[c*7 + 2] = MathUtils::rand<int>(0, _size-1);
+        }
         if(useRandomRotations)
         {
             _curveParameters[c*7 + 3] = MathUtils::rand<float>(0.0f, M_PI);
