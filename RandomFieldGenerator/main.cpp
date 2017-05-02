@@ -52,8 +52,8 @@ int main(int argc, char *argv[])
 
     // See https://figshare.com/articles/Rules_to_Determine_Thermal_Conductivity_and_Density_of_Anodic_Aluminum_Oxide_AAO_Membranes/3085315
     //                               h       unused  unused  unused  unused
-    FEM::Characteristics Al     {     237.0,      0,      0,      0,      0};
-    FEM::Characteristics AAO_Air{       0.92,     0,      0,      0,      0};
+    FEM::Characteristics Al     {  1e4,      0,      0,      0,      0};
+    FEM::Characteristics AAO_Air{    1,      0,      0,      0,      0};
     int RVEDiscreteSize = 128;
     float RVEPhysicalLength = 0.001;
     int cellNum = 7;
@@ -82,13 +82,23 @@ int main(int argc, char *argv[])
         for(int j=0; j<cellNum/(sqrt(3)/2); ++j)
         {
             ++pnts;
+            // Across
             _initialPoints.push_back(MathUtils::Node<3,float>(
-                                         RVEDiscreteSize/2,
                                          (RVEDiscreteSize/cellNum/2)*(j%2) + i*RVEDiscreteSize/cellNum + MathUtils::rand<int>(-RVEDiscreteSize/cellNum/5,RVEDiscreteSize/cellNum/5),
+                                         RVEDiscreteSize/2,
                                          j*RVEDiscreteSize/(cellNum/(sqrt(3)/2)) + MathUtils::rand<int>(-RVEDiscreteSize/cellNum/5,RVEDiscreteSize/cellNum/5)));
+//            // Along
+//            _initialPoints.push_back(MathUtils::Node<3,float>(
+//                                         RVEDiscreteSize/2,
+//                                         (RVEDiscreteSize/cellNum/2)*(j%2) + i*RVEDiscreteSize/cellNum + MathUtils::rand<int>(-RVEDiscreteSize/cellNum/5,RVEDiscreteSize/cellNum/5),
+//                                         j*RVEDiscreteSize/(cellNum/(sqrt(3)/2)) + MathUtils::rand<int>(-RVEDiscreteSize/cellNum/5,RVEDiscreteSize/cellNum/5)));
         }
+    // Across
     RVE.generateOverlappingRandomBezierCurveIntenseCL(
-                pnts,4,6,RVEDiscreteSize,0.8,RVEDiscreteSize/cellNum/1.3, 0.01, 1.0, false, 0, 0, 0, 1.0, &_initialPoints);
+                pnts,4,6,RVEDiscreteSize,0.8,RVEDiscreteSize/cellNum/1.3, 0.01, 1.0, false, 0, 0, M_PI/2, 1.0, &_initialPoints);
+//    // Along
+//    RVE.generateOverlappingRandomBezierCurveIntenseCL(
+//                pnts,4,6,RVEDiscreteSize,0.8,RVEDiscreteSize/cellNum/1.3, 0.01, 1.0, false, 0, 0,  0, 1.0, &_initialPoints);
     RVE.invertUnMasked();
     RVE.saveRVEToFile("Nanoporous_alumina_Hexagon_Bezier_128.RVE");
 
