@@ -162,7 +162,8 @@ HEADERS += \
     SYNTHESIS/synthesis.h \
     TESTS/test_synthesis.h \
     _SIMULATIONS/al_sic.h \
-    _SIMULATIONS/mechanical.h
+    _SIMULATIONS/mechanical.h \
+    _SIMULATIONS/aao.h
 
 FORMS += \
     UI/volumeglrenderformatdialog.ui \
