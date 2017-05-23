@@ -19,7 +19,7 @@ namespace UserInterface
 
         private: float _innerCutLevel = 0.5f;
         public : float getInnerCutLevel() const noexcept {return _innerCutLevel;}
-        public : void setInnerCutLevel(float newCutLevel) noexcept {_innerCutLevel = newCutLevel;}
+        public : void setInnerCutLevel(float newCutLevel);
 
         private: void _grayscaleToRainbow(const float gray, int &r, int &g, int &b) noexcept;
 

@@ -390,3 +390,11 @@ void VolumeGLRender::slot_createEditDialog()
             new UserInterface::VolumeGLRenderEditDialog(this);
     _dialog->show();
 }
+
+void UserInterface::VolumeGLRender::setInnerCutLevel(float newCutLevel)
+{
+    _innerCutLevel = newCutLevel;
+    _loadFieldIntoTexture();
+    _infoString = "Cut level: " + QString::number(_innerCutLevel);
+    this->updateGL();
+}
