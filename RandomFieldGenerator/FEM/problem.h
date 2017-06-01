@@ -292,7 +292,10 @@ namespace FEM
             const double eps,
             const int maxIteration,
             std::vector<float> &out,
-            const bool useBiCG = false) noexcept
+            const bool useBiCG = false,
+            double *error = nullptr,
+            long *iterations = nullptr,
+            std::chrono::duration<double> *time = nullptr) noexcept
         {
             /// \todo remove cout
             std::cout << "Solving problem:\n";
@@ -330,6 +333,8 @@ namespace FEM
                 std::cout << " solved: "
                           << "  error = "<< solverBiCG.error()
                           << "  iterations = " << solverBiCG.iters() << "\n";
+                if(error)*error = solverBiCG.error();
+                if(iterations)*iterations = solverBiCG.iters();
             }
             else
             {
@@ -339,6 +344,8 @@ namespace FEM
                 std::cout << " solved: "
                           << "  error = "<< solverCG.error()
                           << "  iterations = " << solverCG.iters() << "\n";
+                if(error)*error = solverCG.error();
+                if(iterations)*iterations = solverCG.iters();
             }
 
             if(out.size() != u.size())out.resize(u.size());
@@ -349,6 +356,7 @@ namespace FEM
 
             /// \todo remove cout
             std::cout << " Time = " << _calculationTimer.getTimeSpanAsString() << " seconds\n";
+            if(time) *time = _calculationTimer.getTimeSpan();
         }
 
         public : virtual ~AbstractProblem() noexcept {}
