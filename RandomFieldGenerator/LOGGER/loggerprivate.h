@@ -40,6 +40,7 @@ namespace Log
                 _logFileStream << _copy.toStdString();
             }
 //            _myMutex.unlock();
+            _logFileStream.flush();
         }
 
         public : _HiddenWriter(std::ofstream &logFileStream) :
