@@ -171,13 +171,13 @@ VolumeGLRenderRVEEditDialog::VolumeGLRenderRVEEditDialog(QWidget *parent) :
     _previewRender_Fiber->move(510, 10);
 
     // Layers
-    ui->LayerBottomSideSlider_Layer->setMaximum(_parent->_ptrToRVE->getSize()-2);
+    ui->LayerBottomSideSlider_Layer->setMaximum(_parent->_ptrToRVE->getSize()-1);
     ui->LayerBottomSideSlider_Layer->setMinimum(0);
     ui->LayerBottomSideSlider_Layer->setValue(0);
     ui->LayerBottomSideLineEdit_Layer->setText(0);
 
     ui->LayerTopSideSlider_Layer->setMaximum(_parent->_ptrToRVE->getSize()-1);
-    ui->LayerTopSideSlider_Layer->setMinimum(1);
+    ui->LayerTopSideSlider_Layer->setMinimum(0);
     ui->LayerTopSideSlider_Layer->setValue(_parent->_ptrToRVE->getSize()-1);
     ui->LayerTopSideLineEdit_Layer->setText(QString::number(_parent->_ptrToRVE->getSize()-1));
 
@@ -1161,14 +1161,14 @@ void UserInterface::VolumeGLRenderRVEEditDialog::on_LayerBottomSideSlider_Layer_
 {
     ui->LayerBottomSideLineEdit_Layer->setText(QString::number(value));
     if(value >= ui->LayerTopSideSlider_Layer->value())
-        ui->LayerTopSideSlider_Layer->setValue(value+1);
+        ui->LayerTopSideSlider_Layer->setValue(value);
 }
 
 void UserInterface::VolumeGLRenderRVEEditDialog::on_LayerTopSideSlider_Layer_valueChanged(int value)
 {
     ui->LayerTopSideLineEdit_Layer->setText(QString::number(value));
     if(value <= ui->LayerBottomSideSlider_Layer->value())
-        ui->LayerBottomSideSlider_Layer->setValue(value-1);
+        ui->LayerBottomSideSlider_Layer->setValue(value);
 }
 
 void UserInterface::VolumeGLRenderRVEEditDialog::on_CoreIntensitySlider_Layer_valueChanged(int value)

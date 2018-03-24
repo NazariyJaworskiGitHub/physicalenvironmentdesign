@@ -33,8 +33,8 @@ namespace Simulation
 {
     float   sqrt3div2 = sqrt(3)/1.9794f;    // special for 7 pores per axis to match on repeated sides
 
-    float   n_matrix = 1.426f*1.426f;       // SiO2 , see (2006) Braun - (FEM) Effective optical properties of non-absorbing nanoporous thin films
-    float   n_phase = 1.0f*1.0f;            // Air
+    float   n_matrix = 30.0f;       // SiO2 , see (2006) Braun - (FEM) Effective optical properties of non-absorbing nanoporous thin films
+    float   n_phase = 0.026f;            // Air
 
     int     poresPerLength = 7;
     float   Dint = 12.0f;
@@ -67,11 +67,11 @@ namespace Simulation
         std::ofstream outputFile;
         outputFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
         std::stringstream _filename;
-        _filename   << "RVE" << RVEDiscreteSize << "_AAO_EffectiveRefractiveIndex.csv";
+        _filename   << "RVE" << RVEDiscreteSize << "_AAO_EffectiveConductivity.csv";
         outputFile.open(_filename.str());
         outputFile  << "RVE,"<< RVEPhysicalLength * _scaleFactor << "m " << RVEDiscreteSize << "x" << RVEDiscreteSize << "x" << RVEDiscreteSize << "\n"
-                    << "n_matrix," << sqrt(n_matrix) << "\n"
-                    << "n_phase," << sqrt(n_phase) << "\n"
+                    << "n_matrix," << n_matrix << "\n"
+                    << "n_phase," << n_phase << "\n"
                     << "poresPerLength," << poresPerLength << "\n"
                     << "Dint," << Dint * _scaleFactor << "\n"
                     << "DpMax," << DpMax * _scaleFactor << "\n"
@@ -174,17 +174,17 @@ namespace Simulation
 
             std::cout   << cutting*100.0 << " "
                         << PhaseVol << " "
-                        << std::sqrt(effn) << " "
-                        << std::sqrt(minn) << " "
-                        << std::sqrt(maxn) << " "
+                        << effn << " "
+                        << minn << " "
+                        << maxn << " "
                         << DpMax*cutting * _scaleFactor << "\n";
 
 
             outputFile  << cutting*100.0 << ","
                         << PhaseVol << ","
-                        << std::sqrt(effn) << ","
-                        << std::sqrt(minn) << ","
-                        << std::sqrt(maxn) << ","
+                        << effn << ","
+                        << minn << ","
+                        << maxn << ","
                         << DpMax*cutting * _scaleFactor << ","
                         << error << ","
                         << iterations << ","

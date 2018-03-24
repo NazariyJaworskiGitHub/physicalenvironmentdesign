@@ -42,7 +42,7 @@ win32{
 #ViennaCL
 # TODO: Remove it into different project
 DEFINES += VIENNACL_WITH_OPENCL
-INCLUDEPATH += E:\ViennaCL-1.6.2\
+INCLUDEPATH += E:\ViennaCL\ViennaCL-1.6.2\
 
 #For debugging
 CONFIG(debug, release|debug):DEFINES += _DEBUG_MODE
@@ -163,7 +163,8 @@ HEADERS += \
     TESTS/test_synthesis.h \
     _SIMULATIONS/al_sic.h \
     _SIMULATIONS/mechanical.h \
-    _SIMULATIONS/aao.h
+    _SIMULATIONS/aao.h \
+    _SIMULATIONS/porouswall.h
 
 FORMS += \
     UI/volumeglrenderformatdialog.ui \

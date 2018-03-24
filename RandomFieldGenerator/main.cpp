@@ -35,7 +35,8 @@
 
 //#include "_SIMULATIONS/al_sic.h"
 //#include "_SIMULATIONS/mechanical.h"
-#include "_SIMULATIONS/aao.h"
+//#include "_SIMULATIONS/aao.h"
+#include "_SIMULATIONS/porouswall.h"
 
 int main(int argc, char *argv[])
 {
@@ -49,8 +50,13 @@ int main(int argc, char *argv[])
     OpenCL::setupViennaCL();
 
     ///////////////////////////////////////////////////////////////////////////////////////
-    // 23.05.17 AAO Test
-    Simulation::AAOSimulationEffectiveRefractiveIndexTest2();
+    //24.03.18 Kurzydlowski
+    //Simulation::PorousWall();
+
+
+//    ///////////////////////////////////////////////////////////////////////////////////////
+//    // 23.05.17 AAO Test
+//    Simulation::AAOSimulationEffectiveRefractiveIndexTest();
 
 //    /////////////////////////////////////////////////////////////////////////////////////
 //    // 07.05.17 Diploma

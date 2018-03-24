@@ -1163,12 +1163,12 @@ void RepresentativeVolumeElement::applyTwoCutMaskInside(
         const float cutLevelA,
         const float cutLevelB) throw (std::runtime_error)
 {
-    if(cutLevelA < 0.0f || cutLevelA >= cutLevelB)
+    if(cutLevelA < 0.0f || cutLevelA > cutLevelB)
         throw(std::runtime_error(
-                "applyTwoCutMaskInside(): cutLevelA < 0.0f || cutLevelA >= cutLevelB.\n"));
-    if(cutLevelB <= cutLevelA || cutLevelB > 1.0f)
+                "applyTwoCutMaskInside(): cutLevelA < 0.0f || cutLevelA > cutLevelB.\n"));
+    if(cutLevelB < cutLevelA || cutLevelB > 1.0f)
         throw(std::runtime_error(
-                "applyTwoCutMaskInside(): cutLevelB <= cutLevelA || cutLevelB > 1.0f.\n"));
+                "applyTwoCutMaskInside(): cutLevelB < cutLevelA || cutLevelB > 1.0f.\n"));
 
     cleanMask();
     for(long i = 0; i < _size; ++i)
@@ -1185,10 +1185,10 @@ void RepresentativeVolumeElement::applyTwoCutMaskOutside(
         const float cutLevelA,
         const float cutLevelB) throw (std::runtime_error)
 {
-    if(cutLevelA < 0.0f || cutLevelA >= cutLevelB)
+    if(cutLevelA < 0.0f || cutLevelA > cutLevelB)
         throw(std::runtime_error(
                 "applyTwoCutMaskOutside(): cutLevelA < 0.0f || cutLevelA >= cutLevelB.\n"));
-    if(cutLevelB <= cutLevelA || cutLevelB > 1.0f)
+    if(cutLevelB < cutLevelA || cutLevelB > 1.0f)
         throw(std::runtime_error(
                 "applyTwoCutMaskOutside(): cutLevelB <= cutLevelA || cutLevelB > 1.0f.\n"));
 
@@ -1198,7 +1198,7 @@ void RepresentativeVolumeElement::applyTwoCutMaskOutside(
             for(long k = 0; k < _size; ++k)
             {
                 float &_val = _data[(i * _size * _size) + (j * _size) + k];
-                if(_val <= cutLevelA || _val >= cutLevelB)
+                if(_val < cutLevelA || _val > cutLevelB)
                     _val = -_val - _MASK_EPS_;
             }
 }
@@ -2103,7 +2103,7 @@ void RepresentativeVolumeElement::generateLayerY(
         const int top,
         float coreValue)  throw (std::runtime_error)
 {
-    if(top <= bottom)
+    if(top < bottom)
         throw(std::runtime_error("generateLayerY(): layer top index <= layer bottom index.\n"));
     if(top >= _size)
         throw(std::runtime_error("generateLayerY(): layer top index >= RVE size.\n"));
@@ -2111,7 +2111,7 @@ void RepresentativeVolumeElement::generateLayerY(
         throw(std::runtime_error("generateLayerY(): layer bottom index < 0.\n"));
 
     for( long i = 0; i<_size; ++i)
-        for( long j = bottom; j<top; ++j)
+        for( long j = bottom; j<=top; ++j)
             for( long k = 0; k<_size; ++k)
             {
                 float &_val = _data[(i * _size * _size) + (j * _size) + k];
