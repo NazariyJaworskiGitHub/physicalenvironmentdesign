@@ -3,6 +3,10 @@
 
 #include "representativevolumeelement.h"
 
+#include <iomanip>
+#include <fstream>
+#include <sstream>
+
 namespace FEM
 {
     enum SIDES{
@@ -156,7 +160,102 @@ namespace FEM
             case 5: return FixedTetrahedron{_v1, _v4, _v5, _v6, {_v1i, _v4i, _v5i, _v6i}, ch};
             }
         }
+        /// See NASTRAN Bible https://simcompanion.mscsoftware.com/infocenter/index?page=content&id=DOC10004
+        /// and https://www.quartus.com/resources/nastran-101/
+        public : void exportToNASTRAN(const std::string &fileName) const
+        {
+            std::ofstream _DomainFileStream;
+            try
+            {
+                _DomainFileStream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+                _DomainFileStream.open(fileName, std::ios::out | std::ios::trunc | std::ios::binary);
+                if (_DomainFileStream.is_open())
+                {
+                    int size = _refToRVE.getSize();
 
+                    _DomainFileStream << "BEGIN,BULK" << std::endl;
+
+                    // Solid materials: ID ID (see page 3012 of NASTRAN Bible)
+                    if(!MaterialsVector.empty())
+                    {
+                        int materialIndex = 1; // starts from 1
+                        for(auto RVEch = MaterialsVector.begin(); RVEch != MaterialsVector.end(); ++RVEch)
+                        {
+                            _DomainFileStream << "MAT1,"
+                                              << materialIndex
+                                              << std::endl;
+                            _DomainFileStream << "PSOLID,"
+                                              << materialIndex << ','
+                                              << materialIndex
+                                              << std::endl;
+                            ++materialIndex;
+                        }
+                    }
+                    else // Fill dummy solid
+                    {
+                        _DomainFileStream << "MAT1,"
+                                          << "1"
+                                          << std::endl;
+                        _DomainFileStream << "PSOLID,"
+                                          << "1,"
+                                          << "1"
+                                          << std::endl;
+                    }
+
+                    // Mesh nodes: GRID ID CoordinateSystem=Empty X Y Z (see page 1997 of NASTRAN Bible)
+                    float step = _refToRVE.getRepresentationSize() / (size-1.0);
+                    for( long i = 0; i < size; ++i)
+                        for( long j = 0; j < size; ++j)
+                            for( long k = 0; k < size; ++k)
+                            {
+                                long nodeIndex = i + j*size + k*size*size + 1; // starts from 1
+                                _DomainFileStream << "GRID,"
+                                                  << nodeIndex << ','
+                                                  << ","
+                                                  << step*i << ','
+                                                  << step*j << ','
+                                                  << step*k
+                                                  << std::endl;
+                            }
+
+                    // Finite element (CHEXA - cubic, CTETRA - tetrahedron) (see page 1591 of NASTRAN Bible)
+                    // First two: ID IDofMaterial
+                    // Other: vertex index
+                    for(long el=0; el< _elementsNum; ++el)
+                    {
+                        FixedTetrahedron t = (*this)[el];
+                        int characteristicsIndex = 1; // starts from 1
+                        for(auto RVEch = MaterialsVector.begin(); RVEch != MaterialsVector.end(); ++RVEch)
+                            if(t.characteristics == &((*RVEch).characteristics))
+                                break;
+                            else
+                                ++characteristicsIndex;
+                        _DomainFileStream << "CTETRA,"
+                                          << el + 1 << ',' // starts from 1
+                                          << characteristicsIndex << ','
+                                          << t.indexes[0] + 1 << ',' // starts from 1
+                                          << t.indexes[1] + 1 << ',' // starts from 1
+                                          << t.indexes[2] + 1 << ',' // starts from 1
+                                          << t.indexes[3] + 1 // starts from 1
+                                          << std::endl;
+                    }
+                    _DomainFileStream << "ENDDATA" << std::endl;
+                    _DomainFileStream.flush();
+                    _DomainFileStream.close();
+                }
+            }
+            catch(std::exception &e)
+            {
+                if(_DomainFileStream.is_open())
+                    _DomainFileStream.close();
+                std::stringstream _str;
+                _str << e.what() << "\n"
+                     << "  failbit: " << _DomainFileStream.fail() <<"\n"
+                     << "  eofbit: " << _DomainFileStream.eof() <<"\n"
+                     << "  badbit: " << _DomainFileStream.bad() <<"\n";
+                throw(std::runtime_error(_str.str()));
+            }
+        }
         public : ~Domain() noexcept {}
     };
 }

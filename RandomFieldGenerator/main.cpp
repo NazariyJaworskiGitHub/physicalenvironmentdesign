@@ -36,7 +36,7 @@
 //#include "_SIMULATIONS/al_sic.h"
 //#include "_SIMULATIONS/mechanical.h"
 //#include "_SIMULATIONS/aao.h"
-#include "_SIMULATIONS/porouswall.h"
+//#include "_SIMULATIONS/porouswall.h"
 
 int main(int argc, char *argv[])
 {
@@ -50,8 +50,116 @@ int main(int argc, char *argv[])
     OpenCL::setupViennaCL();
 
     ///////////////////////////////////////////////////////////////////////////////////////
-    //24.03.18 Kurzydlowski
-    //Simulation::PorousWall();
+//    06.04.19 NASTRAN TEST (Domain export)
+
+//    int size = 2;
+//    double physicalLength = 1;
+//    RepresentativeVolumeElement *RVE = new RepresentativeVolumeElement(size,physicalLength);
+//    //RVE->generateLayerY(2,3,1);
+//    UserInterface::VolumeGLRenderRVE *renderStructure = new UserInterface::VolumeGLRenderRVE(RVE, NULL);
+//    renderStructure->resize(800,600);
+//    renderStructure->setEnvironmenColor(QColor(255, 255, 255, 255));
+//    renderStructure->setTextColor(QColor(255, 255, 255, 255));
+//    renderStructure->show();
+//    //FEM::Characteristics m1 = { 0, 0, 0, 0, 0};
+//    FEM::Domain domain(*RVE);
+//    //domain.addMaterial(0,0.5,m1);
+//    //domain.addMaterial(0.5,2.0,m2);
+//    domain.exportToNASTRAN("RVE_2_Demo.bdf");
+
+//    OpenCL::CLManager::instance().setCurrentPlatform(0);
+//    OpenCL::CLManager::instance().setCurrentDevice(1);
+//    viennacl::ocl::switch_context(0);
+//    viennacl::ocl::current_context().switch_device(1);
+
+//    int size = 64;
+//    double physicalLength = 0.01;
+//    RepresentativeVolumeElement *RVE = new RepresentativeVolumeElement(size,physicalLength);
+//    RVE->addRandomNoise();
+////    RVE->cleanData();
+////    RVE->addRandomNoise();
+//    RVE->applyGaussianFilterCL(12);
+//    RVE->applyTwoCutMaskInside(0.35,0.45);
+//    RVE->cleanUnMaskedData(0);
+//    RVE->applyTwoCutMaskOutside(0.35,0.45);
+//    RVE->cleanUnMaskedData(1);
+//    RVE->cleanMask();
+//    //RVE->generateOverlappingRandomBezierCurveIntenseCL(50,2,2,32,0.2,3,0.25,0);
+//    RVE->saveRVEToFile("RVE_64_Gaussian_pores.RVE");
+
+//    FEM::Characteristics m1 = { 1, 0, 0, 0, 0};
+//    FEM::Characteristics m2 = { 10, 0, 0, 0, 0};
+//    FEM::Domain domain(*RVE);
+//    domain.addMaterial(0,0.5,m1);
+//    domain.addMaterial(0.5,2.0,m2);
+//    domain.exportToNASTRAN("RVE_64_Gaussian_pores.bdf");
+
+
+    int size = 32;
+    double physicalLength = 0.01;
+    RepresentativeVolumeElement *RVE = new RepresentativeVolumeElement(size,physicalLength);
+    RVE->addRandomNoise();
+    RVE->applyGaussianFilterCL(6);
+    RVE->applyTwoCutMaskInside(0.0,0.6);
+    RVE->cleanUnMaskedData(1);
+    RVE->applyTwoCutMaskOutside(0.0,0.6);
+    RVE->cleanUnMaskedData(0);
+    RVE->cleanMask();
+    //RVE->generateOverlappingRandomBezierCurveIntenseCL(50,2,2,32,0.2,3,0.25,0);
+    RVE->saveRVEToFile("RVE_32_Gaussian_pores.RVE");
+
+    FEM::Characteristics m1 = { 1, 0, 0, 0, 0};
+    FEM::Characteristics m2 = { 10, 0, 0, 0, 0};
+    FEM::Domain domain(*RVE);
+    domain.addMaterial(0,0.5,m1);
+    domain.addMaterial(0.5,2.0,m2);
+    domain.exportToNASTRAN("RVE_32_Gaussian_pores.bdf");
+
+    Timer timer;
+    timer.start();
+
+    FEM::HeatConductionProblem problem(domain);
+    problem.BCManager.addNeumannBC(FEM::LEFT, {1000});
+    problem.BCManager.addDirichletBC(FEM::RIGHT,{293});
+
+    std::vector<float> temperatureField;
+    problem.solve(1e-8,10000,temperatureField);
+
+    timer.stop();
+    std::cout << "Total: " << timer.getTimeSpanAsString() << " seconds" << std::endl;
+
+    UserInterface::VolumeGLRenderRVE *renderStructure = new UserInterface::VolumeGLRenderRVE(RVE, NULL);
+    renderStructure->resize(800,600);
+    renderStructure->setEnvironmenColor(QColor(255, 255, 255, 255));
+    renderStructure->setTextColor(QColor(255, 255, 255, 255));
+    renderStructure->show();
+
+    UserInterface::VolumeGLRender renderTemperature(
+                RVE->getSize(), RVE->getData(), temperatureField.data(), NULL);
+    renderTemperature.setBoundingBoxRepresentationSize(RVE->getRepresentationSize());
+    renderTemperature.setWindowTitle("Temperature");
+    renderTemperature.resize(800,600);
+    renderTemperature.show();
+
+    float meanT = 0;
+    float minT = temperatureField[0];
+    float maxT = temperatureField[0];
+
+    for(int k=0; k<size; ++k)          // z
+        for(int j=0; j<size; ++j)      // y
+        {
+            float _curVal = temperatureField[
+                    0 + size*j + k*size*size];
+            meanT += _curVal;
+            if(_curVal < minT) minT = _curVal;
+            if(_curVal > maxT) maxT = _curVal;
+        }
+    meanT /= size*size;
+    std::cout  << " meanT=" << meanT << " minT=" << minT << " maxT=" << maxT << "\n";
+
+//    ///////////////////////////////////////////////////////////////////////////////////////
+//    //24.03.18 Kurzydlowski
+//    Simulation::PorousWall();
 
 
 //    ///////////////////////////////////////////////////////////////////////////////////////
