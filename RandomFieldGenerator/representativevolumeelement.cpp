@@ -335,7 +335,8 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
                     __global float *_initialPoints,\
                     int cellNum,\
                     __global float *_data,\
-                    int _size)\
+                    int _size,\
+                    float squeezeFactorZ)\
         {\
             int i = get_global_id(0);\
             int j = get_global_id(1);\
@@ -349,14 +350,14 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
                         _initialPoints[2],\
                         k, j, i, &_kk, &_jj, &_ii, _size);\
                 _kk *= _kk; _jj *= _jj; _ii *= _ii;\
-                float _minDist1 = sqrt(_kk + _jj + _ii);\
+                float _minDist1 = sqrt(_kk + _jj + _ii/squeezeFactorZ);\
                 _distanceOnRepeatedSides(\
                             _initialPoints[3+0],\
                         _initialPoints[3+1],\
                         _initialPoints[3+2],\
                         k, j, i, &_kk, &_jj, &_ii, _size);\
                 _kk *= _kk; _jj *= _jj; _ii *= _ii;\
-                float _minDist2 = sqrt(_kk + _jj + _ii);\
+                float _minDist2 = sqrt(_kk + _jj + _ii/squeezeFactorZ);\
                 if(_minDist1 > _minDist2)\
                 {\
                     float tmp = _minDist1;\
@@ -371,7 +372,7 @@ RepresentativeVolumeElement::RepresentativeVolumeElement(
                             _initialPoints[c*3+2],\
                             k, j, i, &_kk, &_jj, &_ii, _size);\
                     _kk *= _kk; _jj *= _jj; _ii *= _ii;\
-                    float _curDist = sqrt(_kk + _jj + _ii);\
+                    float _curDist = sqrt(_kk + _jj + _ii/squeezeFactorZ);\
                     if(_curDist < _minDist1)\
                     {\
                         _minDist2 = _minDist1;\
@@ -1883,9 +1884,14 @@ void RepresentativeVolumeElement::generateOverlappingRandomBezierCurveIntenseCL(
 
 void RepresentativeVolumeElement::generateVoronoiRandomCells(
         const int cellNum,
+        const float squeezeFactorZ,
         const std::vector<MathUtils::Node<3,float>> *_initialPointsPtr)
 throw (std::runtime_error)
 {
+    if(squeezeFactorZ == 0)
+        throw(std::runtime_error("generateVoronoiRandomCells(): "
+                                 "squeezeFactorZ = 0\n"));
+
     if(cellNum < 2)
         throw(std::runtime_error("generateVoronoiRandomCells(): "
                                  "cellNum < 2.\n"));
@@ -1923,7 +1929,7 @@ throw (std::runtime_error)
                 _kk *= _kk;
                 _jj *= _jj;
                 _ii *= _ii;
-                float _minDist1 = std::sqrt(_kk + _jj + _ii);
+                float _minDist1 = std::sqrt(_kk + _jj + _ii/squeezeFactorZ);
 
                 _distanceOnRepeatedSides(
                             _initialPoints[1][0],
@@ -1933,7 +1939,7 @@ throw (std::runtime_error)
                 _kk *= _kk;
                 _jj *= _jj;
                 _ii *= _ii;
-                float _minDist2 = std::sqrt(_kk + _jj + _ii);
+                float _minDist2 = std::sqrt(_kk + _jj + _ii/squeezeFactorZ);
 
                 if(_minDist1 > _minDist2)
                 {
@@ -1952,7 +1958,7 @@ throw (std::runtime_error)
                     _kk *= _kk;
                     _jj *= _jj;
                     _ii *= _ii;
-                    float _curDist = std::sqrt(_kk + _jj + _ii);
+                    float _curDist = std::sqrt(_kk + _jj + _ii/squeezeFactorZ);
 
                     if(_curDist < _minDist1)
                     {
@@ -1971,9 +1977,14 @@ throw (std::runtime_error)
 
 void RepresentativeVolumeElement::generateVoronoiRandomCellsCL(
         const int cellNum,
+        const float squeezeFactorZ,
         const std::vector<MathUtils::Node<3,float>> *_initialPointsPtr)
 throw (std::runtime_error)
 {
+    if(squeezeFactorZ == 0)
+        throw(std::runtime_error("generateVoronoiRandomCells(): "
+                                 "squeezeFactorZ = 0\n"));
+
     if(cellNum < 2)
         throw(std::runtime_error("generateVoronoiRandomCellsCL(): "
                                  "cellNum < 2.\n"));
@@ -2021,6 +2032,7 @@ throw (std::runtime_error)
     _kernelVoronoiPtr->setArg(1, cellNum);
     _kernelVoronoiPtr->setArg(2, _dataBuffer);
     _kernelVoronoiPtr->setArg(3, _size);
+    _kernelVoronoiPtr->setArg(4, squeezeFactorZ);
 
     cl::CommandQueue &_queue = OpenCL::CLManager::instance().getCurrentCommandQueue();
     cl::Event _event;

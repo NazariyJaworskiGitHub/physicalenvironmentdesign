@@ -381,12 +381,13 @@ class RepresentativeVolumeElement
     /// Generate Voronoi diagram random cells
     public : void generateVoronoiRandomCells(
             const int cellNum,
+            const float squeezeFactorZ = 1.0f,
             const std::vector<MathUtils::Node<3,float>> *_initialPointsPtr = nullptr)
     throw (std::runtime_error);
 
     /// Generate Voronoi diagram random cells OpenCL version
-    public : void generateVoronoiRandomCellsCL(
-            const int cellNum,
+    public : void generateVoronoiRandomCellsCL(const int cellNum,
+            const float squeezeFactorZ = 1.0f,
             const std::vector<MathUtils::Node<3,float>> *_initialPointsPtr = nullptr)
     throw (std::runtime_error);
 
