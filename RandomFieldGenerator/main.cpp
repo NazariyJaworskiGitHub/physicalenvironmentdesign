@@ -50,40 +50,95 @@ int main(int argc, char *argv[])
     OpenCL::setupViennaCL();
 
     ///////////////////////////////////////////////////////////////////////////////////////
-//  27.09.19 Graphene,Janusz Woźny
-//  https://graphene-supermarket.com/Conductive-Graphene-Sheets-8-x8-20-pack.html
-    int size = 32;
-    double physicalLength = 1e-6;
-    RepresentativeVolumeElement *RVE = new RepresentativeVolumeElement(size,physicalLength);
-    std::vector<MathUtils::Node<3,float>> initialPoints;
-    int k = size/4;
-    for(int i=0; i<k; ++i)
-        for(int c=0; c<size/4; ++c)
-            initialPoints.push_back(MathUtils::Node<3,float>(
-                MathUtils::rand<int>(0,size-1),
-                MathUtils::rand<int>(0,size-1),
-                i*size/k+MathUtils::rand<int>(0,1)));
-//    int k = 10;
-//    for(int c=0; c<200; ++c)
-//        initialPoints.push_back(MathUtils::Node<3,float>(
-//                                    MathUtils::rand<int>(0,size-1),
-//                                    MathUtils::rand<int>(0,size-1),
-//                                    MathUtils::rand<int>(0,size-1)));
-    RVE->generateVoronoiRandomCellsCL(initialPoints.size(),1.0/k,&initialPoints);
-    RVE->saveRVEToFile("RVE_32_Graphene.RVE");
+//  29.09.19 NASTRAN 2D
+    int RVEDiscreteSize = 128;
+    float RVEPhysicalLength = 1e-9;
+    float cellNum = 1;
+    RepresentativeVolumeElement *RVE = new RepresentativeVolumeElement(RVEDiscreteSize,RVEPhysicalLength);
+    std::vector<MathUtils::Node<3,float>> _initialPoints;
+    int pnts = 0;
+    for(int i=0; i<cellNum; ++i)
+        for(int j=0; j<cellNum; ++j)
+        {
+            ++pnts;
+            // Along
+            _initialPoints.push_back(MathUtils::Node<3,float>(
+                                         i*RVEDiscreteSize/cellNum /*+ MathUtils::rand<int>(-RVEDiscreteSize/cellNum/5,RVEDiscreteSize/cellNum/5)*/,
+                                         RVEDiscreteSize/2,
+                                         j*RVEDiscreteSize/cellNum /*+ MathUtils::rand<int>(-RVEDiscreteSize/cellNum/5,RVEDiscreteSize/cellNum/5)*/));
+        }
+    // Across
+    RVE->generateOverlappingRandomBezierCurveIntenseCL(
+                pnts,2,2,RVEDiscreteSize,1,RVEDiscreteSize/cellNum/2, 0, 1.0, false, 0, 0, M_PI/2, 1.0, &_initialPoints);
+
+//    // Quasi regular hexagon bezier -------------------------------------------------
+//    float cellNum = 7;
+//    std::vector<MathUtils::Node<3,float>> _initialPoints;
+//    int pnts = 0;
+//    for(int i=0; i<cellNum; ++i)
+//        for(int j=0; j<cellNum/(sqrt(3)/2); ++j)
+//        {
+//            ++pnts;
+//            // Along
+//            _initialPoints.push_back(MathUtils::Node<3,float>(
+//                                         (RVEDiscreteSize/cellNum/2)*(j%2) + i*RVEDiscreteSize/cellNum /*+ MathUtils::rand<int>(-RVEDiscreteSize/cellNum/5,RVEDiscreteSize/cellNum/5)*/,
+//                                         RVEDiscreteSize/2,
+//                                         j*RVEDiscreteSize/(cellNum/(sqrt(3)/2)) /*+ MathUtils::rand<int>(-RVEDiscreteSize/cellNum/5,RVEDiscreteSize/cellNum/5)*/));
+//        }
+//    // Across
+//    RVE->generateOverlappingRandomBezierCurveIntenseCL(
+//                pnts,2,2,RVEDiscreteSize,1,RVEDiscreteSize/cellNum/2, 0, 1.0, false, 0, 0, M_PI/2, 1.0, &_initialPoints);
+    RVE->invertUnMasked();
+//    RVE->saveRVEToFile("RVE_256_Hexagon.RVE");
 
     FEM::Characteristics m1 = { 1, 0, 0, 0, 0};
     FEM::Characteristics m2 = { 10, 0, 0, 0, 0};
     FEM::Domain domain(*RVE);
-    domain.addMaterial(0,0.081,m1);
-    domain.addMaterial(0.081,2.0,m2);
-    domain.exportToNASTRAN("RVE_32_Graphene.bdf");
+    domain.addMaterial(0,0.9,m1);
+    domain.addMaterial(0.9,2.0,m2);
+    domain.exportTopSize2DToNASTRAN("RVE_128_Square_2d.bdf");
 
     UserInterface::VolumeGLRenderRVE *renderStructure = new UserInterface::VolumeGLRenderRVE(RVE, NULL);
     renderStructure->resize(800,600);
     renderStructure->setEnvironmenColor(QColor(255, 255, 255, 255));
     renderStructure->setTextColor(QColor(255, 255, 255, 255));
     renderStructure->show();
+
+//    ///////////////////////////////////////////////////////////////////////////////////////
+////  27.09.19 Graphene,Janusz Woźny
+////  https://graphene-supermarket.com/Conductive-Graphene-Sheets-8-x8-20-pack.html
+//    int size = 32;
+//    double physicalLength = 1e-6;
+//    RepresentativeVolumeElement *RVE = new RepresentativeVolumeElement(size,physicalLength);
+//    std::vector<MathUtils::Node<3,float>> initialPoints;
+//    int k = size/4;
+//    for(int i=0; i<k; ++i)
+//        for(int c=0; c<size/4; ++c)
+//            initialPoints.push_back(MathUtils::Node<3,float>(
+//                MathUtils::rand<int>(0,size-1),
+//                MathUtils::rand<int>(0,size-1),
+//                i*size/k+MathUtils::rand<int>(0,1)));
+////    int k = 10;
+////    for(int c=0; c<200; ++c)
+////        initialPoints.push_back(MathUtils::Node<3,float>(
+////                                    MathUtils::rand<int>(0,size-1),
+////                                    MathUtils::rand<int>(0,size-1),
+////                                    MathUtils::rand<int>(0,size-1)));
+//    RVE->generateVoronoiRandomCellsCL(initialPoints.size(),1.0/k,&initialPoints);
+//    RVE->saveRVEToFile("RVE_32_Graphene.RVE");
+
+//    FEM::Characteristics m1 = { 1, 0, 0, 0, 0};
+//    FEM::Characteristics m2 = { 10, 0, 0, 0, 0};
+//    FEM::Domain domain(*RVE);
+//    domain.addMaterial(0,0.081,m1);
+//    domain.addMaterial(0.081,2.0,m2);
+//    domain.exportToNASTRAN("RVE_32_Graphene.bdf");
+
+//    UserInterface::VolumeGLRenderRVE *renderStructure = new UserInterface::VolumeGLRenderRVE(RVE, NULL);
+//    renderStructure->resize(800,600);
+//    renderStructure->setEnvironmenColor(QColor(255, 255, 255, 255));
+//    renderStructure->setTextColor(QColor(255, 255, 255, 255));
+//    renderStructure->show();
 
     ///////////////////////////////////////////////////////////////////////////////////////
 ////    06.04.19 NASTRAN TEST (Domain export)

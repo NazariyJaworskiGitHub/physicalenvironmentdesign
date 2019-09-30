@@ -256,6 +256,110 @@ namespace FEM
                 throw(std::runtime_error(_str.str()));
             }
         }
+        public : void exportTopSize2DToNASTRAN(const std::string &fileName) const
+        {
+            std::ofstream _DomainFileStream;
+            try
+            {
+                _DomainFileStream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+                _DomainFileStream.open(fileName, std::ios::out | std::ios::trunc | std::ios::binary);
+                if (_DomainFileStream.is_open())
+                {
+                    int size = _refToRVE.getSize();
+
+                    _DomainFileStream << "BEGIN,BULK" << std::endl;
+
+                    // Solid materials: ID ID (see page 2985 of NASTRAN Bible)
+                    if(!MaterialsVector.empty())
+                    {
+                        int materialIndex = 1; // starts from 1
+                        for(auto RVEch = MaterialsVector.begin(); RVEch != MaterialsVector.end(); ++RVEch)
+                        {
+                            _DomainFileStream << "MAT1,"
+                                              << materialIndex
+                                              << std::endl;
+                            _DomainFileStream << "PSHELL,"
+                                              << materialIndex << ','
+                                              << materialIndex
+                                              << std::endl;
+                            ++materialIndex;
+                        }
+                    }
+                    else // Fill dummy solid
+                    {
+                        _DomainFileStream << "MAT1,"
+                                          << "1"
+                                          << std::endl;
+                        _DomainFileStream << "PSHELL,"
+                                          << "1,"
+                                          << "1"
+                                          << std::endl;
+                    }
+
+                    // Mesh nodes: GRID ID CoordinateSystem=Empty X Y Z (see page 1997 of NASTRAN Bible)
+                    float step = _refToRVE.getRepresentationSize() / (size-1.0);
+                    for( long i = 0; i < size; ++i)
+                        for( long k = 0; k < size; ++k)
+                        {
+                            long nodeIndex = i + (size-1)*size + k*size*size + 1; // starts from 1
+                            _DomainFileStream << "GRID,"
+                                              << nodeIndex << ','
+                                              << ","
+                                              << step*i << ','
+                                              << step*k << ','
+                                              << 0
+                                              << std::endl;
+                        }
+
+                    // Finite element (CQUAD,  CTRIA3,...) (see page 1527, 1596 of NASTRAN Bible)
+                    // First two: ID IDofMaterial
+                    // Other: vertex index
+                    for(long el=0; el< _elementsNum; el++)
+                    {
+                        FixedTetrahedron t = (*this)[el];
+                        NODES_TRIPLET tmp;
+                        long i,j,k;
+                        if(t.isOnSide(1,_refToRVE.getRepresentationSize(),tmp))
+                        {
+                            int characteristicsIndex = 1; // starts from 1
+                            for(auto RVEch = MaterialsVector.begin(); RVEch != MaterialsVector.end(); ++RVEch)
+                                if(t.characteristics == &((*RVEch).characteristics))
+                                    break;
+                                else
+                                    ++characteristicsIndex;
+                            switch(tmp)
+                            {
+                            case ABC: i=0;j=1;k=2;break;
+                            case ABD: i=0;j=1;k=3;break;
+                            case ACD: i=0;j=2;k=3;break;
+                            case BCD: i=1;j=2;k=3;break;
+                            }
+                            _DomainFileStream << "CTRIA3,"
+                                              << el + 1 << ',' // starts from 1
+                                              << characteristicsIndex << ','
+                                              << t.indexes[1] + 1 << ',' // starts from 1
+                                              << t.indexes[2] + 1 << ',' // starts from 1
+                                              << t.indexes[3] + 1 // starts from 1
+                                              << std::endl;
+                        }
+                    }
+                    _DomainFileStream << "ENDDATA" << std::endl;
+                    _DomainFileStream.flush();
+                    _DomainFileStream.close();
+                }
+            }
+            catch(std::exception &e)
+            {
+                if(_DomainFileStream.is_open())
+                    _DomainFileStream.close();
+                std::stringstream _str;
+                _str << e.what() << "\n"
+                     << "  failbit: " << _DomainFileStream.fail() <<"\n"
+                     << "  eofbit: " << _DomainFileStream.eof() <<"\n"
+                     << "  badbit: " << _DomainFileStream.bad() <<"\n";
+                throw(std::runtime_error(_str.str()));
+            }
+        }
         public : ~Domain() noexcept {}
     };
 }
