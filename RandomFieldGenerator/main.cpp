@@ -51,52 +51,78 @@ int main(int argc, char *argv[])
 
     ///////////////////////////////////////////////////////////////////////////////////////
 //  29.09.19 NASTRAN 2D
+//    double a = 500e-9;
+//    double b = 0.2*a;
+//    float cellNum = 2;
+
+    double a = 500e-9;
+    double b = 0.48*a;
+    float cellNum = 7;
+
     int RVEDiscreteSize = 128;
-    float RVEPhysicalLength = 1e-9;
-    float cellNum = 1;
+    float RVEPhysicalLength = a*cellNum;
+
     RepresentativeVolumeElement *RVE = new RepresentativeVolumeElement(RVEDiscreteSize,RVEPhysicalLength);
+
+//    RVE->addRandomNoise();
+//    RVE->applyGaussianFilterCL(8);
+
+//    RVE->generateVoronoiRandomCellsCL(50);
+
+//    std::vector<MathUtils::Node<3,float>> _initialPoints;
+//    int pnts = 0;
+//    for(int i=0; i<cellNum; ++i)
+//        for(int j=0; j<cellNum; ++j)
+//        {
+//            ++pnts;
+//            _initialPoints.push_back(MathUtils::Node<3,float>(
+//                                         i*RVEDiscreteSize/cellNum /*+ MathUtils::rand<int>(-RVEDiscreteSize/cellNum/5,RVEDiscreteSize/cellNum/5)*/,
+//                                         RVEDiscreteSize/2,
+//                                         j*RVEDiscreteSize/cellNum /*+ MathUtils::rand<int>(-RVEDiscreteSize/cellNum/5,RVEDiscreteSize/cellNum/5)*/));
+//        }
+//    RVE->generateOverlappingRandomBezierCurveIntenseCL(
+//                pnts,2,2,RVEDiscreteSize,1,std::round(RVEDiscreteSize*b/a/cellNum), 0, 0, false, 0, 0, M_PI/2, 1.0, &_initialPoints);
+
+    // Quasi regular hexagon bezier -------------------------------------------------
     std::vector<MathUtils::Node<3,float>> _initialPoints;
     int pnts = 0;
     for(int i=0; i<cellNum; ++i)
-        for(int j=0; j<cellNum; ++j)
+        for(int j=0; j<cellNum/(sqrt(3)/2); ++j)
         {
             ++pnts;
-            // Along
             _initialPoints.push_back(MathUtils::Node<3,float>(
-                                         i*RVEDiscreteSize/cellNum /*+ MathUtils::rand<int>(-RVEDiscreteSize/cellNum/5,RVEDiscreteSize/cellNum/5)*/,
+                                         (RVEDiscreteSize/cellNum/2)*(j%2) + i*RVEDiscreteSize/cellNum /*+ MathUtils::rand<int>(-RVEDiscreteSize/cellNum/5,RVEDiscreteSize/cellNum/5)*/,
                                          RVEDiscreteSize/2,
-                                         j*RVEDiscreteSize/cellNum /*+ MathUtils::rand<int>(-RVEDiscreteSize/cellNum/5,RVEDiscreteSize/cellNum/5)*/));
+                                         j*RVEDiscreteSize/(cellNum/(sqrt(3)/2)) /*+ MathUtils::rand<int>(-RVEDiscreteSize/cellNum/5,RVEDiscreteSize/cellNum/5)*/));
         }
-    // Across
     RVE->generateOverlappingRandomBezierCurveIntenseCL(
-                pnts,2,2,RVEDiscreteSize,1,RVEDiscreteSize/cellNum/2, 0, 1.0, false, 0, 0, M_PI/2, 1.0, &_initialPoints);
+                pnts,2,2,RVEDiscreteSize,1,RVEDiscreteSize*b/a/cellNum, 0, 0, false, 0, 0, M_PI/2, 1.0, &_initialPoints);
+    std::cout << RVEDiscreteSize*b/a/cellNum << " " << RVEDiscreteSize*b/a/cellNum/RVEDiscreteSize*cellNum << std::endl;
 
-//    // Quasi regular hexagon bezier -------------------------------------------------
-//    float cellNum = 7;
 //    std::vector<MathUtils::Node<3,float>> _initialPoints;
 //    int pnts = 0;
 //    for(int i=0; i<cellNum; ++i)
 //        for(int j=0; j<cellNum/(sqrt(3)/2); ++j)
 //        {
+//            if(((j%4==1) && (i%2==0)) || ((j%4==3) && (i%2==1)))continue;
 //            ++pnts;
-//            // Along
 //            _initialPoints.push_back(MathUtils::Node<3,float>(
 //                                         (RVEDiscreteSize/cellNum/2)*(j%2) + i*RVEDiscreteSize/cellNum /*+ MathUtils::rand<int>(-RVEDiscreteSize/cellNum/5,RVEDiscreteSize/cellNum/5)*/,
 //                                         RVEDiscreteSize/2,
 //                                         j*RVEDiscreteSize/(cellNum/(sqrt(3)/2)) /*+ MathUtils::rand<int>(-RVEDiscreteSize/cellNum/5,RVEDiscreteSize/cellNum/5)*/));
 //        }
-//    // Across
 //    RVE->generateOverlappingRandomBezierCurveIntenseCL(
-//                pnts,2,2,RVEDiscreteSize,1,RVEDiscreteSize/cellNum/2, 0, 1.0, false, 0, 0, M_PI/2, 1.0, &_initialPoints);
+//                pnts,2,2,RVEDiscreteSize,1,std::round(RVEDiscreteSize*b/a/cellNum), 0, 0, false, 0, 0, M_PI/2, 1.0, &_initialPoints);
+
     RVE->invertUnMasked();
-//    RVE->saveRVEToFile("RVE_256_Hexagon.RVE");
+    //RVE->saveRVEToFile("RVE_128_Hexagon.RVE");
 
     FEM::Characteristics m1 = { 1, 0, 0, 0, 0};
     FEM::Characteristics m2 = { 10, 0, 0, 0, 0};
     FEM::Domain domain(*RVE);
     domain.addMaterial(0,0.9,m1);
     domain.addMaterial(0.9,2.0,m2);
-    domain.exportTopSize2DToNASTRAN("RVE_128_Square_2d.bdf");
+    domain.exportTopSize2DToNASTRAN("RVE_128_Hexagon_2d.bdf");
 
     UserInterface::VolumeGLRenderRVE *renderStructure = new UserInterface::VolumeGLRenderRVE(RVE, NULL);
     renderStructure->resize(800,600);
