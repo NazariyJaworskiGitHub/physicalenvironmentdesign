@@ -414,8 +414,21 @@ class RepresentativeVolumeElement
             float coreValue = 1.0f) throw (std::runtime_error);
 
     /// Clone layer as a simple box on OY axis
-    public : void cloneLayerY(
+    public : void cloneLayerYFull(
             const int layerIndex) throw (std::runtime_error);
+
+    public : void cloneLayerY(
+        const int srcLayerIndex,
+        const int dstLayerIndex) throw (std::runtime_error);
+
+    /// \todo TEST ONLY!!!
+    public : void squeezeLayersY(
+        const float squeezeFactorY) throw (std::runtime_error);
+
+    public : void useLayerYAsHeightMap(
+        const int layerIndex,
+        const float coreValue = 1.0f,
+        const float transitionLayerSize = 1.0f) throw (std::runtime_error);
 
     public : ~RepresentativeVolumeElement()
     {

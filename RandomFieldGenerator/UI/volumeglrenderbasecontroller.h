@@ -32,7 +32,7 @@ namespace UserInterface
         protected: int _oldMouseY = 0;
         protected: bool _isPressed = false;
 
-        protected: QColor _BackgroundColor = QColor(255, 255, 255, 255);
+        protected: QColor _BackgroundColor = QColor(64, 128, 128, 255);
         public   : void setEnvironmenColor(const QColor &newColor) noexcept{
                     _BackgroundColor = newColor;}
 

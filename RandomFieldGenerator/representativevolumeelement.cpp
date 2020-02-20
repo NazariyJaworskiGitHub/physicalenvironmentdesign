@@ -2132,12 +2132,13 @@ void RepresentativeVolumeElement::generateLayerY(
             }
 }
 
-void RepresentativeVolumeElement::cloneLayerY(const int layerIndex) throw (std::runtime_error)
+void RepresentativeVolumeElement::cloneLayerYFull(
+        const int layerIndex) throw (std::runtime_error)
 {
     if(layerIndex >= _size)
-        throw(std::runtime_error("cloneLayerY(): layer index >= RVE size.\n"));
+        throw(std::runtime_error("cloneLayerYFull(): layer index >= RVE size.\n"));
     if(layerIndex < 0)
-        throw(std::runtime_error("cloneLayerY(): layer index < 0.\n"));
+        throw(std::runtime_error("cloneLayerYFull(): layer index < 0.\n"));
     for( long i = 0; i<_size; ++i)
         for( long j = 0; j<_size; ++j)
             for( long k = 0; k<_size; ++k)
@@ -2146,4 +2147,92 @@ void RepresentativeVolumeElement::cloneLayerY(const int layerIndex) throw (std::
                 if(_val >= 0)
                     _val = _data[(i * _size * _size) + (layerIndex * _size) + k];
             }
+}
+
+void RepresentativeVolumeElement::cloneLayerY(
+        const int srcLayerIndex,
+        const int dstLayerIndex) throw (std::runtime_error)
+{
+    if(srcLayerIndex >= _size || dstLayerIndex >= _size)
+        throw(std::runtime_error("cloneLayerY(): layer index >= RVE size.\n"));
+    if(srcLayerIndex < 0 || dstLayerIndex < 0)
+        throw(std::runtime_error("cloneLayerY(): layer index < 0.\n"));
+    for( long i = 0; i<_size; ++i)
+            for( long k = 0; k<_size; ++k)
+            {
+                float &_val = _data[(i * _size * _size) + (dstLayerIndex * _size) + k];
+                if(_val >= 0)
+                    _val = _data[(i * _size * _size) + (srcLayerIndex * _size) + k];
+            }
+}
+
+void RepresentativeVolumeElement::squeezeLayersY(
+        const float squeezeFactorY) throw (std::runtime_error)
+{
+    if(squeezeFactorY <= 0)
+        throw(std::runtime_error("squeezeLayersY(): "
+                                 "squeezeFactorY <= 0\n"));
+    if(squeezeFactorY > 1)
+        throw(std::runtime_error("squeezeLayersY(): "
+                                 "squeezeFactorY > 1\n"));
+    long p = 1.0/squeezeFactorY;
+    float sum = 0;
+    for( long i = 0; i<_size; ++i)
+        for( long k = 0; k<_size; ++k)
+            for( long j = 0, g=0; j<_size; ++j)
+            {
+                if(!(j%p))
+                {
+                    _data[(i * _size * _size) + (g * _size) + k] = sum / p;
+                    g++;
+                    sum = 0;
+                }
+                float &_val = _data[(i * _size * _size) + (j * _size) + k];
+                if(_val >= 0)
+                    sum += _val;
+            }
+    for( long i = 0; i<p; ++i)
+        for( long j = 0; j<_size/p; ++j)
+            cloneLayerY(j,i*_size/p+j);
+}
+
+void RepresentativeVolumeElement::useLayerYAsHeightMap(
+        const int layerIndex,
+        const float coreValue,
+        const float transitionLayerSize) throw (std::runtime_error)
+{
+    if(layerIndex >= _size)
+        throw(std::runtime_error("useLayerYAsHeightMap(): layer index >= RVE size.\n"));
+    if(layerIndex < 0)
+        throw(std::runtime_error("useLayerYAsHeightMap(): layer index < 0.\n"));
+    if(transitionLayerSize < 0.0f || transitionLayerSize > 1.0f)
+        throw(std::runtime_error(
+                "useLayerYAsHeightMap(): "
+                "transitionLayerSize < 0.0f || "
+                "transitionLayerSize > 1.0f.\n"));
+    if(coreValue < 0.0f || coreValue > 1.0f)
+        throw(std::runtime_error(
+                "useLayerYAsHeightMap(): "
+                "coreValue < 0.0f || coreValue > 1.0f.\n"));
+
+    float *_buffer = new float[_size * _size];
+
+    for( long i = 0; i<_size; ++i)
+        for( long k = 0; k<_size; ++k)
+            _buffer[(i * _size) + k] = _data[(i * _size * _size) + (layerIndex * _size) + k];
+
+    cleanData();
+
+    for( long i = 0; i<_size; ++i)
+            for( long k = 0; k<_size; ++k)
+            {
+                float &_val = _buffer[(i * _size) + k];
+                _data[(i * _size * _size) + ((long)(_size*_val) * _size) + k] = coreValue;
+                for( long j = 0; j<_size*transitionLayerSize && (long)(_size*_val+j)<_size; ++j)
+                    _data[(i * _size * _size) + ((long)(_size*_val+j) * _size) + k] =
+                            coreValue*(_size*transitionLayerSize-1-j)/
+                            (_size*transitionLayerSize-1);
+            }
+
+    delete _buffer;
 }
