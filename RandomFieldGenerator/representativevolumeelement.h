@@ -430,6 +430,8 @@ class RepresentativeVolumeElement
         const float coreValue = 1.0f,
         const float transitionLayerSize = 1.0f) throw (std::runtime_error);
 
+    public : void TESTLayerAsHeight();
+
     public : ~RepresentativeVolumeElement()
     {
         delete [] _data;

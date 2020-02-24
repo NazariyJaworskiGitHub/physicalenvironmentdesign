@@ -51,25 +51,35 @@ int main(int argc, char *argv[])
 
     ///////////////////////////////////////////////////////////////////////////////////////
 //  20.02.20 Graphene,Janusz Woźny 2
-    int size = 128;
+    int size = 256;
     double physicalLength = 1e-6;
     RepresentativeVolumeElement *RVE = new RepresentativeVolumeElement(size,physicalLength);
 
     RVE->addRandomNoise();
-    RVE->applyGaussianFilterCL(64,0.2,0.2,1);
+//    RVE->applyGaussianFilterCL(64);
+//    RVE->applyGaussianFilterCL(4,1,1,1,true,4);
+
+//    RVE->applyGaussianFilterCL(128,0.1,0.1,1);
+
+    RVE->applyGaussianFilterCL(128,0.1,0.1,1);
+    RVE->applyGaussianFilterCL(16,0.2,0.2,1,true,2);
+
     RVE->cloneLayerYFull(0);
     RVE->scaleUnMasked(0,0.2);
     RVE->useLayerYAsHeightMap(0);
     RVE->applyTwoCutMaskInside(0.984,1.0);
     RVE->cleanUnMaskedData();
     RVE->cleanMask();
+    RVE->applyTwoCutMaskOutside(0.984,1.0);
+    RVE->TESTLayerAsHeight();
+    RVE->cleanMask();
 
-    FEM::Characteristics m1 = { 1, 0, 0, 0, 0};
-    FEM::Characteristics m2 = { 10, 0, 0, 0, 0};
-    FEM::Domain domain(*RVE);
-    domain.addMaterial(0,0.5,m1);
-    domain.addMaterial(0.5,2.0,m2);
-    domain.exportToNASTRANLayersY("RVE_128_Graphene.bdf",0,0.2*size+3);
+//    FEM::Characteristics m1 = { 1, 0, 0, 0, 0};
+//    FEM::Characteristics m2 = { 10, 0, 0, 0, 0};
+//    FEM::Domain domain(*RVE);
+//    domain.addMaterial(0,0.5,m1);
+//    domain.addMaterial(0.5,2.0,m2);
+//    domain.exportToNASTRANLayersY("RVE_128_Graphene.bdf",0,0.2*size+3);
 
     UserInterface::VolumeGLRenderRVE *renderStructure = new UserInterface::VolumeGLRenderRVE(RVE, NULL);
     renderStructure->resize(800,600);

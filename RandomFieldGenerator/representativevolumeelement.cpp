@@ -2236,3 +2236,15 @@ void RepresentativeVolumeElement::useLayerYAsHeightMap(
 
     delete _buffer;
 }
+
+void RepresentativeVolumeElement::TESTLayerAsHeight()
+{
+    for( long i = 0; i<_size; ++i)
+        for( long j = 0; j<_size; ++j)
+            for( long k = 0; k<_size; ++k)
+            {
+                float &_val = _data[(i * _size * _size) + (j * _size) + k];
+                if(_val >= 0)
+                    _val = (float)j/(float)(_size-1);
+            }
+}
